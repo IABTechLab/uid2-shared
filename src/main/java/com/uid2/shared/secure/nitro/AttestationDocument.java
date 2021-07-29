@@ -1,0 +1,196 @@
+// Copyright (c) 2021 The Trade Desk, Inc
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice,
+//    this list of conditions and the following disclaimer.
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+//    this list of conditions and the following disclaimer in the documentation
+//    and/or other materials provided with the distribution.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
+
+package com.uid2.shared.secure.nitro;
+
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.*;
+
+import java.io.ByteArrayInputStream;
+import java.math.BigInteger;
+import java.security.cert.CertPath;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class AttestationDocument {
+
+    public static AttestationDocument createFrom(byte[] data) throws CborException {
+        ByteArrayInputStream docStream = new ByteArrayInputStream(data);
+        List<DataItem> docDataItems = new CborDecoder(docStream).decode();
+        AttestationDocument aDoc = new AttestationDocument();
+        Map docMap = (Map) docDataItems.get(0);
+        for (DataItem key : docMap.getKeys()) {
+            String keyStr = ((UnicodeString) key).getString();
+            if (keyStr.equals("module_id")) aDoc.loadModuleId(docMap.get(key));
+            else if (keyStr.equals("digest")) aDoc.loadDigest(docMap.get(key));
+            else if (keyStr.equals("timestamp")) aDoc.loadTimeStamp(docMap.get(key));
+            else if (keyStr.equals("pcrs")) aDoc.loadPcrs(docMap.get(key));
+            else if (keyStr.equals("certificate")) aDoc.loadCertificate(docMap.get(key));
+            else if (keyStr.equals("cabundle")) aDoc.loadCaBundle(docMap.get(key));
+            else if (keyStr.equals("public_key")) aDoc.loadPublicKey(docMap.get(key));
+            else if (keyStr.equals("user_data")) aDoc.loadUserData(docMap.get(key));
+            else if (keyStr.equals("nonce")) aDoc.loadNonce(docMap.get(key));
+        }
+        return aDoc;
+    }
+
+    private String moduleId;
+    private String digest;
+    private BigInteger timestamp;
+    private HashMap<Integer, byte[]> pcrs;
+    private byte[] certificate;
+    private List<byte[]> cabundle;
+    private byte[] publicKey;
+    private byte[] userData;
+    private byte[] nonce;
+
+    private AttestationDocument() {}
+
+    private void loadTimeStamp(DataItem d) {
+        this.timestamp = ((UnsignedInteger)d).getValue();
+    }
+
+    private void loadModuleId(DataItem d) {
+        this.moduleId = ((UnicodeString)d).getString();
+    }
+
+    private void loadDigest(DataItem d) {
+        this.digest = ((UnicodeString)d).getString();
+    }
+
+    private void loadPcrs(DataItem d) {
+        this.pcrs = new HashMap<>();
+        Map pcrMap = (Map) d;
+        for (DataItem pcrkey : pcrMap.getKeys()) {
+            Integer index = getInt(pcrkey);
+            pcrs.put(index, getByteString(pcrMap.get(pcrkey)));
+        }
+    }
+
+    private void loadCertificate(DataItem d) {
+        this.certificate = ((ByteString)d).getBytes();
+    }
+
+    private void loadCaBundle(DataItem d) {
+        this.cabundle = new ArrayList<>();
+        List<DataItem> items = ((Array) d).getDataItems();
+        for(DataItem dd : items) {
+            this.cabundle.add(((ByteString) dd).getBytes());
+        }
+    }
+
+    private void loadPublicKey(DataItem d) {
+        if(d instanceof SimpleValue) {
+            this.publicKey = null;
+        } else {
+            this.publicKey = ((ByteString) d).getBytes();
+        }
+    }
+
+    private void loadUserData(DataItem d) {
+        if(d instanceof SimpleValue) {
+            this.userData = null;
+        } else {
+            this.userData = ((ByteString) d).getBytes();
+        }
+    }
+
+    private void loadNonce(DataItem d) {
+        if(d instanceof SimpleValue) {
+            this.nonce = null;
+        } else {
+            this.nonce = ((ByteString) d).getBytes();
+        }
+    }
+
+    public String getModuleId() {
+        return moduleId;
+    }
+
+    public String getDigest() {
+        return digest;
+    }
+
+    public BigInteger getTimestamp() {
+        return timestamp;
+    }
+
+    public byte[] getPcr(int index) {
+        return pcrs.getOrDefault(index, null);
+    }
+
+    public byte[] getCertificate() {
+        return certificate;
+    }
+
+    public CertPath getCertPath() throws CertificateException {
+        CertificateFactory cf = CertificateFactory.getInstance("X509");
+        List<Certificate> path = this.cabundle.stream()
+                .map(b -> {
+                    try {
+                        return cf.generateCertificate(new ByteArrayInputStream(b));
+                    } catch (CertificateException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                }).collect(Collectors.toList());
+        Collections.reverse(path);
+        return cf.generateCertPath(path);
+    }
+
+    public byte[] getUserData() {
+        return userData;
+    }
+
+    public byte[] getNonce() {
+        return nonce;
+    }
+
+    public byte[] getPublicKey() {
+        return publicKey;
+    }
+
+    private static Integer getInt(DataItem dataItem) {
+        if(dataItem instanceof co.nstant.in.cbor.model.Number) {
+            return ((co.nstant.in.cbor.model.Number)dataItem).getValue().intValue();
+        }
+        else if(dataItem instanceof co.nstant.in.cbor.model.NegativeInteger) {
+            return ((co.nstant.in.cbor.model.NegativeInteger)dataItem).getValue().intValue();
+        }
+        else if(dataItem instanceof co.nstant.in.cbor.model.UnsignedInteger) {
+            return ((co.nstant.in.cbor.model.UnsignedInteger)dataItem).getValue().intValue();
+        }
+        return null;
+    }
+
+    private static byte[] getByteString(DataItem dataItem) {
+        return ((ByteString)dataItem).getBytes();
+    }
+}
