@@ -215,7 +215,7 @@ public class AuthMiddleware {
                 if (profile != null) {
                     rc.data().put(API_CLIENT_PROP, profile);
                     rc.data().put(API_CONTACT_PROP, profile.getContact());
-                    if(this.allowedRoles.stream().anyMatch(profile::hasRole)) {
+                    if (!profile.isDisabled() && this.allowedRoles.stream().anyMatch(profile::hasRole)) {
                         this.onSuccessAuth(rc);
                     } else {
                         this.onFailedAuth(rc);

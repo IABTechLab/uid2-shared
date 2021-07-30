@@ -44,6 +44,7 @@ public class ClientKey implements IAuthorizable {
     private Set<Role> roles;
     @JsonProperty("site_id")
     private int siteId;
+    private boolean disabled;
 
     public ClientKey(String key) {
         this.key = key;
@@ -73,16 +74,18 @@ public class ClientKey implements IAuthorizable {
     }
 
     public ClientKey(String key, String name, String contact, Instant created, Set<Role> roles) {
-        this(key, name, contact, created, roles, Const.Data.DefaultClientSiteId);
+        this(key, name, contact, created, roles, Const.Data.DefaultClientSiteId, false);
     }
 
-    public ClientKey(String key, String name, String contact, Instant created, Set<Role> roles, int siteId) {
+    public ClientKey(String key, String name, String contact, Instant created, Set<Role> roles, int siteId,
+                     boolean disabled) {
         this.key = key;
         this.name = name;
         this.contact = contact;
         this.created = created.getEpochSecond();
         this.roles = Collections.unmodifiableSet(roles);
         this.siteId = siteId;
+        this.disabled = disabled;
     }
 
     public String getKey() {
@@ -109,8 +112,9 @@ public class ClientKey implements IAuthorizable {
         return siteId;
     }
     public boolean hasValidSiteId() { return siteId > 0 && siteId != Const.Data.AdvertisingTokenSiteId; }
+    public boolean isDisabled() { return disabled; }
 
-    // Overriding equals() to compare two OptOutEntry objects
+    // Overriding equals() to compare two ClientKey objects
     @Override
     public boolean equals(Object o) {
         // If the object is compared with itself then return true
@@ -144,7 +148,8 @@ public class ClientKey implements IAuthorizable {
             json.getString("contact"),
             Instant.ofEpochSecond(json.getLong("created")),
             getRoles(json),
-            json.getInteger("site_id", Const.Data.DefaultClientSiteId)
+            json.getInteger("site_id", Const.Data.DefaultClientSiteId),
+            json.getBoolean("disabled", false)
         );
     }
 

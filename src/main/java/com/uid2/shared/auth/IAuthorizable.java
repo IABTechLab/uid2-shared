@@ -27,4 +27,5 @@ public interface IAuthorizable {
     boolean hasRole(Role role);
     String getKey();
     String getContact();
+    boolean isDisabled();
 }

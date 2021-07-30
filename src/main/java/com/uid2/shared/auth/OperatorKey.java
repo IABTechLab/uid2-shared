@@ -33,13 +33,15 @@ public class OperatorKey implements IAuthorizable {
     private final String protocol;
     // epochSeconds
     private final long created;
+    private final boolean disabled;
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created) {
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
         this.key = key;
         this.name = name;
         this.contact = contact;
         this.protocol = protocol;
         this.created = created;
+        this.disabled = disabled;
     }
 
     public String getKey() { return key; }
@@ -47,6 +49,7 @@ public class OperatorKey implements IAuthorizable {
     public String getContact() {return contact;}
     public String getProtocol() {return protocol;}
     public long getCreated() {return created;}
+    public boolean isDisabled() { return disabled; }
 
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
@@ -54,7 +57,8 @@ public class OperatorKey implements IAuthorizable {
                 json.getString("name"),
                 json.getString("contact"),
                 json.getString("protocol"),
-                json.getLong("created")
+                json.getLong("created"),
+                json.getBoolean("disabled", false)
         );
     }
 
