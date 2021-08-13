@@ -27,13 +27,13 @@ import io.vertx.core.json.JsonObject;
 import java.util.Objects;
 
 public class OperatorKey implements IAuthorizable {
-    private final String key;
+    private String key;
     private final String name;
     private final String contact;
     private final String protocol;
     // epochSeconds
     private final long created;
-    private final boolean disabled;
+    private boolean disabled;
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
         this.key = key;
@@ -50,6 +50,7 @@ public class OperatorKey implements IAuthorizable {
     public String getProtocol() {return protocol;}
     public long getCreated() {return created;}
     public boolean isDisabled() { return disabled; }
+    public void setDisabled(boolean disabled) { this.disabled = disabled; }
 
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
@@ -88,5 +89,9 @@ public class OperatorKey implements IAuthorizable {
     @Override
     public int hashCode() {
         return Objects.hash(key, name, contact, protocol, created);
+    }
+
+    public void setKey(String newKey) {
+        this.key = newKey;
     }
 }

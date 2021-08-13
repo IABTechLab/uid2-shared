@@ -28,5 +28,8 @@ public enum Role {
     MAPPER,
     ID_READER,
     OPERATOR,
-    OPTOUT
+    OPTOUT,
+    CLIENTKEY_ISSUER,
+    OPERATOR_MANAGER,
+    ADMINISTRATOR
 }

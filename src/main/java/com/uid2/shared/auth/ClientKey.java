@@ -113,6 +113,7 @@ public class ClientKey implements IAuthorizable {
     }
     public boolean hasValidSiteId() { return siteId > 0 && siteId != Const.Data.AdvertisingTokenSiteId; }
     public boolean isDisabled() { return disabled; }
+    public void setDisabled(boolean disabled) { this.disabled = disabled; }
 
     // Overriding equals() to compare two ClientKey objects
     @Override
@@ -169,5 +170,9 @@ public class ClientKey implements IAuthorizable {
     @Override
     public boolean hasRole(Role role) {
         return this.roles.contains(role);
+    }
+
+    public void setKey(String newKey) {
+        this.key = newKey;
     }
 }

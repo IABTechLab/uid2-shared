@@ -30,10 +30,12 @@ public class Const {
         public static final int ServicePortForCore = 8088;
         public static final int ServicePortForOperator = 8080;
         public static final int ServicePortForOptOut = 8081;
+        public static final int ServicePortForAdmin = 8089;
 
         public static final int PrometheusPortForCore = 9088;
         public static final int PrometheusPortForOperator = 9080;
         public static final int PrometheusPortForOptOut = 9081;
+        public static final int PrometheusPortForAdmin = 9089;
     }
 
     public static class Config {
@@ -42,7 +44,7 @@ public class Const {
         // this is the system property name that vertx-config uses to read override config path
         public static final String VERTX_CONFIG_PATH_PROP = "vertx-config-path";
 
-        // this file stores default config values, can be override by env and sys variables
+        // this file stores default config values, can be overridden by env and sys variables
         public static final String DEFAULT_CONFIG_PATH = "conf" + File.separator + "default-config.json";
         // this files stores override config values that supersede everything else
         public static final String OVERRIDE_CONFIG_PATH = "conf" + File.separator + "config.json";
