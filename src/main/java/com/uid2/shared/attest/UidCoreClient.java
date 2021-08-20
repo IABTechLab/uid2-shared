@@ -59,6 +59,7 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
     private AtomicReference<String> attestationToken;
     private final boolean enforceHttps;
     private static boolean useSecureParameters = true;
+    private boolean allowContentFromLocalFileSystem = false;
 
     /**
      * @deprecated
@@ -127,12 +128,21 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
         return conn;
     }
 
+    public void setAllowContentFromLocalFileSystem(boolean allow) {
+        allowContentFromLocalFileSystem = allow;
+    }
+
     // open connection with auth & attestation headers attached
     private URLConnection openConnection(String serviceEndpoint, String httpMethod) throws IOException {
         final URLConnection urlConnection = (proxy == null ? new URL(serviceEndpoint).openConnection() : new URL(serviceEndpoint).openConnection(proxy));
 
         if(enforceHttps && !(urlConnection instanceof HttpsURLConnection)) {
             throw new IOException("UidCoreClient requires HTTPS connection");
+        }
+
+        if (allowContentFromLocalFileSystem && serviceEndpoint.startsWith("file:/tmp/uid2")) {
+            // returns `file:/tmp/uid2` urlConnection directly
+            return urlConnection;
         }
 
         final HttpURLConnection connection = (HttpURLConnection) urlConnection;
