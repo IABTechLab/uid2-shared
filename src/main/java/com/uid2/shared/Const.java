@@ -85,6 +85,10 @@ public class Const {
         public static final String CoreApiTokenProp = "core_api_token";
     }
 
+    public static class Http {
+        public static String AppVersionHeader = "X-UID2-AppVersion";
+    }
+
     public static class ResponseStatus {
         public static String Success = "success";
         public static String Unauthorized = "unauthorized";

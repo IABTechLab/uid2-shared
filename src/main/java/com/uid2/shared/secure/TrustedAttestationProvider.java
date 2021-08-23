@@ -21,14 +21,27 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package com.uid2.shared.attest;
+package com.uid2.shared.secure;
 
-import com.uid2.enclave.IAttestationProvider;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
 
-public class NoAttestationProvider implements IAttestationProvider {
+import java.util.Collection;
+import java.util.Collections;
+
+public class TrustedAttestationProvider implements IAttestationProvider {
+    public TrustedAttestationProvider() {}
+
     @Override
-    public byte[] getAttestationRequest(byte[] publicKey) {
-        byte[] req = {0};
-        return req;
+    public void attest(byte[] attestationRequest, byte[] publicKey, Handler<AsyncResult<AttestationResult>> handler) {
+        handler.handle(Future.succeededFuture(new AttestationResult(publicKey)));
     }
+
+    @Override
+    public void registerEnclave(String encodedIdentifier) throws AttestationException {}
+    @Override
+    public void unregisterEnclave(String encodedIdentifier) throws AttestationException {}
+    @Override
+    public Collection<String> getEnclaveAllowlist() { return Collections.emptyList(); }
 }

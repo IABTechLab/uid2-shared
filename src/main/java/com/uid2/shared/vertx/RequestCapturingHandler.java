@@ -23,6 +23,7 @@
 
 package com.uid2.shared.vertx;
 
+import com.uid2.shared.Const;
 import com.uid2.shared.jmx.AdminApi;
 import com.uid2.shared.middleware.AuthMiddleware;
 import io.micrometer.core.instrument.Counter;
@@ -38,6 +39,7 @@ import io.vertx.ext.web.RoutingContext;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -47,6 +49,7 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
     private static final ZoneId ZONE_GMT = ZoneId.of("GMT");
     private Queue<String> _capturedRequests = null;
     private final Map<String, Counter> _apiMetricCounters = new HashMap<>();
+    private final Map<String, Counter> _clientAppVersionCounters = new HashMap<>();
 
     private static String formatRFC1123DateTime(long time) {
         return DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant.ofEpochMilli(time).atZone(ZONE_GMT));
@@ -97,6 +100,10 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
             host = "10.x.x.x:xx";
         }
         incrementMetricCounter(apiContact, host, status);
+
+        if (request.headers().contains(Const.Http.AppVersionHeader)) {
+            incrementAppVersionCounter(apiContact, request.headers().get(Const.Http.AppVersionHeader));
+        }
 
         if (AdminApi.instance.getCaptureFailureOnly() && status < 400) {
             return;
@@ -182,5 +189,41 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         }
 
         _apiMetricCounters.get(key).increment();
+    }
+
+    private void incrementAppVersionCounter(String apiContact, String appVersions) {
+        assert apiContact != null;
+        assert appVersions != null;
+
+        AbstractMap.SimpleEntry<String, String> client = parseClientAppVersion(appVersions);
+        if (client == null)
+            return;
+
+        final String key = apiContact + "|" + client.getKey() + "|" + client.getValue();
+        if (!_clientAppVersionCounters.containsKey(key)) {
+            Counter counter = Counter
+                    .builder("uid2.client_versions")
+                    .description("counter for how many http requests are processed per each api contact and status code")
+                    .tags("api_contact", apiContact, "client_name", client.getKey(), "client_version", client.getValue())
+                    .register(Metrics.globalRegistry);
+            _clientAppVersionCounters.put(key, counter);
+        }
+
+        _clientAppVersionCounters.get(key).increment();
+    }
+
+    private static AbstractMap.SimpleEntry<String, String> parseClientAppVersion(String appVersions) {
+        final int eqpos = appVersions.indexOf('=');
+        if (eqpos == -1) {
+            return null;
+        }
+        final String appName = appVersions.substring(0, eqpos);
+
+        final int seppos = appVersions.indexOf(';', eqpos + 1);
+        final String appVersion = seppos == -1
+                ? appVersions.substring(eqpos + 1)
+                : appVersions.substring(eqpos + 1, seppos);
+
+        return new AbstractMap.SimpleEntry<>(appName, appVersion);
     }
 }
