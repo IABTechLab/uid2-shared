@@ -111,7 +111,7 @@ public class ClientKey implements IAuthorizable {
     public int getSiteId() {
         return siteId;
     }
-    public boolean hasValidSiteId() { return siteId > 0 && siteId != Const.Data.AdvertisingTokenSiteId; }
+    public boolean hasValidSiteId() { return siteId > Const.Data.AdvertisingTokenSiteId; }
     public boolean isDisabled() { return disabled; }
     public void setDisabled(boolean disabled) { this.disabled = disabled; }
 
