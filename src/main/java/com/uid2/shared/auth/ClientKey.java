@@ -66,15 +66,7 @@ public class ClientKey implements IAuthorizable {
     public ClientKey withSiteId(int siteId) { this.siteId = siteId; return this; }
 
     public ClientKey(String key, String contact, Role... roles) {
-        this(key, contact, contact, Instant.parse("2021-01-01T00:00:00.000Z"), roles);
-    }
-
-    public ClientKey(String key, String name, String contact, Instant created, Role... roles) {
-        this(key, name, contact, created, new HashSet<Role>(Arrays.asList(roles)));
-    }
-
-    public ClientKey(String key, String name, String contact, Instant created, Set<Role> roles) {
-        this(key, name, contact, created, roles, Const.Data.DefaultClientSiteId, false);
+        this(key, contact, contact, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<Role>(Arrays.asList(roles)), 0, false);
     }
 
     public ClientKey(String key, String name, String contact, Instant created, Set<Role> roles, int siteId,
@@ -149,7 +141,7 @@ public class ClientKey implements IAuthorizable {
             json.getString("contact"),
             Instant.ofEpochSecond(json.getLong("created")),
             getRoles(json),
-            json.getInteger("site_id", Const.Data.DefaultClientSiteId),
+            json.getInteger("site_id"),
             json.getBoolean("disabled", false)
         );
     }

@@ -23,6 +23,7 @@
 
 package com.uid2.shared.store;
 
+import com.uid2.shared.Const;
 import com.uid2.shared.model.EncryptionKey;
 import com.uid2.shared.Utils;
 import com.uid2.shared.attest.UidCoreClient;
@@ -112,7 +113,6 @@ public class RotatingKeyStore implements IKeyStore, IMetadataVersionedStore {
 
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
-        final int systemKeyId = metadata.getInteger("system_key_id");
         final JsonObject clientKeysMetadata = metadata.getJsonObject("keys");
         final String path = clientKeysMetadata.getString("location");
         final InputStream inputStream = this.contentStreamProvider.download(path);
@@ -122,7 +122,7 @@ public class RotatingKeyStore implements IKeyStore, IMetadataVersionedStore {
         final Instant now = Instant.now();
         for (int i = 0; i < keysSpec.size(); ++i) {
             JsonObject keySpec = keysSpec.getJsonObject(i);
-            Integer siteId = keySpec.getInteger("site_id", -1);
+            int siteId = keySpec.getInteger("site_id");
             Instant created = Instant.ofEpochSecond(keySpec.getLong("created"));
             Instant activates = Instant.ofEpochSecond(keySpec.getLong("activates"));
             Instant expires = Instant.ofEpochSecond(keySpec.getLong("expires"));
@@ -131,11 +131,9 @@ public class RotatingKeyStore implements IKeyStore, IMetadataVersionedStore {
                     Base64.getDecoder().decode(keySpec.getString("secret")),
                     created, activates, expires, siteId);
             keyMap.put(key.getId(), key);
-            if(siteId > 0) {
-                siteKeyMap.computeIfAbsent(siteId, k -> new ArrayList<EncryptionKey>()).add(key);
-            }
+            siteKeyMap.computeIfAbsent(siteId, k -> new ArrayList<EncryptionKey>()).add(key);
         }
-        this.latestSnapshot.set(new KeyStoreSnapshot(systemKeyId, keyMap, siteKeyMap));
+        this.latestSnapshot.set(new KeyStoreSnapshot(keyMap, siteKeyMap));
         LOGGER.info("Loaded " + keysSpec.size() + " keys");
         return keysSpec.size();
     }
@@ -145,13 +143,11 @@ public class RotatingKeyStore implements IKeyStore, IMetadataVersionedStore {
     }
 
     public class KeyStoreSnapshot implements IKeyStoreSnapshot {
-        private final EncryptionKey masterKey;
         private final HashMap<Integer, EncryptionKey> keyMap;
         private final HashMap<Integer, List<EncryptionKey>> siteKeyMap;
         private final List<EncryptionKey> activeKeySet;
 
-        public KeyStoreSnapshot(int systemKeyId, HashMap<Integer, EncryptionKey> keyMap, HashMap<Integer, List<EncryptionKey>> siteKeyMap) {
-            this.masterKey = keyMap.get(systemKeyId);
+        public KeyStoreSnapshot(HashMap<Integer, EncryptionKey> keyMap, HashMap<Integer, List<EncryptionKey>> siteKeyMap) {
             this.keyMap = keyMap;
             this.siteKeyMap = siteKeyMap;
             this.activeKeySet = keyMap.values().stream().collect(Collectors.toList());
@@ -162,8 +158,8 @@ public class RotatingKeyStore implements IKeyStore, IMetadataVersionedStore {
         }
 
         @Override
-        public EncryptionKey getMasterKey() {
-            return this.masterKey;
+        public EncryptionKey getMasterKey(Instant now) {
+            return this.getActiveSiteKey(Const.Data.MasterKeySiteId, now);
         }
 
         @Override

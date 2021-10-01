@@ -103,6 +103,8 @@ public class Const {
     }
 
     public static class Data {
+        // This side id is reserved. It is assigned to master keys.
+        public static final int MasterKeySiteId = -1;
         // This site id is reserved. It is assigned to client access keys by default.
         @Deprecated
         public static final int DefaultClientSiteId = 1;
