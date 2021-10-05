@@ -72,7 +72,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
     private final ICloudStorage metadataStreamProvider;
     private final ICloudStorage contentStreamProvider;
     private final String metadataPath;
-    private final AtomicReference<List<SaltSnapshot>> latestSnapshots = new AtomicReference<>();
+    private final AtomicReference<List<SaltSnapshot>> snapshotsByEffectiveTime = new AtomicReference<>();
 
     public RotatingSaltProvider(ICloudStorage fileStreamProvider, String metadataPath) {
         this.metadataStreamProvider = fileStreamProvider;
@@ -117,7 +117,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         }
 
         // Store snapshots in order of them becoming effective
-        this.latestSnapshots.set(snapshots.stream()
+        this.snapshotsByEffectiveTime.set(snapshots.stream()
                 .sorted(Comparator.comparing(SaltSnapshot::getEffective))
                 .collect(Collectors.toList()));
 
@@ -129,12 +129,12 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
     }
 
     public List<SaltSnapshot> getSnapshots() {
-        return this.latestSnapshots.get();
+        return this.snapshotsByEffectiveTime.get();
     }
 
     @Override
     public ISaltSnapshot getSnapshot(Instant asOf) {
-        final List<SaltSnapshot> snapshots = this.latestSnapshots.get();
+        final List<SaltSnapshot> snapshots = this.snapshotsByEffectiveTime.get();
         // Last snapshot past its effective timestamp
         ISaltSnapshot current = null;
         for (SaltSnapshot snapshot : snapshots) {

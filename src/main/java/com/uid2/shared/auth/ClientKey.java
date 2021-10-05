@@ -23,9 +23,8 @@
 
 package com.uid2.shared.auth;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.uid2.shared.Const;
+import com.uid2.shared.model.SiteUtil;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -103,7 +102,7 @@ public class ClientKey implements IAuthorizable {
     public int getSiteId() {
         return siteId;
     }
-    public boolean hasValidSiteId() { return siteId > Const.Data.AdvertisingTokenSiteId; }
+    public boolean hasValidSiteId() { return SiteUtil.isValidSiteId(siteId); }
     public boolean isDisabled() { return disabled; }
     public void setDisabled(boolean disabled) { this.disabled = disabled; }
 
