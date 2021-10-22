@@ -23,6 +23,7 @@
 
 package com.uid2.shared.store;
 
+import com.uid2.shared.Const;
 import com.uid2.shared.model.EncryptionKey;
 
 import com.uid2.shared.cloud.ICloudStorage;
@@ -58,12 +59,11 @@ public class RotatingKeyStoreTest {
         mocks.close();
     }
 
-    private JsonObject makeMetadata(int systemKeyId, String location) {
+    private JsonObject makeMetadata(String location) {
         JsonObject metadata = new JsonObject();
         JsonObject keys = new JsonObject();
         keys.put("location", location);
         metadata.put("keys", keys);
-        metadata.put("system_key_id", systemKeyId);
         return metadata;
     }
 
@@ -104,9 +104,9 @@ public class RotatingKeyStoreTest {
     @Test public void loadContentEmptyArray() throws Exception {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
-        final long count = keyStore.loadContent(makeMetadata(1, "locationPath"));
+        final long count = keyStore.loadContent(makeMetadata("locationPath"));
         Assert.assertEquals(0, count);
-        Assert.assertNull(keyStore.getSnapshot().getMasterKey());
+        Assert.assertNull(keyStore.getSnapshot().getMasterKey(Instant.now()));
         Assert.assertNull(keyStore.getSnapshot().getKey(1));
         Assert.assertNull(keyStore.getSnapshot().getActiveSiteKey(2, Instant.now()));
         Assert.assertTrue(keyStore.getSnapshot().getActiveKeySet().isEmpty());
@@ -115,13 +115,13 @@ public class RotatingKeyStoreTest {
     @Test public void loadContentMultipleKeysArray() throws Exception {
         Instant now = Instant.now();
         JsonArray content = new JsonArray();
-        addKey(content, 101, null, "system", now);
+        addKey(content, 101, Const.Data.MasterKeySiteId, "system", now);
         addKey(content, 102, 202, "key102site202", now);
         addKey(content, 103, 203, "key103site203", now);
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
-        final long count = keyStore.loadContent(makeMetadata(101, "locationPath"));
+        final long count = keyStore.loadContent(makeMetadata("locationPath"));
         Assert.assertEquals(3, count);
-        checkKeyMatches(keyStore.getSnapshot().getMasterKey(), 101, -1, "system");
+        checkKeyMatches(keyStore.getSnapshot().getMasterKey(now), 101, -1, "system");
         Assert.assertNull(keyStore.getSnapshot().getKey(1));
         checkKeyMatches(keyStore.getSnapshot().getKey(101), 101, -1, "system");
         checkKeyMatches(keyStore.getSnapshot().getKey(102), 102, 202, "key102site202");
@@ -140,7 +140,7 @@ public class RotatingKeyStoreTest {
         addKey(content, 103, 200, "key103site200", now.minusSeconds(10), now.plusSeconds(20));
         addKey(content, 104, 200, "key104site200", now.minusSeconds(5), now.minusSeconds(1)); // expired
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
-        final long count = keyStore.loadContent(makeMetadata(101, "locationPath"));
+        final long count = keyStore.loadContent(makeMetadata("locationPath"));
         Assert.assertEquals(4, count);
         checkKeyMatches(keyStore.getSnapshot().getKey(101), 101, 200, "key101site200");
         checkKeyMatches(keyStore.getSnapshot().getKey(102), 102, 200, "key102site200");
@@ -153,13 +153,13 @@ public class RotatingKeyStoreTest {
     @Test public void loadContentMultipleSystemKeys() throws Exception {
         Instant now = Instant.now();
         JsonArray content = new JsonArray();
-        addKey(content, 101, null, "system1", now.plusSeconds(1));
-        addKey(content, 102, null, "system2", now);
-        addKey(content, 103, null, "system3", now.minusSeconds(1));
+        addKey(content, 101, Const.Data.MasterKeySiteId, "system1", now.plusSeconds(1));
+        addKey(content, 102, Const.Data.MasterKeySiteId, "system2", now);
+        addKey(content, 103, Const.Data.MasterKeySiteId, "system3", now.minusSeconds(1));
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
-        final long count = keyStore.loadContent(makeMetadata(102, "locationPath"));
+        final long count = keyStore.loadContent(makeMetadata("locationPath"));
         Assert.assertEquals(3, count);
-        checkKeyMatches(keyStore.getSnapshot().getMasterKey(), 102, -1, "system2");
+        checkKeyMatches(keyStore.getSnapshot().getMasterKey(now), 102, -1, "system2");
         checkKeyMatches(keyStore.getSnapshot().getKey(101), 101, -1, "system1");
         checkKeyMatches(keyStore.getSnapshot().getKey(102), 102, -1, "system2");
         checkKeyMatches(keyStore.getSnapshot().getKey(103), 103, -1, "system3");

@@ -23,6 +23,8 @@
 
 package com.uid2.shared.cloud;
 
+import com.uid2.shared.Utils;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -44,12 +46,14 @@ public class EmbeddedResourceStorage implements ICloudStorage {
     private String urlPrefix;
 
     public EmbeddedResourceStorage(Class cls) {
+        Utils.ensureDirectoryExists(tmpDir);
         this.cls = cls;
         this.resourceList = null;
         this.urlPrefix = null;
     }
 
     public EmbeddedResourceStorage(Class cls, List<String> resourceList) {
+        Utils.ensureDirectoryExists(tmpDir);
         this.cls = cls;
         this.resourceList = Collections.unmodifiableList(resourceList);
         this.urlPrefix = null;

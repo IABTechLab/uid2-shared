@@ -25,6 +25,7 @@ package com.uid2.shared.attest;
 
 import com.uid2.enclave.AttestationException;
 import com.uid2.enclave.IAttestationProvider;
+import com.uid2.shared.ApplicationVersion;
 import com.uid2.shared.Const;
 import com.uid2.shared.Utils;
 import com.uid2.shared.cloud.*;
@@ -47,6 +48,7 @@ import java.security.*;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class UidCoreClient implements IUidCoreClient, ICloudStorage {
@@ -56,41 +58,32 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
     private final Proxy proxy;
     private final String attestationEndpoint;
     private final String userToken;
+    private final ApplicationVersion appVersion;
+    private final String appVersionHeader;
     private AtomicReference<String> attestationToken;
     private final boolean enforceHttps;
     private static boolean useSecureParameters = true;
+    private boolean allowContentFromLocalFileSystem = false;
 
-    /**
-     * @deprecated
-     * This method exists only for backward-compatibility
-     * In the future, call the constructor with enforceHttps argument
-     */
-    public static UidCoreClient createNoAttest(String attestationEndpoint, String userToken) {
-        return createNoAttest(attestationEndpoint, userToken, false);
+    public static UidCoreClient createNoAttest(String attestationEndpoint, String userToken, ApplicationVersion appVersion, boolean enforceHttps) {
+        return new UidCoreClient(attestationEndpoint, userToken, appVersion, CloudUtils.defaultProxy, new NoAttestationProvider(), enforceHttps);
     }
 
-    public static UidCoreClient createNoAttest(String attestationEndpoint, String userToken, boolean enforceHttps) {
-        return new UidCoreClient(attestationEndpoint, userToken, CloudUtils.defaultProxy, new NoAttestationProvider(), enforceHttps);
-    }
-
-    /**
-     * @deprecated
-     * This method exists only for backward-compatibility
-     * In the future, call the constructor with enforceHttps argument
-     */
-    public UidCoreClient(String attestationEndpoint, String userToken, Proxy proxy, IAttestationProvider attestationProvider) {
-        this(attestationEndpoint, userToken, proxy, attestationProvider, false);
-    }
-
-    public UidCoreClient(String attestationEndpoint, String userToken, Proxy proxy,
+    public UidCoreClient(String attestationEndpoint, String userToken, ApplicationVersion appVersion, Proxy proxy,
                          IAttestationProvider attestationProvider, boolean enforceHttps) {
         this.attestationEndpoint = attestationEndpoint;
         this.proxy = proxy;
         this.userToken = userToken;
+        this.appVersion = appVersion;
         this.attestationProvider = attestationProvider;
         this.contentStorage = new PreSignedURLStorage(proxy);
         this.attestationToken = new AtomicReference<>(null);
         this.enforceHttps = enforceHttps;
+
+        String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
+        for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet())
+            appVersionHeader += ";" + kv.getKey() + "=" + kv.getValue();
+        this.appVersionHeader = appVersionHeader;
     }
 
     @Override
@@ -103,6 +96,9 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
     }
 
     private InputStream getWithAttest(String url) throws IOException, UidCoreClientException {
+        if (!attested())
+            attestInternal();
+
         URLConnection conn = sendGet(url);
 
         if (conn instanceof HttpURLConnection && attestIfRequired((HttpURLConnection) conn))
@@ -127,6 +123,10 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
         return conn;
     }
 
+    public void setAllowContentFromLocalFileSystem(boolean allow) {
+        allowContentFromLocalFileSystem = allow;
+    }
+
     // open connection with auth & attestation headers attached
     private URLConnection openConnection(String serviceEndpoint, String httpMethod) throws IOException {
         final URLConnection urlConnection = (proxy == null ? new URL(serviceEndpoint).openConnection() : new URL(serviceEndpoint).openConnection(proxy));
@@ -135,8 +135,14 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
             throw new IOException("UidCoreClient requires HTTPS connection");
         }
 
+        if (allowContentFromLocalFileSystem && serviceEndpoint.startsWith("file:/tmp/uid2")) {
+            // returns `file:/tmp/uid2` urlConnection directly
+            return urlConnection;
+        }
+
         final HttpURLConnection connection = (HttpURLConnection) urlConnection;
         connection.setRequestMethod(httpMethod);
+        connection.setRequestProperty(Const.Http.AppVersionHeader, appVersionHeader);
 
         if(this.userToken != null && this.userToken.length() > 0) {
             connection.setRequestProperty("Authorization", "Bearer " + this.userToken);
@@ -152,6 +158,10 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
 
     //region attestation methods
 
+    private boolean attested() {
+        return this.attestationToken.get() != null;
+    }
+
     /// this also sets this.attestationToken
     private void attestInternal() throws IOException, UidCoreClientException {
         try {
@@ -160,6 +170,14 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
             byte[] publicKey = keyPair.getPublic().getEncoded();
             requestJson.put("attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey)));
             requestJson.put("public_key", Base64.getEncoder().encodeToString(publicKey));
+            requestJson.put("application_name", appVersion.getAppName());
+            requestJson.put("application_version", appVersion.getAppVersion());
+            JsonObject components = new JsonObject();
+            for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet()) {
+                components.put(kv.getKey(), kv.getValue());
+            }
+            requestJson.put("components", components);
+
             HttpURLConnection connection = (HttpURLConnection) openConnection(attestationEndpoint, "POST");
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "application/json");

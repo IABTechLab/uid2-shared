@@ -23,10 +23,10 @@
 
 package com.uid2.shared.auth;
 
-public interface IAuthorizable {
-    boolean hasRole(Role role);
-    String getKey();
-    String getContact();
-    boolean isDisabled();
-    void setDisabled(boolean disabled);
+import com.uid2.shared.model.EnclaveIdentifier;
+
+import java.util.Set;
+
+public interface IOperatorChangeHandler {
+    void handle(Set<EnclaveIdentifier> newSet);
 }

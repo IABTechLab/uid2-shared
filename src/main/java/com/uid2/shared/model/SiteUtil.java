@@ -21,12 +21,12 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package com.uid2.shared.auth;
+package com.uid2.shared.model;
 
-public interface IAuthorizable {
-    boolean hasRole(Role role);
-    String getKey();
-    String getContact();
-    boolean isDisabled();
-    void setDisabled(boolean disabled);
+import com.uid2.shared.Const;
+
+public class SiteUtil {
+    public static boolean isValidSiteId(int siteId) {
+        return siteId > Const.Data.AdvertisingTokenSiteId;
+    }
 }

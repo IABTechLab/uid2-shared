@@ -23,6 +23,7 @@
 
 package com.uid2.shared.store;
 
+import com.uid2.shared.model.SaltEntry;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -33,8 +34,6 @@ public interface ISaltProvider {
 
     ISaltSnapshot getSnapshot(Instant asOf);
 
-    ISaltSnapshot getSnapshot();
-
     static interface ISaltSnapshot {
         SaltEntry getRotatingSalt(String identity);
 
@@ -42,7 +41,7 @@ public interface ISaltProvider {
 
         List<SaltEntry> getModifiedSince(Instant timestamp);
 
-        List<SaltEntry> getAllRotatingSalts();
+        SaltEntry[] getAllRotatingSalts();
     }
 
     static interface ISaltEntryIndexer {
@@ -65,36 +64,6 @@ public interface ISaltProvider {
             LOGGER.warn("slow mod-based indexer is used, this is intended only for unit test");
             int hash = ((shaBytes[0] & 0xFF) << 12) | ((shaBytes[1] & 0xFF) << 4) | ((shaBytes[2] & 0xFF) & 0xF);
             return hash % totalEntries;
-        }
-    }
-
-    static class SaltEntry {
-        private final long id;
-        private final String hashedId;
-        private final long lastUpdated;
-        private final String salt;
-
-        public SaltEntry(long id, String hashedId, long lastUpdated, String salt) {
-            this.id = id;
-            this.lastUpdated = lastUpdated;
-            this.hashedId = hashedId;
-            this.salt = salt;
-        }
-
-        public long getId() {
-            return id;
-        }
-
-        public String getHashedId() {
-            return hashedId;
-        }
-
-        public long getLastUpdated() {
-            return lastUpdated;
-        }
-
-        public String getSalt() {
-            return salt;
         }
     }
 }

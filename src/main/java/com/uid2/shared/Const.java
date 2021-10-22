@@ -30,10 +30,12 @@ public class Const {
         public static final int ServicePortForCore = 8088;
         public static final int ServicePortForOperator = 8080;
         public static final int ServicePortForOptOut = 8081;
+        public static final int ServicePortForAdmin = 8089;
 
         public static final int PrometheusPortForCore = 9088;
         public static final int PrometheusPortForOperator = 9080;
         public static final int PrometheusPortForOptOut = 9081;
+        public static final int PrometheusPortForAdmin = 9089;
     }
 
     public static class Config {
@@ -42,7 +44,7 @@ public class Const {
         // this is the system property name that vertx-config uses to read override config path
         public static final String VERTX_CONFIG_PATH_PROP = "vertx-config-path";
 
-        // this file stores default config values, can be override by env and sys variables
+        // this file stores default config values, can be overridden by env and sys variables
         public static final String DEFAULT_CONFIG_PATH = "conf" + File.separator + "default-config.json";
         // this files stores override config values that supersede everything else
         public static final String OVERRIDE_CONFIG_PATH = "conf" + File.separator + "config.json";
@@ -83,6 +85,10 @@ public class Const {
         public static final String CoreApiTokenProp = "core_api_token";
     }
 
+    public static class Http {
+        public static String AppVersionHeader = "X-UID2-AppVersion";
+    }
+
     public static class ResponseStatus {
         public static String Success = "success";
         public static String Unauthorized = "unauthorized";
@@ -97,7 +103,10 @@ public class Const {
     }
 
     public static class Data {
+        // This side id is reserved. It is assigned to master keys.
+        public static final int MasterKeySiteId = -1;
         // This site id is reserved. It is assigned to client access keys by default.
+        @Deprecated
         public static final int DefaultClientSiteId = 1;
         // This site id is reserved. It may not be used for client keys.
         public static final int AdvertisingTokenSiteId = 2;

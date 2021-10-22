@@ -1,0 +1,4 @@
+.idea/*
+target/
+uid2-shared.iml
+dependencies/
