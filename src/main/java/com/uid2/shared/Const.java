@@ -87,6 +87,7 @@ public class Const {
 
     public static class Http {
         public static String AppVersionHeader = "X-UID2-AppVersion";
+        public static String ClientVersionHeader = "X-UID2-Client-Version";
     }
 
     public static class ResponseStatus {
