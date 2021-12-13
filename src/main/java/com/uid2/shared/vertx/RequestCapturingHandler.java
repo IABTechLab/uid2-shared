@@ -85,6 +85,12 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
     private void capture(RoutingContext context, long timestamp, String remoteClient, HttpVersion version, HttpMethod method, String uri) {
         HttpServerRequest request = context.request();
 
+        String path = context.currentRoute().getPath();
+        if (path == null)
+        {
+            path = "unknown";
+        }
+
         int status = request.response().getStatusCode();
         String apiContact;
         try {
@@ -99,7 +105,7 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
             // mask ip address form of host to reduce the metrics tag pollution
             host = "10.x.x.x:xx";
         }
-        incrementMetricCounter(apiContact, host, status);
+        incrementMetricCounter(apiContact, host, status, method, path);
 
         if (request.headers().contains(Const.Http.AppVersionHeader)) {
             incrementAppVersionCounter(apiContact, request.headers().get(Const.Http.AppVersionHeader));
@@ -141,18 +147,18 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         userAgent = userAgent == null ? "-" : userAgent;
 
         String summary = String.format(
-            "-->[%s] %s - - [%s] \"%s %s %s\" %d %d %s \"%s\" \"%s\"",
-            apiContact,
-            remoteClient,
-            formatRFC1123DateTime(timestamp),
-            method,
-            uri,
-            versionFormatted,
-            status,
-            contentLength,
-            (System.currentTimeMillis() - timestamp),
-            referrer,
-            userAgent);
+                "-->[%s] %s - - [%s] \"%s %s %s\" %d %d %s \"%s\" \"%s\"",
+                apiContact,
+                remoteClient,
+                formatRFC1123DateTime(timestamp),
+                method,
+                uri,
+                versionFormatted,
+                status,
+                contentLength,
+                (System.currentTimeMillis() - timestamp),
+                referrer,
+                userAgent);
 
         StringBuilder messageBuilder = new StringBuilder();
         messageBuilder.append(summary);
@@ -176,15 +182,15 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         _capturedRequests.add(messageBuilder.toString());
     }
 
-    private void incrementMetricCounter(String apiContact, String host, int status) {
+    private void incrementMetricCounter(String apiContact, String host, int status, HttpMethod method, String path) {
         assert apiContact != null;
-        String key = apiContact + "|" + host + "|" + status;
+        String key = apiContact + "|" + host + "|" + status + "|" + method.name() + "|" + path;
         if (!_apiMetricCounters.containsKey(key)) {
             Counter counter = Counter
-                .builder("uid2.http_requests")
-                .description("counter for how many http requests are processed per each api contact and status code")
-                .tags("api_contact", apiContact, "host", host, "status", String.valueOf(status))
-                .register(Metrics.globalRegistry);
+                    .builder("uid2.http_requests")
+                    .description("counter for how many http requests are processed per each api contact and status code")
+                    .tags("api_contact", apiContact, "host", host, "status", String.valueOf(status), "method", method.name(), "path", path)
+                    .register(Metrics.globalRegistry);
             _apiMetricCounters.put(key, counter);
         }
 
