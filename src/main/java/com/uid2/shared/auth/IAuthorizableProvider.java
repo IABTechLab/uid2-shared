@@ -23,6 +23,6 @@
 
 package com.uid2.shared.auth;
 
-public interface IAuthProvider {
+public interface IAuthorizableProvider {
     public IAuthorizable get(String key);
 }

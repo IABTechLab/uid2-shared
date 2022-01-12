@@ -36,24 +36,25 @@ public class AuthMiddleware {
     public static final String API_CONTACT_PROP = "api-contact";
     public static final String API_CLIENT_PROP = "api-client";
 
-    public static JsonObject UnanthorizedResponse = new JsonObject(new HashMap<String, Object>() {
+    public static JsonObject UnauthorizedResponse = new JsonObject(new HashMap<String, Object>() {
         {
             put("status", Const.ResponseStatus.Unauthorized);
         }
     });
-    private static String AuthorizationHeader = "Authorization";
-    private static String PrefixString = "bearer "; // The space at the end is intentional
-    private IAuthProvider authKeyStore;
+    private static final String AuthorizationHeader = "Authorization";
+    private static final String PrefixString = "bearer "; // The space at the end is intentional
+    private IAuthorizableProvider authKeyStore;
     private IAuthorizable internalClient;
 
-    public AuthMiddleware(IAuthProvider authKeyStore) {
+    private static final IAuthorizationProvider blankAuthorizationProvider = new BlankAuthorizationProvider();
+
+    public AuthMiddleware(IAuthorizableProvider authKeyStore) {
         this.authKeyStore = authKeyStore;
     }
 
-    public void setInternalClientKey(String key) {
-        if (internalClient != null) throw new IllegalStateException("internalClient already set");
-        this.internalClient = new ClientKey(key)
-            .withNameAndContact("service-internal");
+    public void setInternalClientKey(IAuthorizable internalClient) {
+        if (this.internalClient != null) throw new IllegalStateException("internalClient already set");
+        this.internalClient = internalClient;
     }
 
     public static String getAuthToken(RoutingContext rc) {
@@ -64,36 +65,46 @@ public class AuthMiddleware {
         return (IAuthorizable) rc.data().get(API_CLIENT_PROP);
     }
 
-    private IAuthorizable getAuthKey(String key) {
+    public static <U extends IAuthorizable> U getAuthClient(Class<U> type, RoutingContext rc) {
+        return (U) rc.data().get(API_CLIENT_PROP);
+    }
+
+    public static void setAuthClient(RoutingContext rc, IAuthorizable profile) {
+        rc.data().put(API_CLIENT_PROP, profile);
+        if (profile != null) {
+            rc.data().put(API_CONTACT_PROP, profile.getContact());
+        }
+    }
+
+    private IAuthorizable getAuthClientByKey(String key) {
         return this.authKeyStore.get(key);
     }
 
-    public Handler<RoutingContext> handleV1(Handler<RoutingContext> handler, Role... roles) {
+    public <E> Handler<RoutingContext> handleV1(Handler<RoutingContext> handler, E... roles) {
         if (roles == null || roles.length == 0) {
-            return handler;
+            throw new IllegalArgumentException("must specify at least one role");
         }
-        final AuthHandler h = new AuthHandler(handler, Collections.unmodifiableSet(new HashSet<Role>(Arrays.asList(roles))), this.authKeyStore, true);
+        final RoleBasedAuthorizationProvider<E> authorizationProvider = new RoleBasedAuthorizationProvider<>(Collections.unmodifiableSet(new HashSet<E>(Arrays.asList(roles))));
+        final AuthHandler h = new AuthHandler(handler, this.authKeyStore, authorizationProvider, true);
         return h::handle;
     }
 
-    public Handler<RoutingContext> handle(Handler<RoutingContext> handler, Role... roles) {
+    public <E> Handler<RoutingContext> handle(Handler<RoutingContext> handler, E... roles) {
         if (roles == null || roles.length == 0) {
-            return handler;
+            throw new IllegalArgumentException("must specify at least one role");
         }
-        final AuthHandler h = new AuthHandler(handler, Collections.unmodifiableSet(new HashSet<Role>(Arrays.asList(roles))), this.authKeyStore);
+        final RoleBasedAuthorizationProvider<E> authorizationProvider = new RoleBasedAuthorizationProvider<>(Collections.unmodifiableSet(new HashSet<E>(Arrays.asList(roles))));
+        final AuthHandler h = new AuthHandler(handler, this.authKeyStore, authorizationProvider, false);
         return h::handle;
     }
 
-    public Handler<RoutingContext> handle(OptionalAuthHandler<RoutingContext> handler, Role... roles) {
-        if (roles == null || roles.length == 0) {
-            return new NoAuthHandler(handler)::handle;
-        }
-        final AuthHandler h = new AuthHandler(handler, Collections.unmodifiableSet(new HashSet<Role>(Arrays.asList(roles))), this.authKeyStore, true);
+    public Handler<RoutingContext> handleWithOptionalAuth(Handler<RoutingContext> handler) {
+        final AuthHandler h = new AuthHandler(handler, this.authKeyStore, blankAuthorizationProvider, true);
         return h::handle;
     }
 
-    public Handler<RoutingContext> loopbackOnly(Handler<RoutingContext> handler) {
-        final LoopbackOnlyHandler h = new LoopbackOnlyHandler(handler);
+    public Handler<RoutingContext> loopbackOnly(Handler<RoutingContext> handler, IAuthorizable clientKey) {
+        final LoopbackOnlyHandler h = new LoopbackOnlyHandler(handler, clientKey);
         return h::handle;
     }
 
@@ -102,26 +113,20 @@ public class AuthMiddleware {
         return h::handle;
     }
 
-    private static class NoAuthHandler {
-        private final OptionalAuthHandler<RoutingContext> innerHandler;
-
-        private NoAuthHandler(OptionalAuthHandler<RoutingContext> handler) {
-            this.innerHandler = handler;
+    private static class BlankAuthorizationProvider implements IAuthorizationProvider {
+        @Override
+        public boolean isAuthorized(IAuthorizable profile) {
+            return true;
         }
-
-        public void handle(RoutingContext rc) {
-            this.innerHandler.handle(rc, true);
-        }
-
     }
 
     private static class LoopbackOnlyHandler {
         private final Handler<RoutingContext> innerHandler;
-        private static ClientKey LOOPBACK_CLIENT = new ClientKey("no-key")
-            .withNameAndContact("loopback");
+        private final IAuthorizable clientKey;
 
-        private LoopbackOnlyHandler(Handler<RoutingContext> handler) {
+        private LoopbackOnlyHandler(Handler<RoutingContext> handler, IAuthorizable clientKey) {
             this.innerHandler = handler;
+            this.clientKey = clientKey;
         }
 
         public void handle(RoutingContext rc) {
@@ -130,8 +135,7 @@ public class AuthMiddleware {
                 // Host not specified, or Host not start with 127.0.0.1
                 rc.fail(401);
             } else {
-                rc.data().put(API_CONTACT_PROP, LOOPBACK_CLIENT.getContact());
-                rc.data().put(API_CLIENT_PROP, LOOPBACK_CLIENT);
+                AuthMiddleware.setAuthClient(rc, clientKey);
                 this.innerHandler.handle(rc);
             }
         }
@@ -153,8 +157,7 @@ public class AuthMiddleware {
                 // auth key doesn't match internal key
                 rc.fail(401);
             } else {
-                rc.data().put(API_CONTACT_PROP, internalClient.getContact());
-                rc.data().put(API_CLIENT_PROP, internalClient);
+                AuthMiddleware.setAuthClient(rc, internalClient);
                 this.innerHandler.handle(rc);
             }
         }
@@ -162,41 +165,15 @@ public class AuthMiddleware {
 
     private static class AuthHandler {
         private final Handler<RoutingContext> innerHandler;
-        private final Set<Role> allowedRoles;
-        private final IAuthProvider authKeyStore;
-        private final OptionalAuthHandler<RoutingContext> optionalAuthHandler;
+        private final IAuthorizableProvider authKeyStore;
+        private final IAuthorizationProvider authorizationProvider;
         private final boolean isV1Response;
 
-        private AuthHandler(OptionalAuthHandler<RoutingContext> handler, Set<Role> allowedRoles, IAuthProvider authKeyStore) {
-            this(handler, allowedRoles, authKeyStore, false);
-        }
-
-        private AuthHandler(Handler<RoutingContext> handler, Set<Role> allowedRoles, IAuthProvider authKeyStore) {
-            this(handler, allowedRoles, authKeyStore, false);
-        }
-
-        private AuthHandler(OptionalAuthHandler<RoutingContext> handler, Set<Role> allowedRoles, IAuthProvider authKeyStore, boolean isV1Response) {
-            this.innerHandler = null;
-            this.allowedRoles = allowedRoles;
-            this.authKeyStore = authKeyStore;
-            this.optionalAuthHandler = handler;
-            this.isV1Response = isV1Response;
-        }
-
-        private AuthHandler(Handler<RoutingContext> handler, Set<Role> allowedRoles, IAuthProvider authKeyStore, boolean isV1Response) {
+        private AuthHandler(Handler<RoutingContext> handler, IAuthorizableProvider authKeyStore, IAuthorizationProvider authorizationProvider, boolean isV1Response) {
             this.innerHandler = handler;
-            this.allowedRoles = allowedRoles;
             this.authKeyStore = authKeyStore;
-            this.optionalAuthHandler = null;
+            this.authorizationProvider = authorizationProvider;
             this.isV1Response = isV1Response;
-        }
-
-        private boolean isOptional() {
-            if (this.optionalAuthHandler == null) {
-                return false;
-            } else {
-                return true;
-            }
         }
 
         public void handle(RoutingContext rc) {
@@ -206,45 +183,24 @@ public class AuthMiddleware {
                 rc.response().headers().add("X-Amzn-Trace-Id", traceId);
             }
 
-            if (this.allowedRoles == null || this.allowedRoles.isEmpty()) {
-                this.onSuccessAuth(rc);
-            } else {
-                final String authHeaderValue = rc.request().getHeader(AuthMiddleware.AuthorizationHeader);
-                final String authKey = AuthHandler.extractBearerToken(authHeaderValue);
-                final IAuthorizable profile = this.authKeyStore.get(authKey);
-                if (profile != null) {
-                    rc.data().put(API_CLIENT_PROP, profile);
-                    rc.data().put(API_CONTACT_PROP, profile.getContact());
-                    if (!profile.isDisabled() && this.allowedRoles.stream().anyMatch(profile::hasRole)) {
-                        this.onSuccessAuth(rc);
-                    } else {
-                        this.onFailedAuth(rc);
-                    }
-                } else {
-                    this.onFailedAuth(rc);
-                }
-            }
-        }
-
-        private void onSuccessAuth(RoutingContext rc) {
-            if (this.isOptional()) {
-                this.optionalAuthHandler.handle(rc, true);
-            } else {
+            final String authHeaderValue = rc.request().getHeader(AuthMiddleware.AuthorizationHeader);
+            final String authKey = AuthHandler.extractBearerToken(authHeaderValue);
+            final IAuthorizable profile = this.authKeyStore.get(authKey);
+            AuthMiddleware.setAuthClient(rc, profile);
+            if (this.authorizationProvider.isAuthorized(profile)) {
                 this.innerHandler.handle(rc);
+            } else {
+                this.onFailedAuth(rc);
             }
         }
 
         private void onFailedAuth(RoutingContext rc) {
-            if (this.isOptional()) {
-                this.optionalAuthHandler.handle(rc, false);
-            } else {
-                if (isV1Response) {
-                    rc.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+            if (isV1Response) {
+                rc.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                         .setStatusCode(401)
-                        .end(UnanthorizedResponse.encode());
-                }
-                rc.fail(401);
+                        .end(UnauthorizedResponse.encode());
             }
+            rc.fail(401);
         }
 
         private static String extractBearerToken(final String headerValue) {
