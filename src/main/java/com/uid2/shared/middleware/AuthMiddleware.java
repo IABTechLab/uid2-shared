@@ -61,6 +61,10 @@ public class AuthMiddleware {
         return AuthHandler.extractBearerToken(rc.request().getHeader(AuthorizationHeader));
     }
 
+    public static boolean isAuthenticated(RoutingContext rc) {
+        return rc.data().get(API_CLIENT_PROP) != null;
+    }
+
     public static IAuthorizable getAuthClient(RoutingContext rc) {
         return (IAuthorizable) rc.data().get(API_CLIENT_PROP);
     }
