@@ -24,10 +24,7 @@
 package com.uid2.shared.middleware;
 
 import com.uid2.shared.attest.IAttestationTokenService;
-import com.uid2.shared.auth.ClientKey;
-import com.uid2.shared.auth.IAuthorizable;
-import com.uid2.shared.auth.OperatorKey;
-import com.uid2.shared.auth.Role;
+import com.uid2.shared.auth.*;
 import io.vertx.core.Handler;
 import io.vertx.ext.web.RoutingContext;
 
@@ -62,11 +59,8 @@ public class AttestationMiddleware {
             boolean success = false;
 
             final IAuthorizable profile = AuthMiddleware.getAuthClient(rc);
-            if (profile.hasRole(Role.OPERATOR)) {
-                String protocol = "unknown";
-                if(profile instanceof OperatorKey) {
-                    protocol = ((OperatorKey) profile).getProtocol();
-                }
+            if (profile instanceof OperatorKey) {
+                final String protocol = ((OperatorKey) profile).getProtocol();
                 final String userToken = AuthMiddleware.getAuthToken(rc);
                 final String encryptedToken = getAttestationToken(rc);
                 if ("trusted".equals(protocol)) {

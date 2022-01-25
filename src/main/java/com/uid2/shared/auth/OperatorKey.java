@@ -26,7 +26,7 @@ package com.uid2.shared.auth;
 import io.vertx.core.json.JsonObject;
 import java.util.Objects;
 
-public class OperatorKey implements IAuthorizable {
+public class OperatorKey implements IRoleAuthorizable<Role> {
     private String key;
     private final String name;
     private final String contact;

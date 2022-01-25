@@ -48,7 +48,7 @@ public class Utils {
     public static final String OS = System.getProperty("os.name").toLowerCase();
     public static final boolean IsWindows = OS.contains("win");
 
-    public static boolean isProductionEnvionment() {
+    public static boolean isProductionEnvironment() {
         // detect if it is running in KUBERNETES_SERVICE_HOST
         if (System.getenv("KUBERNETES_SERVICE_HOST") == null) {
             return false;

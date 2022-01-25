@@ -24,9 +24,7 @@
 package com.uid2.shared.auth;
 
 public interface IAuthorizable {
-    boolean hasRole(Role role);
     String getKey();
     String getContact();
     boolean isDisabled();
-    void setDisabled(boolean disabled);
 }

@@ -21,14 +21,28 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
-package com.uid2.shared.store;
+package com.uid2.shared.auth;
 
-import com.uid2.shared.auth.IAuthorizableProvider;
-import com.uid2.shared.auth.OperatorKey;
+import java.util.Set;
 
-import java.util.Collection;
+public class RoleBasedAuthorizationProvider<E> implements IAuthorizationProvider {
+    private final Set<E> allowedRoles;
 
-public interface IOperatorKeyProvider extends IAuthorizableProvider {
-    OperatorKey getOperatorKey(String token);
-    Collection<OperatorKey> getAll();
+    public RoleBasedAuthorizationProvider(Set<E> allowedRoles) {
+        this.allowedRoles = allowedRoles;
+    }
+
+    @Override
+    public boolean isAuthorized(IAuthorizable client) {
+        if (client == null || client.isDisabled()) {
+            return false;
+        }
+
+        try {
+            final IRoleAuthorizable<E> profile = (IRoleAuthorizable<E>) client;
+            return this.allowedRoles.stream().anyMatch(profile::hasRole);
+        } catch (Exception ex) {
+            return false;
+        }
+    }
 }

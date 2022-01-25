@@ -23,8 +23,6 @@
 
 package com.uid2.shared.auth;
 
-@FunctionalInterface
-public interface OptionalAuthHandler<E> {
-    void handle(E var1, boolean isAuthenticated);
+public interface IRoleAuthorizable<E> extends IAuthorizable {
+    boolean hasRole(E role);
 }
-

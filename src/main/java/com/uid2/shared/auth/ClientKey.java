@@ -25,7 +25,6 @@ package com.uid2.shared.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.uid2.shared.model.SiteUtil;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Instant;
@@ -35,7 +34,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public class ClientKey implements IAuthorizable {
+public class ClientKey implements IRoleAuthorizable<Role> {
     private String key;
     private String name;
     private String contact;
@@ -139,23 +138,10 @@ public class ClientKey implements IAuthorizable {
             json.getString("name"),
             json.getString("contact"),
             Instant.ofEpochSecond(json.getLong("created")),
-            getRoles(json),
+            Roles.getRoles(Role.class, json),
             json.getInteger("site_id"),
             json.getBoolean("disabled", false)
         );
-    }
-
-    public static Set<Role> getRoles(JsonObject clientKeyJson) {
-        return getRoles(clientKeyJson.getJsonArray("roles"));
-    }
-
-    public static Set<Role> getRoles(JsonArray rolesJsonArray) {
-        Set<Role> roles = new HashSet<>();
-        for (int i = 0; i < rolesJsonArray.size(); ++i) {
-            String value = rolesJsonArray.getString(i).toUpperCase();
-            roles.add(Role.valueOf(value));
-        }
-        return roles;
     }
 
     @Override

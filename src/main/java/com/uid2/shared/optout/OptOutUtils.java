@@ -403,7 +403,7 @@ public class OptOutUtils {
             offset = 0;
         }
 
-        if (Utils.isProductionEnvionment() && replicaId == -1) {
+        if (Utils.isProductionEnvironment() && replicaId == -1) {
             // read from hostname
             try {
                 String hostname = InetAddress.getLocalHost().getHostName();
