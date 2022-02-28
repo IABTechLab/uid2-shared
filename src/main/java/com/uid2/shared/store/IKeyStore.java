@@ -36,6 +36,8 @@ public interface IKeyStore {
     public interface IKeyStoreSnapshot {
         public EncryptionKey getMasterKey(Instant now);
 
+        public EncryptionKey getRefreshKey(Instant now);
+
         public List<EncryptionKey> getActiveKeySet();
 
         public EncryptionKey getActiveSiteKey(int siteId, Instant now);
