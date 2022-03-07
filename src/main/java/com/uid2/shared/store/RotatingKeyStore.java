@@ -164,8 +164,7 @@ public class RotatingKeyStore implements IKeyStore, IMetadataVersionedStore {
 
         @Override
         public EncryptionKey getRefreshKey(Instant now) {
-            EncryptionKey refreshKey = this.getActiveSiteKey(Const.Data.RefreshKeySiteId, now);
-            return refreshKey != null ? refreshKey : this.getActiveSiteKey(Const.Data.MasterKeySiteId, now);
+            return this.getActiveSiteKey(Const.Data.RefreshKeySiteId, now);
         }
 
         @Override
