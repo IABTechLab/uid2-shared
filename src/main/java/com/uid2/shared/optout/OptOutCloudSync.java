@@ -121,7 +121,7 @@ public class OptOutCloudSync implements ICloudSync {
 
     @Override
     public String toLocalPath(String path) {
-        if (path.startsWith("https://")) {
+        if (path.startsWith("http")) {
             try {
                 URL url = new URL(path);
                 // use the URL path to convert to local file
@@ -337,11 +337,8 @@ public class OptOutCloudSync implements ICloudSync {
             } else if (OptOutUtils.getFileTimestamp(f) == null) {
                 LOGGER.warn("Unrecognized timestamp, unknown file " + f);
             }
-            if (Utils.IsWindows && f.indexOf(':') > 0) {
-                cachedPaths.add(f.substring(f.indexOf(':') + 1));
-            } else {
-                cachedPaths.add(f);
-            }
+
+            cachedPaths.add(f);
         }
     }
 

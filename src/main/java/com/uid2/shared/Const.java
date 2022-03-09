@@ -58,6 +58,7 @@ public class Const {
         public static final String AwsRegionProp = "aws_region";
         public static final String AccessKeyIdProp = "aws_access_key_id";
         public static final String SecretAccessKeyProp = "aws_secret_access_key";
+        public static final String S3EndpointProp = "aws_s3_endpoint";
         public static final String OptOutDataDirProp = "optout_data_dir";
         public static final String OptOutReplicaUris = "optout_replica_uris";
         public static final String OptOutSyntheticLogsEnabledProp = "optout_synthetic_logs_enabled";

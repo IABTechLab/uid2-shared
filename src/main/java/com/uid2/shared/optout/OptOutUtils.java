@@ -288,7 +288,7 @@ public class OptOutUtils {
     }
 
     public static Instant getFileTimestamp(String fullPath) {
-        if (fullPath.startsWith("https")) {
+        if (fullPath.startsWith("http")) {
             fullPath = extractUrlPath(fullPath);
         }
         return OptOutUtils.getFileTimestamp(Paths.get(fullPath));
