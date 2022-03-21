@@ -89,7 +89,7 @@ public class RotatingKeyAclProviderTest {
     }
 
     private ClientKey makeClientKey(int siteId) {
-        return new ClientKey("test-client-key").withSiteId(siteId);
+        return new ClientKey("test-client-key", "test-client-secret").withSiteId(siteId);
     }
 
     private EncryptionKey makeKey(int siteId) {
