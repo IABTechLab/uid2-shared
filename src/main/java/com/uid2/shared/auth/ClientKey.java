@@ -162,4 +162,8 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     public void setKey(String newKey) {
         this.key = newKey;
     }
+
+    public void setSecret(String newSecret) {
+        this.secret = newSecret;
+    }
 }
