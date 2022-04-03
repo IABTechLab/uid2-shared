@@ -27,6 +27,7 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.*;
@@ -47,15 +48,24 @@ public class CloudStorageS3 implements ICloudStorage {
     private final String bucket;
     private long preSignedUrlExpiryInSeconds = 3600;
 
-    public CloudStorageS3(String accessKeyId, String secretAccessKey, String region, String bucket) {
+    public CloudStorageS3(String accessKeyId, String secretAccessKey, String region, String bucket, String s3Endpoint) {
         // Reading https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html
         AWSCredentials creds = new BasicAWSCredentials(
             accessKeyId,
             secretAccessKey);
-        this.s3 = AmazonS3ClientBuilder.standard()
-            .withRegion(region)
-            .withCredentials(new AWSStaticCredentialsProvider(creds))
-            .build();
+        if (s3Endpoint.isEmpty()) {
+            this.s3 = AmazonS3ClientBuilder.standard()
+                .withRegion(region)
+                .withCredentials(new AWSStaticCredentialsProvider(creds))
+                .build();
+        }
+        else {
+            this.s3 = AmazonS3ClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(creds))
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint, region))
+                .enablePathStyleAccess()
+                .build();
+        }
         this.bucket = bucket;
     }
 

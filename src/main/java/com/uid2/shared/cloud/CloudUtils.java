@@ -47,7 +47,8 @@ public class CloudUtils {
             System.getProperty(Const.Config.AccessKeyIdProp),
             System.getProperty(Const.Config.SecretAccessKeyProp),
             System.getProperty(Const.Config.AwsRegionProp),
-            cloudBucket
+            cloudBucket,
+            System.getProperty(Const.Config.S3EndpointProp, "")
         );
     }
 
@@ -56,7 +57,8 @@ public class CloudUtils {
             jsonConfig.getString(Const.Config.AccessKeyIdProp),
             jsonConfig.getString(Const.Config.SecretAccessKeyProp),
             jsonConfig.getString(Const.Config.AwsRegionProp),
-            cloudBucket
+            cloudBucket,
+            jsonConfig.getString(Const.Config.S3EndpointProp, "")
         );
     }
 
