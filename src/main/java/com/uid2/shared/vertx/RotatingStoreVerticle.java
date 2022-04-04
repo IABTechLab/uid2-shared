@@ -134,7 +134,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                     final long elapsed = ((end - start) / 1000000);
                     this.counterStoreRefreshTimeMs.increment(elapsed);
                     if (asyncResult.failed()) {
-                        this.consecutiveRefreshFailures.set(this.consecutiveRefreshFailures.get() + 1);
+                        this.consecutiveRefreshFailures.set(this.consecutiveRefreshFailures.addAndGet(1));
                         LOGGER.error("Failed to load " + this.storeName + ", " + elapsed + " ms", asyncResult.cause());
                     } else {
                         this.counterStoreRefreshed.increment();
