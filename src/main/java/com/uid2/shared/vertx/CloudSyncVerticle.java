@@ -73,7 +73,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private final ICloudSync cloudSync;
     private final int downloadThreads;
     private final int uploadThreads;
-    private final AtomicInteger consecutiveRefreshFailures = new AtomicInteger(0);
+    private final AtomicInteger storeRefreshIsFailing = new AtomicInteger(0);
 
     private final String eventRefresh;
     private final String eventRefreshed;
@@ -160,7 +160,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
             .register(Metrics.globalRegistry);
 
         this.gaugeConsecutiveRefreshFailures = Gauge
-            .builder("uid2.cloud_downloaded.consecutive_refresh_failures", () -> this.consecutiveRefreshFailures.get())
+            .builder("uid2.cloud_downloaded.consecutive_refresh_failures", () -> this.storeRefreshIsFailing.get())
             .tag("store", name)
             .description("gauge for number of consecutive " + name + " store refresh failures")
             .register(Metrics.globalRegistry);
@@ -224,9 +224,9 @@ public class CloudSyncVerticle extends AbstractVerticle {
 
     private void handleRefresh(Message m) {
         cloudRefresh()
-            .onSuccess(t -> this.consecutiveRefreshFailures.set(0))
+            .onSuccess(t -> this.storeRefreshIsFailing.set(0))
             .onFailure(t -> {
-                this.consecutiveRefreshFailures.addAndGet(1);
+                this.storeRefreshIsFailing.set(1);
                 LOGGER.error("handleRefresh error: " + t.getMessage(), new Exception(t));
             });
     }

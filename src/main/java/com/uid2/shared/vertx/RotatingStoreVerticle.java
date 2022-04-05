@@ -50,7 +50,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     private final IMetadataVersionedStore versionedStore;
     private final AtomicLong latestVersion = new AtomicLong(-1L);
     private final AtomicLong latestEntryCount = new AtomicLong(-1L);
-    private final AtomicInteger consecutiveRefreshFailures = new AtomicInteger(0);
+    private final AtomicInteger storeRefreshIsFailing = new AtomicInteger(0);
 
     private final long refreshIntervalMs;
 
@@ -80,7 +80,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
             .description("gauge for " + storeName + "store total entry count")
             .register(Metrics.globalRegistry);
         this.gaugeConsecutiveRefreshFailures = Gauge
-            .builder("uid2.config_store.consecutive_refresh_failures", () -> this.consecutiveRefreshFailures.get())
+            .builder("uid2.config_store.consecutive_refresh_failures", () -> this.storeRefreshIsFailing.get())
             .tag("store", storeName)
             .description("gauge for number of consecutive " + storeName + " store refresh failures")
             .register(Metrics.globalRegistry);
@@ -134,11 +134,11 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                     final long elapsed = ((end - start) / 1000000);
                     this.counterStoreRefreshTimeMs.increment(elapsed);
                     if (asyncResult.failed()) {
-                        this.consecutiveRefreshFailures.set(this.consecutiveRefreshFailures.addAndGet(1));
+                        this.storeRefreshIsFailing.set(1);
                         LOGGER.error("Failed to load " + this.storeName + ", " + elapsed + " ms", asyncResult.cause());
                     } else {
                         this.counterStoreRefreshed.increment();
-                        this.consecutiveRefreshFailures.set(0);
+                        this.storeRefreshIsFailing.set(0);
                         LOGGER.trace("Successfully refreshed " + this.storeName + ", " + elapsed + " ms");
                     }
                 }
