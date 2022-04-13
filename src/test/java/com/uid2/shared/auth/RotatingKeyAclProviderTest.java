@@ -23,6 +23,7 @@
 
 package com.uid2.shared.auth;
 
+import com.uid2.shared.Utils;
 import com.uid2.shared.model.EncryptionKey;
 import com.uid2.shared.cloud.ICloudStorage;
 
@@ -38,6 +39,7 @@ import org.mockito.MockitoAnnotations;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import static org.mockito.Mockito.*;
 
@@ -89,7 +91,7 @@ public class RotatingKeyAclProviderTest {
     }
 
     private ClientKey makeClientKey(int siteId) {
-        return new ClientKey("test-client-key", "test-client-secret").withSiteId(siteId);
+        return new ClientKey("test-client-key", Utils.toBase64String("test-client-secret".getBytes(StandardCharsets.UTF_8))).withSiteId(siteId);
     }
 
     private EncryptionKey makeKey(int siteId) {
