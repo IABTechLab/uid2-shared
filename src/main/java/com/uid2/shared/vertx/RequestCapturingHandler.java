@@ -33,6 +33,8 @@ import io.vertx.core.MultiMap;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpVersion;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.RoutingContext;
 
@@ -46,6 +48,7 @@ import java.util.Queue;
 import java.util.regex.Matcher;
 
 public class RequestCapturingHandler implements Handler<RoutingContext> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestCapturingHandler.class);
     private static final ZoneId ZONE_GMT = ZoneId.of("GMT");
     private Queue<String> _capturedRequests = null;
     private final Map<String, Counter> _apiMetricCounters = new HashMap<>();
@@ -71,7 +74,7 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         HttpMethod method = context.request().method();
         String uri = context.request().uri();
         HttpVersion version = context.request().version();
-        context.addBodyEndHandler(v -> capture(context, timestamp, remoteClient, version, method, uri));
+        context.addBodyEndHandler(v -> captureNoThrow(context, timestamp, remoteClient, version, method, uri));
         context.next();
     }
 
@@ -82,12 +85,25 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         return inetSocketAddress.host();
     }
 
+    private void captureNoThrow(RoutingContext context, long timestamp, String remoteClient, HttpVersion version, HttpMethod method, String uri) {
+        try {
+            capture(context, timestamp, remoteClient, version, method, uri);
+        } catch (Throwable t) {
+            LOGGER.error("capture() throws", t);
+        }
+    }
+
     private void capture(RoutingContext context, long timestamp, String remoteClient, HttpVersion version, HttpMethod method, String uri) {
         HttpServerRequest request = context.request();
 
-        String path = context.currentRoute().getPath();
-        if (path == null)
-        {
+        String path = null;
+        try {
+            path = context.currentRoute().getPath();
+        } catch (NullPointerException ex) {
+            // RoutingContextImplBase has a bug: context.currentRoute() throws with NullPointerException when called from bodyEndHandler for StaticHandlerImpl.sendFile()
+        }
+
+        if (path == null) {
             path = "unknown";
         }
 
