@@ -50,16 +50,14 @@ public class ClientKey implements IRoleAuthorizable<Role> {
 
     public ClientKey(String key, String secret) {
         this.key = key;
-        this.secret = secret;
-        this.secretBytes = Utils.decodeBase64String(secret);
+        this.setSecret(secret);
         created = Instant.parse("2021-01-01T00:00:00.000Z").getEpochSecond();
         siteId = -1;
     }
 
     public ClientKey(String key, String secret, Instant created) {
         this.key = key;
-        this.secret = secret;
-        this.secretBytes = Utils.decodeBase64String(secret);
+        this.setSecret(secret);
         this.created = created.getEpochSecond();
         this.siteId = -1;
     }
@@ -78,8 +76,7 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     public ClientKey(String key, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId,
                      boolean disabled) {
         this.key = key;
-        this.secret = secret;
-        this.secretBytes = Utils.decodeBase64String(secret);
+        this.setSecret(secret);
         this.name = name;
         this.contact = contact;
         this.created = created.getEpochSecond();

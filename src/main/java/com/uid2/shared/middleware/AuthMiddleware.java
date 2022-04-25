@@ -84,14 +84,6 @@ public class AuthMiddleware {
         return this.authKeyStore.get(key);
     }
 
-    public Handler<RoutingContext> handleV2(Handler<RoutingContext> handler, Role role) {
-        if (role == null) {
-            throw new IllegalArgumentException("must specify one role");
-        }
-        final AuthHandler h = new AuthHandler(handler, this.authKeyStore);
-        return rc -> h.handleV2(rc, role);
-    }
-
     public <E> Handler<RoutingContext> handleV1(Handler<RoutingContext> handler, E... roles) {
         if (roles == null || roles.length == 0) {
             throw new IllegalArgumentException("must specify at least one role");
@@ -188,14 +180,6 @@ public class AuthMiddleware {
             this.isV1Response = isV1Response;
         }
 
-        private AuthHandler(Handler<RoutingContext> handler, IAuthorizableProvider authKeyStore)
-        {
-            this.innerHandler = handler;
-            this.authKeyStore = authKeyStore;
-            this.authorizationProvider = null;
-            this.isV1Response = false;
-        }
-
         public void handle(RoutingContext rc) {
             // add aws request id tracer to help validation
             String traceId = rc.request().getHeader("X-Amzn-Trace-Id");
@@ -211,24 +195,6 @@ public class AuthMiddleware {
                 this.innerHandler.handle(rc);
             } else {
                 this.onFailedAuth(rc);
-            }
-        }
-
-        public void handleV2(RoutingContext rc, Role role) {
-            // add aws request id tracer to help validation
-            String traceId = rc.request().getHeader("X-Amzn-Trace-Id");
-            if (traceId != null && traceId.length() > 0) {
-                rc.response().headers().add("X-Amzn-Trace-Id", traceId);
-            }
-
-            final String authHeaderValue = rc.request().getHeader(AuthMiddleware.AuthorizationHeader);
-            final String authKey = AuthHandler.extractBearerToken(authHeaderValue);
-            final ClientKey profile = (ClientKey)this.authKeyStore.get(authKey);
-            AuthMiddleware.setAuthClient(rc, profile);
-            if (profile == null || profile.isDisabled() || !profile.getRoles().contains(role)) {
-                this.onFailedAuth(rc);
-            } else {
-                this.innerHandler.handle(rc);
             }
         }
 
