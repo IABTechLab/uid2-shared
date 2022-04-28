@@ -1,0 +1,30 @@
+name: Setup Dependancies
+inputs:
+  key:
+    descriptions: 'The Key to be imported'
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup settings.xml
+      shell: bash
+      run: |
+        mkdir ~/.m2
+        echo "<settings>" >> ~/.m2/settings.xml
+        echo "  <servers>" >> ~/.m2/settings.xml
+        echo "    <server>" >> ~/.m2/settings.xml
+        echo "      <id>\${repo.id}</id>" >> ~/.m2/settings.xml
+        echo "      <username>\${repo.login}</username>" >> ~/.m2/settings.xml
+        echo "      <password>\${repo.pwd}</password>" >> ~/.m2/settings.xml
+        echo "    </server>" >> ~/.m2/settings.xml
+        echo "  </servers>" >> ~/.m2/settings.xml
+        echo "</settings>" >> ~/.m2/settings.xml
+    - name: Import GPG key 
+      shell: bash
+      run: |
+        echo -n "$GPG_SIGNING_KEY" | base64 --decode > private.key 
+        gpg --batch --import private.key
+      env:
+        GPG_SIGNING_KEY: ${{ inputs.key }}
