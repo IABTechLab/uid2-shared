@@ -143,7 +143,7 @@ public class OptOutUtilsTest {
     @Test
     public void nullHash_tests() {
         assertTrue(OptOutUtils.isValidSha256Hex(OptOutUtils.nullHash));
-        for (byte b : OptOutUtils.sha256HexToByteArray(OptOutUtils.nullHash)) {
+        for (byte b : OptOutUtils.hexToByteArray(OptOutUtils.nullHash)) {
             assertEquals((byte) 0, b);
         }
 
@@ -153,7 +153,7 @@ public class OptOutUtilsTest {
     @Test
     public void ffffHash_tests() {
         assertTrue(OptOutUtils.isValidSha256Hex(OptOutUtils.onesHash));
-        for (byte b : OptOutUtils.sha256HexToByteArray(OptOutUtils.onesHash)) {
+        for (byte b : OptOutUtils.hexToByteArray(OptOutUtils.onesHash)) {
             assertEquals((byte) 0xff, b);
         }
 

@@ -281,39 +281,25 @@ public class OptOutHeap extends OptOutCollection {
     }
 
     private void copyEntryIntoHeap(OptOutEntry entry, int heapPos) {
-        // copy identity_hash
-        int heapBufPos = heapPos * OptOutConst.EntrySize;
-        System.arraycopy(entry.identityHash, 0, store, heapBufPos, OptOutConst.Sha256Bytes);
-        heapBufPos += OptOutConst.Sha256Bytes;
-
-        // copy advertising_id
-        System.arraycopy(entry.advertisingId, 0, store, heapBufPos, OptOutConst.Sha256Bytes);
-        heapBufPos += OptOutConst.Sha256Bytes;
-
-        // copy timestamp
-        System.arraycopy(OptOutUtils.toByteArray(entry.timestamp), 0, store, heapBufPos, Long.BYTES);
+        entry.copyToByteArray(store, heapPos * OptOutConst.EntrySize);
     }
 
     private void copyEntryIntoHeap(byte[] entryAsBytes, int heapPos) {
-        // copy identity hash + advertising id + timestamp
-        int heapBufPos = heapPos * OptOutConst.EntrySize;
+        final int heapBufPos = heapPos * OptOutConst.EntrySize;
         System.arraycopy(entryAsBytes, 0, store, heapBufPos, OptOutConst.EntrySize);
     }
 
     private byte[] copyEntryToTemp(int i) {
-        int heapBufPos = i * OptOutConst.EntrySize;
+        final int heapBufPos = i * OptOutConst.EntrySize;
         System.arraycopy(store, heapBufPos, tempEntry, 0, OptOutConst.EntrySize);
         return tempEntry;
     }
 
     private long getEntryTimestamp(int pos) {
-        int bufPos = pos * OptOutConst.EntrySize + (OptOutConst.Sha256Bytes << 1);
-        return OptOutUtils.toLong(store, bufPos);
+        return OptOutEntry.parseTimestamp(store, pos * OptOutConst.EntrySize);
     }
 
     private void setEntryTimestamp(int pos, long timestamp) {
-        int bufPos = pos * OptOutConst.EntrySize + (OptOutConst.Sha256Bytes << 1);
-        byte[] tsBytes = OptOutUtils.toByteArray(timestamp);
-        System.arraycopy(tsBytes, 0, store, bufPos, Long.BYTES);
+        OptOutEntry.setTimestamp(store, pos * OptOutConst.EntrySize, timestamp);
     }
 }
