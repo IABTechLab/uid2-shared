@@ -35,7 +35,7 @@ public interface ISaltProvider {
     ISaltSnapshot getSnapshot(Instant asOf);
 
     static interface ISaltSnapshot {
-        SaltEntry getRotatingSalt(String identity);
+        SaltEntry getRotatingSalt(byte[] identity);
 
         String getFirstLevelSalt();
 

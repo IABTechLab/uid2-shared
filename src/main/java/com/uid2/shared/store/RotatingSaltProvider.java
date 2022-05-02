@@ -210,9 +210,8 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         public SaltEntry[] getAllRotatingSalts() { return this.entries; }
 
         @Override
-        public SaltEntry getRotatingSalt(String identity) {
-            final byte[] shaBytes = Base64.getDecoder().decode(identity);
-            final int idx = saltEntryIndexer.getIndex(shaBytes, entries.length);
+        public SaltEntry getRotatingSalt(byte[] identity) {
+            final int idx = saltEntryIndexer.getIndex(identity, entries.length);
             return this.entries[idx];
         }
 
