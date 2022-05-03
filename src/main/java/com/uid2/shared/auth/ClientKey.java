@@ -23,7 +23,9 @@
 
 package com.uid2.shared.auth;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.uid2.shared.Utils;
 import com.uid2.shared.model.SiteUtil;
 import io.vertx.core.json.JsonObject;
 
@@ -37,6 +39,7 @@ import java.util.Set;
 public class ClientKey implements IRoleAuthorizable<Role> {
     private String key;
     private String secret;
+    private byte[] secretBytes;
     private String name;
     private String contact;
     private long created;
@@ -47,14 +50,14 @@ public class ClientKey implements IRoleAuthorizable<Role> {
 
     public ClientKey(String key, String secret) {
         this.key = key;
-        this.secret = secret;
+        this.setSecret(secret);
         created = Instant.parse("2021-01-01T00:00:00.000Z").getEpochSecond();
         siteId = -1;
     }
 
     public ClientKey(String key, String secret, Instant created) {
         this.key = key;
-        this.secret = secret;
+        this.setSecret(secret);
         this.created = created.getEpochSecond();
         this.siteId = -1;
     }
@@ -73,7 +76,7 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     public ClientKey(String key, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId,
                      boolean disabled) {
         this.key = key;
-        this.secret = secret;
+        this.setSecret(secret);
         this.name = name;
         this.contact = contact;
         this.created = created.getEpochSecond();
@@ -88,6 +91,11 @@ public class ClientKey implements IRoleAuthorizable<Role> {
 
     public String getSecret() {
         return secret;
+    }
+
+    @JsonIgnore
+    public byte[] getSecretBytes() {
+        return secretBytes;
     }
 
     public String getName() {
@@ -165,5 +173,6 @@ public class ClientKey implements IRoleAuthorizable<Role> {
 
     public void setSecret(String newSecret) {
         this.secret = newSecret;
+        this.secretBytes = Utils.decodeBase64String(newSecret);
     }
 }
