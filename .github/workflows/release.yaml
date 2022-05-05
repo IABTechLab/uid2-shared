@@ -11,6 +11,6 @@ jobs:
         with:
           key: ${{ secrets.GPG_KEY }}
       - name: Remove Snapshot
-        run: mvn versions:set -DremoveSnapshot
+        run: mvn -B versions:set -DremoveSnapshot
       - name: Deploy Snapshot
-        run: mvn -Drepo.id=ossrh -Drepo.login=uidadmin -Drepo.pwd="${{ secrets.SONATYPE_REPO_PASSWORD }}" -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" clean deploy
+        run: mvn -B -Drepo.id=ossrh -Drepo.login=uidadmin -Drepo.pwd="${{ secrets.SONATYPE_REPO_PASSWORD }}" -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" clean deploy
