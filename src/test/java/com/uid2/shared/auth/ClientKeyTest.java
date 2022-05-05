@@ -11,6 +11,7 @@ public class ClientKeyTest {
     public void verifyDisabledPropIsOptional() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
+                "        \"secret\": \"\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -27,6 +28,7 @@ public class ClientKeyTest {
     public void verifyDisabledPropSetTrue() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
+                "        \"secret\": \"\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -44,6 +46,7 @@ public class ClientKeyTest {
     public void verifyDisabledPropSetFalse() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
+                "        \"secret\": \"\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
