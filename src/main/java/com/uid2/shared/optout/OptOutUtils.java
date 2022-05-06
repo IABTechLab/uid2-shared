@@ -68,7 +68,7 @@ public class OptOutUtils {
     public static String nullHash = OptOutUtils.byteArrayToHex(new byte[OptOutConst.Sha256Bytes]);
 
     public static String onesHash = new String(new char[OptOutConst.Sha256Characters]).replace("\0", "f");
-    public static byte[] onesHashBytes = OptOutUtils.sha256HexToByteArray(OptOutUtils.onesHash);
+    public static byte[] onesHashBytes = OptOutUtils.hexToByteArray(OptOutUtils.onesHash);
 
     // comparator to help producing a sorted order of delta filenames
     public static final Comparator<String> DeltaFilenameComparator = new Comparator<String>() {
@@ -111,7 +111,7 @@ public class OptOutUtils {
         return true;
     }
 
-    public static byte[] sha256HexToByteArray(String s) {
+    public static byte[] hexToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
