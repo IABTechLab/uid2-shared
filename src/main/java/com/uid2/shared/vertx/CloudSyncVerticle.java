@@ -42,6 +42,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 //
 // consumes events:
@@ -64,6 +65,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private final Counter counterUploaded;
     private final Counter counterDownloadFailures;
     private final Counter counterUploadFailures;
+    private final Gauge gaugeConsecutiveRefreshFailures;
 
     private final String name;
     private final ICloudStorage cloudStorage;
@@ -71,6 +73,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private final ICloudSync cloudSync;
     private final int downloadThreads;
     private final int uploadThreads;
+    private final AtomicInteger storeRefreshIsFailing = new AtomicInteger(0);
 
     private final String eventRefresh;
     private final String eventRefreshed;
@@ -155,6 +158,12 @@ public class CloudSyncVerticle extends AbstractVerticle {
             .tag("store", name)
             .description("counter for how many cloud files uploads have failed")
             .register(Metrics.globalRegistry);
+
+        this.gaugeConsecutiveRefreshFailures = Gauge
+            .builder("uid2.cloud_downloaded.consecutive_refresh_failures", () -> this.storeRefreshIsFailing.get())
+            .tag("store", name)
+            .description("gauge for number of consecutive " + name + " store refresh failures")
+            .register(Metrics.globalRegistry);
     }
 
     @Override
@@ -215,7 +224,11 @@ public class CloudSyncVerticle extends AbstractVerticle {
 
     private void handleRefresh(Message m) {
         cloudRefresh()
-            .onFailure(t -> LOGGER.error("handleRefresh error: " + t.getMessage(), new Exception(t)));
+            .onSuccess(t -> this.storeRefreshIsFailing.set(0))
+            .onFailure(t -> {
+                this.storeRefreshIsFailing.set(1);
+                LOGGER.error("handleRefresh error: " + t.getMessage(), new Exception(t));
+            });
     }
 
     private Future<Void> cloudRefresh() {
