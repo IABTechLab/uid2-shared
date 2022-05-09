@@ -29,6 +29,7 @@ import com.uid2.shared.ApplicationVersion;
 import com.uid2.shared.Const;
 import com.uid2.shared.Utils;
 import com.uid2.shared.cloud.*;
+import io.vertx.core.Handler;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -64,6 +65,7 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
     private final boolean enforceHttps;
     private static boolean useSecureParameters = true;
     private boolean allowContentFromLocalFileSystem = false;
+    private AtomicReference<Handler<Integer>> responseWatcher;
 
     public static UidCoreClient createNoAttest(String attestationEndpoint, String userToken, ApplicationVersion appVersion, boolean enforceHttps) {
         return new UidCoreClient(attestationEndpoint, userToken, appVersion, CloudUtils.defaultProxy, new NoAttestationProvider(), enforceHttps);
@@ -79,6 +81,7 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
         this.contentStorage = new PreSignedURLStorage(proxy);
         this.attestationToken = new AtomicReference<>(null);
         this.enforceHttps = enforceHttps;
+        this.responseWatcher = new AtomicReference<Handler<Integer>>(null);
 
         String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
         for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet())
@@ -110,6 +113,7 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
     private boolean attestIfRequired(HttpURLConnection conn) throws IOException, UidCoreClientException {
         boolean attested = false;
         int statusCode = conn.getResponseCode();
+        notifyResponseStatusWatcher(statusCode);
         if (statusCode == 401) {
             LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
             attested = true;
@@ -186,6 +190,8 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
             }
 
             int statusCode = connection.getResponseCode();
+            notifyResponseStatusWatcher(statusCode);
+
             if (statusCode < 200 || statusCode >= 300) {
                 LOGGER.warn("attestation failed with UID2 Core returning statusCode=" + statusCode);
                 throw new UidCoreClientException(statusCode, "unexpected status code from uid core service");
@@ -285,5 +291,15 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
     @Override
     public String mask(String cloudPath) {
         throw new UnsupportedOperationException("UidCoreClient::mask method is not supported");
+    }
+
+    public void setResponseStatusWatcher(Handler<Integer> watcher) {
+        this.responseWatcher.set(watcher);
+    }
+
+    public void notifyResponseStatusWatcher(int statusCode) {
+        Handler<Integer> w = this.responseWatcher.get();
+        if (w != null)
+            w.handle(statusCode);
     }
 }
