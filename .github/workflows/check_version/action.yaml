@@ -1,0 +1,39 @@
+name: Check Version
+# This workflow checks that the version in the commit is valid. 
+# Valid meaning:
+# - Not Already Released
+# - Has -SNAPSHOT for now released workflows
+inputs:
+  needs_snapshot:
+    description: 'If set to true, this version needs a -SNAPSHOT'
+    required: 'true'
+    type: string
+outputs:
+  version:
+    description: 'The Version of the package'
+    value: ${{ steps.version.outputs.jar_version }}
+runs:
+  using: "composite" 
+
+  steps:
+    - name: Get Jar Version
+      id: version
+      shell: bash
+      run: echo "::set-output name=jar_version::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
+    - name: Check if Version has Snapshot
+      if: ${{ inputs.needs_snapshot == 'true' }}
+      shell: bash
+      run: grep -q "\-SNAPSHOT" <<< "${{ steps.version.outputs.jar_version }}"
+    - name: Check if Version has no Snapshot
+      if: ${{ inputs.needs_snapshot == 'false' }}
+      shell: bash
+      run: grep -vq "\-SNAPSHOT" <<< "${{ steps.version.outputs.jar_version }}"
+    - name: Check if Version is released
+      shell: bash
+      run: |
+        export VERSION=${{ steps.version.outputs.jar_version }}
+        if [[ $VERSION == *"-SNAPSHOT"* ]]; then
+           export VERSION=$(echo $VERSION | awk '{ print substr( $0, 1, length($0)-9 ) }')
+        fi
+        mvn dependency:get -Dartifact=$(mvn help:evaluate -Dexpression=project.name -q -DforceStdout):$VERSION || exit 0
+        exit 1

@@ -2,13 +2,17 @@ name: Publish Snapshot
 on: workflow_dispatch
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/download_gpg_key
         with:
           key: ${{ secrets.GPG_KEY }}
+      - name: Check Version is snapshot
+        id: check_verion
+        uses: ./.github/workflows/check_version
+        with:
+          needs_snapshot: 'true'
       - name: Deploy Snapshot
         run: mvn -B -Drepo.id=ossrh -Drepo.login=uidadmin -Drepo.pwd="${{ secrets.SONATYPE_REPO_PASSWORD }}" -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" clean deploy

@@ -1,0 +1,39 @@
+name: Create Release Branch
+on: 
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version tag to create the branch from'
+        type: string
+        required: true
+  workflow_call:
+    inputs:
+      version:
+        description: 'The version tag to create the branch from'
+        type: string
+        required: true
+
+jobs:
+  create_branch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get Short Version
+        id: version
+        run: |
+          echo "::set-output name=short_version::$(echo ${{ github.event.inputs.version }} | rev | cut -c3- | rev)"
+      - name: Checkout Branch from tag
+        run: |
+          git fetch --tags
+          git checkout -b release-${{ steps.version.outputs.short_version }}  ${{ github.event.inputs.version }}
+      - name: Bump Version
+        run: mvn versions:set -DnextSnapshot
+      - name: Commit Pom.xml
+        uses: EndBug/add-and-commit@v9
+        with:
+          add: 'pom.xml'
+          author_name: Release Workflow
+          author_email: unifiedid-admin+release@thetradedesk.com
+          push: '--set-upstream origin release-${{ steps.version.outputs.short_version }}'
+          message: 'release-branch-${{ github.event.inputs.version }}'
