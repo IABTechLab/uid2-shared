@@ -113,11 +113,18 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
     private boolean attestIfRequired(HttpURLConnection conn) throws IOException, UidCoreClientException {
         boolean attested = false;
         int statusCode = conn.getResponseCode();
-        notifyResponseStatusWatcher(statusCode);
         if (statusCode == 401) {
             LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
             attested = true;
-            attestInternal();
+            try {
+                attestInternal();
+            }
+            catch (UidCoreClientException | IOException e) {
+                notifyResponseStatusWatcher(statusCode);
+                throw e;
+            }
+        } else {
+            notifyResponseStatusWatcher(statusCode);
         }
         return attested;
     }
