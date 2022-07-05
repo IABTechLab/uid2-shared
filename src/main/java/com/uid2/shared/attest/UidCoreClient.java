@@ -119,7 +119,7 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
             try {
                 attestInternal();
             }
-            catch (Exception e) {
+            catch (UidCoreClientException | IOException e) {
                 notifyResponseStatusWatcher(statusCode);
                 throw e;
             }
