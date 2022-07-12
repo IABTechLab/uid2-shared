@@ -40,7 +40,7 @@ public class AesCbc {
             final SecretKey k = new SecretKeySpec(key.getKeyBytes(), "AES");
             return decrypt(encryptedBytes, k);
         } catch (Exception e) {
-            throw new RuntimeException("Unable to Encrypt", e);
+            throw new RuntimeException("Unable to Decrypt", e);
         }
     }
 
@@ -51,7 +51,7 @@ public class AesCbc {
             c.init(Cipher.DECRYPT_MODE, key, iv);
             return c.doFinal(encryptedBytes, 16, encryptedBytes.length - 16);
         } catch (Exception e) {
-            throw new RuntimeException("Unable to Encrypt", e);
+            throw new RuntimeException("Unable to Decrypt", e);
         }
     }
 }
