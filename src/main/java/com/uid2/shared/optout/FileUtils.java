@@ -93,6 +93,10 @@ public class FileUtils {
     public boolean isFileInRange(String file, Instant timeLeft, Instant timeRight) {
         Instant ts = OptOutUtils.getFileTimestamp(file);
 
+        if (ts == null) {
+            throw new NullPointerException("getting timestamp from file " + file + " returned null");
+        }
+
         if (this.syntheticLogsEnabled && OptOutUtils.isSyntheticFile(file)) {
             // synthetic files by-pass time range check (never expired)
             return true;
