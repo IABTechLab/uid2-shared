@@ -61,7 +61,6 @@ public interface ISaltProvider {
 
         @Override
         public int getIndex(byte[] shaBytes, int totalEntries) {
-            LOGGER.warn("slow mod-based indexer is used, this is intended only for unit test");
             int hash = ((shaBytes[0] & 0xFF) << 12) | ((shaBytes[1] & 0xFF) << 4) | ((shaBytes[2] & 0xFF) & 0xF);
             return hash % totalEntries;
         }

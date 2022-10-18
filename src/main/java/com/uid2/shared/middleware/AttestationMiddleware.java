@@ -26,9 +26,12 @@ package com.uid2.shared.middleware;
 import com.uid2.shared.attest.IAttestationTokenService;
 import com.uid2.shared.auth.*;
 import io.vertx.core.Handler;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.RoutingContext;
 
 public class AttestationMiddleware {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AttestationMiddleware.class);
 
     private final IAttestationTokenService tokenService;
 

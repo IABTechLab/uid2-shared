@@ -43,6 +43,7 @@ import java.util.Random;
 public class AttestationToken {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttestationToken.class);
     private static final String Algorithm = "AES/CBC/PKCS5Padding";
+    private static final String INVALID_USER_TOKEN = "invalid";
 
     private final String userToken;
     private final long expiresAt;
@@ -132,13 +133,13 @@ public class AttestationToken {
     }
 
     private static AttestationToken Failed() {
-        return new AttestationToken("invalid", 0L, 0L, false);
+        return new AttestationToken(INVALID_USER_TOKEN, 0L, 0L, false);
     }
 
     @Override
     public String toString() {
         return "AttestationToken{" +
-                "userToken=" + userToken +
+                "userToken=" + (userToken.equals(INVALID_USER_TOKEN) ? INVALID_USER_TOKEN : "********") +
                 ", expiresAt=" + expiresAt +
                 ", nonce=" + nonce +
                 '}';

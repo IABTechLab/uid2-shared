@@ -94,44 +94,43 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
         return this.contentStorage;
     }
 
-    public void attest() throws IOException, UidCoreClientException {
-        attestInternal();
-    }
-
+    /**
+     * HTTP Get with automatic attestation on first 401 Unauthorized response
+     * @param url API endpoint
+     * @return InputStream from HTTP response
+     * @throws IOException on HTTP failures
+     * @throws UidCoreClientException on attestation failures
+     */
     private InputStream getWithAttest(String url) throws IOException, UidCoreClientException {
-        if (!attested())
-            attestInternal();
-
-        URLConnection conn = sendGet(url);
-
-        if (conn instanceof HttpURLConnection && attestIfRequired((HttpURLConnection) conn))
-            conn = sendGet(url);
-
-        return conn.getInputStream();
-    }
-
-    private boolean attestIfRequired(HttpURLConnection conn) throws IOException, UidCoreClientException {
-        boolean attested = false;
-        int statusCode = conn.getResponseCode();
-        if (statusCode == 401) {
-            LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
-            attested = true;
+        if (!attested()) {
             try {
-                attestInternal();
-            }
-            catch (UidCoreClientException | IOException e) {
-                notifyResponseStatusWatcher(statusCode);
+                attest();
+            } catch (UidCoreClientException | IOException e) {
+                LOGGER.warn("Initial attestation failed: " + e.getMessage());
+                notifyResponseStatusWatcher(401);
                 throw e;
             }
-        } else {
-            notifyResponseStatusWatcher(statusCode);
         }
-        return attested;
-    }
 
-    private URLConnection sendGet(String url) throws IOException {
-        final URLConnection conn = openConnection(url, "GET");
-        return conn;
+        HttpURLConnection conn = (HttpURLConnection) openConnection(url, "GET");
+        int statusCode = conn.getResponseCode();
+        if (statusCode == 401) {
+            LOGGER.info("First response from UID2 Core returned 401. We might hold an expired attestation token. Performing attestation.");
+            try {
+                attest();
+            } catch (UidCoreClientException | IOException e) {
+                LOGGER.warn("Attestation failed: " + e.getMessage());
+                notifyResponseStatusWatcher(401);
+                throw e;
+            }
+
+            // Note: re-initiate `conn` and `statusCode`
+            conn = (HttpURLConnection) openConnection(url, "GET");
+            statusCode = conn.getResponseCode();
+        }
+
+        notifyResponseStatusWatcher(statusCode);
+        return conn.getInputStream();
     }
 
     public void setAllowContentFromLocalFileSystem(boolean allow) {
@@ -159,9 +158,9 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
             connection.setRequestProperty("Authorization", "Bearer " + this.userToken);
         }
 
-        final String atoken = this.attestationToken.get();
-        if(atoken != null && atoken.length() > 0) {
-            connection.setRequestProperty("Attestation-Token", atoken);
+        final String attestationToken = this.attestationToken.get();
+        if(attestationToken != null && attestationToken.length() > 0) {
+            connection.setRequestProperty("Attestation-Token", attestationToken);
         }
 
         return connection;
@@ -173,21 +172,15 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
         return this.attestationToken.get() != null;
     }
 
-    /// this also sets this.attestationToken
-    private void attestInternal() throws IOException, UidCoreClientException {
+    /**
+     * Attest with Core service
+     * @throws IOException HTTP failures
+     * @throws UidCoreClientException Attestation Failures
+     */
+    private void attest() throws IOException, UidCoreClientException {
         try {
-            JsonObject requestJson = new JsonObject();
             KeyPair keyPair = generateKeyPair();
-            byte[] publicKey = keyPair.getPublic().getEncoded();
-            requestJson.put("attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey)));
-            requestJson.put("public_key", Base64.getEncoder().encodeToString(publicKey));
-            requestJson.put("application_name", appVersion.getAppName());
-            requestJson.put("application_version", appVersion.getAppVersion());
-            JsonObject components = new JsonObject();
-            for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet()) {
-                components.put(kv.getKey(), kv.getValue());
-            }
-            requestJson.put("components", components);
+            JsonObject requestJson = createAttestationRequest(keyPair.getPublic());
 
             HttpURLConnection connection = (HttpURLConnection) openConnection(attestationEndpoint, "POST");
             connection.setDoOutput(true);
@@ -210,21 +203,34 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
                 throw new UidCoreClientException(statusCode, "response did not return a successful status");
             }
 
-            String atoken = getAttestationToken(responseJson);
-            if (atoken == null) {
+            String attestationToken = getAttestationToken(responseJson);
+            if (attestationToken == null) {
                 throw new UidCoreClientException(statusCode, "response json does not contain body.attestation_token");
             }
 
-            atoken = new String(decrypt(Base64.getDecoder().decode(atoken), keyPair.getPrivate()), StandardCharsets.UTF_8);
+            attestationToken = new String(decrypt(Base64.getDecoder().decode(attestationToken), keyPair.getPrivate()), StandardCharsets.UTF_8);
             LOGGER.info("Attestation successful. Attestation token received.");
-            this.attestationToken.set(atoken);
-        } catch (AttestationException ae) {
-            throw new UidCoreClientException(ae);
+            this.attestationToken.set(attestationToken);
         } catch (IOException ioe) {
             throw ioe;
         } catch (Exception e) {
             throw new UidCoreClientException(e);
         }
+    }
+
+    private JsonObject createAttestationRequest(PublicKey publicKey) throws AttestationException {
+        JsonObject requestJson = new JsonObject();
+        byte[] publicKeyEncoded = publicKey.getEncoded();
+        requestJson.put("attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKeyEncoded)));
+        requestJson.put("public_key", Base64.getEncoder().encodeToString(publicKeyEncoded));
+        requestJson.put("application_name", appVersion.getAppName());
+        requestJson.put("application_version", appVersion.getAppVersion());
+        JsonObject components = new JsonObject();
+        for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet()) {
+            components.put(kv.getKey(), kv.getValue());
+        }
+        requestJson.put("components", components);
+        return requestJson;
     }
 
     private static boolean isFailed(JsonObject responseJson) {
