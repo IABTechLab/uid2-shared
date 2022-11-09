@@ -1,6 +1,5 @@
 package com.uid2.shared.vertx;
 
-import com.sun.jndi.toolkit.url.Uri;
 import com.uid2.shared.Const;
 import com.uid2.shared.jmx.AdminApi;
 import com.uid2.shared.middleware.AuthMiddleware;
@@ -16,7 +15,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.RoutingContext;
 
+import java.net.URI;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -78,8 +79,8 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         String path = null;
         try {
             path = context.currentRoute().getPath();
-            path = new Uri(context.request().absoluteURI()).getPath();
-        } catch (NullPointerException | MalformedURLException ex) {
+            path = new URI(context.request().absoluteURI()).getPath();
+        } catch (NullPointerException | URISyntaxException ex) {
             // RoutingContextImplBase has a bug: context.currentRoute() throws with NullPointerException when called from bodyEndHandler for StaticHandlerImpl.sendFile()
         }
 
