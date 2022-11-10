@@ -78,8 +78,10 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
 
         String path = null;
         try {
-            path = context.currentRoute().getPath();
-            path = new URI(context.request().absoluteURI()).getPath();
+            // If the current route is a known path, extract the full path from the request URI
+            if (context.currentRoute().getPath() != null) {
+                path = new URI(context.request().absoluteURI()).getPath();
+            }
         } catch (NullPointerException | URISyntaxException ex) {
             // RoutingContextImplBase has a bug: context.currentRoute() throws with NullPointerException when called from bodyEndHandler for StaticHandlerImpl.sendFile()
         }
