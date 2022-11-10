@@ -15,6 +15,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.core.net.SocketAddress;
 import io.vertx.ext.web.RoutingContext;
 
+import java.net.URI;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -75,8 +78,11 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
 
         String path = null;
         try {
-            path = context.currentRoute().getPath();
-        } catch (NullPointerException ex) {
+            // If the current route is a known path, extract the full path from the request URI
+            if (context.currentRoute().getPath() != null) {
+                path = new URI(context.request().absoluteURI()).getPath();
+            }
+        } catch (NullPointerException | URISyntaxException ex) {
             // RoutingContextImplBase has a bug: context.currentRoute() throws with NullPointerException when called from bodyEndHandler for StaticHandlerImpl.sendFile()
         }
 
