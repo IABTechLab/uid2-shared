@@ -9,3 +9,10 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build
         run: mvn -B clean compile test
+      - name: Generate Code Coverage
+        run: mvn jacoco:report
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage-report
+          path: target/site/jacoco/*
