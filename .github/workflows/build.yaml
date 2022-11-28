@@ -10,7 +10,7 @@ jobs:
       - name: Build
         run: mvn -B clean compile test
       - name: Generate Code Coverage
-          run: mvn jacoco:report
+        run: mvn jacoco:report
       - name: Archive code coverage results
         uses: actions/upload-artifact@v3
         with:
