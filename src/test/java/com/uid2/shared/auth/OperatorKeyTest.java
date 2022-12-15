@@ -7,13 +7,14 @@ import org.junit.Test;
 
 public class OperatorKeyTest {
     @Test
-    public void verifyDisabledAndSiteIdPropIsOptional() {
+    public void verifyDisabledPropIsOptional() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
-                "        \"roles\": [ \"mapper\", \"generator\" ]\n" +
+                "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
+                "        \"site_id\": 3\n" +
                 "    }";
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
@@ -53,5 +54,21 @@ public class OperatorKeyTest {
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
         Assert.assertFalse(c.isDisabled());
+    }
+
+    @Test
+    public void verifySiteIdPropIsOptionalForBackwardsCompatibility() {
+        final String testJson = "    {\n" +
+                "        \"key\": \"test-admin-key\",\n" +
+                "        \"name\": \"admin@uid2.com\",\n" +
+                "        \"contact\": \"admin@uid2.com\",\n" +
+                "        \"created\": 1617149276,\n" +
+                "        \"disabled\": false,\n" +
+                "        \"roles\": [ \"mapper\", \"generator\" ]\n" +
+                "    }";
+
+        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
+        OperatorKey c = OperatorKey.valueOf(jo);
+        Assert.assertNull(c.getSiteId());
     }
 }
