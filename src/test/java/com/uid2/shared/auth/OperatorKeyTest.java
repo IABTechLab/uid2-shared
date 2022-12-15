@@ -14,7 +14,7 @@ public class OperatorKeyTest {
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
-                "        \"site_id\": 3\n" +
+                "        \"site_ids\": [3]\n" +
                 "    }";
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
@@ -31,7 +31,7 @@ public class OperatorKeyTest {
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": true,\n" +
                 "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
-                "        \"site_id\": 3\n" +
+                "        \"site_ids\": [3]\n" +
                 "    }";
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
@@ -48,7 +48,7 @@ public class OperatorKeyTest {
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
                 "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
-                "        \"site_id\": 3\n" +
+                "        \"site_ids\": [3]\n" +
                 "    }";
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
