@@ -1,7 +1,11 @@
 package com.uid2.shared.auth;
 
 import io.vertx.core.json.JsonObject;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class OperatorKey implements IRoleAuthorizable<Role> {
     private String key;
@@ -11,23 +15,26 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     // epochSeconds
     private final long created;
     private boolean disabled;
+    private final List<Integer> siteIds = new ArrayList<>();
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, List<Integer> siteIds) {
         this.key = key;
         this.name = name;
         this.contact = contact;
         this.protocol = protocol;
         this.created = created;
         this.disabled = disabled;
+        this.siteIds.addAll(siteIds);
     }
 
     public String getKey() { return key; }
     public String getName() { return name; }
-    public String getContact() {return contact;}
-    public String getProtocol() {return protocol;}
-    public long getCreated() {return created;}
+    public String getContact() { return contact; }
+    public String getProtocol() { return protocol; }
+    public long getCreated() { return created; }
     public boolean isDisabled() { return disabled; }
     public void setDisabled(boolean disabled) { this.disabled = disabled; }
+    public List<Integer> getSiteIds() { return siteIds; }
 
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
@@ -36,8 +43,8 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getString("contact"),
                 json.getString("protocol"),
                 json.getLong("created"),
-                json.getBoolean("disabled", false)
-        );
+                json.getBoolean("disabled", false),
+                json.getJsonArray("site_ids") != null ? json.getJsonArray("site_ids").stream().map(x -> (int) x).collect(Collectors.toList()) : new ArrayList<>());
     }
 
     @Override
@@ -60,12 +67,13 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 && this.name.equals(b.name)
                 && this.contact.equals(b.contact)
                 && this.protocol.equals(b.protocol)
-                && this.created == b.created;
+                && this.created == b.created
+                && this.siteIds.equals(b.siteIds);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, name, contact, protocol, created);
+        return Objects.hash(key, name, contact, protocol, created, siteIds);
     }
 
     public void setKey(String newKey) {
