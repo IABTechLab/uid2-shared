@@ -15,16 +15,16 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     // epochSeconds
     private final long created;
     private boolean disabled;
-    private final List<Integer> siteIds = new ArrayList<>();
+    private final Integer siteId;
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, List<Integer> siteIds) {
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
         this.key = key;
         this.name = name;
         this.contact = contact;
         this.protocol = protocol;
         this.created = created;
         this.disabled = disabled;
-        this.siteIds.addAll(siteIds);
+        this.siteId = siteId;
     }
 
     public String getKey() { return key; }
@@ -34,7 +34,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     public long getCreated() { return created; }
     public boolean isDisabled() { return disabled; }
     public void setDisabled(boolean disabled) { this.disabled = disabled; }
-    public List<Integer> getSiteIds() { return siteIds; }
+    public Integer getSiteId() { return siteId; }
 
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
@@ -44,7 +44,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getString("protocol"),
                 json.getLong("created"),
                 json.getBoolean("disabled", false),
-                json.getJsonArray("site_ids") != null ? json.getJsonArray("site_ids").stream().map(x -> (int) x).collect(Collectors.toList()) : new ArrayList<>());
+                json.getInteger("site_id", null));
     }
 
     @Override
@@ -67,13 +67,12 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 && this.name.equals(b.name)
                 && this.contact.equals(b.contact)
                 && this.protocol.equals(b.protocol)
-                && this.created == b.created
-                && this.siteIds.equals(b.siteIds);
+                && this.created == b.created;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, name, contact, protocol, created, siteIds);
+        return Objects.hash(key, name, contact, protocol, created);
     }
 
     public void setKey(String newKey) {
