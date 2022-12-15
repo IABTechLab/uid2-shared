@@ -2,10 +2,7 @@ package com.uid2.shared.auth;
 
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class OperatorKey implements IRoleAuthorizable<Role> {
     private String key;
