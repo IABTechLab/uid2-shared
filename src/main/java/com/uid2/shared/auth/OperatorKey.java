@@ -41,7 +41,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getString("protocol"),
                 json.getLong("created"),
                 json.getBoolean("disabled", false),
-                json.getInteger("site_id", null));
+                json.getInteger("site_id"));
     }
 
     @Override
