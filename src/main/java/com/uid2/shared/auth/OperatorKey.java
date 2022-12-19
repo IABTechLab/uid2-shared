@@ -1,5 +1,6 @@
 package com.uid2.shared.auth;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Objects;
@@ -12,6 +13,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     // epochSeconds
     private final long created;
     private boolean disabled;
+    @JsonProperty("site_id")
     private final Integer siteId;
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
