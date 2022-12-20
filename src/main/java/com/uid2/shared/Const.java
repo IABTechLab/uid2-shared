@@ -4,15 +4,15 @@ import java.io.File;
 
 public class Const {
     public static class Port {
-        public static final int ServicePortForCore = 8088;
-        public static final int ServicePortForOperator = 8080;
-        public static final int ServicePortForOptOut = 8081;
-        public static final int ServicePortForAdmin = 8089;
+        public static final int ServicePortForCore = 18088;
+        public static final int ServicePortForOperator = 18080;
+        public static final int ServicePortForOptOut = 18081;
+        public static final int ServicePortForAdmin = 18089;
 
-        public static final int PrometheusPortForCore = 9088;
-        public static final int PrometheusPortForOperator = 9080;
-        public static final int PrometheusPortForOptOut = 9081;
-        public static final int PrometheusPortForAdmin = 9089;
+        public static final int PrometheusPortForCore = 29088;
+        public static final int PrometheusPortForOperator = 29080;
+        public static final int PrometheusPortForOptOut = 29081;
+        public static final int PrometheusPortForAdmin = 29089;
     }
 
     public static class Config {

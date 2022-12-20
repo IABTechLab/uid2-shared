@@ -71,4 +71,24 @@ public class OperatorKeyTest {
         OperatorKey c = OperatorKey.valueOf(jo);
         Assert.assertNull(c.getSiteId());
     }
+
+    @Test
+    public void verifyIsPublicOperatorFlagIsOptionalForBackwardsCompatibility() {
+        final String testJson = "    {\n" +
+                "        \"key\": \"test-admin-key\",\n" +
+                "        \"name\": \"admin@uid2.com\",\n" +
+                "        \"contact\": \"admin@uid2.com\",\n" +
+                "        \"created\": 1617149276,\n" +
+                "        \"disabled\": false\n" +
+                "    }";
+
+        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
+        OperatorKey c = OperatorKey.valueOf(jo);
+        Assert.assertTrue(c.isPrivateOperator());
+        Assert.assertFalse(c.isPublicOperator());
+
+        c.setIsPublicOperator(true);
+        Assert.assertTrue(c.isPublicOperator());
+        Assert.assertFalse(c.isPrivateOperator());
+    }
 }
