@@ -1,6 +1,8 @@
 package com.uid2.shared.auth;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.vertx.core.json.JsonObject;
+
 import java.util.Objects;
 
 public class OperatorKey implements IRoleAuthorizable<Role> {
@@ -11,23 +13,27 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     // epochSeconds
     private final long created;
     private boolean disabled;
+    @JsonProperty("site_id")
+    private final Integer siteId;
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
         this.key = key;
         this.name = name;
         this.contact = contact;
         this.protocol = protocol;
         this.created = created;
         this.disabled = disabled;
+        this.siteId = siteId;
     }
 
     public String getKey() { return key; }
     public String getName() { return name; }
-    public String getContact() {return contact;}
-    public String getProtocol() {return protocol;}
-    public long getCreated() {return created;}
+    public String getContact() { return contact; }
+    public String getProtocol() { return protocol; }
+    public long getCreated() { return created; }
     public boolean isDisabled() { return disabled; }
     public void setDisabled(boolean disabled) { this.disabled = disabled; }
+    public Integer getSiteId() { return siteId; }
 
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
@@ -36,8 +42,8 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getString("contact"),
                 json.getString("protocol"),
                 json.getLong("created"),
-                json.getBoolean("disabled", false)
-        );
+                json.getBoolean("disabled", false),
+                json.getInteger("site_id"));
     }
 
     @Override

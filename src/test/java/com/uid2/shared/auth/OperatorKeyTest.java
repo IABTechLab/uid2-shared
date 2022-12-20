@@ -55,4 +55,20 @@ public class OperatorKeyTest {
         OperatorKey c = OperatorKey.valueOf(jo);
         Assert.assertFalse(c.isDisabled());
     }
+
+    @Test
+    public void verifySiteIdPropIsOptionalForBackwardsCompatibility() {
+        final String testJson = "    {\n" +
+                "        \"key\": \"test-admin-key\",\n" +
+                "        \"name\": \"admin@uid2.com\",\n" +
+                "        \"contact\": \"admin@uid2.com\",\n" +
+                "        \"created\": 1617149276,\n" +
+                "        \"disabled\": false,\n" +
+                "        \"roles\": [ \"mapper\", \"generator\" ]\n" +
+                "    }";
+
+        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
+        OperatorKey c = OperatorKey.valueOf(jo);
+        Assert.assertNull(c.getSiteId());
+    }
 }
