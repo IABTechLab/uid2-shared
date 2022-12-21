@@ -22,7 +22,7 @@ jobs:
       - name: Get Short Version
         id: version
         run: |
-          echo "::set-output name=short_version::$(echo ${{ github.event.inputs.version }} | rev | cut -c3- | rev)"
+          echo "short_version=$(echo ${{ github.event.inputs.version }} | rev | cut -c3- | rev)" >> $GITHUB_OUTPUT
       - name: Checkout Branch from tag
         run: |
           git fetch --tags

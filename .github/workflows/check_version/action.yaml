@@ -19,7 +19,7 @@ runs:
     - name: Get Jar Version
       id: version
       shell: bash
-      run: echo "::set-output name=jar_version::$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)"
+      run: echo "jar_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
     - name: Check if Version has Snapshot
       if: ${{ inputs.needs_snapshot == 'true' }}
       shell: bash
