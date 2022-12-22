@@ -14,7 +14,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private final long created;
     private boolean disabled;
     @JsonProperty("site_id")
-    private final Integer siteId;
+    private Integer siteId;
     private boolean isPublicOperator;
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, boolean isPublicOperator) {
@@ -39,6 +39,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     public boolean isPublicOperator() { return isPublicOperator; }
     public boolean isPrivateOperator() { return !isPublicOperator; }
     public void setIsPublicOperator(boolean enabled) { this.isPublicOperator = enabled; }
+    public void setSiteId(Integer siteId) { this.siteId = siteId; }
 
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
@@ -49,8 +50,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getLong("created"),
                 json.getBoolean("disabled", false),
                 json.getInteger("site_id"),
-                json.getBoolean("isPublicOperator", false)
-        );
+                json.getBoolean("isPublicOperator", false));
     }
 
     @Override
