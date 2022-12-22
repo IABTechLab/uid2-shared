@@ -1,7 +1,6 @@
 package com.uid2.shared;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.uid2.shared.model.EncryptionKey;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -184,4 +183,22 @@ public class Utils {
         }
         return first;
     }
+
+    //can make this as an config in admin/core service config
+    public static final String SiteSpecificDataSubDirPath = "sites/";
+    public static String getSiteSpecificMetadataPathName(int siteId, String metadataPathName)
+    {
+        return SiteSpecificDataSubDirPath +siteId + metadataPathName;
+    }
+
+    public static String getMetadataPathName(boolean isPublicOperator, int siteId, String metadataPathName)
+    {
+        if(isPublicOperator)
+        {
+            return metadataPathName;
+        }
+
+        return getSiteSpecificMetadataPathName(siteId, metadataPathName);
+    }
+
 }
