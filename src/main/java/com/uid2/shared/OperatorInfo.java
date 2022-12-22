@@ -6,6 +6,10 @@ import io.vertx.ext.web.RoutingContext;
 
 import static com.uid2.shared.middleware.AuthMiddleware.API_CLIENT_PROP;
 
+/**
+ * Given a logged in operator, determine its side id and if it's a public/private
+ * Typically this should be extracting these details from the according OperatorKey
+ */
 public class OperatorInfo {
     public boolean isPublicOperator;
     public int siteId;
@@ -15,13 +19,13 @@ public class OperatorInfo {
         this.siteId = siteId;
     }
 
-    public static OperatorInfo getOperatorInfo(RoutingContext rc) {
+    public static OperatorInfo getOperatorInfo(RoutingContext rc) throws Exception {
         IAuthorizable profile = (IAuthorizable)  rc.data().get(API_CLIENT_PROP);
         if (profile instanceof OperatorKey) {
             OperatorKey operatorKey = (OperatorKey) profile;
             return new OperatorInfo(operatorKey.isPublicOperator(), operatorKey.getSiteId());
         }
-        return new OperatorInfo(true, 0);
+        throw new Exception("Cannot determine the operator type and site id from the profile");
     }
 }
 
