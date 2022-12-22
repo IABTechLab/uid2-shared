@@ -4,6 +4,7 @@ public enum Role {
     GENERATOR,
     MAPPER,
     ID_READER,
+    SHARER,
     OPERATOR,
     OPTOUT,
     CLIENTKEY_ISSUER,
