@@ -87,7 +87,7 @@ public class OperatorKeyTest {
         Assert.assertTrue(c.isPrivateOperator());
         Assert.assertFalse(c.isPublicOperator());
 
-        c.setIsPublicOperator(true);
+        c.setPublicOperator(true);
         Assert.assertTrue(c.isPublicOperator());
         Assert.assertFalse(c.isPrivateOperator());
     }

@@ -15,9 +15,10 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private boolean disabled;
     @JsonProperty("site_id")
     private Integer siteId;
-    private boolean isPublicOperator;
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, boolean isPublicOperator) {
+    private boolean publicOperator;
+
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, boolean publicOperator) {
         this.key = key;
         this.name = name;
         this.contact = contact;
@@ -25,7 +26,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = siteId;
-        this.isPublicOperator = isPublicOperator;
+        this.publicOperator = publicOperator;
     }
 
     public String getKey() { return key; }
@@ -36,9 +37,9 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     public boolean isDisabled() { return disabled; }
     public void setDisabled(boolean disabled) { this.disabled = disabled; }
     public Integer getSiteId() { return siteId; }
-    public boolean isPublicOperator() { return isPublicOperator; }
-    public boolean isPrivateOperator() { return !isPublicOperator; }
-    public void setIsPublicOperator(boolean enabled) { this.isPublicOperator = enabled; }
+    public boolean isPublicOperator() { return publicOperator; }
+    public boolean isPrivateOperator() { return !publicOperator; }
+    public void setPublicOperator(boolean enabled) { this.publicOperator = enabled; }
     public void setSiteId(Integer siteId) { this.siteId = siteId; }
 
     public static OperatorKey valueOf(JsonObject json) {
@@ -50,7 +51,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getLong("created"),
                 json.getBoolean("disabled", false),
                 json.getInteger("site_id"),
-                json.getBoolean("isPublicOperator", false));
+                json.getBoolean("publicOperator", false));
     }
 
     @Override
