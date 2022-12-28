@@ -3,7 +3,7 @@ package com.uid2.shared.auth;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.vertx.core.json.JsonObject;
 
-import java.util.Objects;
+import java.util.*;
 
 public class OperatorKey implements IRoleAuthorizable<Role> {
     private String key;
@@ -15,6 +15,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private boolean disabled;
     @JsonProperty("site_id")
     private Integer siteId;
+    private Set<Role> roles;
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
         this.key = key;
@@ -26,7 +27,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.siteId = null;
     }
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
         this.key = key;
         this.name = name;
         this.contact = contact;
@@ -34,6 +35,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = siteId;
+        this.roles = Collections.unmodifiableSet(roles);
     }
 
     public String getKey() { return key; }
@@ -43,8 +45,13 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     public long getCreated() { return created; }
     public boolean isDisabled() { return disabled; }
     public void setDisabled(boolean disabled) { this.disabled = disabled; }
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
     public Integer getSiteId() { return siteId; }
     public void setSiteId(Integer siteId) { this.siteId = siteId; }
+    public OperatorKey withRoles(Set<Role> roles) { this.roles = Collections.unmodifiableSet(roles); return this; }
 
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
@@ -54,12 +61,13 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getString("protocol"),
                 json.getLong("created"),
                 json.getBoolean("disabled", false),
-                json.getInteger("site_id"));
+                json.getInteger("site_id"),
+                Roles.getRoles(Role.class, json));
     }
 
     @Override
     public boolean hasRole(Role role) {
-        return role == Role.OPERATOR;
+        return this.roles.contains(role);
     }
 
     @Override
@@ -77,12 +85,13 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 && this.name.equals(b.name)
                 && this.contact.equals(b.contact)
                 && this.protocol.equals(b.protocol)
+                && this.roles.equals(this.roles)
                 && this.created == b.created;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, name, contact, protocol, created);
+        return Objects.hash(key, name, contact, protocol, created, roles);
     }
 
     public void setKey(String newKey) {

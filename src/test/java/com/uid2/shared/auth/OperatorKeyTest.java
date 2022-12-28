@@ -71,4 +71,34 @@ public class OperatorKeyTest {
         OperatorKey c = OperatorKey.valueOf(jo);
         Assert.assertNull(c.getSiteId());
     }
+
+    @Test
+    public void verifyRolesPropIsOptionalForBackwardsCompatibility() {
+        final String testJson = "    {\n" +
+                "        \"key\": \"test-admin-key\",\n" +
+                "        \"name\": \"admin@uid2.com\",\n" +
+                "        \"contact\": \"admin@uid2.com\",\n" +
+                "        \"created\": 1617149276,\n" +
+                "        \"disabled\": false\n" +
+                "    }";
+
+        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
+        OperatorKey c = OperatorKey.valueOf(jo);
+        Assert.assertTrue(c.getRoles().isEmpty());
+    }
+    @Test
+    public void verifyRolesPropSetOptoutRole() {
+        final String testJson = "    {\n" +
+                "        \"key\": \"test-admin-key\",\n" +
+                "        \"name\": \"admin@uid2.com\",\n" +
+                "        \"contact\": \"admin@uid2.com\",\n" +
+                "        \"created\": 1617149276,\n" +
+                "        \"disabled\": false,\n" +
+                "        \"roles\": [ \"optout\" ]\n" +
+                "    }";
+
+        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
+        OperatorKey c = OperatorKey.valueOf(jo);
+        Assert.assertTrue(c.getRoles().contains(Role.OPTOUT));
+    }
 }
