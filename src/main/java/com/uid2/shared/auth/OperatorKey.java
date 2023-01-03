@@ -16,6 +16,16 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     @JsonProperty("site_id")
     private Integer siteId;
 
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
+        this.key = key;
+        this.name = name;
+        this.contact = contact;
+        this.protocol = protocol;
+        this.created = created;
+        this.disabled = disabled;
+        this.siteId = null;
+    }
+
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
         this.key = key;
         this.name = name;
