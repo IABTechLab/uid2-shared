@@ -3,10 +3,9 @@ package com.uid2.shared.store;
 import com.uid2.shared.cloud.ICloudStorage;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -15,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 public class RotatingSaltProviderTest {
@@ -22,12 +23,12 @@ public class RotatingSaltProviderTest {
     @Mock
     private ICloudStorage cloudStorage;
 
-    @Before
+    @BeforeEach
     public void setup() {
         mocks = MockitoAnnotations.openMocks(this);
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         mocks.close();
     }
@@ -81,11 +82,11 @@ public class RotatingSaltProviderTest {
 
         final JsonObject loadedMetadata = saltsProvider.getMetadata();
         saltsProvider.loadContent(loadedMetadata);
-        Assert.assertEquals(2, saltsProvider.getVersion(loadedMetadata));
+        assertEquals(2, saltsProvider.getVersion(loadedMetadata));
 
         final ISaltProvider.ISaltSnapshot snapshot = saltsProvider.getSnapshot(Instant.now());
-        Assert.assertEquals(FIRST_LEVEL_SALT, snapshot.getFirstLevelSalt());
-        Assert.assertTrue(snapshot.getModifiedSince(Instant.now().minus(1, ChronoUnit.HOURS)).isEmpty());
+        assertEquals(FIRST_LEVEL_SALT, snapshot.getFirstLevelSalt());
+        assertTrue(snapshot.getModifiedSince(Instant.now().minus(1, ChronoUnit.HOURS)).isEmpty());
     }
 
     @Test
@@ -161,12 +162,12 @@ public class RotatingSaltProviderTest {
 
         final JsonObject loadedMetadata = saltsProvider.getMetadata();
         saltsProvider.loadContent(loadedMetadata);
-        Assert.assertEquals(2, saltsProvider.getVersion(loadedMetadata));
+        assertEquals(2, saltsProvider.getVersion(loadedMetadata));
 
         final ISaltProvider.ISaltSnapshot snapshot = saltsProvider.getSnapshot(Instant.now());
-        Assert.assertEquals(FIRST_LEVEL_SALT, snapshot.getFirstLevelSalt());
-        Assert.assertTrue(snapshot.getModifiedSince(Instant.now().minus(1, ChronoUnit.HOURS)).isEmpty());
-        Assert.assertEquals(1, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).size());
-        Assert.assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).get(0).getId());
+        assertEquals(FIRST_LEVEL_SALT, snapshot.getFirstLevelSalt());
+        assertTrue(snapshot.getModifiedSince(Instant.now().minus(1, ChronoUnit.HOURS)).isEmpty());
+        assertEquals(1, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).size());
+        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).get(0).getId());
     }
 }
