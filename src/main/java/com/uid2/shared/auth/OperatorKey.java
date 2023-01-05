@@ -25,6 +25,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = null;
+        this.roles = new HashSet<>(Arrays.asList(Role.OPERATOR));
     }
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
@@ -35,6 +36,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = siteId;
+        roles.add(Role.OPERATOR);
         this.roles = Collections.unmodifiableSet(roles);
     }
 
@@ -91,7 +93,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, name, contact, protocol, created, roles);
+        return Objects.hash(key, name, contact, protocol, created);
     }
 
     public void setKey(String newKey) {
