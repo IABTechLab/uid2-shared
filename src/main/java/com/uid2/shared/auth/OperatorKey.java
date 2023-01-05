@@ -27,7 +27,16 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.siteId = null;
         this.roles = new HashSet<>(Arrays.asList(Role.OPERATOR));
     }
-
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
+        this.key = key;
+        this.name = name;
+        this.contact = contact;
+        this.protocol = protocol;
+        this.created = created;
+        this.disabled = disabled;
+        this.siteId = siteId;
+        this.roles = new HashSet<>(Arrays.asList(Role.OPERATOR));
+    }
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
         this.key = key;
         this.name = name;
