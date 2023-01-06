@@ -100,6 +100,8 @@ public class VmConfigVerifier {
                     String cloudInitConfig = metadataItem.getValue();
                     String templatizedConfig = templatizeVmConfig(cloudInitConfig);
                     str.append(getSha256Base64Encoded(templatizedConfig));
+                } else if (metadataItem.getKey().equals("startup-script")) {
+                    LOGGER.warn("received attestation request with startup-script: " + metadataItem.getValue());
                 }
             }
 
