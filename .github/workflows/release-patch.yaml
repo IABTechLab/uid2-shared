@@ -1,47 +1,9 @@
 name: Release Patch 
-on: workflow_dispatch
+
+on: [workflow_dispatch]
 
 jobs:
   release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/workflows/download_gpg_key
-        with:
-          key: ${{ secrets.GPG_KEY }}
-      - name: Check Version before any work
-        uses: ./.github/workflows/check_version
-        with:
-          needs_snapshot: 'true'
-      - name: Remove Snapshot
-        run: mvn -B versions:set -DremoveSnapshot
-      - name: Check Version snapshot removed
-        id: check_version
-        uses: ./.github/workflows/check_version
-        with:
-          needs_snapshot: 'false'
-      - name: Commit Pom.xml
-        uses: EndBug/add-and-commit@v9
-        with:
-          add: 'pom.xml'
-          author_name: Release Workflow
-          author_email: unifiedid-admin+release@thetradedesk.com
-          message: 'release-${{ steps.check_version.outputs.version }}'
-          tag: '${{ steps.check_version.outputs.version }}'
-      - name: Publish 
-        run: mvn -B -Drepo.id=ossrh -Drepo.login=uidadmin -Drepo.pwd="${{ secrets.SONATYPE_REPO_PASSWORD }}" -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" clean deploy
-        #"
-      - name: Bump Version
-        run: mvn versions:set -DnextSnapshot
-      - name: Check Version Bump Was Successful
-        id: check_version_after
-        uses: ./.github/workflows/check_version
-        with:
-          needs_snapshot: 'true'
-      - name: Commit Pom.xml
-        uses: EndBug/add-and-commit@v9
-        with:
-          add: 'pom.xml'
-          author_name: Release Workflow
-          author_email: unifiedid-admin+release@thetradedesk.com
-          message: 'Increment ${{ steps.check_version.outputs.version }} to ${{ steps.check_version_after.outputs.version }}'
+    uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-release-major-minor-patch.yaml@main
+    with:
+      is_patch: true
