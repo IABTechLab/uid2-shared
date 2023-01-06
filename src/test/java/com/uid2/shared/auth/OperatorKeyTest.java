@@ -85,6 +85,7 @@ public class OperatorKeyTest {
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
         Assert.assertTrue(c.getRoles().contains(Role.OPERATOR));
+        Assert.assertFalse(c.hasRole(Role.OPTOUT));
     }
     @Test
     public void verifyRolesPropSetOptoutRole() {
@@ -101,7 +102,7 @@ public class OperatorKeyTest {
         OperatorKey c = OperatorKey.valueOf(jo);
         // Operator role should be set by default
         Assert.assertTrue(c.getRoles().contains(Role.OPERATOR));
-        Assert.assertTrue(c.getRoles().contains(Role.OPTOUT));
+        Assert.assertTrue(c.hasRole(Role.OPTOUT));
     }
 
     @Test
