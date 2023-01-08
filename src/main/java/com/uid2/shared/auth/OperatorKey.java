@@ -35,7 +35,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = siteId;
-        this.roles = new HashSet<>(Arrays.asList(Role.OPERATOR));
+        this.roles = Set.of(Role.OPERATOR);
     }
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
         this.key = key;
@@ -62,8 +62,9 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
 
     public Integer getSiteId() { return siteId; }
     public void setSiteId(Integer siteId) { this.siteId = siteId; }
-    public OperatorKey withRoles(Set<Role> roles) { this.roles = Collections.unmodifiableSet(roles); return this; }
-
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
                 json.getString("key"),
@@ -96,13 +97,15 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 && this.name.equals(b.name)
                 && this.contact.equals(b.contact)
                 && this.protocol.equals(b.protocol)
+                && this.disabled == b.disabled
+                && this.siteId.equals(b.siteId)
                 && this.roles.equals(this.roles)
                 && this.created == b.created;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, name, contact, protocol, created);
+        return Objects.hash(key, name, contact, protocol, created, disabled, siteId, roles);
     }
 
     public void setKey(String newKey) {
