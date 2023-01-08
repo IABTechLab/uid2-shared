@@ -62,9 +62,9 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
 
     public Integer getSiteId() { return siteId; }
     public void setSiteId(Integer siteId) { this.siteId = siteId; }
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
+    public void setRoles(Set<Role> roles) { this.roles = roles; }
+    public OperatorKey withRoles(Set<Role> roles) { this.roles = Collections.unmodifiableSet(roles); return this; }
+    public OperatorKey withRoles(Role... roles) { this.roles = Set.of(roles); return this; }
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
                 json.getString("key"),
