@@ -4,6 +4,9 @@ import com.uid2.shared.Utils;
 import com.uid2.shared.model.EncryptionKey;
 import com.uid2.shared.cloud.ICloudStorage;
 
+import com.uid2.shared.store.CloudPath;
+import com.uid2.shared.store.reader.RotatingKeyAclProvider;
+import com.uid2.shared.store.scope.GlobalScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.After;
@@ -27,7 +30,7 @@ public class RotatingKeyAclProviderTest {
 
     @Before public void setup() {
         mocks = MockitoAnnotations.openMocks(this);
-        keyAclProvider = new RotatingKeyAclProvider(cloudStorage, "metadata");
+        keyAclProvider = new RotatingKeyAclProvider(cloudStorage, new GlobalScope(new CloudPath("metadata")));
     }
 
     @After public void teardown() throws Exception {

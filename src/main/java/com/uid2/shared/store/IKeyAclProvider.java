@@ -8,8 +8,4 @@ import java.time.Instant;
 public interface IKeyAclProvider {
     IKeysAclSnapshot getSnapshot(Instant asOf);
     IKeysAclSnapshot getSnapshot();
-
-    interface IKeysAclSnapshot {
-        boolean canClientAccessKey(ClientKey clientKey, EncryptionKey key);
-    }
 }

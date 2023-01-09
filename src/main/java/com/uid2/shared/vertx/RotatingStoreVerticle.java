@@ -2,7 +2,7 @@ package com.uid2.shared.vertx;
 
 import com.uid2.shared.health.HealthComponent;
 import com.uid2.shared.health.HealthManager;
-import com.uid2.shared.store.IMetadataVersionedStore;
+import com.uid2.shared.store.reader.IMetadataVersionedStore;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
