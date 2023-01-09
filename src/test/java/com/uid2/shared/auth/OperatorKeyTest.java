@@ -84,8 +84,8 @@ public class OperatorKeyTest {
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertTrue(c.isPrivateOperator());
-        Assert.assertFalse(c.isPublicOperator());
+        Assert.assertFalse(c.isPrivateOperator());
+        Assert.assertTrue(c.isPublicOperator());
 
         c.setPublicOperator(true);
         Assert.assertTrue(c.isPublicOperator());
