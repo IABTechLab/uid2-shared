@@ -17,6 +17,10 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private Integer siteId;
     private boolean publicOperator;
 
+    // UID2-598 for initial rollout, we will default every operator to be public and then manually change to private for
+    // appropriate ones and later we can default back to private operator again
+    private static boolean defaultPublicOperatorStatus = true;
+
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
         this.key = key;
         this.name = name;
@@ -25,7 +29,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = null;
-        this.publicOperator = true;
+        this.publicOperator = defaultPublicOperatorStatus;
     }
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
@@ -36,7 +40,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = siteId;
-        this.publicOperator = true;
+        this.publicOperator = defaultPublicOperatorStatus;
     }
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, boolean publicOperator) {
@@ -72,7 +76,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getLong("created"),
                 json.getBoolean("disabled", false),
                 json.getInteger("site_id"),
-                json.getBoolean("publicOperator", false));
+                json.getBoolean("publicOperator", defaultPublicOperatorStatus));
     }
 
     @Override
