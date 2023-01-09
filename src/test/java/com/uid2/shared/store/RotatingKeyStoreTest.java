@@ -4,6 +4,8 @@ import com.uid2.shared.Const;
 import com.uid2.shared.model.EncryptionKey;
 
 import com.uid2.shared.cloud.ICloudStorage;
+import com.uid2.shared.store.reader.RotatingKeyStore;
+import com.uid2.shared.store.scope.GlobalScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.After;
@@ -29,7 +31,7 @@ public class RotatingKeyStoreTest {
 
     @Before public void setup() {
         mocks = MockitoAnnotations.openMocks(this);
-        keyStore = new RotatingKeyStore(cloudStorage, "metadata");
+        keyStore = new RotatingKeyStore(cloudStorage, new GlobalScope(new CloudPath("metadata")));
     }
 
     @After public void teardown() throws Exception {

@@ -1,4 +1,4 @@
-package com.uid2.shared.store;
+package com.uid2.shared.store.reader;
 
 import io.vertx.core.json.JsonObject;
 

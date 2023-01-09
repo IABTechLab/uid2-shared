@@ -2,8 +2,10 @@ package com.uid2.shared.auth;
 
 import com.uid2.shared.Utils;
 import com.uid2.shared.cloud.ICloudStorage;
-import com.uid2.shared.store.IMetadataVersionedStore;
+import com.uid2.shared.store.CloudPath;
+import com.uid2.shared.store.reader.IMetadataVersionedStore;
 import com.uid2.shared.store.IOperatorKeyProvider;
+import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -20,22 +22,23 @@ public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetad
 
     private final ICloudStorage metadataStreamProvider;
     private final ICloudStorage contentStreamProvider;
-    private final String metadataPath;
+    private final StoreScope scope;
     private final AtomicReference<Map<String, OperatorKey>> latestSnapshot = new AtomicReference<Map<String, OperatorKey>>(null);
 
-    public RotatingOperatorKeyProvider(ICloudStorage metadataStreamProvider, ICloudStorage contentStreamProvider, String metadataPath) {
+    public RotatingOperatorKeyProvider(ICloudStorage metadataStreamProvider, ICloudStorage contentStreamProvider, StoreScope scope) {
         this.metadataStreamProvider = metadataStreamProvider;
         this.contentStreamProvider = contentStreamProvider;
-        this.metadataPath = metadataPath;
+        this.scope = scope;
     }
 
-    public String getMetadataPath() {
-        return metadataPath;
+    public CloudPath getMetadataPath() {
+        return scope.getMetadataPath();
     }
 
     @Override
     public JsonObject getMetadata() throws Exception {
-        InputStream s = this.metadataStreamProvider.download(this.metadataPath);
+        String cloudPath = getMetadataPath().toString();
+        InputStream s = this.metadataStreamProvider.download(cloudPath);
         return Utils.toJsonObject(s);
     }
 

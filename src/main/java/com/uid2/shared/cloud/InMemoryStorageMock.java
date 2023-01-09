@@ -39,7 +39,13 @@ public class InMemoryStorageMock implements ICloudStorage {
 
     @Override
     public InputStream download(String cloudPath) throws CloudStorageException {
-        byte[] content = cloudFileSystemMock.get(cloudPath).clone();
+        byte[] data = cloudFileSystemMock.get(cloudPath);
+        if (data == null) {
+            String error = "Trying to download missing path `" + cloudPath + "`. Available keys: " + cloudFileSystemMock.keySet();
+            throw new CloudStorageException(error);
+        }
+
+        byte[] content = data.clone();
         ByteArrayInputStream inputStream = new ByteArrayInputStream(content);
         return inputStream;
     }

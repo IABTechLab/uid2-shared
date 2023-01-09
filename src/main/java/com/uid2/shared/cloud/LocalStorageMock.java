@@ -88,7 +88,7 @@ public class LocalStorageMock implements ICloudStorage {
             Path prefixPath = getAbsolutePath(prefix);
             if (!Files.exists(prefixPath)) return EMPTY_LIST;
             else return Files.find(prefixPath, Integer.MAX_VALUE, (filePath, fileAttr) -> fileAttr.isRegularFile())
-                .map(p -> p.toString())
+                .map(Path::toString)
                 .collect(Collectors.toList());
         }
         catch (IOException e) {
