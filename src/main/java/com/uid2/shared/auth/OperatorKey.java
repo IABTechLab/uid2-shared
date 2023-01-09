@@ -16,11 +16,10 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     @JsonProperty("site_id")
     private Integer siteId;
     private Set<Role> roles;
+    @JsonProperty("is_public_operator")
     private boolean publicOperator;
 
-    // UID2-598 for initial rollout, we will default every operator to be public and then manually change to private for
-    // appropriate ones and later we can default back to private operator again
-    private static boolean defaultPublicOperatorStatus = true;
+    private static boolean defaultPublicOperatorStatus = false;
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
         this.key = key;
@@ -103,7 +102,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getBoolean("disabled", false),
                 json.getInteger("site_id"),
                 Roles.getRoles(Role.class, json),
-                json.getBoolean("publicOperator", defaultPublicOperatorStatus));
+                json.getBoolean("is_public_operator", defaultPublicOperatorStatus));
     }
 
     @Override
