@@ -154,12 +154,10 @@ public class OperatorKeyTest {
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertTrue(c.isPrivateOperator());
-        Assert.assertFalse(c.isPublicOperator());
+        Assert.assertTrue(c.getOperatorType() == OperatorType.PRIVATE);
 
-        c.setPublicOperator(false);
-        Assert.assertTrue(c.isPrivateOperator());
-        Assert.assertFalse(c.isPublicOperator());
+        c.setOperatorType(OperatorType.PUBLIC);
+        Assert.assertTrue(c.getOperatorType() == OperatorType.PUBLIC);
     }
 
     @Test
@@ -170,17 +168,15 @@ public class OperatorKeyTest {
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
-                "        \"is_public_operator\": true\n" +
+                "        \"operator_type\": \"PUBLIC\"\n" +
                 "    }";
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertFalse(c.isPrivateOperator());
-        Assert.assertTrue(c.isPublicOperator());
+        Assert.assertTrue(c.getOperatorType() == OperatorType.PUBLIC);
 
-        c.setPublicOperator(false);
-        Assert.assertTrue(c.isPrivateOperator());
-        Assert.assertFalse(c.isPublicOperator());
+        c.setOperatorType(OperatorType.PRIVATE);
+        Assert.assertTrue(c.getOperatorType() == OperatorType.PRIVATE);
     }
 
     @Test
@@ -191,32 +187,26 @@ public class OperatorKeyTest {
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
-                "        \"is_public_operator\": false\n" +
+                "        \"operator_type\": \"PRIVATE\"\n" +
                 "    }";
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertTrue(c.isPrivateOperator());
-        Assert.assertFalse(c.isPublicOperator());
+        Assert.assertTrue(c.getOperatorType() == OperatorType.PRIVATE);
 
-        c.setPublicOperator(true);
-        Assert.assertFalse(c.isPrivateOperator());
-        Assert.assertTrue(c.isPublicOperator());
+        c.setOperatorType(OperatorType.PUBLIC);
+        Assert.assertTrue(c.getOperatorType() == OperatorType.PUBLIC);
     }
 
     @Test
     public void verifyConstructorIsPublicOperator() {
         OperatorKey k1 = new OperatorKey("key1", "name1", "contact1", "protocol1", 1, true);
-        Assert.assertTrue(k1.isPrivateOperator());
-        Assert.assertFalse(k1.isPublicOperator());
+        Assert.assertTrue(k1.getOperatorType() == OperatorType.PRIVATE);
         OperatorKey k2 = new OperatorKey("key2", "name2", "contact2", "protocol2", 2, true, 2);
-        Assert.assertTrue(k2.isPrivateOperator());
-        Assert.assertFalse(k2.isPublicOperator());
+        Assert.assertTrue(k2.getOperatorType() == OperatorType.PRIVATE);
         OperatorKey k3 = new OperatorKey("key3", "name3", "contact3", "protocol3", 3, true, 3,  new HashSet<Role>());
-        Assert.assertTrue(k3.isPrivateOperator());
-        Assert.assertFalse(k3.isPublicOperator());
-        OperatorKey k4 = new OperatorKey("key4", "name4", "contact4", "protocol4", 4, true, 4,  new HashSet<Role>(), true);
-        Assert.assertFalse(k4.isPrivateOperator());
-        Assert.assertTrue(k4.isPublicOperator());
+        Assert.assertTrue(k3.getOperatorType() == OperatorType.PRIVATE);
+        OperatorKey k4 = new OperatorKey("key4", "name4", "contact4", "protocol4", 4, true, 4,  new HashSet<Role>(), OperatorType.PUBLIC);
+        Assert.assertTrue(k4.getOperatorType() == OperatorType.PUBLIC);
     }
 }
