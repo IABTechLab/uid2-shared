@@ -102,7 +102,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 && this.protocol.equals(b.protocol)
                 && this.disabled == b.disabled
                 && this.siteId.equals(b.siteId)
-                && this.roles.equals(this.roles)
+                && this.roles.equals(b.roles)
                 && this.created == b.created;
     }
 
