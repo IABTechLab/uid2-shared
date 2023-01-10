@@ -161,7 +161,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyIsPublicOperatorFlagOn() {
+    public void verifyPublicOperatorType() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -180,7 +180,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyIsPublicOperatorFlagOff() {
+    public void verifyPrivateOperatorType() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -199,7 +199,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyConstructorIsPublicOperator() {
+    public void verifyConstructorStartsWithPrivateOperator() {
         OperatorKey k1 = new OperatorKey("key1", "name1", "contact1", "protocol1", 1, true);
         Assert.assertTrue(k1.getOperatorType() == OperatorType.PRIVATE);
         OperatorKey k2 = new OperatorKey("key2", "name2", "contact2", "protocol2", 2, true, 2);
