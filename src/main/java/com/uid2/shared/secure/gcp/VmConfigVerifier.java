@@ -6,7 +6,6 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.gax.paging.Page;
 import com.google.api.services.compute.Compute;
-import com.google.api.services.compute.ComputeScopes;
 import com.google.api.services.compute.model.AttachedDisk;
 import com.google.api.services.compute.model.Disk;
 import com.google.api.services.compute.model.Instance;
@@ -25,7 +24,6 @@ import io.vertx.core.logging.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
@@ -77,7 +75,7 @@ public class VmConfigVerifier {
         }
     }
 
-    public String getVmConfigId(InstanceDocument id) {
+    public VmConfigId getVmConfigId(InstanceDocument id) {
         try {
             LOGGER.debug("Issuing instance get request...");
             Instance instance = computeApi.instances()
@@ -86,8 +84,8 @@ public class VmConfigVerifier {
 
             StringBuilder str = new StringBuilder();
             for (AttachedDisk disk : instance.getDisks()) {
-                if (!disk.getAutoDelete()) return null;
-                if (!disk.getBoot()) return null;
+                if (!disk.getAutoDelete()) return VmConfigId.failure("!disk.autodelete", id.getProjectId());
+                if (!disk.getBoot()) return VmConfigId.failure("!disk.getboot", id.getProjectId());
 
                 String diskSourceUrl = disk.getSource();
                 String imageUrl = getDiskSourceImage(diskSourceUrl);
@@ -100,19 +98,24 @@ public class VmConfigVerifier {
                     String cloudInitConfig = metadataItem.getValue();
                     String templatizedConfig = templatizeVmConfig(cloudInitConfig);
                     str.append(getSha256Base64Encoded(templatizedConfig));
-                } else if (metadataItem.getKey().equals("startup-script")) {
-                    LOGGER.warn("received attestation request with startup-script: " + metadataItem.getValue());
+                } else {
+                    LOGGER.debug("gcp-vmid attestation got unrecognized metadata key: " + metadataItem.getKey());
+                    return VmConfigId.failure("bad metadata item: " + metadataItem.getKey(), id.getProjectId());
                 }
             }
 
-            validateAuditLogs(id);
+            String badAuditLog = findUnauthorizedAuditLog(id);
+            if (badAuditLog != null) {
+                LOGGER.debug("attestation failed because of audit log: " + badAuditLog);
+                return VmConfigId.failure("bad audit log: " + badAuditLog, id.getProjectId());
+            }
 
             // str is a concatenation of disk hashes and cloud-init hashes
             // configId is the SHA-256 output of str.toString()
-            return getSha256Base64Encoded(str.toString());
+            return VmConfigId.success(getSha256Base64Encoded(str.toString()), id.getProjectId());
         } catch (Exception e) {
             LOGGER.error("getVmConfigId error " + e.getMessage(), e);
-            return null;
+            return VmConfigId.failure(e.getMessage(), id.getProjectId());
         }
     }
 
@@ -150,10 +153,16 @@ public class VmConfigVerifier {
             id.getInstanceId());
     }
 
-    private void validateAuditLogs(InstanceDocument id) throws InvalidProtocolBufferException, InvalidKeyException {
+    /**
+     * Find the first unauthorized audit log and its reason.
+     * @param id the instance document
+     * @return reason the log is unauthorized, *null* if all passed or skipped.
+     * @throws InvalidProtocolBufferException
+     */
+    private String findUnauthorizedAuditLog(InstanceDocument id) throws InvalidProtocolBufferException {
         if (!VALIDATE_AUDITLOGS) {
             LOGGER.fatal("Skip AuditLogs validation (VALIDATE_AUDITLOGS off)...");
-            return;
+            return null;
         }
 
         LOGGER.debug("Searching AuditLogs...");
@@ -164,18 +173,24 @@ public class VmConfigVerifier {
             for (LogEntry logEntry : entries.iterateAll()) {
                 Any data = (Any)logEntry.getPayload().getData();
                 AuditLog auditLog = AuditLog.parseFrom(data.getValue());
-                validateAuditLog(auditLog);
+                if (!validateAuditLog(auditLog)) {
+                    return auditLog.getMethodName();
+                }
             }
             entries = entries.getNextPage();
         } while (entries != null);
+
+        return null;
     }
 
-    private void validateAuditLog(AuditLog auditLog) throws InvalidKeyException {
-        if (!allowedMethodsFromInstanceAuditLogs.contains(auditLog.getMethodName())) {
-            throw new InvalidKeyException("Unexpected method: " + auditLog.getMethodName());
-        }
-
+    private boolean validateAuditLog(AuditLog auditLog) {
         LOGGER.debug("Validating AuditLog for operation: " + auditLog.getMethodName());
+        if (allowedMethodsFromInstanceAuditLogs.contains(auditLog.getMethodName())) {
+            return true;
+        } else {
+            LOGGER.warn("gcp-vmid attestation receives unauthorized method: " + auditLog.getMethodName());
+            return false;
+        }
     }
 
     private String getDiskSourceImage(String diskSourceUrl) throws IOException {

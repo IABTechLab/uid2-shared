@@ -34,8 +34,9 @@ public class VmConfigVerifierTest {
 
         InstanceDocument id = InstanceDocumentVerifierTest.getTestInstanceDocument();
         VmConfigVerifier vmConfigVerifier = new VmConfigVerifier(GoogleCredentials.getApplicationDefault(), null);
-        String vmConfigId = vmConfigVerifier.getVmConfigId(id);
+        VmConfigId vmConfigId = vmConfigVerifier.getVmConfigId(id);
         Assert.assertNotNull(vmConfigId);
+        Assert.assertTrue(vmConfigId.isValid());
     }
 
     @Test
