@@ -7,3 +7,4 @@ jobs:
     uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-release-major-minor-patch.yaml@main
     with:
       is_patch: true
+    secrets: inherit
