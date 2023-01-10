@@ -3,7 +3,7 @@ package com.uid2.shared.auth;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.vertx.core.json.JsonObject;
 
-import java.util.Objects;
+import java.util.*;
 
 public class OperatorKey implements IRoleAuthorizable<Role> {
     private String key;
@@ -15,6 +15,11 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private boolean disabled;
     @JsonProperty("site_id")
     private Integer siteId;
+    private Set<Role> roles;
+    @JsonProperty("operator_type")
+    private OperatorType operatorType;
+
+    private static OperatorType defaultOperatorType = OperatorType.PRIVATE;
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
         this.key = key;
@@ -24,8 +29,9 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = null;
+        this.roles = new HashSet<>(Arrays.asList(Role.OPERATOR));
+        this.operatorType = defaultOperatorType;
     }
-
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
         this.key = key;
         this.name = name;
@@ -34,6 +40,34 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = siteId;
+        this.roles = new HashSet<>(Arrays.asList(Role.OPERATOR));
+        this.operatorType = defaultOperatorType;
+    }
+
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
+        this.key = key;
+        this.name = name;
+        this.contact = contact;
+        this.protocol = protocol;
+        this.created = created;
+        this.disabled = disabled;
+        this.siteId = siteId;
+        roles.add(Role.OPERATOR);
+        this.roles = Collections.unmodifiableSet(roles);
+        this.operatorType = defaultOperatorType;
+    }
+
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) {
+        this.key = key;
+        this.name = name;
+        this.contact = contact;
+        this.protocol = protocol;
+        this.created = created;
+        this.disabled = disabled;
+        this.siteId = siteId;
+        roles.add(Role.OPERATOR);
+        this.roles = Collections.unmodifiableSet(roles);
+        this.operatorType = operatorType;
     }
 
     public String getKey() { return key; }
@@ -43,9 +77,20 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     public long getCreated() { return created; }
     public boolean isDisabled() { return disabled; }
     public void setDisabled(boolean disabled) { this.disabled = disabled; }
-    public Integer getSiteId() { return siteId; }
-    public void setSiteId(Integer siteId) { this.siteId = siteId; }
+    public Set<Role> getRoles() {
+        return roles;
+    }
 
+    public Integer getSiteId() { return siteId; }
+    public OperatorType getOperatorType() { return operatorType; }
+    public void setOperatorType(OperatorType type) { this.operatorType = type; }
+    public void setSiteId(Integer siteId) { this.siteId = siteId; }
+    public void setRoles(Set<Role> roles) {
+        roles.add(Role.OPERATOR);
+        this.roles = Collections.unmodifiableSet(roles);
+    }
+    public OperatorKey withRoles(Set<Role> roles) { setRoles(roles); return this; }
+    public OperatorKey withRoles(Role... roles) { setRoles(new HashSet<>(Arrays.asList(roles))); return this; }
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
                 json.getString("key"),
@@ -54,12 +99,15 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getString("protocol"),
                 json.getLong("created"),
                 json.getBoolean("disabled", false),
-                json.getInteger("site_id"));
+                json.getInteger("site_id"),
+                Roles.getRoles(Role.class, json),
+                OperatorType.valueOf(json.getString("operator_type", defaultOperatorType.toString()))
+                );
     }
 
     @Override
     public boolean hasRole(Role role) {
-        return role == Role.OPERATOR;
+        return this.roles.contains(role);
     }
 
     @Override
@@ -77,12 +125,16 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 && this.name.equals(b.name)
                 && this.contact.equals(b.contact)
                 && this.protocol.equals(b.protocol)
-                && this.created == b.created;
+                && this.disabled == b.disabled
+                && this.siteId.equals(b.siteId)
+                && this.roles.equals(b.roles)
+                && this.created == b.created
+                && this.operatorType == b.operatorType;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, name, contact, protocol, created);
+        return Objects.hash(key, name, contact, protocol, created, disabled, siteId, roles, operatorType);
     }
 
     public void setKey(String newKey) {

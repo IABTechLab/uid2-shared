@@ -1,7 +1,6 @@
 package com.uid2.shared;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.uid2.shared.model.EncryptionKey;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
