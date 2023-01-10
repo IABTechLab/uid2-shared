@@ -208,5 +208,7 @@ public class OperatorKeyTest {
         Assert.assertTrue(k3.getOperatorType() == OperatorType.PRIVATE);
         OperatorKey k4 = new OperatorKey("key4", "name4", "contact4", "protocol4", 4, true, 4,  new HashSet<Role>(), OperatorType.PUBLIC);
         Assert.assertTrue(k4.getOperatorType() == OperatorType.PUBLIC);
+        OperatorKey k5 = new OperatorKey("key5", "name5", "contact5", "protocol5", 5, true, 5,  new HashSet<Role>(), OperatorType.PRIVATE);
+        Assert.assertTrue(k5.getOperatorType() == OperatorType.PRIVATE);
     }
 }
