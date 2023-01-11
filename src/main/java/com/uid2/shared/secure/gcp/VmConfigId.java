@@ -25,13 +25,23 @@ public class VmConfigId {
         return this.isValid;
     }
 
-    public String getValue() {
-        if (!isValid) throw new RuntimeException("value is invalid - check isValid() before using VmConfigId");
+    /**
+     * Get string representation of the vmConfigId
+     * @return vmConfigId string
+     * @throws AssertionError if the value is inValid. Check isValid() before calling.
+     */
+    public String getValue() throws AssertionError {
+        assert isValid : "check isValid() before getting the value";
         return idString;
     }
 
-    public String getFailedReason() {
-        if (isValid) throw new RuntimeException("no failed reason - check isValid() before using VmConfigId");
+    /**
+     * Get why we did not create a vmConfigId successfully
+     * @return reason it failed
+     * @throws AssertionError if we have a valid vmConfigId. Check isValid() before calling.
+     */
+    public String getFailedReason() throws AssertionError {
+        assert !isValid : "check isValid() before getting failed reason";
         return failedReason;
     }
 
