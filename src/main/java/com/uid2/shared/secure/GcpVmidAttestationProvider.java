@@ -48,7 +48,6 @@ public class GcpVmidAttestationProvider implements IAttestationProvider {
             // return attestation failure for non-confidential-vm
             handler.handle(Future.failedFuture(new AttestationException("not on confidential vm")));
             return;
-
         }
 
         LOGGER.debug("Validating client public key...");

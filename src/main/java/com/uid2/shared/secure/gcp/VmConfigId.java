@@ -27,21 +27,17 @@ public class VmConfigId {
 
     /**
      * Get string representation of the vmConfigId
-     * @return vmConfigId string
-     * @throws AssertionError if the value is inValid. Check isValid() before calling.
+     * @return vmConfigId string, null if the value is inValid. Check isValid() before calling.
      */
-    public String getValue() throws AssertionError {
-        assert isValid : "check isValid() before getting the value";
+    public String getValue() {
         return idString;
     }
 
     /**
      * Get why we did not create a vmConfigId successfully
-     * @return reason it failed
-     * @throws AssertionError if we have a valid vmConfigId. Check isValid() before calling.
+     * @return reason it failed, null if we have a valid vmConfigId. Check isValid() before calling.
      */
-    public String getFailedReason() throws AssertionError {
-        assert !isValid : "check isValid() before getting failed reason";
+    public String getFailedReason() {
         return failedReason;
     }
 
