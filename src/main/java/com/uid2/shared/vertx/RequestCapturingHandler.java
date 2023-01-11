@@ -192,12 +192,8 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         }
 
         final IAuthorizable profile = AuthMiddleware.getAuthClient(context);
-        if (profile instanceof OperatorKey) {
-            return ((OperatorKey) profile).getSiteId();
-        }
-
-        if (profile instanceof ClientKey) {
-            return ((ClientKey) profile).getSiteId();
+        if (profile != null) {
+            return profile.getSiteId();
         }
 
         return null;
