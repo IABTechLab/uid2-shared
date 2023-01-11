@@ -2,6 +2,7 @@ package com.uid2.shared.secure;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.uid2.shared.Utils;
+import com.uid2.shared.secure.gcp.VmConfigId;
 import com.uid2.shared.secure.gcp.VmConfigVerifier;
 import com.uid2.shared.secure.gcp.InstanceDocument;
 import com.uid2.shared.secure.gcp.InstanceDocumentVerifier;
@@ -47,7 +48,6 @@ public class GcpVmidAttestationProvider implements IAttestationProvider {
             // return attestation failure for non-confidential-vm
             handler.handle(Future.failedFuture(new AttestationException("not on confidential vm")));
             return;
-
         }
 
         LOGGER.debug("Validating client public key...");
@@ -66,7 +66,7 @@ public class GcpVmidAttestationProvider implements IAttestationProvider {
 
         // extract vmConfigId using information from instance document
         LOGGER.debug("Validating VmConfig...");
-        final String vmConfigId;
+        final VmConfigId vmConfigId;
         try {
             vmConfigId = vmConfigVerifier.getVmConfigId(vmid);
         }
@@ -76,14 +76,17 @@ public class GcpVmidAttestationProvider implements IAttestationProvider {
         }
 
         // check if vmConfigId is approved/allowed
-        if (vmConfigId == null) {
-            handler.handle(Future.failedFuture(new AttestationException("Invalid or null vmConfigId")));
+        if (!vmConfigId.isValid()) {
+            final String errorMessage = vmConfigId.getProjectId() == null ?
+                    vmConfigId.getFailedReason() :
+                    vmConfigId.getProjectId() + " @ " + vmConfigId.getFailedReason();
+            handler.handle(Future.failedFuture(new AttestationException(errorMessage)));
             return;
         }
 
-        LOGGER.debug("VmConfigId = " + vmConfigId + ", validating against " +  allowedVmConfigIds.size() + " registered enclaves");
-        if (VmConfigVerifier.VALIDATE_VMCONFIG && !allowedVmConfigIds.contains(vmConfigId)) {
-            handler.handle(Future.failedFuture(new AttestationException("Invalid or null vmConfigId")));
+        LOGGER.debug("VmConfigId = " + vmConfigId + ", validating against " + allowedVmConfigIds.size() + " registered enclaves");
+        if (VmConfigVerifier.VALIDATE_VMCONFIG && !allowedVmConfigIds.contains(vmConfigId.getValue())) {
+            handler.handle(Future.failedFuture(new AttestationException("unauthorized vmConfigId")));
             return;
         } else if (!VmConfigVerifier.VALIDATE_VMCONFIG) {
             LOGGER.fatal("Skip VmConfig validation (VALIDATE_VMCONFIG off)...");
