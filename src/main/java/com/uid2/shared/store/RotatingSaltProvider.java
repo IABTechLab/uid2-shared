@@ -4,6 +4,7 @@ import com.uid2.shared.Utils;
 import com.uid2.shared.attest.UidCoreClient;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.model.SaltEntry;
+import com.uid2.shared.store.reader.IMetadataVersionedStore;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;

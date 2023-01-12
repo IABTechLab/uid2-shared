@@ -1,9 +1,15 @@
 package com.uid2.shared.auth;
 
+import com.google.api.client.util.Sets;
 import com.uid2.shared.Utils;
+import com.uid2.shared.cloud.InMemoryStorageMock;
 import com.uid2.shared.model.EncryptionKey;
 import com.uid2.shared.cloud.ICloudStorage;
 
+import com.uid2.shared.store.CloudPath;
+import com.uid2.shared.store.reader.RotatingKeyAclProvider;
+import com.uid2.shared.store.scope.GlobalScope;
+import com.uid2.shared.store.scope.SiteScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.After;
@@ -15,10 +21,13 @@ import org.mockito.MockitoAnnotations;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class RotatingKeyAclProviderTest {
     private AutoCloseable mocks;
@@ -27,7 +36,7 @@ public class RotatingKeyAclProviderTest {
 
     @Before public void setup() {
         mocks = MockitoAnnotations.openMocks(this);
-        keyAclProvider = new RotatingKeyAclProvider(cloudStorage, "metadata");
+        keyAclProvider = new RotatingKeyAclProvider(cloudStorage, new GlobalScope(new CloudPath("metadata")));
     }
 
     @After public void teardown() throws Exception {
@@ -43,7 +52,7 @@ public class RotatingKeyAclProviderTest {
     }
 
     private InputStream makeInputStream(JsonArray content) {
-        return new ByteArrayInputStream(content.toString().getBytes(Charset.forName("UTF-8")));
+        return toInputStream(content.toString());
     }
 
     private void addBlacklist(JsonArray content, int siteId, int... blacklistedSiteIds) {
@@ -59,8 +68,8 @@ public class RotatingKeyAclProviderTest {
         entry.put("site_id", siteId);
 
         JsonArray list = new JsonArray();
-        for(int i = 0; i < listedSiteIds.length; ++i) {
-            list.add(listedSiteIds[i]);
+        for (int listedSiteId : listedSiteIds) {
+            list.add(listedSiteId);
         }
         entry.put(listType, list);
 
@@ -79,11 +88,50 @@ public class RotatingKeyAclProviderTest {
         return keyAclProvider.getSnapshot().canClientAccessKey(makeClientKey(clientSiteId), makeKey(keySiteId));
     }
 
+    private static ByteArrayInputStream toInputStream(String data) {
+        return new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
+    }
+
+    @Test public void loadsContentToSiteScope() throws Exception {
+        RotatingKeyAclProvider provider = new RotatingKeyAclProvider(cloudStorage, new SiteScope(new CloudPath("metadata"), 5));
+        JsonArray content = new JsonArray();
+        addBlacklist(content, 1, 2, 3);
+        addWhitelist(content, 3, 4, 5);
+        when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
+        final long count = provider.loadContent(makeMetadata("locationPath"));
+        Assert.assertEquals(2, count);
+    }
+
     @Test public void loadContentEmptyArray() throws Exception {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = keyAclProvider.loadContent(makeMetadata("locationPath"));
         Assert.assertEquals(0, count);
+    }
+
+    @Test public void loadsContent() throws Exception {
+        InMemoryStorageMock cloudStorage = new InMemoryStorageMock();
+        String contentPath = "file.json";
+        String metadataPath = "metadata.json";
+        int siteId = 1;
+
+        cloudStorage.upload(toInputStream(makeMetadata(contentPath).encodePrettily()), metadataPath);
+
+        JsonArray content = new JsonArray();
+        addBlacklist(content, siteId, 2, 3);
+        cloudStorage.upload(toInputStream(content.encodePrettily()), contentPath);
+
+        RotatingKeyAclProvider provider = new RotatingKeyAclProvider(cloudStorage, new GlobalScope(new CloudPath(metadataPath)));
+        provider.loadContent();
+
+        AclSnapshot snapshot = provider.getSnapshot();
+        Map<Integer, EncryptionKeyAcl> actual = snapshot.getAllAcls();
+        Set<Integer> expectedBlacklist = new HashSet<>();
+        expectedBlacklist.add(2);
+        expectedBlacklist.add(3);
+        assertThat(actual).hasSize(1);
+        assertThat(actual.get(siteId).getAccessList()).isEqualTo(expectedBlacklist);
+        assertThat(actual.get(siteId).getIsWhitelist()).isEqualTo(false);
     }
 
     @Test public void loadContentMultipleEntries() throws Exception {

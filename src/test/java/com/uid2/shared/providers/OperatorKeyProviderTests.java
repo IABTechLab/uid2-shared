@@ -3,6 +3,8 @@ package com.uid2.shared.providers;
 import com.uid2.shared.auth.OperatorKey;
 import com.uid2.shared.auth.RotatingOperatorKeyProvider;
 import com.uid2.shared.cloud.InMemoryStorageMock;
+import com.uid2.shared.store.CloudPath;
+import com.uid2.shared.store.scope.GlobalScope;
 import io.vertx.core.json.JsonObject;
 import org.junit.Test;
 
@@ -46,7 +48,7 @@ public class OperatorKeyProviderTests {
         storage.upload("local/operators/operators.json", "cloud/operators/operators.json");
 
         RotatingOperatorKeyProvider provider = new RotatingOperatorKeyProvider(
-                storage, storage, "cloud/operators/metadata.json");
+                storage, storage, new GlobalScope(new CloudPath("cloud/operators/metadata.json")));
 
         JsonObject metadata = provider.getMetadata();
 
