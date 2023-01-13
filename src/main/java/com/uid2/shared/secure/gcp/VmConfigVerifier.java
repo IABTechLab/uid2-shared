@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -42,6 +43,22 @@ public class VmConfigVerifier {
     private final Set<String> enclaveParams;
     private final Set<String> allowedMethodsFromInstanceAuditLogs =
         new HashSet<String>(Collections.singletonList("v1.compute.instances.insert"));
+
+    private final Set<String> forbiddenMetadataKeys =
+        new HashSet<String>(Arrays.asList(
+                "startup-script",
+                "startup-script-url",
+                "shutdown-script",
+                "shutdown-script-url",
+                "sysprep-specialize-script-ps1",
+                "sysprep-specialize-script-cmd",
+                "sysprep-specialize-script-bat",
+                "sysprep-specialize-script-url",
+                "windows-startup-script-ps1",
+                "windows-startup-script-cmd",
+                "windows-startup-script-bat",
+                "windows-startup-script-url",
+                "windows-shutdown-script-cmd"));
 
     private final Compute computeApi;
     private final Logging loggingApi;
@@ -98,9 +115,9 @@ public class VmConfigVerifier {
                     String cloudInitConfig = metadataItem.getValue();
                     String templatizedConfig = templatizeVmConfig(cloudInitConfig);
                     str.append(getSha256Base64Encoded(templatizedConfig));
-                } else {
-                    LOGGER.debug("gcp-vmid attestation got unrecognized metadata key: " + metadataItem.getKey());
-                    return VmConfigId.failure("bad metadata item: " + metadataItem.getKey(), id.getProjectId());
+                } else if (forbiddenMetadataKeys.contains(metadataItem.getKey())) {
+                    LOGGER.debug("gcp-vmid attestation got forbidden metadata key: " + metadataItem.getKey());
+                    return VmConfigId.failure("forbidden metadata key: " + metadataItem.getKey(), id.getProjectId());
                 }
             }
 
