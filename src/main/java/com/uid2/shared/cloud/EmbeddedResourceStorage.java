@@ -10,10 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class EmbeddedResourceStorage implements ICloudStorage {
@@ -72,16 +69,26 @@ public class EmbeddedResourceStorage implements ICloudStorage {
 
     @Override
     public List<String> list(String prefix) throws CloudStorageException {
-        if (this.resourceList == null) {
-            File resourceDir = new File(cls.getResource(prefix).getPath());
-            return Arrays.stream(resourceDir.listFiles())
-                .map(f -> f.getAbsolutePath())
-                .collect(Collectors.toList());
-        } else {
+        if (this.resourceList != null) {
             return this.resourceList.stream()
-                .filter(p -> p.startsWith(prefix))
-                .collect(Collectors.toList());
+                    .filter(p -> p.startsWith(prefix))
+                    .collect(Collectors.toList());
         }
+
+        File resource = new File(cls.getResource(prefix).getPath());
+        if (resource.isDirectory()) {
+            return Arrays.stream(resource.listFiles())
+                    .map(File::getAbsolutePath)
+                    .collect(Collectors.toList());
+        }
+
+        if (resource.exists()) {
+            List<String> result = new ArrayList<>();
+            result.add(resource.getAbsolutePath());
+            return result;
+        }
+
+        return Collections.emptyList();
     }
 
     @Override
