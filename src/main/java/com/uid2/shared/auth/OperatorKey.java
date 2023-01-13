@@ -52,8 +52,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = siteId;
-        roles.add(Role.OPERATOR);
-        this.roles = Collections.unmodifiableSet(roles);
+        this.roles = this.reorderAndAddDefaultRole(roles);
         this.operatorType = defaultOperatorType;
     }
 
@@ -65,8 +64,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = siteId;
-        roles.add(Role.OPERATOR);
-        this.roles = Collections.unmodifiableSet(roles);
+        this.roles = this.reorderAndAddDefaultRole(roles);
         this.operatorType = operatorType;
     }
 
@@ -86,11 +84,10 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     public void setOperatorType(OperatorType type) { this.operatorType = type; }
     public void setSiteId(Integer siteId) { this.siteId = siteId; }
     public void setRoles(Set<Role> roles) {
-        roles.add(Role.OPERATOR);
-        this.roles = Collections.unmodifiableSet(roles);
+        this.roles = this.reorderAndAddDefaultRole(roles);
     }
     public OperatorKey withRoles(Set<Role> roles) { setRoles(roles); return this; }
-    public OperatorKey withRoles(Role... roles) { setRoles(new HashSet<>(Arrays.asList(roles))); return this; }
+    public OperatorKey withRoles(Role... roles) { setRoles(new TreeSet<>(Arrays.asList(roles))); return this; }
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
                 json.getString("key"),
@@ -103,6 +100,13 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 Roles.getRoles(Role.class, json),
                 OperatorType.valueOf(json.getString("operator_type", defaultOperatorType.toString()))
                 );
+    }
+
+    private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) {
+        Set<Role> newRoles = roles != null ? new TreeSet<>(roles) : new TreeSet<>();
+        newRoles.add(Role.OPERATOR);
+        newRoles.removeIf(Objects::isNull);
+        return Collections.unmodifiableSet(newRoles);
     }
 
     @Override

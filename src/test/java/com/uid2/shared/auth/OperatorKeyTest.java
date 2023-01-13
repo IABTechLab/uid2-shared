@@ -1,10 +1,13 @@
 package com.uid2.shared.auth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.HashSet;
 
 public class OperatorKeyTest {
@@ -143,6 +146,22 @@ public class OperatorKeyTest {
     }
 
     @Test
+    public void verifyRolesIsWrittenInAlphabeticalOrder() throws JsonProcessingException {
+        final String expectJson = "{" +
+                "\"key\":\"test-admin-key\"," +
+                "\"name\":\"admin@uid2.com\"," +
+                "\"contact\":\"admin@uid2.com\"," +
+                "\"protocol\":\"protocol1\"," +
+                "\"created\":1617149276," +
+                "\"disabled\":false," +
+                "\"roles\":[\"OPERATOR\",\"OPTOUT\"]," +
+                "\"site_id\":1," +
+                "\"operator_type\":\"PRIVATE\"" +
+                "}";
+        OperatorKey k = new OperatorKey("test-admin-key", "admin@uid2.com", "admin@uid2.com", "protocol1", 1617149276, false, 1, new HashSet<>(Arrays.asList(Role.OPTOUT, Role.OPERATOR)));
+        ObjectMapper objectMapper = new ObjectMapper();
+        Assert.assertEquals(expectJson, objectMapper.writeValueAsString(k));
+    }
     public void verifyIsPublicOperatorFlagIsOptionalForBackwardsCompatibility() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
@@ -204,11 +223,11 @@ public class OperatorKeyTest {
         Assert.assertTrue(k1.getOperatorType() == OperatorType.PRIVATE);
         OperatorKey k2 = new OperatorKey("key2", "name2", "contact2", "protocol2", 2, true, 2);
         Assert.assertTrue(k2.getOperatorType() == OperatorType.PRIVATE);
-        OperatorKey k3 = new OperatorKey("key3", "name3", "contact3", "protocol3", 3, true, 3,  new HashSet<Role>());
+        OperatorKey k3 = new OperatorKey("key3", "name3", "contact3", "protocol3", 3, true, 3,  null);
         Assert.assertTrue(k3.getOperatorType() == OperatorType.PRIVATE);
-        OperatorKey k4 = new OperatorKey("key4", "name4", "contact4", "protocol4", 4, true, 4,  new HashSet<Role>(), OperatorType.PUBLIC);
+        OperatorKey k4 = new OperatorKey("key4", "name4", "contact4", "protocol4", 4, true, 4,  null, OperatorType.PUBLIC);
         Assert.assertTrue(k4.getOperatorType() == OperatorType.PUBLIC);
-        OperatorKey k5 = new OperatorKey("key5", "name5", "contact5", "protocol5", 5, true, 5,  new HashSet<Role>(), OperatorType.PRIVATE);
+        OperatorKey k5 = new OperatorKey("key5", "name5", "contact5", "protocol5", 5, true, 5,  null, OperatorType.PRIVATE);
         Assert.assertTrue(k5.getOperatorType() == OperatorType.PRIVATE);
     }
 }
