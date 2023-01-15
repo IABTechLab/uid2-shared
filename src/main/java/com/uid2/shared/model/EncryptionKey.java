@@ -1,10 +1,8 @@
 package com.uid2.shared.model;
 
-import com.uid2.shared.auth.ClientKey;
 import com.uid2.shared.model.KeyIdentifier;
 
 import java.time.Instant;
-import java.util.Objects;
 
 public final class EncryptionKey {
     private final int id;
