@@ -3,6 +3,7 @@ package com.uid2.shared.model;
 import com.uid2.shared.model.KeyIdentifier;
 
 import java.time.Instant;
+import java.util.Objects;
 
 public final class EncryptionKey {
     private final int id;
@@ -48,4 +49,30 @@ public final class EncryptionKey {
     }
 
     public boolean isExpired(Instant asOf) { return !expires.isAfter(asOf); }
+
+    @Override
+    public boolean equals(Object o) {
+        // If the object is compared with itself then return true
+        if (o == this) return true;
+
+        /* Check if o is an instance of Complex or not
+          "null instanceof [type]" also returns false */
+        if (!(o instanceof EncryptionKey)) return false;
+
+        // typecast o to Complex so that we can compare data members
+        EncryptionKey b = (EncryptionKey) o;
+
+        // Compare the data members and return accordingly
+        return this.id == b.id
+                && this.keyBytes.equals(b.keyBytes)
+                && this.created.equals(b.created)
+                && this.activates.equals(b.activates)
+                && this.expires.equals(b.expires)
+                && this.siteId == b.siteId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, keyBytes, created, activates, expires, siteId);
+    }
 }
