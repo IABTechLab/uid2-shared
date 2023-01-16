@@ -1,6 +1,7 @@
 package com.uid2.shared.store.reader;
 
 import com.uid2.shared.cloud.ICloudStorage;
+import com.uid2.shared.model.EncryptionKey;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.IKeyStore;
 import com.uid2.shared.store.ScopedStoreReader;
@@ -9,6 +10,7 @@ import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Instant;
+import java.util.Collection;
 
 /*
   1. metadata.json format
@@ -41,7 +43,7 @@ import java.time.Instant;
   ]
 
  */
-public class RotatingKeyStore implements IKeyStore, IMetadataVersionedStore {
+public class RotatingKeyStore implements IKeyStore, StoreReader<Collection<EncryptionKey>> {
     private final ScopedStoreReader<IKeyStoreSnapshot> reader;
 
     public RotatingKeyStore(ICloudStorage fileStreamProvider, StoreScope scope) {
@@ -75,6 +77,12 @@ public class RotatingKeyStore implements IKeyStore, IMetadataVersionedStore {
         return reader.loadContent(metadata, "keys");
     }
 
+    @Override
+    public Collection<EncryptionKey> getAll() {
+        return reader.getSnapshot().getActiveKeySet();
+    }
+
+    @Override
     public void loadContent() throws Exception {
         this.loadContent(this.getMetadata());
     }
