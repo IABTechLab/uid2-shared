@@ -1,15 +1,19 @@
 package com.uid2.shared.store.reader;
 
 import com.uid2.shared.auth.AclSnapshot;
+import com.uid2.shared.auth.EncryptionKeyAcl;
 import com.uid2.shared.cloud.ICloudStorage;
-import com.uid2.shared.store.*;
+import com.uid2.shared.store.CloudPath;
+import com.uid2.shared.store.IKeyAclProvider;
+import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.KeyAclParser;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Instant;
+import java.util.Map;
 
-public class RotatingKeyAclProvider implements IKeyAclProvider, IMetadataVersionedStore {
+public class RotatingKeyAclProvider implements IKeyAclProvider, StoreReader<Map<Integer, EncryptionKeyAcl>> {
     private final ScopedStoreReader<AclSnapshot> reader;
 
     public RotatingKeyAclProvider(ICloudStorage fileStreamProvider, StoreScope scope) {
@@ -33,6 +37,12 @@ public class RotatingKeyAclProvider implements IKeyAclProvider, IMetadataVersion
         return reader.loadContent(metadata, "keys_acl");
     }
 
+    @Override
+    public Map<Integer, EncryptionKeyAcl> getAll() {
+        return reader.getSnapshot().getAllAcls();
+    }
+
+    @Override
     public void loadContent() throws Exception {
         this.loadContent(this.getMetadata());
     }

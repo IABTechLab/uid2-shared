@@ -37,7 +37,7 @@ import java.util.Map;
         ...
       ]
 */
-public class RotatingClientKeyProvider implements IClientKeyProvider, IMetadataVersionedStore {
+public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReader<Collection<ClientKey>> {
     private final ScopedStoreReader<Map<String, ClientKey>> reader;
     public RotatingClientKeyProvider(ICloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys");
