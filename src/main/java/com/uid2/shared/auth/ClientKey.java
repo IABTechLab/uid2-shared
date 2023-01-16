@@ -120,7 +120,7 @@ public class ClientKey implements IRoleAuthorizable<Role> {
             && this.created == b.created
             && this.siteId == b.siteId
             && this.disabled == b.disabled
-            && secretBytes.equals(secretBytes);
+            && Arrays.equals(this.secretBytes, b.secretBytes);
     }
 
     @Override

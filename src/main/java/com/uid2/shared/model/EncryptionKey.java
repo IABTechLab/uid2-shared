@@ -3,6 +3,7 @@ package com.uid2.shared.model;
 import com.uid2.shared.model.KeyIdentifier;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Objects;
 
 public final class EncryptionKey {
@@ -64,7 +65,7 @@ public final class EncryptionKey {
 
         // Compare the data members and return accordingly
         return this.id == b.id
-                && this.keyBytes.equals(b.keyBytes)
+                && Arrays.equals(this.keyBytes, b.keyBytes)
                 && this.created.equals(b.created)
                 && this.activates.equals(b.activates)
                 && this.expires.equals(b.expires)
