@@ -116,7 +116,7 @@ public class ClientKey implements IRoleAuthorizable<Role> {
             && this.secret.equals(b.secret)
             && this.name.equals(b.name)
             && this.contact.equals(b.contact)
-            && this.roles.equals(this.roles)
+            && this.roles.equals(b.roles)
             && this.created == b.created
             && this.siteId == b.siteId
             && this.disabled == b.disabled
