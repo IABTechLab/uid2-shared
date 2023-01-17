@@ -24,6 +24,11 @@ public class AttestationToken {
     private final long expiresAt;
     private final long nonce;
     private final boolean isValid;
+    private static final int GCM_AUTHTAG_LENGTH_BYTE = 16;
+
+    // The AES-GCM specification recommends that the IV should be 96 bits long
+    // https://developer.mozilla.org/en-US/docs/Web/API/AesGcmParams
+    private static final int GCM_IV_LENGTH = 12;
 
     public AttestationToken(String plaintext, Instant expiresAt) {
         this(plaintext, expiresAt.getEpochSecond(), generateNonce(), true);
@@ -75,7 +80,7 @@ public class AttestationToken {
 
     private static String decrypt(byte[] cipherText, byte[] iv, String paraphrase, String salt) throws Exception {
         Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-        cipher.init(Cipher.DECRYPT_MODE, getKeyFromPassword(paraphrase, salt), new GCMParameterSpec(128, iv));
+        cipher.init(Cipher.DECRYPT_MODE, getKeyFromPassword(paraphrase, salt), new GCMParameterSpec(GCM_AUTHTAG_LENGTH_BYTE * 8, iv));
         byte[] plaintext = cipher.doFinal(cipherText);
         return new String(plaintext);
     }
@@ -145,7 +150,7 @@ public class AttestationToken {
     }
 
     private static GCMParameterSpec generateGcmParam() {
-        byte[] iv = new byte[16];
+        byte[] iv = new byte[GCM_IV_LENGTH];
         new SecureRandom().nextBytes(iv);
         return new GCMParameterSpec(128, iv);
     }
