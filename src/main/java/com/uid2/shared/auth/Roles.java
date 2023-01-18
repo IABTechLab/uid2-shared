@@ -10,7 +10,8 @@ import java.util.stream.Collectors;
 
 public class Roles {
     public static <T extends Enum<T>> Set<T> getRoles(Class<T> type, JsonObject clientKeyJson) {
-        return getRoles(type, clientKeyJson.getJsonArray("roles", new JsonArray()));
+        JsonArray rolesArr = clientKeyJson.getJsonArray("roles");
+        return rolesArr != null ? getRoles(type, rolesArr) : null;
     }
 
     public static <T extends Enum<T>> Set<T> getRoles(Class<T> type, JsonArray rolesJsonArray) {

@@ -6,6 +6,7 @@ import io.vertx.core.logging.LoggerFactory;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -19,12 +20,15 @@ import java.util.Random;
 
 public class AttestationToken {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttestationToken.class);
-    private static final String Algorithm = "AES/CBC/PKCS5Padding";
-
     private final String userToken;
     private final long expiresAt;
     private final long nonce;
     private final boolean isValid;
+    private static final int GCM_AUTHTAG_LENGTH_BYTE = 16;
+
+    // The AES-GCM specification recommends that the IV should be 96 bits long
+    // https://developer.mozilla.org/en-US/docs/Web/API/AesGcmParams
+    private static final int GCM_IV_LENGTH = 12;
 
     public AttestationToken(String plaintext, Instant expiresAt) {
         this(plaintext, expiresAt.getEpochSecond(), generateNonce(), true);
@@ -50,26 +54,67 @@ public class AttestationToken {
     public static AttestationToken fromEncrypted(String encryptedToken, String paraphrase, String salt) {
         try {
             String[] parts = encryptedToken.split("-");
-            if(parts.length != 2) {
-                throw new Exception("token must satisfy format: <Base64>-<Base64>");
+            if (parts.length == 2) {
+                String plainText = decryptOld(
+                        Base64.getDecoder().decode(parts[0]),
+                        Base64.getDecoder().decode(parts[1]),
+                        paraphrase, salt);
+                return fromPlaintext(plainText);
+            } else if (parts.length == 3) {
+                if (!parts[2].equals("g")) {
+                    throw new Exception("invalid attestation token: invalid encryption algorithm");
+                }
+                String plainText = decrypt(
+                        Base64.getDecoder().decode(parts[0]),
+                        Base64.getDecoder().decode(parts[1]),
+                        paraphrase, salt);
+                return fromPlaintext(plainText);
+            } else {
+                throw new Exception("invalid attestation token format");
             }
-
-            byte[] cipherText = Base64.getDecoder().decode(parts[0]);
-            byte[] iv = Base64.getDecoder().decode(parts[1]);
-            Cipher cipher = Cipher.getInstance(Algorithm);
-            cipher.init(Cipher.DECRYPT_MODE, getKeyFromPassword(paraphrase, salt), new IvParameterSpec(iv));
-            byte[] plaintext = cipher.doFinal(cipherText);
-            return fromPlaintext(new String(plaintext));
         } catch (Exception e) {
             LOGGER.debug("failed to decrypt attestation token: {}", e.getMessage());
             return AttestationToken.Failed();
         }
     }
 
+    private static String decrypt(byte[] cipherText, byte[] iv, String paraphrase, String salt) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        cipher.init(Cipher.DECRYPT_MODE, getKeyFromPassword(paraphrase, salt), new GCMParameterSpec(GCM_AUTHTAG_LENGTH_BYTE * 8, iv));
+        byte[] plaintext = cipher.doFinal(cipherText);
+        return new String(plaintext);
+    }
+
+    @Deprecated
+    private static String decryptOld(byte[] cipherText, byte[] iv, String paraphrase, String salt) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.DECRYPT_MODE, getKeyFromPassword(paraphrase, salt), new IvParameterSpec(iv));
+        byte[] plaintext = cipher.doFinal(cipherText);
+        return new String(plaintext);
+    }
+
+    // TODO: replace encode with encodeNew
+    public String encodeNew(String paraphrase, String salt) {
+        try {
+            GCMParameterSpec gcmParam = generateGcmParam();
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            cipher.init(Cipher.ENCRYPT_MODE, getKeyFromPassword(paraphrase, salt), gcmParam);
+            byte[] cipherText = cipher.doFinal(this.getPlaintext().getBytes());
+            return String.format("%s-%s-g",
+                    Base64.getEncoder().encodeToString(cipherText),
+                    Base64.getEncoder().encodeToString(gcmParam.getIV()));
+        } catch (Exception e) {
+            LOGGER.warn("error while encrypting with AES algorithm: " + e.getMessage());
+        }
+        return null;
+    }
+
+    @Deprecated
     public String encode(String paraphrase, String salt) {
         try {
             IvParameterSpec iv = generateIv();
-            Cipher cipher = Cipher.getInstance(Algorithm);
+            // TODO: deprecate old algorithm
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             cipher.init(Cipher.ENCRYPT_MODE, getKeyFromPassword(paraphrase, salt), iv);
             byte[] cipherText = cipher.doFinal(this.getPlaintext().getBytes());
             return String.format("%s-%s",
@@ -102,6 +147,12 @@ public class AttestationToken {
         byte[] iv = new byte[16];
         new SecureRandom().nextBytes(iv);
         return new IvParameterSpec(iv);
+    }
+
+    private static GCMParameterSpec generateGcmParam() {
+        byte[] iv = new byte[GCM_IV_LENGTH];
+        new SecureRandom().nextBytes(iv);
+        return new GCMParameterSpec(128, iv);
     }
 
     private String getPlaintext() {

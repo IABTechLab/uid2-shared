@@ -12,9 +12,9 @@ public class AttestationTokenService implements IAttestationTokenService {
         this.encryptionSalt = encryptionSalt;
     }
 
-    public String createToken(String userToken, Instant expiresAt, String key, String salt) {
+    public String createToken(String userToken, Instant expiresAt) {
         AttestationToken attToken = new AttestationToken(userToken, expiresAt);
-        return attToken.encode(key, salt);
+        return attToken.encode(encryptionKey, encryptionSalt);
     }
 
     public boolean validateToken(String userToken, String attestationToken) {
