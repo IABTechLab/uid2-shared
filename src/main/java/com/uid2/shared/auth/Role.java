@@ -10,5 +10,7 @@ public enum Role {
     CLIENTKEY_ISSUER,
     OPERATOR_MANAGER,
     SECRET_MANAGER,
-    ADMINISTRATOR
+    ADMINISTRATOR,
+    //UID2-575 for cronjob to trigger private site data generated
+    PRIVATE_SITE_REFRESHER
 }
