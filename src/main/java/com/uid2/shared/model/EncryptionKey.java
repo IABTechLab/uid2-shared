@@ -3,6 +3,8 @@ package com.uid2.shared.model;
 import com.uid2.shared.model.KeyIdentifier;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Objects;
 
 public final class EncryptionKey {
     private final int id;
@@ -48,4 +50,25 @@ public final class EncryptionKey {
     }
 
     public boolean isExpired(Instant asOf) { return !expires.isAfter(asOf); }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) return true;
+
+        if (!(o instanceof EncryptionKey)) return false;
+        
+        EncryptionKey b = (EncryptionKey) o;
+
+        return this.id == b.id
+                && Arrays.equals(this.keyBytes, b.keyBytes)
+                && this.created.equals(b.created)
+                && this.activates.equals(b.activates)
+                && this.expires.equals(b.expires)
+                && this.siteId == b.siteId;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, keyBytes, created, activates, expires, siteId);
+    }
 }

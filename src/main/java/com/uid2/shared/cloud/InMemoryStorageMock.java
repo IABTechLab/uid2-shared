@@ -46,8 +46,7 @@ public class InMemoryStorageMock implements ICloudStorage {
         }
 
         byte[] content = data.clone();
-        ByteArrayInputStream inputStream = new ByteArrayInputStream(content);
-        return inputStream;
+        return new ByteArrayInputStream(content);
     }
 
     @Override

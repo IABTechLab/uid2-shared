@@ -101,29 +101,26 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     // Overriding equals() to compare two ClientKey objects
     @Override
     public boolean equals(Object o) {
-        // If the object is compared with itself then return true
         if (o == this) return true;
 
-        /* Check if o is an instance of Complex or not
-          "null instanceof [type]" also returns false */
         if (!(o instanceof ClientKey)) return false;
 
-        // typecast o to Complex so that we can compare data members
         ClientKey b = (ClientKey) o;
 
-        // Compare the data members and return accordingly
         return this.key.equals(b.key)
             && this.secret.equals(b.secret)
             && this.name.equals(b.name)
             && this.contact.equals(b.contact)
-            && this.roles.equals(this.roles)
+            && this.roles.equals(b.roles)
             && this.created == b.created
-            && this.siteId == b.siteId;
+            && this.siteId == b.siteId
+            && this.disabled == b.disabled
+            && Arrays.equals(this.secretBytes, b.secretBytes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(created, key, secret, name, contact, roles, siteId);
+        return Objects.hash(key, secret, name, contact, roles, created, siteId, disabled, secretBytes);
     }
 
     public static ClientKey valueOf(JsonObject json) {
