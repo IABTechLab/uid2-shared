@@ -56,11 +56,9 @@ public final class EncryptionKey {
         if (o == this) return true;
 
         if (!(o instanceof EncryptionKey)) return false;
-
-        // typecast o to Complex so that we can compare data members
+        
         EncryptionKey b = (EncryptionKey) o;
 
-        // Compare the data members and return accordingly
         return this.id == b.id
                 && Arrays.equals(this.keyBytes, b.keyBytes)
                 && this.created.equals(b.created)
