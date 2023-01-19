@@ -105,10 +105,8 @@ public class ClientKey implements IRoleAuthorizable<Role> {
 
         if (!(o instanceof ClientKey)) return false;
 
-        // typecast o to Complex so that we can compare data members
         ClientKey b = (ClientKey) o;
 
-        // Compare the data members and return accordingly
         return this.key.equals(b.key)
             && this.secret.equals(b.secret)
             && this.name.equals(b.name)

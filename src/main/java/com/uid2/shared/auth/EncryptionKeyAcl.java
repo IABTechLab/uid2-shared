@@ -27,10 +27,8 @@ public class EncryptionKeyAcl {
 
         if (!(o instanceof EncryptionKeyAcl)) return false;
 
-        // typecast o to Complex so that we can compare data members
         EncryptionKeyAcl b = (EncryptionKeyAcl) o;
 
-        // Compare the data members and return accordingly
         return this.isWhitelist == b.isWhitelist
                 && this.accessList.equals(b.accessList);
     }
