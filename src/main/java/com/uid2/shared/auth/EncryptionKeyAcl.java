@@ -6,8 +6,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public class EncryptionKeyAcl {
-    boolean isWhitelist;
-    Set<Integer> accessList;
+    private final boolean isWhitelist;
+    private final Set<Integer> accessList;
 
     public EncryptionKeyAcl(boolean isWhitelist, Set<Integer> accessList) {
         this.isWhitelist = isWhitelist;
@@ -23,11 +23,8 @@ public class EncryptionKeyAcl {
 
     @Override
     public boolean equals(Object o) {
-        // If the object is compared with itself then return true
         if (o == this) return true;
 
-        /* Check if o is an instance of Complex or not
-          "null instanceof [type]" also returns false */
         if (!(o instanceof EncryptionKeyAcl)) return false;
 
         // typecast o to Complex so that we can compare data members
