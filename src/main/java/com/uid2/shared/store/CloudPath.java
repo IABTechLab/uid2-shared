@@ -76,11 +76,23 @@ public class CloudPath {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CloudPath cloudPath = (CloudPath) o;
-        return path.equals(cloudPath.path);
+
+        // comparing file path to uri
+        if ((uriBase == null) != (cloudPath.uriBase == null))
+            return false;
+
+        if (uriBase == null) {
+            return path.equals(cloudPath.path);
+        } else {
+            // we only use `scheme://authority` part of the uriBase, hence 'Base'
+            return uriBase.getScheme().equals(cloudPath.uriBase.getScheme()) &&
+                    uriBase.getAuthority().equals(cloudPath.uriBase.getAuthority()) &&
+                    path.equals(cloudPath.path);
+        }
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(path);
+        return Objects.hash(uriBase, path);
     }
 }
