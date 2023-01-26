@@ -20,6 +20,7 @@ public class RotatingKeyAclProvider implements IKeyAclProvider, StoreReader<Map<
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeyAclParser(), "key acls");
     }
 
+    @Override
     public CloudPath getMetadataPath() { return reader.getMetadataPath(); }
 
     @Override

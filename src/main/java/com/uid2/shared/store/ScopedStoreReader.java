@@ -2,17 +2,15 @@ package com.uid2.shared.store;
 
 import com.uid2.shared.Utils;
 import com.uid2.shared.attest.UidCoreClient;
-import com.uid2.shared.cloud.CloudStorageException;
 import com.uid2.shared.cloud.ICloudStorage;
-import com.uid2.shared.store.parser.ParsingResult;
 import com.uid2.shared.store.parser.Parser;
+import com.uid2.shared.store.parser.ParsingResult;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
 import java.io.InputStream;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ScopedStoreReader<T> {
@@ -43,16 +41,9 @@ public class ScopedStoreReader<T> {
 
     public JsonObject getMetadata() throws Exception {
         String cloudPath = getMetadataPath().toString();
-        if (isFileMissing(cloudPath)) {
-            return null;
-        }
         return Utils.toJsonObject(this.metadataStreamProvider.download(cloudPath));
     }
 
-    private boolean isFileMissing(String cloudPath) throws CloudStorageException {
-        List<String> files = metadataStreamProvider.list(cloudPath);
-        return files.isEmpty();
-    }
     private long loadContent(String path) throws Exception {
         final InputStream inputStream = this.contentStreamProvider.download(path);
         final ParsingResult<T> parsed = parser.deserialize(inputStream);
