@@ -50,6 +50,7 @@ public class RotatingKeyStore implements IKeyStore, StoreReader<Collection<Encry
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeyParser(), "keys");
     }
 
+    @Override
     public CloudPath getMetadataPath() { return reader.getMetadataPath(); }
 
     @Override

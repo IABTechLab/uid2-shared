@@ -72,6 +72,7 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
         this.loadContent(this.getMetadata());
     }
 
+    @Override
     public CloudPath getMetadataPath() {
         return reader.getMetadataPath();
     }

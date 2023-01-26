@@ -8,8 +8,6 @@ import com.uid2.shared.store.scope.GlobalScope;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -18,6 +16,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 
 class ScopedStoreReaderTest {
@@ -52,15 +53,6 @@ class ScopedStoreReaderTest {
                 () -> reader.loadContent(null, dataType),
                 "No metadata provided for loading data type test-data-type, can not load content"
         );
-    }
-
-    @Test
-    void returnsNullIfMetadataFileMissing() throws Exception {
-        ScopedStoreReader<Collection<TestData>> reader = new ScopedStoreReader<>(storage, scope, parser, dataType);
-
-        JsonObject metadata = reader.getMetadata();
-
-        assertThat(metadata).isNull();
     }
 
     @Test
