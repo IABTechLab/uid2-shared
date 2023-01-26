@@ -54,24 +54,17 @@ public class AttestationToken {
     public static AttestationToken fromEncrypted(String encryptedToken, String paraphrase, String salt) {
         try {
             String[] parts = encryptedToken.split("-");
-            if (parts.length == 2) {
-                String plainText = decryptOld(
-                        Base64.getDecoder().decode(parts[0]),
-                        Base64.getDecoder().decode(parts[1]),
-                        paraphrase, salt);
-                return fromPlaintext(plainText);
-            } else if (parts.length == 3) {
-                if (!parts[2].equals("g")) {
-                    throw new Exception("invalid attestation token: invalid encryption algorithm");
-                }
-                String plainText = decrypt(
-                        Base64.getDecoder().decode(parts[0]),
-                        Base64.getDecoder().decode(parts[1]),
-                        paraphrase, salt);
-                return fromPlaintext(plainText);
-            } else {
+            if (parts.length != 3) {
                 throw new Exception("invalid attestation token format");
             }
+            if (!parts[2].equals("g")) {
+                throw new Exception("invalid attestation token: invalid encryption algorithm");
+            }
+            String plainText = decrypt(
+                    Base64.getDecoder().decode(parts[0]),
+                    Base64.getDecoder().decode(parts[1]),
+                    paraphrase, salt);
+            return fromPlaintext(plainText);
         } catch (Exception e) {
             LOGGER.debug("failed to decrypt attestation token: {}", e.getMessage());
             return AttestationToken.Failed();
@@ -85,16 +78,7 @@ public class AttestationToken {
         return new String(plaintext);
     }
 
-    @Deprecated
-    private static String decryptOld(byte[] cipherText, byte[] iv, String paraphrase, String salt) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, getKeyFromPassword(paraphrase, salt), new IvParameterSpec(iv));
-        byte[] plaintext = cipher.doFinal(cipherText);
-        return new String(plaintext);
-    }
-
-    // TODO: replace encode with encodeNew
-    public String encodeNew(String paraphrase, String salt) {
+    public String encode(String paraphrase, String salt) {
         try {
             GCMParameterSpec gcmParam = generateGcmParam();
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
@@ -103,23 +87,6 @@ public class AttestationToken {
             return String.format("%s-%s-g",
                     Base64.getEncoder().encodeToString(cipherText),
                     Base64.getEncoder().encodeToString(gcmParam.getIV()));
-        } catch (Exception e) {
-            LOGGER.warn("error while encrypting with AES algorithm: " + e.getMessage());
-        }
-        return null;
-    }
-
-    @Deprecated
-    public String encode(String paraphrase, String salt) {
-        try {
-            IvParameterSpec iv = generateIv();
-            // TODO: deprecate old algorithm
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            cipher.init(Cipher.ENCRYPT_MODE, getKeyFromPassword(paraphrase, salt), iv);
-            byte[] cipherText = cipher.doFinal(this.getPlaintext().getBytes());
-            return String.format("%s-%s",
-                    Base64.getEncoder().encodeToString(cipherText),
-                    Base64.getEncoder().encodeToString(iv.getIV()));
         } catch (Exception e) {
             LOGGER.warn("error while encrypting with AES algorithm: " + e.getMessage());
         }
