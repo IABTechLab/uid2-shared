@@ -1,6 +1,7 @@
 package com.uid2.shared.auth;
 
 import com.uid2.shared.Utils;
+import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.reader.IMetadataVersionedStore;
@@ -20,12 +21,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetadataVersionedStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingOperatorKeyProvider.class);
 
-    private final ICloudStorage metadataStreamProvider;
-    private final ICloudStorage contentStreamProvider;
+    private final DownloadCloudStorage metadataStreamProvider;
+    private final DownloadCloudStorage contentStreamProvider;
     private final StoreScope scope;
     private final AtomicReference<Map<String, OperatorKey>> latestSnapshot = new AtomicReference<Map<String, OperatorKey>>(null);
 
-    public RotatingOperatorKeyProvider(ICloudStorage metadataStreamProvider, ICloudStorage contentStreamProvider, StoreScope scope) {
+    public RotatingOperatorKeyProvider(DownloadCloudStorage metadataStreamProvider, DownloadCloudStorage contentStreamProvider, StoreScope scope) {
         this.metadataStreamProvider = metadataStreamProvider;
         this.contentStreamProvider = contentStreamProvider;
         this.scope = scope;

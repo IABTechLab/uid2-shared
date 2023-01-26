@@ -1,5 +1,6 @@
 package com.uid2.shared.store.reader;
 
+import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.model.EncryptionKey;
 import com.uid2.shared.store.CloudPath;
@@ -46,7 +47,7 @@ import java.util.Collection;
 public class RotatingKeyStore implements IKeyStore, StoreReader<Collection<EncryptionKey>> {
     private final ScopedStoreReader<IKeyStoreSnapshot> reader;
 
-    public RotatingKeyStore(ICloudStorage fileStreamProvider, StoreScope scope) {
+    public RotatingKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeyParser(), "keys");
     }
 

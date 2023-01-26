@@ -2,6 +2,7 @@ package com.uid2.shared.store;
 
 import com.uid2.shared.Utils;
 import com.uid2.shared.attest.UidCoreClient;
+import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.store.parser.Parser;
 import com.uid2.shared.store.parser.ParsingResult;
@@ -15,14 +16,14 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class ScopedStoreReader<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScopedStoreReader.class);
-    private final ICloudStorage metadataStreamProvider;
+    private final DownloadCloudStorage metadataStreamProvider;
     private final StoreScope scope;
     private final Parser<T> parser;
     private final String dataTypeName;
-    private final ICloudStorage contentStreamProvider;
+    private final DownloadCloudStorage contentStreamProvider;
     private final AtomicReference<T> latestSnapshot = new AtomicReference<>();
 
-    public ScopedStoreReader(ICloudStorage fileStreamProvider, StoreScope scope, Parser<T> parser, String dataTypeName) {
+    public ScopedStoreReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, Parser<T> parser, String dataTypeName) {
         this.metadataStreamProvider = fileStreamProvider;
         this.scope = scope;
         this.parser = parser;

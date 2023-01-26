@@ -2,6 +2,7 @@ package com.uid2.shared.store;
 
 import com.uid2.shared.Utils;
 import com.uid2.shared.attest.UidCoreClient;
+import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.model.SaltEntry;
 import com.uid2.shared.store.reader.IMetadataVersionedStore;
@@ -47,12 +48,12 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingSaltProvider.class);
     private static final int HashingSeed = 122054;
     public static RotatingSaltProvider INSTANCE;
-    private final ICloudStorage metadataStreamProvider;
-    private final ICloudStorage contentStreamProvider;
+    private final DownloadCloudStorage metadataStreamProvider;
+    private final DownloadCloudStorage contentStreamProvider;
     private final String metadataPath;
     private final AtomicReference<List<SaltSnapshot>> snapshotsByEffectiveTime = new AtomicReference<>();
 
-    public RotatingSaltProvider(ICloudStorage fileStreamProvider, String metadataPath) {
+    public RotatingSaltProvider(DownloadCloudStorage fileStreamProvider, String metadataPath) {
         this.metadataStreamProvider = fileStreamProvider;
         if (fileStreamProvider instanceof UidCoreClient) {
             this.contentStreamProvider = ((UidCoreClient) fileStreamProvider).getContentStorage();

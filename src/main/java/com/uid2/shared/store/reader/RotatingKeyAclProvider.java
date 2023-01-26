@@ -2,6 +2,7 @@ package com.uid2.shared.store.reader;
 
 import com.uid2.shared.auth.AclSnapshot;
 import com.uid2.shared.auth.EncryptionKeyAcl;
+import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.IKeyAclProvider;
@@ -16,7 +17,7 @@ import java.util.Map;
 public class RotatingKeyAclProvider implements IKeyAclProvider, StoreReader<Map<Integer, EncryptionKeyAcl>> {
     private final ScopedStoreReader<AclSnapshot> reader;
 
-    public RotatingKeyAclProvider(ICloudStorage fileStreamProvider, StoreScope scope) {
+    public RotatingKeyAclProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeyAclParser(), "key acls");
     }
 

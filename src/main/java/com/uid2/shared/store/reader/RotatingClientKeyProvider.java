@@ -2,7 +2,7 @@ package com.uid2.shared.store.reader;
 
 import com.uid2.shared.auth.ClientKey;
 import com.uid2.shared.auth.IAuthorizable;
-import com.uid2.shared.cloud.ICloudStorage;
+import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.IClientKeyProvider;
@@ -39,7 +39,7 @@ import java.util.Map;
 */
 public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReader<Collection<ClientKey>> {
     private final ScopedStoreReader<Map<String, ClientKey>> reader;
-    public RotatingClientKeyProvider(ICloudStorage fileStreamProvider, StoreScope scope) {
+    public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys");
     }
 

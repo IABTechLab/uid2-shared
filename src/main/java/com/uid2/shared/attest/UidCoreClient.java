@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class UidCoreClient implements IUidCoreClient, ICloudStorage {
+public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private static final Logger LOGGER = LoggerFactory.getLogger(UidCoreClient.class);
     private final IAttestationProvider attestationProvider;
     private final ICloudStorage contentStorage;
@@ -229,52 +229,12 @@ public class UidCoreClient implements IUidCoreClient, ICloudStorage {
     //endregion attestation methods
 
     @Override
-    public void upload(String s, String s1) throws CloudStorageException {
-        throw new UnsupportedOperationException("UidCoreClient::upload method is not supported");
-    }
-
-    @Override
-    public void upload(InputStream s, String s1) throws CloudStorageException {
-        throw new UnsupportedOperationException("UidCoreClient::upload method is not supported");
-    }
-
-    @Override
     public InputStream download(String path) throws CloudStorageException {
         try {
             return getWithAttest(path);
         } catch (Exception e) {
             throw new CloudStorageException("download " + path + " error: " + e.getMessage(), e);
         }
-    }
-
-    @Override
-    public void delete(String cloudPath) throws CloudStorageException {
-        throw new UnsupportedOperationException("UidCoreClient::delete method is not supported");
-    }
-
-    @Override
-    public void delete(Collection<String> cloudPath) throws CloudStorageException {
-        throw new UnsupportedOperationException("UidCoreClient::delete method is not supported");
-    }
-
-    @Override
-    public List<String> list(String s) throws CloudStorageException {
-        throw new UnsupportedOperationException("UidCoreClient::list method is not supported");
-    }
-
-    @Override
-    public URL preSignUrl(String s) throws CloudStorageException {
-        throw new UnsupportedOperationException("UidCoreClient::preSignUrl method is not supported");
-    }
-
-    @Override
-    public void setPreSignedUrlExpiry(long expiry) {
-        throw new UnsupportedOperationException("UidCoreClient::preSignUrl method is not supported");
-    }
-
-    @Override
-    public String mask(String cloudPath) {
-        throw new UnsupportedOperationException("UidCoreClient::mask method is not supported");
     }
 
     public void setResponseStatusWatcher(Handler<Integer> watcher) {
