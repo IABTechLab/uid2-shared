@@ -1,5 +1,6 @@
 package com.uid2.shared.secure;
 
+import com.uid2.shared.attest.AttestationToken;
 import com.uid2.shared.attest.AttestationTokenService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -50,5 +51,27 @@ public class AttestationTokenTest {
                 Instant.now().plus(1, ChronoUnit.HOURS));
         final String badAttestationToken = attestationToken + "-hoho";
         Assertions.assertFalse(ats.validateToken("userToken", badAttestationToken));
+    }
+
+    @Test
+    public void testAttestationTokenNew() {
+        final long lifetime = 1800;
+        final Instant expiryLowerBound = Instant.now().plusSeconds(lifetime - 60);
+        final Instant expiryUpperBound = Instant.now().plusSeconds(lifetime + 300);
+        final AttestationTokenService ats = new AttestationTokenService(ENCRYPTION_KEY, SALT, lifetime);
+
+        final String attestationToken = ats.createToken("userToken");
+        Assertions.assertTrue(ats.validateToken("userToken", attestationToken));
+
+        final AttestationToken reconstructToken = AttestationToken.fromEncrypted(attestationToken, ENCRYPTION_KEY, SALT);
+        Assertions.assertTrue(reconstructToken.getExpiresAt().isAfter(expiryLowerBound));
+        Assertions.assertTrue(reconstructToken.getExpiresAt().isBefore(expiryUpperBound));
+    }
+
+    @Test
+    public void testAttestationTokenExpiry() {
+        Assertions.assertFalse(new AttestationToken(
+                "hello",
+                Instant.now().minusSeconds(1)).validate("hello"));
     }
 }

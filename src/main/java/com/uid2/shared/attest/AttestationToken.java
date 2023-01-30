@@ -97,6 +97,10 @@ public class AttestationToken {
         return this.isValid && this.userToken.equals(userToken) && this.expiresAt > Instant.now().getEpochSecond();
     }
 
+    public Instant getExpiresAt() {
+        return Instant.ofEpochSecond(expiresAt);
+    }
+
     private static SecretKey getKeyFromPassword(String paraphrase, String salt)
             throws NoSuchAlgorithmException, InvalidKeySpecException
     {
