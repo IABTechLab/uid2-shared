@@ -5,12 +5,10 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 
-public interface ICloudStorage {
+public interface ICloudStorage extends DownloadCloudStorage {
     void upload(String localPath, String cloudPath) throws CloudStorageException;
 
     void upload(InputStream input, String cloudPath) throws CloudStorageException;
-
-    InputStream download(String cloudPath) throws CloudStorageException;
 
     void delete(String cloudPath) throws CloudStorageException;
 
@@ -24,3 +22,4 @@ public interface ICloudStorage {
 
     String mask(String cloudPath);
 }
+
