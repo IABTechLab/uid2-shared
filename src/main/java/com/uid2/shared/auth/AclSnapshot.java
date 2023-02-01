@@ -1,8 +1,7 @@
 package com.uid2.shared.auth;
 
-import com.google.api.client.auth.oauth2.Credential;
 import com.uid2.shared.model.EncryptionKey;
-import com.uid2.shared.store.ACLSnapShotAccessMethod;
+import com.uid2.shared.store.ACLMode.LegacyDEP;
 import com.uid2.shared.store.IKeysAclSnapshot;
 
 import java.util.Map;
@@ -15,11 +14,11 @@ public class AclSnapshot implements IKeysAclSnapshot {
     }
 
     public boolean canClientAccessKey(ClientKey clientKey, EncryptionKey key) {
-        return canClientAccessKey(clientKey, key, ACLSnapShotAccessMethod.noACLTrue);
+        return canClientAccessKey(clientKey, key, LegacyDEP.noACLTrue);
     }
 
     @Override
-    public boolean canClientAccessKey(ClientKey clientKey, EncryptionKey key, ACLSnapShotAccessMethod accessMethod) {
+    public boolean canClientAccessKey(ClientKey clientKey, EncryptionKey key, LegacyDEP accessMethod) {
         // Client can always access their own keys
         if(clientKey.getSiteId() == key.getSiteId()) return true;
 
@@ -27,7 +26,7 @@ public class AclSnapshot implements IKeysAclSnapshot {
 
         // No ACL: everyone has access to the site keys
         if(acl == null) {
-            return accessMethod == ACLSnapShotAccessMethod.noACLTrue;
+            return accessMethod == LegacyDEP.noACLTrue;
         }
 
         return acl.canBeAccessedBySite(clientKey.getSiteId());
