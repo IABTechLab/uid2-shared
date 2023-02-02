@@ -91,7 +91,8 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         return roles;
     }
 
-    public int getSiteId() {
+    @Override
+    public Integer getSiteId() {
         return siteId;
     }
     public boolean hasValidSiteId() { return SiteUtil.isValidSiteId(siteId); }

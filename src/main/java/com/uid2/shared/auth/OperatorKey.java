@@ -79,6 +79,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         return roles;
     }
 
+    @Override
     public Integer getSiteId() { return siteId; }
     public OperatorType getOperatorType() { return operatorType; }
     public void setOperatorType(OperatorType type) { this.operatorType = type; }
