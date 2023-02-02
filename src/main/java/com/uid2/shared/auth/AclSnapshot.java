@@ -1,7 +1,7 @@
 package com.uid2.shared.auth;
 
 import com.uid2.shared.model.EncryptionKey;
-import com.uid2.shared.store.ACLMode.LegacyDEP;
+import com.uid2.shared.store.ACLMode.MissingAclMode;
 import com.uid2.shared.store.IKeysAclSnapshot;
 
 import java.util.Map;
@@ -14,11 +14,11 @@ public class AclSnapshot implements IKeysAclSnapshot {
     }
 
     public boolean canClientAccessKey(ClientKey clientKey, EncryptionKey key) {
-        return canClientAccessKey(clientKey, key, LegacyDEP.noACLTrue);
+        return canClientAccessKey(clientKey, key, MissingAclMode.ALLOW_ALL);
     }
 
     @Override
-    public boolean canClientAccessKey(ClientKey clientKey, EncryptionKey key, LegacyDEP accessMethod) {
+    public boolean canClientAccessKey(ClientKey clientKey, EncryptionKey key, MissingAclMode accessMethod) {
         // Client can always access their own keys
         if(clientKey.getSiteId() == key.getSiteId()) return true;
 
@@ -26,7 +26,7 @@ public class AclSnapshot implements IKeysAclSnapshot {
 
         // No ACL: everyone has access to the site keys
         if(acl == null) {
-            return accessMethod == LegacyDEP.noACLTrue;
+            return accessMethod == MissingAclMode.ALLOW_ALL;
         }
 
         return acl.canBeAccessedBySite(clientKey.getSiteId());
