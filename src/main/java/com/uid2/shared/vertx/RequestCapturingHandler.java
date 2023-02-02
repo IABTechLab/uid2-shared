@@ -1,9 +1,7 @@
 package com.uid2.shared.vertx;
 
 import com.uid2.shared.Const;
-import com.uid2.shared.auth.ClientKey;
 import com.uid2.shared.auth.IAuthorizable;
-import com.uid2.shared.auth.OperatorKey;
 import com.uid2.shared.jmx.AdminApi;
 import com.uid2.shared.middleware.AuthMiddleware;
 import io.micrometer.core.instrument.Counter;
