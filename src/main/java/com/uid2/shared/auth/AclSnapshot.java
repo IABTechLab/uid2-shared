@@ -14,11 +14,14 @@ public class AclSnapshot implements IKeysAclSnapshot {
     }
 
     public boolean canClientAccessKey(ClientKey clientKey, EncryptionKey key) {
+        // Old method, this will return true if there is no ACL for a key
         return canClientAccessKey(clientKey, key, MissingAclMode.ALLOW_ALL);
     }
 
     @Override
     public boolean canClientAccessKey(ClientKey clientKey, EncryptionKey key, MissingAclMode accessMethod) {
+        // This function when called with MissingAclMode.ALLOW_ALL will always return true if the key does not have an ACL
+        // When called with MissingAclMode.DENY_ALL will always return false if there is no ACL
         // Client can always access their own keys
         if(clientKey.getSiteId() == key.getSiteId()) return true;
 
