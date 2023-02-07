@@ -92,4 +92,8 @@ public class Const {
         // This site id is reserved. It may not be used for client keys.
         public static final int AdvertisingTokenSiteId = 2;
     }
+
+    public static class RoutingContextData {
+        public static final String SiteId = "site-id";
+    }
 }
