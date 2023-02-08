@@ -41,7 +41,7 @@ public class InstanceDocument {
         this.projectId = (String)computeEngineMap.get("project_id");
         this.zone = (String)computeEngineMap.get("zone");
 
-        LOGGER.debug("Received instance document { " + projectId + ", " + zone + ", " + instanceId + " }");
+        LOGGER.info("Received instance document { " + projectId + ", " + zone + ", " + instanceId + " }");
     }
 
     public String getAudience() {

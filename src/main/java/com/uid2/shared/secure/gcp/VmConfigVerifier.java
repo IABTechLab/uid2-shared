@@ -94,7 +94,7 @@ public class VmConfigVerifier {
 
     public VmConfigId getVmConfigId(InstanceDocument id) {
         try {
-            LOGGER.debug("Issuing instance get request...");
+            LOGGER.info("Issuing instance get request...");
             Instance instance = computeApi.instances()
                 .get(id.getProjectId(), id.getZone(), id.getInstanceId())
                 .execute();
@@ -116,14 +116,14 @@ public class VmConfigVerifier {
                     String templatizedConfig = templatizeVmConfig(cloudInitConfig);
                     str.append(getSha256Base64Encoded(templatizedConfig));
                 } else if (forbiddenMetadataKeys.contains(metadataItem.getKey())) {
-                    LOGGER.debug("gcp-vmid attestation got forbidden metadata key: " + metadataItem.getKey());
+                    LOGGER.info("gcp-vmid attestation got forbidden metadata key: " + metadataItem.getKey());
                     return VmConfigId.failure("forbidden metadata key: " + metadataItem.getKey(), id.getProjectId());
                 }
             }
 
             String badAuditLog = findUnauthorizedAuditLog(id);
             if (badAuditLog != null) {
-                LOGGER.debug("attestation failed because of audit log: " + badAuditLog);
+                LOGGER.info("attestation failed because of audit log: " + badAuditLog);
                 return VmConfigId.failure("bad audit log: " + badAuditLog, id.getProjectId());
             }
 
@@ -182,7 +182,7 @@ public class VmConfigVerifier {
             return null;
         }
 
-        LOGGER.debug("Searching AuditLogs...");
+        LOGGER.info("Searching AuditLogs...");
         String logFilter = getAuditLogFilter(id);
         Page<LogEntry> entries = loggingApi.listLogEntries(Logging.EntryListOption.filter(logFilter));
 
@@ -201,7 +201,7 @@ public class VmConfigVerifier {
     }
 
     private boolean validateAuditLog(AuditLog auditLog) {
-        LOGGER.debug("Validating AuditLog for operation: " + auditLog.getMethodName());
+        LOGGER.info("Validating AuditLog for operation: " + auditLog.getMethodName());
         if (allowedMethodsFromInstanceAuditLogs.contains(auditLog.getMethodName())) {
             return true;
         } else {
@@ -216,7 +216,7 @@ public class VmConfigVerifier {
         String zone = splits[8];
         String diskId = splits[10];
 
-        LOGGER.debug("Issuing disk get request for " + diskId + "...");
+        LOGGER.info("Issuing disk get request for " + diskId + "...");
         Disk disk = computeApi.disks().get(projectId, zone, diskId).execute();
         return disk.getSourceImage();
     }

@@ -184,7 +184,7 @@ public class OptOutCloudSync implements ICloudSync {
                     if (deltasToMerge.size() == 0) {
                         LOGGER.warn("Skip partition produce due to no delta files found between now and last partition");
                     } else {
-                        LOGGER.debug("sending " + this.eventMergeDelta);
+                        LOGGER.info("sending " + this.eventMergeDelta);
                         vertx.eventBus().send(this.eventMergeDelta, Utils.toJson(deltasToMerge));
                     }
                 }

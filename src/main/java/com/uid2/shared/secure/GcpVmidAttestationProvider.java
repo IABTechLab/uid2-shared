@@ -43,14 +43,14 @@ public class GcpVmidAttestationProvider implements IAttestationProvider {
             return;
         }
 
-        LOGGER.debug("Validating Instance Confidentiality...");
+        LOGGER.info("Validating Instance Confidentiality...");
         if (!vmid.getInstanceConfidentiality()) {
             // return attestation failure for non-confidential-vm
             handler.handle(Future.failedFuture(new AttestationException("not on confidential vm")));
             return;
         }
 
-        LOGGER.debug("Validating client public key...");
+        LOGGER.info("Validating client public key...");
         // check client public key matches audience in instance document
         try {
             byte[] signedPubKey = Utils.decodeBase64String(vmid.getAudience());
@@ -65,7 +65,7 @@ public class GcpVmidAttestationProvider implements IAttestationProvider {
         }
 
         // extract vmConfigId using information from instance document
-        LOGGER.debug("Validating VmConfig...");
+        LOGGER.info("Validating VmConfig...");
         final VmConfigId vmConfigId;
         try {
             vmConfigId = vmConfigVerifier.getVmConfigId(vmid);
@@ -84,7 +84,7 @@ public class GcpVmidAttestationProvider implements IAttestationProvider {
             return;
         }
 
-        LOGGER.debug("VmConfigId = " + vmConfigId + ", validating against " + allowedVmConfigIds.size() + " registered enclaves");
+        LOGGER.info("VmConfigId = " + vmConfigId + ", validating against " + allowedVmConfigIds.size() + " registered enclaves");
         if (VmConfigVerifier.VALIDATE_VMCONFIG && !allowedVmConfigIds.contains(vmConfigId.getValue())) {
             handler.handle(Future.failedFuture(new AttestationException("unauthorized vmConfigId")));
             return;
@@ -92,7 +92,7 @@ public class GcpVmidAttestationProvider implements IAttestationProvider {
             LOGGER.fatal("Skip VmConfig validation (VALIDATE_VMCONFIG off)...");
         }
 
-        LOGGER.debug("Successfully attested VmConfigId against registered enclaves");
+        LOGGER.info("Successfully attested VmConfigId against registered enclaves");
 
         // return successful attestation with public key if all above checks pass
         AttestationResult result = new AttestationResult(publicKey);

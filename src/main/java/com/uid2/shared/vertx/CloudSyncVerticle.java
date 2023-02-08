@@ -210,7 +210,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
 
     private Future<Void> cloudRefresh() {
         if (this.isRefreshing) {
-            LOGGER.debug("existing s3 refresh in-progress, skipping this one");
+            LOGGER.info("existing s3 refresh in-progress, skipping this one");
             counterRefreshSkipped.increment();
             return Future.succeededFuture();
         }

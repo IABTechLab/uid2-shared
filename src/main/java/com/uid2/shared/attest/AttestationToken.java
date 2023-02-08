@@ -66,7 +66,7 @@ public class AttestationToken {
                     paraphrase, salt);
             return fromPlaintext(plainText);
         } catch (Exception e) {
-            LOGGER.debug("failed to decrypt attestation token: {}", e.getMessage());
+            LOGGER.info("failed to decrypt attestation token: {}", e.getMessage());
             return AttestationToken.Failed();
         }
     }
