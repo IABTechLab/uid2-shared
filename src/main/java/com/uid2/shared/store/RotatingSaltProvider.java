@@ -8,8 +8,8 @@ import com.uid2.shared.model.SaltEntry;
 import com.uid2.shared.store.reader.IMetadataVersionedStore;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hashids.Hashids;
 
 import java.io.BufferedReader;

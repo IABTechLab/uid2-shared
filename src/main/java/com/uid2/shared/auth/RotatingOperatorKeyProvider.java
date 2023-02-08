@@ -9,8 +9,8 @@ import com.uid2.shared.store.IOperatorKeyProvider;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.util.Collection;

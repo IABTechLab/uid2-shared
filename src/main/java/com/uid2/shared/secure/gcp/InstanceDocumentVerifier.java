@@ -5,8 +5,8 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.uid2.shared.secure.AttestationException;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InstanceDocumentVerifier {
     private static final Logger LOGGER = LoggerFactory.getLogger(InstanceDocumentVerifier.class);
@@ -20,7 +20,7 @@ public class InstanceDocumentVerifier {
     public InstanceDocument verify(String token) throws Exception {
         GoogleIdToken googleId = GoogleIdToken.parse(verifier.getJsonFactory(), token);
         if (!VERIFY_SIGNATURE) {
-            LOGGER.fatal("InstanceDocumentVerifier signature verification is ignored" );
+            LOGGER.error("InstanceDocumentVerifier signature verification is ignored" );
         } else {
             if (!verifier.verify(googleId)) {
                 throw new AttestationException("Unable to verify GCP VM's instance document");

@@ -11,8 +11,8 @@ import io.grpc.internal.PickFirstLoadBalancerProvider;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -89,7 +89,7 @@ public class GcpVmidAttestationProvider implements IAttestationProvider {
             handler.handle(Future.failedFuture(new AttestationException("unauthorized vmConfigId")));
             return;
         } else if (!VmConfigVerifier.VALIDATE_VMCONFIG) {
-            LOGGER.fatal("Skip VmConfig validation (VALIDATE_VMCONFIG off)...");
+            LOGGER.error("Skip VmConfig validation (VALIDATE_VMCONFIG off)...");
         }
 
         LOGGER.debug("Successfully attested VmConfigId against registered enclaves");
@@ -104,7 +104,7 @@ public class GcpVmidAttestationProvider implements IAttestationProvider {
         try {
             allowedVmConfigIds.add(vmConfigId);
         } catch (Exception e) {
-            LOGGER.error(e);
+            LOGGER.error("registerEnclave", e);
             throw new AttestationException(e);
         }
     }
