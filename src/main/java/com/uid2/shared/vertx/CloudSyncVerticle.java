@@ -11,8 +11,8 @@ import io.micrometer.core.instrument.Metrics;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.time.Instant;
@@ -173,7 +173,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 this.healthComponent.setHealthStatus(true);
             })
             .onFailure(e -> {
-                LOGGER.fatal("failed starting CloudSyncVerticle." + name, new Exception(e));
+                LOGGER.error("failed starting CloudSyncVerticle." + name, new Exception(e));
                 this.healthComponent.setHealthStatus(false, e.getMessage());
             });
     }

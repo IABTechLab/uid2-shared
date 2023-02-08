@@ -8,8 +8,8 @@ import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.vertx.ICloudSync;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.MalformedURLException;

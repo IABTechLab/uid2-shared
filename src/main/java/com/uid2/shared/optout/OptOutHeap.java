@@ -1,7 +1,7 @@
 package com.uid2.shared.optout;
 
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
@@ -155,7 +155,7 @@ public class OptOutHeap extends OptOutCollection {
         if (sizeNeeded > capacity) {
             int newArraySize = Math.max(sizeNeeded, capacity * 2) * OptOutConst.EntrySize;
             if (newArraySize < 0) {
-                LOGGER.fatal("checkCapacity error: old " + capacity + " plus " + newEntries + " new " + newArraySize);
+                LOGGER.error("checkCapacity error: old " + capacity + " plus " + newEntries + " new " + newArraySize);
                 assert false;
             }
 

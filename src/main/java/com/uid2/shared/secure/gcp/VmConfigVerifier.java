@@ -19,8 +19,8 @@ import com.google.cloud.logging.LoggingOptions;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.uid2.shared.Utils;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -178,7 +178,7 @@ public class VmConfigVerifier {
      */
     private String findUnauthorizedAuditLog(InstanceDocument id) throws InvalidProtocolBufferException {
         if (!VALIDATE_AUDITLOGS) {
-            LOGGER.fatal("Skip AuditLogs validation (VALIDATE_AUDITLOGS off)...");
+            LOGGER.error("Skip AuditLogs validation (VALIDATE_AUDITLOGS off)...");
             return null;
         }
 

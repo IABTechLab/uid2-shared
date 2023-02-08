@@ -1,8 +1,8 @@
 package com.uid2.shared.store;
 
 import com.uid2.shared.model.SaltEntry;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.List;
