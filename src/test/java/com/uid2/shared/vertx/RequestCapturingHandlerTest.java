@@ -78,9 +78,10 @@ public class RequestCapturingHandlerTest {
     public void captureSubRouterPath(Vertx vertx, VertxTestContext testContext) {
         Router router = Router.router(vertx);
         router.route().handler(new RequestCapturingHandler());
+
         Router v2Router = Router.router(vertx);
         v2Router.post("/token/generate").handler(dummyResponseHandler);
-        router.mountSubRouter("/v2", v2Router);
+        router.route("/v2/*").subRouter(v2Router);
 
         vertx.deployVerticle(new TestVerticle(router), testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
