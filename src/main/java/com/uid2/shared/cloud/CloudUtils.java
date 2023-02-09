@@ -5,8 +5,8 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.uid2.shared.Const;
 import com.uid2.shared.Utils;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.net.InetSocketAddress;
