@@ -39,26 +39,13 @@ public class RequestCapturingHandlerTest {
         routingContext.response().setStatusCode(200).end();
     };
 
-    public class TestVerticle extends AbstractVerticle {
-        private final Router testRouter;
-
-        public TestVerticle(Router testRouter) {
-            this.testRouter = testRouter;
-        }
-
-        @Override
-        public void start() {
-            vertx.createHttpServer().requestHandler(this.testRouter).listen(Port);
-        }
-    }
-
     @Test
     public void captureSimplePath(Vertx vertx, VertxTestContext testContext) {
         Router router = Router.router(vertx);
         router.route().handler(new RequestCapturingHandler());
         router.get("/v1/token/generate").handler(dummyResponseHandler);
 
-        vertx.deployVerticle(new TestVerticle(router), testContext.succeeding(id -> {
+        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
             client.get(Port, "localhost", "/v1/token/generate?email=someemail").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
@@ -82,7 +69,7 @@ public class RequestCapturingHandlerTest {
         v2Router.post("/token/generate").handler(dummyResponseHandler);
         router.mountSubRouter("/v2", v2Router);
 
-        vertx.deployVerticle(new TestVerticle(router), testContext.succeeding(id -> {
+        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
             client.post(Port, "localhost", "/v2/token/generate").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertEquals(1,
@@ -104,7 +91,7 @@ public class RequestCapturingHandlerTest {
         router.route().handler(new RequestCapturingHandler());
         router.get("/static/*").handler(dummyResponseHandler);
 
-        vertx.deployVerticle(new TestVerticle(router), testContext.succeeding(id -> {
+        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
             client.get(Port, "localhost", "/static/content").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
@@ -125,7 +112,7 @@ public class RequestCapturingHandlerTest {
         Router router = Router.router(vertx);
         router.route().handler(new RequestCapturingHandler());
 
-        vertx.deployVerticle(new TestVerticle(router), testContext.succeeding(id -> {
+        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
             client.get(Port, "localhost", "/randomPath").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
@@ -153,7 +140,7 @@ public class RequestCapturingHandlerTest {
             ctx.response().end();
         });
 
-        vertx.deployVerticle(new TestVerticle(router), testContext.succeeding(id -> {
+        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
             client.get(Port, "localhost", "/test")
                     .send(testContext.succeeding(response -> testContext.verify(() -> {
