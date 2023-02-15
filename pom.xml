@@ -43,7 +43,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <vertx.version>4.3.7</vertx.version>
+        <vertx.version>4.3.8</vertx.version>
         <junit-jupiter.version>5.7.0</junit-jupiter.version>
         <!-- check micrometer.version vertx-micrometer-metrics consumes before bumping up -->
         <micrometer.version>1.1.0</micrometer.version>
