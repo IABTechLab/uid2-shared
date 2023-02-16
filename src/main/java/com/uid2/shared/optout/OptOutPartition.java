@@ -21,6 +21,11 @@ public class OptOutPartition extends OptOutCollection {
             return -1;
         }
 
+        if (getTombstoneByIndex(entryIndex)) {
+            // this user optout has been marked for deletion (user opt-in)
+            return -1;
+        }
+
         return getTimestampByIndex(entryIndex);
     }
 
@@ -63,5 +68,9 @@ public class OptOutPartition extends OptOutCollection {
     private long getTimestampByIndex(int entryIndex) {
         // start byte index is calculated from itemIndex and optout entry size
         return OptOutEntry.parseTimestamp(this.store, entryIndex * OptOutConst.EntrySize);
+    }
+
+    private boolean getTombstoneByIndex(int entryIndex) {
+        return OptOutEntry.parseTombstone(this.store, entryIndex * OptOutConst.EntrySize);
     }
 }

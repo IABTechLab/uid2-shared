@@ -12,7 +12,8 @@ import java.util.Arrays;
 // Total: 72 bytes
 //
 // Metadata format:
-// Lower 6 bits  -- identity type
+// Lower 5 bits  -- identity type
+// Middle 1 bit  -- tombstone
 // Higher 2 bits -- record version
 // Total: 1 byte
 //
@@ -23,11 +24,15 @@ public final class OptOutEntry {
     public final byte[] identityHash;
     public final byte[] advertisingId;
     public final long timestamp;
+    public final boolean isTombstone;
 
-    private static final long timestampMask = 0xFFFFFFFFFFFFFFl;
-    private static final byte adsIdTypeMask = 0x3F;
+    private static final long timestampMask = 0xFFFFFFFFFFFFFFL;
+    private static final byte adsIdTypeMask = 0x1F;
     private static final int adsIdVersionShift = 6;
+    private static final byte tombstoneMask = 0x1;
+    private static final int tombstoneShift = 5;
 
+    @Deprecated
     public OptOutEntry(byte[] identityHash, byte[] advertisingId, long ts) {
         assert identityHash.length == OptOutConst.Sha256Bytes;
         assert advertisingId.length == OptOutConst.Sha256Bytes || advertisingId.length == OptOutConst.Sha256Bytes + 1;
@@ -35,6 +40,17 @@ public final class OptOutEntry {
         this.identityHash = identityHash;
         this.advertisingId = advertisingId;
         this.timestamp = ts;
+        this.isTombstone = false;
+    }
+
+    public OptOutEntry(byte[] identityHash, byte[] advertisingId, long ts, boolean isTombstone) {
+        assert identityHash.length == OptOutConst.Sha256Bytes;
+        assert advertisingId.length == OptOutConst.Sha256Bytes || advertisingId.length == OptOutConst.Sha256Bytes + 1;
+        // assert ts >= 0;
+        this.identityHash = identityHash;
+        this.advertisingId = advertisingId;
+        this.timestamp = ts;
+        this.isTombstone = isTombstone;
     }
 
     public static OptOutEntry parse(byte[] buffer, int bufferIndex) {
@@ -43,6 +59,7 @@ public final class OptOutEntry {
         final byte metadata = buffer[bufferIndex + OptOutConst.EntrySize - 1];
         final byte adsIdVersion = (byte) (metadata >> adsIdVersionShift);
         final byte identityType = (byte) (metadata & adsIdTypeMask);
+        final boolean isTombstone = (((byte) (metadata >> tombstoneShift)) & tombstoneMask) == 0x1;
 
         final byte[] idHash = Arrays.copyOfRange(buffer, bufferIndex, bufferIndex + OptOutConst.Sha256Bytes);
         bufferIndex += OptOutConst.Sha256Bytes;
@@ -54,7 +71,7 @@ public final class OptOutEntry {
 
         final long ts = ByteBuffer.wrap(buffer, bufferIndex, Long.BYTES).order(ByteOrder.LITTLE_ENDIAN).getLong() & timestampMask;
 
-        return new OptOutEntry(idHash, adsId, ts);
+        return new OptOutEntry(idHash, adsId, ts, isTombstone);
     }
 
     private static byte[] parseAdsIdV3(byte[] buffer, int bufferIndex, byte identityType) {
@@ -68,6 +85,12 @@ public final class OptOutEntry {
         assert bufferIndexForEntry + OptOutConst.EntrySize <= buffer.length;
         return ByteBuffer.wrap(buffer, bufferIndexForEntry + (OptOutConst.Sha256Bytes << 1), Long.BYTES)
                 .order(ByteOrder.LITTLE_ENDIAN).getLong() & timestampMask;
+    }
+
+    public static boolean parseTombstone(byte[] buffer, int bufferIndexForEntry) {
+        assert bufferIndexForEntry + OptOutConst.EntrySize <= buffer.length;
+        byte metadata = buffer[bufferIndexForEntry + (OptOutConst.Sha256Bytes << 1) + 7];
+        return ((byte)(metadata >> tombstoneShift) & tombstoneMask) == (byte)0x1;
     }
 
     public static void setTimestamp(byte[] buffer, int bufferIndexForEntry, long timestamp) {
@@ -109,7 +132,7 @@ public final class OptOutEntry {
     public static OptOutEntry newTestEntry(long idHash, long timestamp) {
         // for test, using the same value for identity_hash and advertising_id
         byte[] id = idHashFromLong(idHash);
-        return new OptOutEntry(id, id, timestamp);
+        return new OptOutEntry(id, id, timestamp, false);
     }
 
     // Overriding equals() to compare two OptOutEntry objects
@@ -131,8 +154,11 @@ public final class OptOutEntry {
         return (int) (timestamp + Arrays.hashCode(identityHash) + Arrays.hashCode(advertisingId));
     }
 
-    private static byte calcMetadata(byte[] advertisingId) {
-        return (byte) (advertisingId.length == OptOutConst.Sha256Bytes ? 0 : ((1 << adsIdVersionShift) | advertisingId[0]));
+    private static byte calcMetadata(byte[] advertisingId, boolean isTombstone) {
+        return (byte) (
+                (advertisingId.length == OptOutConst.Sha256Bytes ? 0 : ((1 << adsIdVersionShift) | advertisingId[0]))
+                | (isTombstone ? (1 << tombstoneShift) : 0)
+        );
     }
 
     public void copyToByteArray(byte[] bytes, int offset) {
@@ -140,7 +166,7 @@ public final class OptOutEntry {
         System.arraycopy(this.identityHash, 0, bytes, offset, OptOutConst.Sha256Bytes);
         offset += OptOutConst.Sha256Bytes;
 
-        final byte metadata = calcMetadata(this.advertisingId);
+        final byte metadata = calcMetadata(this.advertisingId, isTombstone);
 
         // copy advertising id
         System.arraycopy(this.advertisingId, metadata == 0 ? 0 : 1, bytes, offset, OptOutConst.Sha256Bytes);
@@ -153,11 +179,16 @@ public final class OptOutEntry {
         bytes[offset + Long.BYTES - 1] = metadata;
     }
 
+    @Deprecated
     public static void writeTo(ByteBuffer buffer, byte[] identityHash, byte[] advertisingId, long timestamp) {
+        writeTo(buffer, identityHash, advertisingId, timestamp, false);
+    }
+
+    public static void writeTo(ByteBuffer buffer, byte[] identityHash, byte[] advertisingId, long timestamp, boolean isTombstone) {
         assert identityHash.length == OptOutConst.Sha256Bytes;
         assert advertisingId.length == OptOutConst.Sha256Bytes || advertisingId.length == OptOutConst.Sha256Bytes + 1;
 
-        final byte metadata = calcMetadata(advertisingId);
+        final byte metadata = calcMetadata(advertisingId, isTombstone);
         final byte[] timestampBytes = OptOutUtils.toByteArray(timestamp);
         timestampBytes[timestampBytes.length - 1] = metadata;
 
