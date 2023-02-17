@@ -54,11 +54,25 @@ public class AttestationTokenTest {
     }
 
     @Test
-    public void testAttestationTokenNew() {
+    public void testAttestationTokenNewSettingLifetime() {
         final long lifetime = 1800;
-        final Instant expiryLowerBound = Instant.now().plusSeconds(lifetime - 60);
-        final Instant expiryUpperBound = Instant.now().plusSeconds(lifetime + 300);
+        final Instant expiryLowerBound = Instant.now().plusSeconds(lifetime + (5 * 60));
+        final Instant expiryUpperBound = Instant.now().plusSeconds(lifetime + (10 * 60));
         final AttestationTokenService ats = new AttestationTokenService(ENCRYPTION_KEY, SALT, lifetime);
+
+        final String attestationToken = ats.createToken("userToken");
+        Assertions.assertTrue(ats.validateToken("userToken", attestationToken));
+
+        final AttestationToken reconstructToken = AttestationToken.fromEncrypted(attestationToken, ENCRYPTION_KEY, SALT);
+        Assertions.assertTrue(reconstructToken.getExpiresAt().isAfter(expiryLowerBound));
+        Assertions.assertTrue(reconstructToken.getExpiresAt().isBefore(expiryUpperBound));
+    }
+    @Test
+    public void testAttestationTokenNewDefaultLifetime() {
+        final long defaultLifetime = 7200;
+        final Instant expiryLowerBound = Instant.now().plusSeconds(defaultLifetime + (5 * 60));
+        final Instant expiryUpperBound = Instant.now().plusSeconds(defaultLifetime + (10 * 60));
+        final AttestationTokenService ats = new AttestationTokenService(ENCRYPTION_KEY, SALT);
 
         final String attestationToken = ats.createToken("userToken");
         Assertions.assertTrue(ats.validateToken("userToken", attestationToken));

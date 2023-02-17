@@ -2,6 +2,7 @@ package com.uid2.shared.attest;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class AttestationTokenService implements IAttestationTokenService {
 
@@ -11,9 +12,7 @@ public class AttestationTokenService implements IAttestationTokenService {
 
     @Deprecated
     public AttestationTokenService(String encryptionKey, String encryptionSalt) {
-        this.encryptionKey = encryptionKey;
-        this.encryptionSalt = encryptionSalt;
-        this.expiresAfterSeconds = 2 * 3600; // 2 hours;
+        this(encryptionKey, encryptionSalt, 2 * 3600);
     }
 
     public AttestationTokenService(String encryptionKey, String encryptionSalt, long expiresAfterSeconds) {
@@ -24,7 +23,8 @@ public class AttestationTokenService implements IAttestationTokenService {
 
     @Override
     public String createToken(String userToken) {
-        Instant expiresAt = Instant.now().plus(this.expiresAfterSeconds, ChronoUnit.SECONDS);
+        long ran = ThreadLocalRandom.current().nextLong(300, 600); // random time between 5 and 10 minutes more to create some variation between when operators expire
+        Instant expiresAt = Instant.now().plus(this.expiresAfterSeconds + ran, ChronoUnit.SECONDS);
         AttestationToken attToken = new AttestationToken(userToken, expiresAt);
         return attToken.encode(encryptionKey, encryptionSalt);
     }
