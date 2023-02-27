@@ -106,12 +106,11 @@ public class Utils {
         final InputStreamReader reader = new InputStreamReader(stream);
         final char[] buff = new char[1024];
         final StringBuilder sb = new StringBuilder();
-        for (int count; (count = reader.read(buff, 0, buff.length)) > 0; ) {
+        for (int count; (count = reader.read(buff, 0, buff.length)) > 0;) {
             sb.append(buff, 0, count);
         }
 
-        final T ret = (T) Json.decodeValue(sb.toString());
-        return ret;
+        return (T) Json.decodeValue(sb.toString());
     }
 
     public static JsonObject toJsonObject(InputStream stream) throws IOException {

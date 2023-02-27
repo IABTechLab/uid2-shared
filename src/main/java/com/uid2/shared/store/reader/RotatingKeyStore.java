@@ -1,7 +1,6 @@
 package com.uid2.shared.store.reader;
 
 import com.uid2.shared.cloud.DownloadCloudStorage;
-import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.model.EncryptionKey;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.IKeyStore;
@@ -52,7 +51,9 @@ public class RotatingKeyStore implements IKeyStore, StoreReader<Collection<Encry
     }
 
     @Override
-    public CloudPath getMetadataPath() { return reader.getMetadataPath(); }
+    public CloudPath getMetadataPath() {
+        return reader.getMetadataPath();
+    }
 
     @Override
     public IKeyStoreSnapshot getSnapshot(Instant asOf) {
