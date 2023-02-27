@@ -1,5 +1,8 @@
 package com.uid2.shared.attest;
 
+import com.uid2.shared.store.Clock;
+import com.uid2.shared.store.InstantClock;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ThreadLocalRandom;
@@ -9,6 +12,8 @@ public class AttestationTokenService implements IAttestationTokenService {
     private final String encryptionKey;
     private final String encryptionSalt;
     private final long expiresAfterSeconds;
+    private final ThreadLocalRandom random;
+    private final Clock clock;
 
     @Deprecated
     public AttestationTokenService(String encryptionKey, String encryptionSalt) {
@@ -16,15 +21,21 @@ public class AttestationTokenService implements IAttestationTokenService {
     }
 
     public AttestationTokenService(String encryptionKey, String encryptionSalt, long expiresAfterSeconds) {
+        this(encryptionKey, encryptionSalt, expiresAfterSeconds, ThreadLocalRandom.current(), new InstantClock());
+    }
+
+    public AttestationTokenService(String encryptionKey, String encryptionSalt, long expiresAfterSeconds, ThreadLocalRandom random, Clock clock) {
         this.encryptionKey = encryptionKey;
         this.encryptionSalt = encryptionSalt;
         this.expiresAfterSeconds = expiresAfterSeconds;
+        this.random = random;
+        this.clock = clock;
     }
 
     @Override
     public String createToken(String userToken) {
-        long ran = ThreadLocalRandom.current().nextLong(300, 600); // random time between 5 and 10 minutes more to create some variation between when operators expire
-        Instant expiresAt = Instant.now().plus(this.expiresAfterSeconds + ran, ChronoUnit.SECONDS);
+        long randomOffset = this.random.nextLong(300, 600); // random time between 5 and 10 minutes more to create some variation between when operators expire
+        Instant expiresAt = this.clock.now().plus(this.expiresAfterSeconds + randomOffset, ChronoUnit.SECONDS);
         AttestationToken attToken = new AttestationToken(userToken, expiresAt);
         return attToken.encode(encryptionKey, encryptionSalt);
     }
