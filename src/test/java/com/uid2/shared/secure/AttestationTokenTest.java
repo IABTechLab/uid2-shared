@@ -2,12 +2,12 @@ package com.uid2.shared.secure;
 
 import com.uid2.shared.attest.AttestationToken;
 import com.uid2.shared.attest.AttestationTokenService;
-import com.uid2.shared.store.Clock;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
@@ -70,7 +70,7 @@ public class AttestationTokenTest {
     public void testAttestationTokenSettingLifetimeHasExpectedPlusRandomValue(long randomValue) {
         final long lifetime = 1800;
         final Instant fixedInstant = Instant.now().truncatedTo(ChronoUnit.SECONDS);
-        when(clock.now()).thenReturn(fixedInstant);
+        when(clock.instant()).thenReturn(fixedInstant);
         when(random.nextLong(300, 600)).thenReturn(randomValue);
         final Instant targetLifetime = fixedInstant.plus(1800 + randomValue, ChronoUnit.SECONDS);
         final AttestationTokenService ats = new AttestationTokenService(ENCRYPTION_KEY, SALT, lifetime, random, clock);
