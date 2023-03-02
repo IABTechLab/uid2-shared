@@ -1,7 +1,5 @@
 package com.uid2.shared.model;
 
-import com.uid2.shared.model.KeyIdentifier;
-
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Objects;
@@ -69,6 +67,6 @@ public final class EncryptionKey {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, keyBytes, created, activates, expires, siteId);
+        return Objects.hash(id, Arrays.hashCode(keyBytes), created, activates, expires, siteId);
     }
 }

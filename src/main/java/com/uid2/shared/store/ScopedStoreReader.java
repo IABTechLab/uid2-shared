@@ -35,7 +35,10 @@ public class ScopedStoreReader<T> {
         }
     }
 
-    public CloudPath getMetadataPath() { return scope.getMetadataPath(); }
+    public CloudPath getMetadataPath() {
+        return scope.getMetadataPath();
+    }
+
     public T getSnapshot() {
         return latestSnapshot.get();
     }

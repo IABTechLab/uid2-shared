@@ -7,6 +7,5 @@ public interface StoreReader<T> extends IMetadataVersionedStore {
     T getAll();
     void loadContent() throws Exception;
     JsonObject getMetadata() throws Exception;
-
     CloudPath getMetadataPath();
 }
