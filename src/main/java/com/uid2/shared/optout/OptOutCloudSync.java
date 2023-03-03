@@ -140,10 +140,9 @@ public class OptOutCloudSync implements ICloudSync {
             .collect(Collectors.toMap(this::toLocalPath, Function.identity()));
 
         // convert cloudPath to localPath, and remove cached local files
-        Set<String> missing = fileUtils.filterNonExpired(cloudPaths, now).stream()
+        Set<String> missing = cloudPaths.stream()
             .map(this::toLocalPath)
             .collect(Collectors.toSet());
-        missing.removeAll(fileUtils.filterNonExpired(cachedPaths, now));
 
         // use local to cloud map to retrieve list of cloud files to download
         missing = missing.stream()
@@ -153,17 +152,9 @@ public class OptOutCloudSync implements ICloudSync {
         // invoke callback to handle downloads
         handleDownloads.accept(missing);
 
-        // find files to delete, 1. expired files
         Set<String> deletes = cachedPaths.stream()
-            .filter(f -> fileUtils.isDeltaOrPartitionExpired(now, f))
-            .collect(Collectors.toSet());
-
-        // 2. local extra files
-        List<String> localExtra = cachedPaths.stream()
             .filter(f -> !localToCloud.keySet().contains(f))
-            .collect(Collectors.toList());
-
-        deletes.addAll(localExtra);
+            .collect(Collectors.toSet());
 
         // invoke callback to delete files
         handleDeletes.accept(deletes);
