@@ -143,7 +143,7 @@ public class OptOutCloudSync implements ICloudSync {
         Set<String> missing = cloudPaths.stream()
             .map(this::toLocalPath)
             .collect(Collectors.toSet());
-
+        missing.removeAll(cachedPaths);
         // use local to cloud map to retrieve list of cloud files to download
         missing = missing.stream()
             .map(p -> localToCloud.get(p))
