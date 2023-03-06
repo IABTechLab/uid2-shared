@@ -4,7 +4,7 @@ The UID 2 Project is subject to Tech Lab IPR’s Policy and is managed by the IA
 
 ## Local Development
 
-Set your `JAVA_HOME` environment variable to the location of your JDK 1.8 installation
+Set your `JAVA_HOME` environment variable to the location of your JDK 11 installation
 
 To run unit tests:
 
