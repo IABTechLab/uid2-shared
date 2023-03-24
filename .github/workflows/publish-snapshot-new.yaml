@@ -1,0 +1,10 @@
+name: Publish Snapshot Package
+on:
+  workflow_dispatch:
+
+jobs:
+  build-publish-package:
+    uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-java-publish-versioned-package.yaml@main
+    with: 
+      release_type: 'Snapshot'
+    secrets: inherit
