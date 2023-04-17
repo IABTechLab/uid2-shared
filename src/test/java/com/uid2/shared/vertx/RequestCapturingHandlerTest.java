@@ -129,6 +129,29 @@ public class RequestCapturingHandlerTest {
         }));
     }
 
+    @Test
+    public void captureHostname(Vertx vertx, VertxTestContext testContext) {
+        Router router = Router.router(vertx);
+        router.route().handler(new RequestCapturingHandler());
+        router.get("/v1/token/generate").handler(dummyResponseHandler);
+
+        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
+            WebClient client = WebClient.create(vertx);
+            client.get(Port, "localhost", "/v1/token/generate?email=someemail").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
+                Assertions.assertDoesNotThrow(() ->
+                        Metrics.globalRegistry
+                                .get("uid2.http_requests")
+                                .tag("status", "200")
+                                .tag("method", "GET")
+                                .tag("path", "/v1/token/generate")
+                                .tag("hostname", "localhost")
+                                .counter());
+
+                testContext.completeNow();
+            })));
+        }));
+    }
+
     @ParameterizedTest
     @MethodSource("siteIdRoutingContextData")
     public void getSiteIdFromRoutingContextData(String key, Object value, String siteId, Vertx vertx, VertxTestContext testContext) {

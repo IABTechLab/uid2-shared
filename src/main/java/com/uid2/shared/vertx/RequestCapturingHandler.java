@@ -105,8 +105,11 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
             host = "10.x.x.x:xx";
         }
 
+        String hostname = request.host();
+        hostname = hostname.substring(0, hostname.indexOf(":"));;
+
         final Integer siteId = getSiteId(context);
-        incrementMetricCounter(apiContact, siteId, host, status, method, path);
+        incrementMetricCounter(apiContact, siteId, host, status, method, path, hostname);
 
         if (request.headers().contains(Const.Http.AppVersionHeader)) {
             incrementAppVersionCounter(apiContact, request.headers().get(Const.Http.AppVersionHeader));
@@ -197,14 +200,14 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         return null;
     }
 
-    private void incrementMetricCounter(String apiContact, Integer siteId, String host, int status, HttpMethod method, String path) {
+    private void incrementMetricCounter(String apiContact, Integer siteId, String host, int status, HttpMethod method, String path, String hostname) {
         assert apiContact != null;
-        String key = apiContact + "|" + siteId + "|" + host + "|" + status + "|" + method.name() + "|" + path;
+        String key = apiContact + "|" + siteId + "|" + host + "|" + status + "|" + method.name() + "|" + path + "|" + hostname;
         if (!_apiMetricCounters.containsKey(key)) {
             Counter counter = Counter
                     .builder("uid2.http_requests")
                     .description("counter for how many http requests are processed per each api contact and status code")
-                    .tags("api_contact", apiContact, "site_id", String.valueOf(siteId), "host", host, "status", String.valueOf(status), "method", method.name(), "path", path)
+                    .tags("api_contact", apiContact, "site_id", String.valueOf(siteId), "host", host, "status", String.valueOf(status), "method", method.name(), "path", path, "hostname", hostname)
                     .register(Metrics.globalRegistry);
             _apiMetricCounters.put(key, counter);
         }
