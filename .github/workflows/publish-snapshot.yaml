@@ -1,10 +1,16 @@
 name: Publish Snapshot Package
 on:
   workflow_dispatch:
-
+    inputs:
+      publish_to_maven:
+        description: 'True to publish the artifacts to maven repository, false to skip the step'
+        default: true
+        required: false
+        type: boolean
 jobs:
   build-publish-package:
     uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-java-publish-versioned-package.yaml@main
     with: 
       release_type: 'Snapshot'
+      publish_to_maven: ${{ inputs.publish_to_maven }}
     secrets: inherit
