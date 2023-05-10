@@ -191,10 +191,9 @@ public class CloudStorageS3 implements ICloudStorage {
     }
 
     private void checkVersioningEnabled() {
-
         try {
             var config =this.s3.getBucketVersioningConfiguration(this.bucket);
-            if (config.getStatus() == "ENABLED"){
+            if (config.getStatus().equalsIgnoreCase("ENABLED")) {
                 LOGGER.info("Bucket: {} in Region: {} has versioning configured.", this.bucket, this.s3.getRegionName());
             } else {
                 LOGGER.warn("Bucket: {} in Region: {} does not have versioning configured. There is a potential for data loss", this.bucket, this.s3.getRegionName());
