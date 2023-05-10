@@ -51,6 +51,7 @@ public class CloudStorageS3 implements ICloudStorage {
         try {
             File file = new File(localPath);
             this.s3.putObject(bucket, cloudPath, file);
+            this.checkVersioningEnabled();
         } catch (Throwable t) {
             throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
         }
@@ -60,6 +61,7 @@ public class CloudStorageS3 implements ICloudStorage {
     public void upload(InputStream input, String cloudPath) throws CloudStorageException {
         try {
             this.s3.putObject(bucket, cloudPath, input, null);
+            this.checkVersioningEnabled();
         } catch (Throwable t) {
             throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
         }
@@ -185,6 +187,21 @@ public class CloudStorageS3 implements ICloudStorage {
             this.s3.deleteObjects(dor);
         } catch (Throwable t) {
             throw new CloudStorageException("s3 get error: " + t.getMessage(), t);
+        }
+    }
+
+    private void checkVersioningEnabled() {
+
+        try {
+            var config =this.s3.getBucketVersioningConfiguration(this.bucket);
+            if (config.getStatus() == "ENABLED"){
+                LOGGER.info("Bucket: {} in Region: {} has versioning configured.", this.bucket, this.s3.getRegionName());
+            } else {
+                LOGGER.warn("Bucket: {} in Region: {} does not have versioning configured. There is a potential for data loss", this.bucket, this.s3.getRegionName());
+            }
+        } catch (Throwable t) {
+            // don't want this to fail when writing, but should be logged
+            LOGGER.error(String.format("Unable to determine if the S3 bucket: %s has versioning enabled", this.bucket), t);
         }
     }
 }
