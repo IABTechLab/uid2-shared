@@ -11,6 +11,7 @@ public enum Role {
     OPERATOR_MANAGER,
     SECRET_MANAGER,
     ADMINISTRATOR,
+    SHARING_PORTAL,
     //UID2-575 for cronjob to trigger private site data generated
     PRIVATE_SITE_REFRESHER
 }
