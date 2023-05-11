@@ -17,8 +17,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
-public class CloudStorageS3 implements ICloudStorage {
+public class CloudStorageS3 implements TaggableCloudStorage {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudStorageS3.class);
 
     private final AmazonS3 s3;
@@ -173,6 +174,18 @@ public class CloudStorageS3 implements ICloudStorage {
     @Override
     public String mask(String cloudPath) {
         return cloudPath;
+    }
+
+    @Override
+    public void setTags(String cloudPath, Map<String, String> tags) throws CloudStorageException {
+        try {
+            List<Tag> newTags = new ArrayList<>();
+            tags.forEach((k, v) -> newTags.add(new Tag(k, v)));
+
+            this.s3.setObjectTagging(new SetObjectTaggingRequest(this.bucket, cloudPath, new ObjectTagging(newTags)));
+        } catch (Throwable t) {
+            throw new CloudStorageException("s3 set tags error", t);
+        }
     }
 
     private void deleteInternal(Collection<String> cloudPaths) throws CloudStorageException {
