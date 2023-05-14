@@ -29,20 +29,19 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     public CloudStorageS3(String accessKeyId, String secretAccessKey, String region, String bucket, String s3Endpoint) {
         // Reading https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html
         AWSCredentials creds = new BasicAWSCredentials(
-            accessKeyId,
-            secretAccessKey);
+                accessKeyId,
+                secretAccessKey);
         if (s3Endpoint.isEmpty()) {
             this.s3 = AmazonS3ClientBuilder.standard()
-                .withRegion(region)
-                .withCredentials(new AWSStaticCredentialsProvider(creds))
-                .build();
-        }
-        else {
+                    .withRegion(region)
+                    .withCredentials(new AWSStaticCredentialsProvider(creds))
+                    .build();
+        } else {
             this.s3 = AmazonS3ClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(creds))
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint, region))
-                .enablePathStyleAccess()
-                .build();
+                    .withCredentials(new AWSStaticCredentialsProvider(creds))
+                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint, region))
+                    .enablePathStyleAccess()
+                    .build();
         }
         this.bucket = bucket;
     }
@@ -114,8 +113,8 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     public List<String> list(String prefix) throws CloudStorageException {
         try {
             ListObjectsV2Request req = new ListObjectsV2Request()
-                .withBucketName(bucket)
-                .withPrefix(prefix);
+                    .withBucketName(bucket)
+                    .withPrefix(prefix);
             ListObjectsV2Result result = null;
             List<S3ObjectSummary> objects = null;
 
@@ -156,9 +155,9 @@ public class CloudStorageS3 implements TaggableCloudStorage {
 
             // Generate the presigned URL.
             GeneratePresignedUrlRequest generatePresignedUrlRequest =
-                new GeneratePresignedUrlRequest(this.bucket, cloudPath)
-                    .withMethod(HttpMethod.GET)
-                    .withExpiration(expiration);
+                    new GeneratePresignedUrlRequest(this.bucket, cloudPath)
+                            .withMethod(HttpMethod.GET)
+                            .withExpiration(expiration);
             URL url = this.s3.generatePresignedUrl(generatePresignedUrlRequest);
             return url;
         } catch (Throwable t) {
@@ -198,8 +197,8 @@ public class CloudStorageS3 implements TaggableCloudStorage {
             keys.add(new DeleteObjectsRequest.KeyVersion(p));
         }
         DeleteObjectsRequest dor = new DeleteObjectsRequest(bucket)
-            .withKeys(keys)
-            .withQuiet(false);
+                .withKeys(keys)
+                .withQuiet(false);
         try {
             this.s3.deleteObjects(dor);
         } catch (Throwable t) {
@@ -209,7 +208,7 @@ public class CloudStorageS3 implements TaggableCloudStorage {
 
     private void checkVersioningEnabled() {
         try {
-            var config =this.s3.getBucketVersioningConfiguration(this.bucket);
+            var config = this.s3.getBucketVersioningConfiguration(this.bucket);
             if (config.getStatus().equalsIgnoreCase("ENABLED")) {
                 LOGGER.info("Bucket: {} in Region: {} has versioning configured.", this.bucket, this.s3.getRegionName());
             } else {
