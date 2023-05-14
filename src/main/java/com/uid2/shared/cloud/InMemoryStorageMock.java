@@ -92,7 +92,7 @@ public class InMemoryStorageMock implements TaggableCloudStorage {
 
     @Override
     public void setTags(String cloudPath, Map<String, String> tags) throws CloudStorageException {
-        var newTags = new HashMap<String, String>(tags);
+        var newTags = new HashMap<>(tags);
         cloudFileTagsMock.put(cloudPath, newTags);
     }
 }

@@ -179,10 +179,14 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     @Override
     public void setTags(String cloudPath, Map<String, String> tags) throws CloudStorageException {
         try {
-            List<Tag> newTags = new ArrayList<>();
-            tags.forEach((k, v) -> newTags.add(new Tag(k, v)));
+            if (this.s3.doesObjectExist(this.bucket, cloudPath)) {
+                List<Tag> newTags = new ArrayList<>();
+                tags.forEach((k, v) -> newTags.add(new Tag(k, v)));
 
-            this.s3.setObjectTagging(new SetObjectTaggingRequest(this.bucket, cloudPath, new ObjectTagging(newTags)));
+                this.s3.setObjectTagging(new SetObjectTaggingRequest(this.bucket, cloudPath, new ObjectTagging(newTags)));
+            } else {
+                LOGGER.warn("CloudPath: {} does not exist in bucket: {}. Tags not set", cloudPath, this.bucket);
+            }
         } catch (Throwable t) {
             throw new CloudStorageException("s3 set tags error", t);
         }
