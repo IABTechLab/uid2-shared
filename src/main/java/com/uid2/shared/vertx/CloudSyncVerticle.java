@@ -326,8 +326,9 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private void cloudUploadBlocking(Promise<Void> promise, String fileToUpload) {
         try {
             String cloudPath = this.cloudSync.toCloudPath(fileToUpload);
-            InputStream localInput = this.localStorage.download(fileToUpload);
-            this.cloudStorage.upload(localInput, cloudPath);
+            try (InputStream localInput = this.localStorage.download(fileToUpload)) {
+                this.cloudStorage.upload(localInput, cloudPath);
+            }
             promise.complete();
         } catch (Exception ex) {
             LOGGER.error(ex.getMessage(), ex);
@@ -372,8 +373,9 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private void cloudDownloadBlocking(Promise<Void> promise, String s3Path) {
         try {
             String localPath = this.cloudSync.toLocalPath(s3Path);
-            InputStream cloudInput = this.cloudStorage.download(s3Path);
-            this.localStorage.upload(cloudInput, localPath);
+            try (InputStream cloudInput = this.cloudStorage.download(s3Path)) {
+                this.localStorage.upload(cloudInput, localPath);
+            }
             promise.complete();
         } catch (Exception ex) {
             LOGGER.error("download: " + s3Path + ": " + ex.getMessage(), ex);

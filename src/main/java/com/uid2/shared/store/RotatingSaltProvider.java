@@ -67,8 +67,9 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
 
     @Override
     public JsonObject getMetadata() throws Exception {
-        InputStream s = this.metadataStreamProvider.download(this.metadataPath);
-        return Utils.toJsonObject(s);
+        try (InputStream s = this.metadataStreamProvider.download(this.metadataPath)) {
+            return Utils.toJsonObject(s);
+        }
     }
 
     @Override
@@ -132,16 +133,16 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         if (now.isAfter(expires)) return null;
 
         final String path = spec.getString("location");
-        final InputStream inputStream = this.contentStreamProvider.download(path);
-        final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-
+        int idx = 0;
         final SaltEntry[] entries = new SaltEntry[spec.getInteger("size")];
 
-        int idx = 0;
-        for (String l; (l = reader.readLine()) != null; ++idx) {
-            // System.out.println("Processing Line " + l);
-            final SaltEntry entry = entryBuilder.toEntry(l);
-            entries[idx] = entry;
+        try (InputStream inputStream = this.contentStreamProvider.download(path);
+             InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+             BufferedReader reader = new BufferedReader(inputStreamReader)) {
+            for (String l; (l = reader.readLine()) != null; ++idx) {
+                final SaltEntry entry = entryBuilder.toEntry(l);
+                entries[idx] = entry;
+            }
         }
 
         LOGGER.info("Loaded " + idx + " salts");
