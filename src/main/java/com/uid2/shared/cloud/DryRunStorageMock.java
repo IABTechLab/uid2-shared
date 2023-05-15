@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class DryRunStorageMock implements ICloudStorage {
+public class DryRunStorageMock implements TaggableCloudStorage {
     private static final List<String> EMPTY_LIST = new ArrayList<>();
     private static final InputStream EMPTY_STREAM = new ByteArrayInputStream(new byte[0]);
 
@@ -71,6 +71,12 @@ public class DryRunStorageMock implements ICloudStorage {
     public String mask(String cloudPath) {
         logMessage("mask", "(" + cloudPath + ")");
         return cloudPath;
+    }
+
+    @Override
+    public void setTags(String cloudPath, Map<String, String> tags) throws CloudStorageException {
+        logMessage("setTags", "(..." + tags.size() + " tags...)");
+        tags.forEach((k, v) -> logMessage("tag", String.format("key: %s, value: %s", k, v)));
     }
 
     private void logMessage(String method, String msg) {
