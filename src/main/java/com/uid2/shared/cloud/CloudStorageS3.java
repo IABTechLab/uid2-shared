@@ -50,8 +50,8 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     public void upload(String localPath, String cloudPath) throws CloudStorageException {
         try {
             File file = new File(localPath);
-            this.s3.putObject(bucket, cloudPath, file);
-            this.checkVersioningEnabled();
+            var putResult = this.s3.putObject(bucket, cloudPath, file);
+            this.checkVersioningEnabled(putResult);
         } catch (Throwable t) {
             throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
         }
@@ -60,8 +60,37 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     @Override
     public void upload(InputStream input, String cloudPath) throws CloudStorageException {
         try {
-            this.s3.putObject(bucket, cloudPath, input, null);
-            this.checkVersioningEnabled();
+            var putResult = this.s3.putObject(bucket, cloudPath, input, null);
+            this.checkVersioningEnabled(putResult);
+        } catch (Throwable t) {
+            throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
+        }
+    }
+
+    @Override
+    public void upload(String localPath, String cloudPath, Map<String, String> tags) throws CloudStorageException {
+        try {
+            File file = new File(localPath);
+            PutObjectRequest putRequest = new PutObjectRequest(bucket, cloudPath, file);
+            List<Tag> newTags = new ArrayList<>();
+            tags.forEach((k, v) -> newTags.add(new Tag(k, v)));
+            putRequest.setTagging(new ObjectTagging(newTags));
+            var putResult = this.s3.putObject(putRequest);
+            this.checkVersioningEnabled(putResult);
+        } catch (Throwable t) {
+            throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
+        }
+    }
+
+    @Override
+    public void upload(InputStream input, String cloudPath, Map<String, String> tags) throws CloudStorageException {
+        try {
+            PutObjectRequest putRequest = new PutObjectRequest(bucket, cloudPath, input, null);
+            List<Tag> newTags = new ArrayList<>();
+            tags.forEach((k, v) -> newTags.add(new Tag(k, v)));
+            putRequest.setTagging(new ObjectTagging(newTags));
+            var putResult = this.s3.putObject(putRequest);
+            this.checkVersioningEnabled(putResult);
         } catch (Throwable t) {
             throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
         }
@@ -206,13 +235,13 @@ public class CloudStorageS3 implements TaggableCloudStorage {
         }
     }
 
-    private void checkVersioningEnabled() {
+    private void checkVersioningEnabled(PutObjectResult putObjectResult) {
         try {
-            var config = this.s3.getBucketVersioningConfiguration(this.bucket);
-            if (config.getStatus().equalsIgnoreCase("ENABLED")) {
-                LOGGER.info("Bucket: {} in Region: {} has versioning configured.", this.bucket, this.s3.getRegionName());
-            } else {
+            String versionId = putObjectResult.getVersionId();
+            if (versionId == null || versionId.isEmpty()) {
                 LOGGER.warn("Bucket: {} in Region: {} does not have versioning configured. There is a potential for data loss", this.bucket, this.s3.getRegionName());
+            } else {
+                LOGGER.info("Bucket: {} in Region: {} has versioning configured.", this.bucket, this.s3.getRegionName());
             }
         } catch (Throwable t) {
             // don't want this to fail when writing, but should be logged
