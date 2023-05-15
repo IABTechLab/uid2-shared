@@ -17,8 +17,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
-public class CloudStorageS3 implements ICloudStorage {
+public class CloudStorageS3 implements TaggableCloudStorage {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudStorageS3.class);
 
     private final AmazonS3 s3;
@@ -28,20 +29,19 @@ public class CloudStorageS3 implements ICloudStorage {
     public CloudStorageS3(String accessKeyId, String secretAccessKey, String region, String bucket, String s3Endpoint) {
         // Reading https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html
         AWSCredentials creds = new BasicAWSCredentials(
-            accessKeyId,
-            secretAccessKey);
+                accessKeyId,
+                secretAccessKey);
         if (s3Endpoint.isEmpty()) {
             this.s3 = AmazonS3ClientBuilder.standard()
-                .withRegion(region)
-                .withCredentials(new AWSStaticCredentialsProvider(creds))
-                .build();
-        }
-        else {
+                    .withRegion(region)
+                    .withCredentials(new AWSStaticCredentialsProvider(creds))
+                    .build();
+        } else {
             this.s3 = AmazonS3ClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(creds))
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint, region))
-                .enablePathStyleAccess()
-                .build();
+                    .withCredentials(new AWSStaticCredentialsProvider(creds))
+                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint, region))
+                    .enablePathStyleAccess()
+                    .build();
         }
         this.bucket = bucket;
     }
@@ -51,6 +51,7 @@ public class CloudStorageS3 implements ICloudStorage {
         try {
             File file = new File(localPath);
             this.s3.putObject(bucket, cloudPath, file);
+            this.checkVersioningEnabled();
         } catch (Throwable t) {
             throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
         }
@@ -60,6 +61,7 @@ public class CloudStorageS3 implements ICloudStorage {
     public void upload(InputStream input, String cloudPath) throws CloudStorageException {
         try {
             this.s3.putObject(bucket, cloudPath, input, null);
+            this.checkVersioningEnabled();
         } catch (Throwable t) {
             throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
         }
@@ -111,8 +113,8 @@ public class CloudStorageS3 implements ICloudStorage {
     public List<String> list(String prefix) throws CloudStorageException {
         try {
             ListObjectsV2Request req = new ListObjectsV2Request()
-                .withBucketName(bucket)
-                .withPrefix(prefix);
+                    .withBucketName(bucket)
+                    .withPrefix(prefix);
             ListObjectsV2Result result = null;
             List<S3ObjectSummary> objects = null;
 
@@ -153,9 +155,9 @@ public class CloudStorageS3 implements ICloudStorage {
 
             // Generate the presigned URL.
             GeneratePresignedUrlRequest generatePresignedUrlRequest =
-                new GeneratePresignedUrlRequest(this.bucket, cloudPath)
-                    .withMethod(HttpMethod.GET)
-                    .withExpiration(expiration);
+                    new GeneratePresignedUrlRequest(this.bucket, cloudPath)
+                            .withMethod(HttpMethod.GET)
+                            .withExpiration(expiration);
             URL url = this.s3.generatePresignedUrl(generatePresignedUrlRequest);
             return url;
         } catch (Throwable t) {
@@ -173,18 +175,48 @@ public class CloudStorageS3 implements ICloudStorage {
         return cloudPath;
     }
 
+    @Override
+    public void setTags(String cloudPath, Map<String, String> tags) throws CloudStorageException {
+        try {
+            if (this.s3.doesObjectExist(this.bucket, cloudPath)) {
+                List<Tag> newTags = new ArrayList<>();
+                tags.forEach((k, v) -> newTags.add(new Tag(k, v)));
+
+                this.s3.setObjectTagging(new SetObjectTaggingRequest(this.bucket, cloudPath, new ObjectTagging(newTags)));
+            } else {
+                LOGGER.warn("CloudPath: {} does not exist in bucket: {}. Tags not set", cloudPath, this.bucket);
+            }
+        } catch (Throwable t) {
+            throw new CloudStorageException("s3 set tags error", t);
+        }
+    }
+
     private void deleteInternal(Collection<String> cloudPaths) throws CloudStorageException {
         List<DeleteObjectsRequest.KeyVersion> keys = new ArrayList<>();
         for (String p : cloudPaths) {
             keys.add(new DeleteObjectsRequest.KeyVersion(p));
         }
         DeleteObjectsRequest dor = new DeleteObjectsRequest(bucket)
-            .withKeys(keys)
-            .withQuiet(false);
+                .withKeys(keys)
+                .withQuiet(false);
         try {
             this.s3.deleteObjects(dor);
         } catch (Throwable t) {
             throw new CloudStorageException("s3 get error: " + t.getMessage(), t);
+        }
+    }
+
+    private void checkVersioningEnabled() {
+        try {
+            var config = this.s3.getBucketVersioningConfiguration(this.bucket);
+            if (config.getStatus().equalsIgnoreCase("ENABLED")) {
+                LOGGER.info("Bucket: {} in Region: {} has versioning configured.", this.bucket, this.s3.getRegionName());
+            } else {
+                LOGGER.warn("Bucket: {} in Region: {} does not have versioning configured. There is a potential for data loss", this.bucket, this.s3.getRegionName());
+            }
+        } catch (Throwable t) {
+            // don't want this to fail when writing, but should be logged
+            LOGGER.error(String.format("Unable to determine if the S3 bucket: %s has versioning enabled", this.bucket), t);
         }
     }
 }

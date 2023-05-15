@@ -10,10 +10,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class InMemoryStorageMock implements ICloudStorage {
+public class InMemoryStorageMock implements TaggableCloudStorage {
 
     public Map<String, byte[]> localFileSystemMock = new HashMap<>();
     public Map<String, byte[]> cloudFileSystemMock = new HashMap<>();
+
+    public Map<String, Map<String, String>> cloudFileTagsMock = new HashMap<>();
 
     public void save(byte[] content, String fullPath) {
         localFileSystemMock.put(fullPath, content);
@@ -86,5 +88,11 @@ public class InMemoryStorageMock implements ICloudStorage {
     @Override
     public String mask(String cloudPath) {
         return cloudPath;
+    }
+
+    @Override
+    public void setTags(String cloudPath, Map<String, String> tags) throws CloudStorageException {
+        var newTags = new HashMap<>(tags);
+        cloudFileTagsMock.put(cloudPath, newTags);
     }
 }

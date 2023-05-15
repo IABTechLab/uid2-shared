@@ -19,7 +19,7 @@ public class CloudUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudUtils.class);
     public static Proxy defaultProxy = getDefaultProxy();
 
-    public static ICloudStorage createStorage(String cloudBucket) {
+    public static TaggableCloudStorage createStorage(String cloudBucket) {
         return new CloudStorageS3(
             System.getProperty(Const.Config.AccessKeyIdProp),
             System.getProperty(Const.Config.SecretAccessKeyProp),
@@ -29,7 +29,7 @@ public class CloudUtils {
         );
     }
 
-    public static ICloudStorage createStorage(String cloudBucket, JsonObject jsonConfig) {
+    public static TaggableCloudStorage createStorage(String cloudBucket, JsonObject jsonConfig) {
         return new CloudStorageS3(
             jsonConfig.getString(Const.Config.AccessKeyIdProp),
             jsonConfig.getString(Const.Config.SecretAccessKeyProp),
