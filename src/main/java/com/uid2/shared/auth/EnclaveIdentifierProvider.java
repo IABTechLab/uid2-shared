@@ -51,8 +51,9 @@ public class EnclaveIdentifierProvider implements IEnclaveIdentifierProvider, IM
 
     @Override
     public JsonObject getMetadata() throws Exception {
-        InputStream s = this.metadataStreamProvider.download(this.metadataPath);
-        return Utils.toJsonObject(s);
+        try (InputStream s = this.metadataStreamProvider.download(this.metadataPath)) {
+            return Utils.toJsonObject(s);
+        }
     }
 
     @Override
@@ -64,8 +65,10 @@ public class EnclaveIdentifierProvider implements IEnclaveIdentifierProvider, IM
     public long loadContent(JsonObject metadata) throws Exception {
         JsonObject root = metadata.getJsonObject("enclaves");
         String path = root.getString("location");
-        InputStream in = this.contentStreamProvider.download(path);
-        JsonArray idList = Utils.toJsonArray(in);
+        JsonArray idList;
+        try (InputStream in = this.contentStreamProvider.download(path)) {
+             idList = Utils.toJsonArray(in);
+        }
         Set<EnclaveIdentifier> newSet = new HashSet<>();
         for (int i = 0; i < idList.size(); i++) {
             JsonObject item = idList.getJsonObject(i);

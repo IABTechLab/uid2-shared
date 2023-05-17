@@ -39,8 +39,9 @@ public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetad
     @Override
     public JsonObject getMetadata() throws Exception {
         String cloudPath = getMetadataPath().toString();
-        InputStream s = this.metadataStreamProvider.download(cloudPath);
-        return Utils.toJsonObject(s);
+        try (InputStream s = this.metadataStreamProvider.download(cloudPath)) {
+            return Utils.toJsonObject(s);
+        }
     }
 
     @Override
@@ -52,8 +53,9 @@ public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetad
     public long loadContent(JsonObject metadata) throws Exception {
         final JsonObject operatorsMetadata = metadata.getJsonObject("operators");
         final String contentPath = operatorsMetadata.getString("location");
-        final InputStream contentStream = this.contentStreamProvider.download(contentPath);
-        return loadOperators(contentStream);
+        try (InputStream contentStream = this.contentStreamProvider.download(contentPath)) {
+            return loadOperators(contentStream);
+        }
     }
 
     private long loadOperators(InputStream contentStream) throws Exception {

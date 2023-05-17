@@ -45,15 +45,18 @@ public class ScopedStoreReader<T> {
 
     public JsonObject getMetadata() throws Exception {
         String cloudPath = getMetadataPath().toString();
-        return Utils.toJsonObject(this.metadataStreamProvider.download(cloudPath));
+        try (InputStream stream = this.metadataStreamProvider.download(cloudPath)) {
+            return Utils.toJsonObject(stream);
+        }
     }
 
     private long loadContent(String path) throws Exception {
-        final InputStream inputStream = this.contentStreamProvider.download(path);
-        final ParsingResult<T> parsed = parser.deserialize(inputStream);
-        this.latestSnapshot.set(parsed.getData());
-        LOGGER.info(String.format("Loaded %d %s", parsed.getCount(), dataTypeName));
-        return parsed.getCount();
+        try (InputStream inputStream = this.contentStreamProvider.download(path)) {
+            final ParsingResult<T> parsed = parser.deserialize(inputStream);
+            this.latestSnapshot.set(parsed.getData());
+            LOGGER.info(String.format("Loaded %d %s", parsed.getCount(), dataTypeName));
+            return parsed.getCount();
+        }
     }
 
     public long loadContent(JsonObject metadata, String dataType) throws Exception {

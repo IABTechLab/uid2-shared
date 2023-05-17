@@ -96,7 +96,9 @@ public class EmbeddedResourceStorage implements ICloudStorage {
         try {
             // for embedded resource, pre-signing URL is to download the cloud path to a tmp file and return URL for it
             Path tmpFile = Files.createTempFile(this.tmpDir, "pre-signed", ".dat");
-            Files.copy(download(cloudPath), tmpFile, StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream inputStream = download(cloudPath)) {
+                Files.copy(inputStream, tmpFile, StandardCopyOption.REPLACE_EXISTING);
+            }
             if(this.urlPrefix == null || this.urlPrefix.isEmpty()) {
                 return tmpFile.toUri().toURL();
             } else {

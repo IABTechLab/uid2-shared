@@ -34,9 +34,10 @@ public class ApplicationVersion {
     public Map<String, String> getComponentVersions() { return componentVersions; }
 
     private static String loadVersion(String componentName) throws IOException {
-        InputStream is = ApplicationVersion.class.getClassLoader().getResourceAsStream(componentName + ".properties");
-        Properties properties = new Properties();
-        properties.load(is);
-        return properties.getProperty("image.version");
+        try (InputStream is = ApplicationVersion.class.getClassLoader().getResourceAsStream(componentName + ".properties")) {
+            Properties properties = new Properties();
+            properties.load(is);
+            return properties.getProperty("image.version");
+        }
     }
 }
