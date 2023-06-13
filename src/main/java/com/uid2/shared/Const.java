@@ -56,6 +56,7 @@ public class Const {
         public static final String ClientsMetadataPathProp = "clients_metadata_path";
         public static final String KeysMetadataPathProp = "keys_metadata_path";
         public static final String KeysAclMetadataPathProp = "keys_acl_metadata_path";
+        public static final String KeysetsMetadataPathProp = "keysets_metadata_path";
         public static final String OperatorsMetadataPathProp = "operators_metadata_path";
         public static final String SaltsMetadataPathProp = "salts_metadata_path";
         public static final String OptOutMetadataPathProp = "optout_metadata_path";
