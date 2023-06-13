@@ -105,7 +105,9 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
 
     private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) {
         Set<Role> newRoles = roles != null ? new TreeSet<>(roles) : new TreeSet<>();
-        newRoles.add(Role.OPERATOR);
+        if (!newRoles.contains(Role.OPTOUT_SERVICE)) {
+            newRoles.add(Role.OPERATOR);
+        }
         newRoles.removeIf(Objects::isNull);
         return Collections.unmodifiableSet(newRoles);
     }
