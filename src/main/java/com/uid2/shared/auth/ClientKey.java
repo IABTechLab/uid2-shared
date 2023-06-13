@@ -14,12 +14,12 @@ import java.util.Objects;
 import java.util.Set;
 
 public class ClientKey implements IRoleAuthorizable<Role> {
-    private String key;
-    private String secret;
-    private byte[] secretBytes;
+    private final String key;
+    private final String secret;
+    private final byte[] secretBytes;
     private String name;
     private String contact;
-    private long created;
+    private final long created;
     private Set<Role> roles;
     @JsonProperty("site_id")
     private int siteId;
@@ -27,14 +27,16 @@ public class ClientKey implements IRoleAuthorizable<Role> {
 
     public ClientKey(String key, String secret) {
         this.key = key;
-        this.setSecret(secret);
+        this.secret = secret;
+        this.secretBytes = Utils.decodeBase64String(secret);
         created = Instant.parse("2021-01-01T00:00:00.000Z").getEpochSecond();
         siteId = -1;
     }
 
     public ClientKey(String key, String secret, Instant created) {
         this.key = key;
-        this.setSecret(secret);
+        this.secret = secret;
+        this.secretBytes = Utils.decodeBase64String(secret);
         this.created = created.getEpochSecond();
         this.siteId = -1;
     }
@@ -53,7 +55,8 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     public ClientKey(String key, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId,
                      boolean disabled) {
         this.key = key;
-        this.setSecret(secret);
+        this.secret = secret;
+        this.secretBytes = Utils.decodeBase64String(secret);
         this.name = name;
         this.contact = contact;
         this.created = created.getEpochSecond();
@@ -140,10 +143,5 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     @Override
     public boolean hasRole(Role role) {
         return this.roles.contains(role);
-    }
-
-    private void setSecret(String newSecret) {
-        this.secret = newSecret;
-        this.secretBytes = Utils.decodeBase64String(newSecret);
     }
 }

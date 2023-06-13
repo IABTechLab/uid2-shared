@@ -6,7 +6,7 @@ import io.vertx.core.json.JsonObject;
 import java.util.*;
 
 public class OperatorKey implements IRoleAuthorizable<Role> {
-    private String key;
+    private final String key;
     private final String name;
     private final String contact;
     private final String protocol;
