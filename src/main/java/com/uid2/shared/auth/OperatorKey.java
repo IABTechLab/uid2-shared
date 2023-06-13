@@ -141,8 +141,4 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     public int hashCode() {
         return Objects.hash(key, name, contact, protocol, created, disabled, siteId, roles, operatorType);
     }
-
-    public void setKey(String newKey) {
-        this.key = newKey;
-    }
 }

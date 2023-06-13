@@ -142,11 +142,7 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         return this.roles.contains(role);
     }
 
-    public void setKey(String newKey) {
-        this.key = newKey;
-    }
-
-    public void setSecret(String newSecret) {
+    private void setSecret(String newSecret) {
         this.secret = newSecret;
         this.secretBytes = Utils.decodeBase64String(newSecret);
     }
