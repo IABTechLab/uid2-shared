@@ -26,41 +26,6 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
             Set.of(Role.OPTOUT_SERVICE)
     );
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
-        this.key = key;
-        this.name = name;
-        this.contact = contact;
-        this.protocol = protocol;
-        this.created = created;
-        this.disabled = disabled;
-        this.siteId = null;
-        this.roles = new HashSet<>(List.of(Role.OPERATOR));
-        this.operatorType = DEFAULT_OPERATOR_TYPE;
-    }
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
-        this.key = key;
-        this.name = name;
-        this.contact = contact;
-        this.protocol = protocol;
-        this.created = created;
-        this.disabled = disabled;
-        this.siteId = siteId;
-        this.roles = new HashSet<>(List.of(Role.OPERATOR));
-        this.operatorType = DEFAULT_OPERATOR_TYPE;
-    }
-
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
-        this.key = key;
-        this.name = name;
-        this.contact = contact;
-        this.protocol = protocol;
-        this.created = created;
-        this.disabled = disabled;
-        this.siteId = siteId;
-        this.roles = this.reorderAndAddDefaultRole(roles);
-        this.operatorType = DEFAULT_OPERATOR_TYPE;
-    }
-
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) {
         this.key = key;
         this.name = name;
@@ -73,27 +38,18 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.operatorType = operatorType;
     }
 
-    public String getKey() { return key; }
-    public String getName() { return name; }
-    public String getContact() { return contact; }
-    public String getProtocol() { return protocol; }
-    public long getCreated() { return created; }
-    public boolean isDisabled() { return disabled; }
-    public void setDisabled(boolean disabled) { this.disabled = disabled; }
-    public Set<Role> getRoles() {
-        return roles;
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
+        this(key, name, contact, protocol, created, disabled, siteId, roles, DEFAULT_OPERATOR_TYPE);
     }
 
-    @Override
-    public Integer getSiteId() { return siteId; }
-    public OperatorType getOperatorType() { return operatorType; }
-    public void setOperatorType(OperatorType type) { this.operatorType = type; }
-    public void setSiteId(Integer siteId) { this.siteId = siteId; }
-    public void setRoles(Set<Role> roles) {
-        this.roles = this.reorderAndAddDefaultRole(roles);
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
+        this(key, name, contact, protocol, created, disabled, siteId, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
     }
-    public OperatorKey withRoles(Set<Role> roles) { setRoles(roles); return this; }
-    public OperatorKey withRoles(Role... roles) { setRoles(new TreeSet<>(Arrays.asList(roles))); return this; }
+
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
+        this(key, name, contact, protocol, created, disabled, null, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
+    }
+
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
                 json.getString("key"),
@@ -106,6 +62,70 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 Roles.getRoles(Role.class, json),
                 OperatorType.valueOf(json.getString("operator_type", DEFAULT_OPERATOR_TYPE.toString()))
         );
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String newKey) {
+        this.key = newKey;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getContact() {
+        return contact;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public long getCreated() {
+        return created;
+    }
+
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    @Override
+    public Integer getSiteId() {
+        return siteId;
+    }
+
+    public void setSiteId(Integer siteId) {
+        this.siteId = siteId;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = this.reorderAndAddDefaultRole(roles);
+    }
+
+    public OperatorKey withRoles(Set<Role> roles) {
+        setRoles(roles);
+        return this;
+    }
+
+    public OperatorKey withRoles(Role... roles) {
+        setRoles(new TreeSet<>(Arrays.asList(roles)));
+        return this;
+    }
+
+    @Override
+    public boolean hasRole(Role role) {
+        return this.roles.contains(role);
     }
 
     private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) {
@@ -126,9 +146,12 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         }
     }
 
-    @Override
-    public boolean hasRole(Role role) {
-        return this.roles.contains(role);
+    public OperatorType getOperatorType() {
+        return operatorType;
+    }
+
+    public void setOperatorType(OperatorType type) {
+        this.operatorType = type;
     }
 
     @Override
@@ -156,9 +179,5 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     @Override
     public int hashCode() {
         return Objects.hash(key, name, contact, protocol, created, disabled, siteId, roles, operatorType);
-    }
-
-    public void setKey(String newKey) {
-        this.key = newKey;
     }
 }
