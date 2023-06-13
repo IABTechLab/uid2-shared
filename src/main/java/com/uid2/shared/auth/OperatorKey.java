@@ -19,7 +19,12 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     @JsonProperty("operator_type")
     private OperatorType operatorType;
 
-    private static OperatorType defaultOperatorType = OperatorType.PRIVATE;
+    private static final OperatorType DEFAULT_OPERATOR_TYPE = OperatorType.PRIVATE;
+    private static final Set<Set<Role>> VALID_ROLE_COMBINATIONS = Set.of(
+            Set.of(Role.OPERATOR),
+            Set.of(Role.OPERATOR, Role.OPTOUT),
+            Set.of(Role.OPTOUT_SERVICE)
+    );
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
         this.key = key;
@@ -29,8 +34,8 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = null;
-        this.roles = new HashSet<>(Arrays.asList(Role.OPERATOR));
-        this.operatorType = defaultOperatorType;
+        this.roles = new HashSet<>(List.of(Role.OPERATOR));
+        this.operatorType = DEFAULT_OPERATOR_TYPE;
     }
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
         this.key = key;
@@ -40,8 +45,8 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.created = created;
         this.disabled = disabled;
         this.siteId = siteId;
-        this.roles = new HashSet<>(Arrays.asList(Role.OPERATOR));
-        this.operatorType = defaultOperatorType;
+        this.roles = new HashSet<>(List.of(Role.OPERATOR));
+        this.operatorType = DEFAULT_OPERATOR_TYPE;
     }
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
@@ -53,7 +58,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.disabled = disabled;
         this.siteId = siteId;
         this.roles = this.reorderAndAddDefaultRole(roles);
-        this.operatorType = defaultOperatorType;
+        this.operatorType = DEFAULT_OPERATOR_TYPE;
     }
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) {
@@ -99,17 +104,26 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getBoolean("disabled", false),
                 json.getInteger("site_id"),
                 Roles.getRoles(Role.class, json),
-                OperatorType.valueOf(json.getString("operator_type", defaultOperatorType.toString()))
-                );
+                OperatorType.valueOf(json.getString("operator_type", DEFAULT_OPERATOR_TYPE.toString()))
+        );
     }
 
     private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) {
         Set<Role> newRoles = roles != null ? new TreeSet<>(roles) : new TreeSet<>();
+        newRoles.removeIf(Objects::isNull);
         if (!newRoles.contains(Role.OPTOUT_SERVICE)) {
             newRoles.add(Role.OPERATOR);
         }
-        newRoles.removeIf(Objects::isNull);
+
+        validateRoles(newRoles);
+
         return Collections.unmodifiableSet(newRoles);
+    }
+
+    private void validateRoles(Set<Role> roles) {
+        if (!VALID_ROLE_COMBINATIONS.contains(roles)) {
+            throw new RuntimeException("Invalid role combination for operator key. Must be one of: " + VALID_ROLE_COMBINATIONS);
+        }
     }
 
     @Override
