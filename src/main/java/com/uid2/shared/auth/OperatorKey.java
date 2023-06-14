@@ -147,9 +147,9 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         return Collections.unmodifiableSet(newRoles);
     }
 
-    private void validateRoles(Set<Role> roles) {
+    private void validateRoles(Set<Role> roles) throws InvalidRoleException {
         if (!VALID_ROLE_COMBINATIONS.contains(roles)) {
-            throw new RuntimeException("Invalid role combination for operator key. Must be one of: " + VALID_ROLE_COMBINATIONS);
+            throw new InvalidRoleException("Invalid role combination for operator key. Must be one of: " + VALID_ROLE_COMBINATIONS);
         }
     }
 
