@@ -19,11 +19,11 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private OperatorType operatorType;
 
     private static final OperatorType DEFAULT_OPERATOR_TYPE = OperatorType.PRIVATE;
-    private static final Set<Set<Role>> VALID_ROLE_COMBINATIONS = Set.of(
-            Set.of(Role.OPERATOR),
-            Set.of(Role.OPERATOR, Role.OPTOUT),
-            Set.of(Role.OPTOUT_SERVICE)
-    );
+    private static final Set<Set<Role>> VALID_ROLE_COMBINATIONS = (Set.of(
+            new TreeSet<>(Set.of(Role.OPERATOR)),
+            new TreeSet<>(Set.of(Role.OPERATOR, Role.OPTOUT)),
+            new TreeSet<>(Set.of(Role.OPTOUT_SERVICE))
+    ));
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) throws InvalidRoleException {
         this.key = key;
