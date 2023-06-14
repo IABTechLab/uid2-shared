@@ -10,8 +10,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private final String name;
     private final String contact;
     private final String protocol;
-    // epochSeconds
-    private final long created;
+    private final long created; // epochSeconds
     private boolean disabled;
     @JsonProperty("site_id")
     private Integer siteId;
@@ -26,7 +25,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
             Set.of(Role.OPTOUT_SERVICE)
     );
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) {
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) throws InvalidRoleException {
         this.key = key;
         this.name = name;
         this.contact = contact;
@@ -38,19 +37,27 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.operatorType = operatorType;
     }
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) throws InvalidRoleException {
         this(key, name, contact, protocol, created, disabled, siteId, roles, DEFAULT_OPERATOR_TYPE);
     }
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
-        this(key, name, contact, protocol, created, disabled, siteId, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
+        this.key = key;
+        this.name = name;
+        this.contact = contact;
+        this.protocol = protocol;
+        this.created = created;
+        this.disabled = disabled;
+        this.siteId = siteId;
+        this.roles = new HashSet<>(List.of(Role.OPERATOR));
+        this.operatorType = DEFAULT_OPERATOR_TYPE;
     }
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
-        this(key, name, contact, protocol, created, disabled, null, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
+        this(key, name, contact, protocol, created, disabled, null);
     }
 
-    public static OperatorKey valueOf(JsonObject json) {
+    public static OperatorKey valueOf(JsonObject json) throws InvalidRoleException {
         return new OperatorKey(
                 json.getString("key"),
                 json.getString("name"),
@@ -109,16 +116,16 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         return roles;
     }
 
-    public void setRoles(Set<Role> roles) {
+    public void setRoles(Set<Role> roles) throws InvalidRoleException  {
         this.roles = this.reorderAndAddDefaultRole(roles);
     }
 
-    public OperatorKey withRoles(Set<Role> roles) {
+    public OperatorKey withRoles(Set<Role> roles) throws InvalidRoleException {
         setRoles(roles);
         return this;
     }
 
-    public OperatorKey withRoles(Role... roles) {
+    public OperatorKey withRoles(Role... roles) throws InvalidRoleException {
         setRoles(new TreeSet<>(Arrays.asList(roles)));
         return this;
     }
@@ -128,7 +135,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         return this.roles.contains(role);
     }
 
-    private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) {
+    private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) throws InvalidRoleException {
         Set<Role> newRoles = roles != null ? new TreeSet<>(roles) : new TreeSet<>();
         newRoles.removeIf(Objects::isNull);
         if (!newRoles.contains(Role.OPTOUT_SERVICE)) {
