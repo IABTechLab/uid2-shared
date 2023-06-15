@@ -22,7 +22,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private static final Set<Set<Role>> VALID_ROLE_COMBINATIONS = (Set.of(
             new TreeSet<>(Set.of(Role.OPERATOR)),
             new TreeSet<>(Set.of(Role.OPERATOR, Role.OPTOUT)),
-            new TreeSet<>(Set.of(Role.OPTOUT_SERVICE))
+            new TreeSet<>(Set.of(Role.OPERATOR, Role.OPTOUT_SERVICE))
     ));
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) throws InvalidRoleException {
@@ -138,9 +138,9 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) throws InvalidRoleException {
         Set<Role> newRoles = roles != null ? new TreeSet<>(roles) : new TreeSet<>();
         newRoles.removeIf(Objects::isNull);
-        if (!newRoles.contains(Role.OPTOUT_SERVICE)) {
-            newRoles.add(Role.OPERATOR);
-        }
+//        if (!newRoles.contains(Role.OPTOUT_SERVICE)) {
+        newRoles.add(Role.OPERATOR);
+//        }
 
         validateRoles(newRoles);
 

@@ -158,24 +158,24 @@ public class OperatorKeyTest {
         Assert.assertEquals(Set.of(Role.OPTOUT_SERVICE), c.getRoles());
     }
 
-    @Test
-    public void verifyRolesPropThrowsInvalidRoleExceptionForOperatorRoleAndOptoutServiceRole() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
-                "        \"name\": \"admin@uid2.com\",\n" +
-                "        \"contact\": \"admin@uid2.com\",\n" +
-                "        \"created\": 1617149276,\n" +
-                "        \"disabled\": false,\n" +
-                "        \"roles\": [ \"OPERATOR\", \"OPTOUT_SERVICE\" ]\n" +
-                "    }";
-
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        try {
-            OperatorKey.valueOf(jo);
-            Assert.fail("Runtime exception expected");
-        } catch (InvalidRoleException ignored) {
-        }
-    }
+//    @Test
+//    public void verifyRolesPropThrowsInvalidRoleExceptionForOperatorRoleAndOptoutServiceRole() {
+//        final String testJson = "    {\n" +
+//                "        \"key\": \"test-admin-key\",\n" +
+//                "        \"name\": \"admin@uid2.com\",\n" +
+//                "        \"contact\": \"admin@uid2.com\",\n" +
+//                "        \"created\": 1617149276,\n" +
+//                "        \"disabled\": false,\n" +
+//                "        \"roles\": [ \"OPERATOR\", \"OPTOUT_SERVICE\" ]\n" +
+//                "    }";
+//
+//        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
+//        try {
+//            OperatorKey.valueOf(jo);
+//            Assert.fail("Runtime exception expected");
+//        } catch (InvalidRoleException ignored) {
+//        }
+//    }
 
     @Test
     public void verifyRolesPropThrowsInvalidRoleExceptionExceptionForOptoutRoleAndOptoutServiceRole() {
