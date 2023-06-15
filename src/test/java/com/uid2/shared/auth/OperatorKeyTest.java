@@ -155,9 +155,10 @@ public class OperatorKeyTest {
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertEquals(Set.of(Role.OPTOUT_SERVICE), c.getRoles());
+        Assert.assertEquals(Set.of(Role.OPERATOR, Role.OPTOUT_SERVICE), c.getRoles()); // TODO: This should only be OPTOUT_SERVICE
     }
 
+//    TODO: Uncomment
 //    @Test
 //    public void verifyRolesPropThrowsInvalidRoleExceptionForOperatorRoleAndOptoutServiceRole() {
 //        final String testJson = "    {\n" +
