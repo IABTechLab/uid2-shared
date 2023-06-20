@@ -21,6 +21,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private static final OperatorType DEFAULT_OPERATOR_TYPE = OperatorType.PRIVATE;
     private static final Set<Set<Role>> VALID_ROLE_COMBINATIONS = (Set.of(
             new TreeSet<>(Set.of(Role.OPERATOR)),
+            new TreeSet<>(Set.of(Role.OPTOUT_SERVICE)),
             new TreeSet<>(Set.of(Role.OPERATOR, Role.OPTOUT)),
             new TreeSet<>(Set.of(Role.OPERATOR, Role.OPTOUT_SERVICE)) // TODO: This should be OPTOUT_SERVICE only
     ));
@@ -138,9 +139,9 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) throws InvalidRoleException {
         Set<Role> newRoles = roles != null ? new TreeSet<>(roles) : new TreeSet<>();
         newRoles.removeIf(Objects::isNull);
-//        if (!newRoles.contains(Role.OPTOUT_SERVICE)) { // TODO: Uncomment this if-block
-        newRoles.add(Role.OPERATOR);
-//        }
+        if (!newRoles.contains(Role.OPTOUT_SERVICE)) { // TODO: Uncomment this if-block
+            newRoles.add(Role.OPERATOR);
+        }
 
         validateRoles(newRoles);
 
