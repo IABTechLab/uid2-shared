@@ -13,7 +13,7 @@ import java.util.Set;
 
 public class OperatorKeyTest {
     @Test
-    public void verifyDisabledPropIsOptional() throws InvalidRoleException {
+    public void verifyDisabledPropIsOptional() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -29,7 +29,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyDisabledPropSetTrue() throws InvalidRoleException {
+    public void verifyDisabledPropSetTrue() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -46,7 +46,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyDisabledPropSetFalse() throws InvalidRoleException {
+    public void verifyDisabledPropSetFalse() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -63,7 +63,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifySiteIdPropIsOptionalForBackwardsCompatibility() throws InvalidRoleException {
+    public void verifySiteIdPropIsOptionalForBackwardsCompatibility() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -79,7 +79,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyRolesPropIsOptionalForBackwardsCompatibility() throws InvalidRoleException {
+    public void verifyRolesPropIsOptionalForBackwardsCompatibility() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -94,7 +94,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyRolesPropSetOptoutRole() throws InvalidRoleException {
+    public void verifyRolesPropSetOptoutRole() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -111,7 +111,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyRolesPropSetOperatorRole() throws InvalidRoleException {
+    public void verifyRolesPropSetOperatorRole() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -127,7 +127,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyRolesPropSetOperatorRoleAndOptoutRole() throws InvalidRoleException {
+    public void verifyRolesPropSetOperatorRoleAndOptoutRole() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -143,7 +143,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyRolesPropSetOptoutServiceRole() throws InvalidRoleException {
+    public void verifyRolesPropSetOptoutServiceRole() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -155,69 +155,11 @@ public class OperatorKeyTest {
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertEquals(Set.of(Role.OPERATOR, Role.OPTOUT_SERVICE), c.getRoles()); // TODO: This should only be OPTOUT_SERVICE
-    }
-
-//    TODO: Uncomment
-//    @Test
-//    public void verifyRolesPropThrowsInvalidRoleExceptionForOperatorRoleAndOptoutServiceRole() {
-//        final String testJson = "    {\n" +
-//                "        \"key\": \"test-admin-key\",\n" +
-//                "        \"name\": \"admin@uid2.com\",\n" +
-//                "        \"contact\": \"admin@uid2.com\",\n" +
-//                "        \"created\": 1617149276,\n" +
-//                "        \"disabled\": false,\n" +
-//                "        \"roles\": [ \"OPERATOR\", \"OPTOUT_SERVICE\" ]\n" +
-//                "    }";
-//
-//        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-//        try {
-//            OperatorKey.valueOf(jo);
-//            Assert.fail("Runtime exception expected");
-//        } catch (InvalidRoleException ignored) {
-//        }
-//    }
-
-    @Test
-    public void verifyRolesPropThrowsInvalidRoleExceptionExceptionForOptoutRoleAndOptoutServiceRole() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
-                "        \"name\": \"admin@uid2.com\",\n" +
-                "        \"contact\": \"admin@uid2.com\",\n" +
-                "        \"created\": 1617149276,\n" +
-                "        \"disabled\": false,\n" +
-                "        \"roles\": [ \"OPTOUT\", \"OPTOUT_SERVICE\" ]\n" +
-                "    }";
-
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        try {
-            OperatorKey.valueOf(jo);
-            Assert.fail("Runtime exception expected");
-        } catch (InvalidRoleException ignored) {
-        }
+        Assert.assertEquals(Set.of(Role.OPTOUT_SERVICE), c.getRoles());
     }
 
     @Test
-    public void verifyRolesPropThrowsInvalidRoleExceptionForOperatorRoleAndOptoutRoleAndOptoutServiceRole() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
-                "        \"name\": \"admin@uid2.com\",\n" +
-                "        \"contact\": \"admin@uid2.com\",\n" +
-                "        \"created\": 1617149276,\n" +
-                "        \"disabled\": false,\n" +
-                "        \"roles\": [ \"OPERATOR\", \"OPTOUT\", \"OPTOUT_SERVICE\" ]\n" +
-                "    }";
-
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        try {
-            OperatorKey.valueOf(jo);
-            Assert.fail("Runtime exception expected");
-        } catch (InvalidRoleException ignored) {
-        }
-    }
-
-    @Test
-    public void verifyRolesPropIsWrittenInAlphabeticalOrder() throws JsonProcessingException, InvalidRoleException {
+    public void verifyRolesPropIsWrittenInAlphabeticalOrder() throws JsonProcessingException {
         final String expectJson = "{" +
                 "\"key\":\"test-admin-key\"," +
                 "\"name\":\"admin@uid2.com\"," +
@@ -235,7 +177,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyOperatorTypePropIsOptionalForBackwardsCompatibility() throws InvalidRoleException {
+    public void verifyOperatorTypePropIsOptionalForBackwardsCompatibility() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -250,7 +192,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyOperatorTypePropIsPublic() throws InvalidRoleException {
+    public void verifyOperatorTypePropIsPublic() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -266,7 +208,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyOperatorTypePropIsPrivate() throws InvalidRoleException {
+    public void verifyOperatorTypePropIsPrivate() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -282,7 +224,7 @@ public class OperatorKeyTest {
     }
 
     @Test
-    public void verifyConstructorStartsWithPrivateOperator() throws InvalidRoleException {
+    public void verifyConstructorStartsWithPrivateOperator() {
         OperatorKey k1 = new OperatorKey("key1", "name1", "contact1", "protocol1", 1, true);
         Assert.assertEquals(OperatorType.PRIVATE, k1.getOperatorType());
         OperatorKey k2 = new OperatorKey("key2", "name2", "contact2", "protocol2", 2, true, 2);

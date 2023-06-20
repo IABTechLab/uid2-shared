@@ -19,13 +19,8 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private OperatorType operatorType;
 
     private static final OperatorType DEFAULT_OPERATOR_TYPE = OperatorType.PRIVATE;
-    private static final Set<Set<Role>> VALID_ROLE_COMBINATIONS = (Set.of(
-            new TreeSet<>(Set.of(Role.OPERATOR)),
-            new TreeSet<>(Set.of(Role.OPERATOR, Role.OPTOUT)),
-            new TreeSet<>(Set.of(Role.OPERATOR, Role.OPTOUT_SERVICE)) // TODO: This should be OPTOUT_SERVICE only
-    ));
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) throws InvalidRoleException {
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) {
         this.key = key;
         this.name = name;
         this.contact = contact;
@@ -37,7 +32,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.operatorType = operatorType;
     }
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) throws InvalidRoleException {
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
         this(key, name, contact, protocol, created, disabled, siteId, roles, DEFAULT_OPERATOR_TYPE);
     }
 
@@ -57,7 +52,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this(key, name, contact, protocol, created, disabled, null);
     }
 
-    public static OperatorKey valueOf(JsonObject json) throws InvalidRoleException {
+    public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
                 json.getString("key"),
                 json.getString("name"),
@@ -116,16 +111,16 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         return roles;
     }
 
-    public void setRoles(Set<Role> roles) throws InvalidRoleException  {
+    public void setRoles(Set<Role> roles)  {
         this.roles = this.reorderAndAddDefaultRole(roles);
     }
 
-    public OperatorKey withRoles(Set<Role> roles) throws InvalidRoleException {
+    public OperatorKey withRoles(Set<Role> roles) {
         setRoles(roles);
         return this;
     }
 
-    public OperatorKey withRoles(Role... roles) throws InvalidRoleException {
+    public OperatorKey withRoles(Role... roles) {
         setRoles(new TreeSet<>(Arrays.asList(roles)));
         return this;
     }
@@ -135,22 +130,14 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         return this.roles.contains(role);
     }
 
-    private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) throws InvalidRoleException {
+    private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) {
         Set<Role> newRoles = roles != null ? new TreeSet<>(roles) : new TreeSet<>();
         newRoles.removeIf(Objects::isNull);
-//        if (!newRoles.contains(Role.OPTOUT_SERVICE)) { // TODO: Uncomment this if-block
-        newRoles.add(Role.OPERATOR);
-//        }
-
-        validateRoles(newRoles);
+        if (!newRoles.contains(Role.OPTOUT_SERVICE)) {
+            newRoles.add(Role.OPERATOR);
+        }
 
         return Collections.unmodifiableSet(newRoles);
-    }
-
-    private void validateRoles(Set<Role> roles) throws InvalidRoleException {
-        if (!VALID_ROLE_COMBINATIONS.contains(roles)) {
-            throw new InvalidRoleException("Invalid role combination for operator key. Must be one of: " + VALID_ROLE_COMBINATIONS);
-        }
     }
 
     public OperatorType getOperatorType() {
