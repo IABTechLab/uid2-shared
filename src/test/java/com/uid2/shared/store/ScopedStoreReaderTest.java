@@ -5,6 +5,7 @@ import com.uid2.shared.cloud.InMemoryStorageMock;
 import com.uid2.shared.store.parser.Parser;
 import com.uid2.shared.store.parser.ParsingResult;
 import com.uid2.shared.store.scope.GlobalScope;
+import static com.uid2.shared.TestUtilites.toInputStream;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -115,9 +116,5 @@ class ScopedStoreReaderTest {
             return new BufferedReader(new InputStreamReader(inputStream))
                     .lines().collect(Collectors.joining("\n"));
         }
-    }
-
-    private static ByteArrayInputStream toInputStream(String metadata) {
-        return new ByteArrayInputStream(metadata.getBytes(StandardCharsets.UTF_8));
     }
 }

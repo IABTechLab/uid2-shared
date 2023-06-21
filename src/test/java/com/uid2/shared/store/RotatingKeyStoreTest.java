@@ -6,6 +6,7 @@ import com.uid2.shared.model.EncryptionKey;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.store.reader.RotatingKeyStore;
 import com.uid2.shared.store.scope.GlobalScope;
+import static com.uid2.shared.TestUtilites.makeInputStream;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.After;
@@ -44,10 +45,6 @@ public class RotatingKeyStoreTest {
         keys.put("location", location);
         metadata.put("keys", keys);
         return metadata;
-    }
-
-    private InputStream makeInputStream(JsonArray content) {
-        return new ByteArrayInputStream(content.toString().getBytes(Charset.forName("UTF-8")));
     }
 
     private void addKey(JsonArray content, int keyId, Integer siteId, String secret, Instant activates) {

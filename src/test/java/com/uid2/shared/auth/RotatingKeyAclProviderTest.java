@@ -19,13 +19,13 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static com.uid2.shared.TestUtilites.makeInputStream;
+import static com.uid2.shared.TestUtilites.toInputStream;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,9 +51,6 @@ public class RotatingKeyAclProviderTest {
         return metadata;
     }
 
-    private InputStream makeInputStream(JsonArray content) {
-        return toInputStream(content.toString());
-    }
 
     private void addBlacklist(JsonArray content, int siteId, int... blacklistedSiteIds) {
         addAccessList(content, siteId, "blacklist", blacklistedSiteIds);
@@ -88,9 +85,6 @@ public class RotatingKeyAclProviderTest {
         return keyAclProvider.getSnapshot().canClientAccessKey(makeClientKey(clientSiteId), makeKey(keySiteId));
     }
 
-    private static ByteArrayInputStream toInputStream(String data) {
-        return new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
-    }
 
     @Test public void loadsContentToSiteScope() throws Exception {
         RotatingKeyAclProvider provider = new RotatingKeyAclProvider(cloudStorage, new SiteScope(new CloudPath("metadata"), 5));

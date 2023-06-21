@@ -4,6 +4,7 @@ import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.model.KeysetKey;
 import com.uid2.shared.store.reader.RotatingKeysetKeyStore;
 import com.uid2.shared.store.scope.GlobalScope;
+import static com.uid2.shared.TestUtilites.makeInputStream;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.After;
@@ -43,10 +44,6 @@ public class RotatingKeysetKeyStoreTest {
         keys.put("location", location);
         metadata.put("keyset_keys", keys);
         return metadata;
-    }
-
-    private InputStream makeInputStream(JsonArray content) {
-        return new ByteArrayInputStream(content.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     private KeysetKey addKey(JsonArray content, int keyId, Integer keysetId, String secret, Instant activates) {
