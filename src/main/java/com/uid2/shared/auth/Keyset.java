@@ -60,7 +60,7 @@ public class Keyset {
     }
 
     public boolean canBeAccessedBySite(Integer siteId) {
-        //QUEST do we want to check if the keyset is enabled here?
+        if(!isEnabled) return false;
         return allowedSites.contains(siteId);
     }
     @Override
