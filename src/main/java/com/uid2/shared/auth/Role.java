@@ -6,12 +6,12 @@ public enum Role {
     ID_READER,
     SHARER,
     OPERATOR,
-    OPTOUT,
+    OPTOUT, // Used for operators to call optout service's /optout/refresh API
+    OPTOUT_SERVICE, // UID2-912 - Specifically for optout service only
     CLIENTKEY_ISSUER,
     OPERATOR_MANAGER,
     SECRET_MANAGER,
     ADMINISTRATOR,
     SHARING_PORTAL,
-    //UID2-575 for cronjob to trigger private site data generated
-    PRIVATE_SITE_REFRESHER
+    PRIVATE_SITE_REFRESHER // UID2-575 - For cronjob to trigger private site data generated
 }

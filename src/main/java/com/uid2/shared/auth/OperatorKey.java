@@ -10,8 +10,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private final String name;
     private final String contact;
     private final String protocol;
-    // epochSeconds
-    private final long created;
+    private final long created; // epochSeconds
     private boolean disabled;
     @JsonProperty("site_id")
     private Integer siteId;
@@ -19,42 +18,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     @JsonProperty("operator_type")
     private OperatorType operatorType;
 
-    private static OperatorType defaultOperatorType = OperatorType.PRIVATE;
-
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
-        this.key = key;
-        this.name = name;
-        this.contact = contact;
-        this.protocol = protocol;
-        this.created = created;
-        this.disabled = disabled;
-        this.siteId = null;
-        this.roles = new HashSet<>(Arrays.asList(Role.OPERATOR));
-        this.operatorType = defaultOperatorType;
-    }
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
-        this.key = key;
-        this.name = name;
-        this.contact = contact;
-        this.protocol = protocol;
-        this.created = created;
-        this.disabled = disabled;
-        this.siteId = siteId;
-        this.roles = new HashSet<>(Arrays.asList(Role.OPERATOR));
-        this.operatorType = defaultOperatorType;
-    }
-
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
-        this.key = key;
-        this.name = name;
-        this.contact = contact;
-        this.protocol = protocol;
-        this.created = created;
-        this.disabled = disabled;
-        this.siteId = siteId;
-        this.roles = this.reorderAndAddDefaultRole(roles);
-        this.operatorType = defaultOperatorType;
-    }
+    private static final OperatorType DEFAULT_OPERATOR_TYPE = OperatorType.PRIVATE;
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) {
         this.key = key;
@@ -68,27 +32,26 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.operatorType = operatorType;
     }
 
-    public String getKey() { return key; }
-    public String getName() { return name; }
-    public String getContact() { return contact; }
-    public String getProtocol() { return protocol; }
-    public long getCreated() { return created; }
-    public boolean isDisabled() { return disabled; }
-    public void setDisabled(boolean disabled) { this.disabled = disabled; }
-    public Set<Role> getRoles() {
-        return roles;
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
+        this(key, name, contact, protocol, created, disabled, siteId, roles, DEFAULT_OPERATOR_TYPE);
     }
 
-    @Override
-    public Integer getSiteId() { return siteId; }
-    public OperatorType getOperatorType() { return operatorType; }
-    public void setOperatorType(OperatorType type) { this.operatorType = type; }
-    public void setSiteId(Integer siteId) { this.siteId = siteId; }
-    public void setRoles(Set<Role> roles) {
-        this.roles = this.reorderAndAddDefaultRole(roles);
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
+        this.key = key;
+        this.name = name;
+        this.contact = contact;
+        this.protocol = protocol;
+        this.created = created;
+        this.disabled = disabled;
+        this.siteId = siteId;
+        this.roles = new HashSet<>(List.of(Role.OPERATOR));
+        this.operatorType = DEFAULT_OPERATOR_TYPE;
     }
-    public OperatorKey withRoles(Set<Role> roles) { setRoles(roles); return this; }
-    public OperatorKey withRoles(Role... roles) { setRoles(new TreeSet<>(Arrays.asList(roles))); return this; }
+
+    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
+        this(key, name, contact, protocol, created, disabled, null);
+    }
+
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
                 json.getString("key"),
@@ -99,20 +62,90 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 json.getBoolean("disabled", false),
                 json.getInteger("site_id"),
                 Roles.getRoles(Role.class, json),
-                OperatorType.valueOf(json.getString("operator_type", defaultOperatorType.toString()))
-                );
+                OperatorType.valueOf(json.getString("operator_type", DEFAULT_OPERATOR_TYPE.toString()))
+        );
     }
 
-    private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) {
-        Set<Role> newRoles = roles != null ? new TreeSet<>(roles) : new TreeSet<>();
-        newRoles.add(Role.OPERATOR);
-        newRoles.removeIf(Objects::isNull);
-        return Collections.unmodifiableSet(newRoles);
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String newKey) {
+        this.key = newKey;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getContact() {
+        return contact;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public long getCreated() {
+        return created;
+    }
+
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+    }
+
+    @Override
+    public Integer getSiteId() {
+        return siteId;
+    }
+
+    public void setSiteId(Integer siteId) {
+        this.siteId = siteId;
+    }
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles)  {
+        this.roles = this.reorderAndAddDefaultRole(roles);
+    }
+
+    public OperatorKey withRoles(Set<Role> roles) {
+        setRoles(roles);
+        return this;
+    }
+
+    public OperatorKey withRoles(Role... roles) {
+        setRoles(new TreeSet<>(Arrays.asList(roles)));
+        return this;
     }
 
     @Override
     public boolean hasRole(Role role) {
         return this.roles.contains(role);
+    }
+
+    private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) {
+        Set<Role> newRoles = roles != null ? new TreeSet<>(roles) : new TreeSet<>();
+        newRoles.removeIf(Objects::isNull);
+        if (!newRoles.contains(Role.OPTOUT_SERVICE)) {
+            newRoles.add(Role.OPERATOR);
+        }
+
+        return Collections.unmodifiableSet(newRoles);
+    }
+
+    public OperatorType getOperatorType() {
+        return operatorType;
+    }
+
+    public void setOperatorType(OperatorType type) {
+        this.operatorType = type;
     }
 
     @Override
@@ -140,9 +173,5 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     @Override
     public int hashCode() {
         return Objects.hash(key, name, contact, protocol, created, disabled, siteId, roles, operatorType);
-    }
-
-    public void setKey(String newKey) {
-        this.key = newKey;
     }
 }
