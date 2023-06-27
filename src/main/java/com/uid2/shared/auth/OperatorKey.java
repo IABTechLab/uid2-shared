@@ -6,6 +6,8 @@ import io.vertx.core.json.JsonObject;
 import java.util.*;
 
 public class OperatorKey implements IRoleAuthorizable<Role> {
+    private static final OperatorType DEFAULT_OPERATOR_TYPE = OperatorType.PRIVATE;
+
     private final String key;
     private final String name;
     private final String contact;
@@ -17,8 +19,6 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private Set<Role> roles;
     @JsonProperty("operator_type")
     private OperatorType operatorType;
-
-    private static final OperatorType DEFAULT_OPERATOR_TYPE = OperatorType.PRIVATE;
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) {
         this.key = key;
