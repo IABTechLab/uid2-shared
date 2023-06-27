@@ -70,10 +70,6 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         return key;
     }
 
-    public void setKey(String newKey) {
-        this.key = newKey;
-    }
-
     public String getName() {
         return name;
     }
@@ -111,6 +107,11 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         return roles;
     }
 
+    @Override
+    public boolean hasRole(Role role) {
+        return this.roles.contains(role);
+    }
+
     public void setRoles(Set<Role> roles)  {
         this.roles = this.reorderAndAddDefaultRole(roles);
     }
@@ -123,11 +124,6 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     public OperatorKey withRoles(Role... roles) {
         setRoles(new TreeSet<>(Arrays.asList(roles)));
         return this;
-    }
-
-    @Override
-    public boolean hasRole(Role role) {
-        return this.roles.contains(role);
     }
 
     private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) {
