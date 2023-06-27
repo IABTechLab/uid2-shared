@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Set;
 
 public class OperatorKeyTest {
     @Test
@@ -18,7 +19,7 @@ public class OperatorKeyTest {
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
-                "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
+                "        \"roles\": [ \"OPERATOR\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
 
@@ -35,7 +36,7 @@ public class OperatorKeyTest {
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": true,\n" +
-                "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
+                "        \"roles\": [ \"OPERATOR\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
 
@@ -52,7 +53,7 @@ public class OperatorKeyTest {
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
-                "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
+                "        \"roles\": [ \"OPERATOR\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
 
@@ -69,7 +70,7 @@ public class OperatorKeyTest {
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
-                "        \"roles\": [ \"mapper\", \"generator\" ]\n" +
+                "        \"roles\": [ \"OPERATOR\" ]\n" +
                 "    }";
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
@@ -89,8 +90,7 @@ public class OperatorKeyTest {
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertTrue(c.getRoles().contains(Role.OPERATOR));
-        Assert.assertFalse(c.hasRole(Role.OPTOUT));
+        Assert.assertEquals(Set.of(Role.OPERATOR), c.getRoles());
     }
 
     @Test
@@ -101,14 +101,13 @@ public class OperatorKeyTest {
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
-                "        \"roles\": [ \"optout\" ]\n" +
+                "        \"roles\": [ \"OPTOUT\" ]\n" +
                 "    }";
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
         // Operator role should be set by default
-        Assert.assertTrue(c.getRoles().contains(Role.OPERATOR));
-        Assert.assertTrue(c.hasRole(Role.OPTOUT));
+        Assert.assertEquals(Set.of(Role.OPERATOR, Role.OPTOUT), c.getRoles());
     }
 
     @Test
@@ -119,13 +118,12 @@ public class OperatorKeyTest {
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
-                "        \"roles\": [ \"operator\" ]\n" +
+                "        \"roles\": [ \"OPERATOR\" ]\n" +
                 "    }";
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertTrue(c.getRoles().contains(Role.OPERATOR));
-        Assert.assertFalse(c.hasRole(Role.OPTOUT));
+        Assert.assertEquals(Set.of(Role.OPERATOR), c.getRoles());
     }
 
     @Test
@@ -136,17 +134,32 @@ public class OperatorKeyTest {
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
-                "        \"roles\": [ \"operator\", \"optout\" ]\n" +
+                "        \"roles\": [ \"OPERATOR\", \"OPTOUT\" ]\n" +
                 "    }";
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertTrue(c.getRoles().contains(Role.OPERATOR));
-        Assert.assertTrue(c.hasRole(Role.OPTOUT));
+        Assert.assertEquals(Set.of(Role.OPERATOR, Role.OPTOUT), c.getRoles());
     }
 
     @Test
-    public void verifyRolesIsWrittenInAlphabeticalOrder() throws JsonProcessingException {
+    public void verifyRolesPropSetOptoutServiceRole() {
+        final String testJson = "    {\n" +
+                "        \"key\": \"test-admin-key\",\n" +
+                "        \"name\": \"admin@uid2.com\",\n" +
+                "        \"contact\": \"admin@uid2.com\",\n" +
+                "        \"created\": 1617149276,\n" +
+                "        \"disabled\": false,\n" +
+                "        \"roles\": [ \"OPTOUT_SERVICE\" ]\n" +
+                "    }";
+
+        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
+        OperatorKey c = OperatorKey.valueOf(jo);
+        Assert.assertEquals(Set.of(Role.OPTOUT_SERVICE), c.getRoles());
+    }
+
+    @Test
+    public void verifyRolesPropIsWrittenInAlphabeticalOrder() throws JsonProcessingException {
         final String expectJson = "{" +
                 "\"key\":\"test-admin-key\"," +
                 "\"name\":\"admin@uid2.com\"," +
@@ -162,7 +175,9 @@ public class OperatorKeyTest {
         ObjectMapper objectMapper = new ObjectMapper();
         Assert.assertEquals(expectJson, objectMapper.writeValueAsString(k));
     }
-    public void verifyIsPublicOperatorFlagIsOptionalForBackwardsCompatibility() {
+
+    @Test
+    public void verifyOperatorTypePropIsOptionalForBackwardsCompatibility() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -173,14 +188,11 @@ public class OperatorKeyTest {
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertTrue(c.getOperatorType() == OperatorType.PRIVATE);
-
-        c.setOperatorType(OperatorType.PUBLIC);
-        Assert.assertTrue(c.getOperatorType() == OperatorType.PUBLIC);
+        Assert.assertEquals(OperatorType.PRIVATE, c.getOperatorType());
     }
 
     @Test
-    public void verifyPublicOperatorType() {
+    public void verifyOperatorTypePropIsPublic() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -192,14 +204,11 @@ public class OperatorKeyTest {
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertTrue(c.getOperatorType() == OperatorType.PUBLIC);
-
-        c.setOperatorType(OperatorType.PRIVATE);
-        Assert.assertTrue(c.getOperatorType() == OperatorType.PRIVATE);
+        Assert.assertEquals(OperatorType.PUBLIC, c.getOperatorType());
     }
 
     @Test
-    public void verifyPrivateOperatorType() {
+    public void verifyOperatorTypePropIsPrivate() {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -211,23 +220,20 @@ public class OperatorKeyTest {
 
         JsonObject jo = (JsonObject) Json.decodeValue(testJson);
         OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertTrue(c.getOperatorType() == OperatorType.PRIVATE);
-
-        c.setOperatorType(OperatorType.PUBLIC);
-        Assert.assertTrue(c.getOperatorType() == OperatorType.PUBLIC);
+        Assert.assertEquals(OperatorType.PRIVATE, c.getOperatorType());
     }
 
     @Test
     public void verifyConstructorStartsWithPrivateOperator() {
         OperatorKey k1 = new OperatorKey("key1", "name1", "contact1", "protocol1", 1, true);
-        Assert.assertTrue(k1.getOperatorType() == OperatorType.PRIVATE);
+        Assert.assertEquals(OperatorType.PRIVATE, k1.getOperatorType());
         OperatorKey k2 = new OperatorKey("key2", "name2", "contact2", "protocol2", 2, true, 2);
-        Assert.assertTrue(k2.getOperatorType() == OperatorType.PRIVATE);
+        Assert.assertEquals(OperatorType.PRIVATE, k2.getOperatorType());
         OperatorKey k3 = new OperatorKey("key3", "name3", "contact3", "protocol3", 3, true, 3,  null);
-        Assert.assertTrue(k3.getOperatorType() == OperatorType.PRIVATE);
+        Assert.assertEquals(OperatorType.PRIVATE, k3.getOperatorType());
         OperatorKey k4 = new OperatorKey("key4", "name4", "contact4", "protocol4", 4, true, 4,  null, OperatorType.PUBLIC);
-        Assert.assertTrue(k4.getOperatorType() == OperatorType.PUBLIC);
+        Assert.assertEquals(OperatorType.PUBLIC, k4.getOperatorType());
         OperatorKey k5 = new OperatorKey("key5", "name5", "contact5", "protocol5", 5, true, 5,  null, OperatorType.PRIVATE);
-        Assert.assertTrue(k5.getOperatorType() == OperatorType.PRIVATE);
+        Assert.assertEquals(OperatorType.PRIVATE, k5.getOperatorType());
     }
 }
