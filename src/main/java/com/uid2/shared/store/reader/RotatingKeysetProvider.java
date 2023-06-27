@@ -4,8 +4,6 @@ import com.uid2.shared.auth.Keyset;
 import com.uid2.shared.auth.KeysetSnapshot;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.store.CloudPath;
-import com.uid2.shared.store.IKeysetProvider;
-import com.uid2.shared.store.IKeysetSnapshot;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.KeysetParser;
 import com.uid2.shared.store.scope.StoreScope;
@@ -14,19 +12,17 @@ import io.vertx.core.json.JsonObject;
 import java.time.Instant;
 import java.util.Map;
 
-public class RotatingKeysetProvider implements IKeysetProvider, StoreReader<Map<Integer, Keyset>> {
+public class RotatingKeysetProvider implements StoreReader<Map<Integer, Keyset>> {
     private final ScopedStoreReader<KeysetSnapshot> reader;
 
     public RotatingKeysetProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeysetParser(), "keysets");
     }
 
-    @Override
     public KeysetSnapshot getSnapshot(Instant asOf) {
         return reader.getSnapshot();
     }
 
-    @Override
     public KeysetSnapshot getSnapshot() {
         return this.getSnapshot(Instant.now());
     }
