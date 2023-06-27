@@ -37,19 +37,11 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     }
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
-        this.key = key;
-        this.name = name;
-        this.contact = contact;
-        this.protocol = protocol;
-        this.created = created;
-        this.disabled = disabled;
-        this.siteId = siteId;
-        this.roles = new HashSet<>(List.of(Role.OPERATOR));
-        this.operatorType = DEFAULT_OPERATOR_TYPE;
+        this(key, name, contact, protocol, created, disabled, siteId, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
     }
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
-        this(key, name, contact, protocol, created, disabled, null);
+        this(key, name, contact, protocol, created, disabled, null, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
     }
 
     public static OperatorKey valueOf(JsonObject json) {
@@ -112,7 +104,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         return this.roles.contains(role);
     }
 
-    public void setRoles(Set<Role> roles)  {
+    public void setRoles(Set<Role> roles) {
         this.roles = this.reorderAndAddDefaultRole(roles);
     }
 
