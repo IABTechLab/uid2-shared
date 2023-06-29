@@ -6,7 +6,9 @@ import io.vertx.core.json.JsonObject;
 import java.util.*;
 
 public class OperatorKey implements IRoleAuthorizable<Role> {
-    private String key;
+    private static final OperatorType DEFAULT_OPERATOR_TYPE = OperatorType.PRIVATE;
+
+    private final String key;
     private final String name;
     private final String contact;
     private final String protocol;
@@ -17,8 +19,6 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private Set<Role> roles;
     @JsonProperty("operator_type")
     private OperatorType operatorType;
-
-    private static final OperatorType DEFAULT_OPERATOR_TYPE = OperatorType.PRIVATE;
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) {
         this.key = key;
@@ -37,19 +37,11 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     }
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
-        this.key = key;
-        this.name = name;
-        this.contact = contact;
-        this.protocol = protocol;
-        this.created = created;
-        this.disabled = disabled;
-        this.siteId = siteId;
-        this.roles = new HashSet<>(List.of(Role.OPERATOR));
-        this.operatorType = DEFAULT_OPERATOR_TYPE;
+        this(key, name, contact, protocol, created, disabled, siteId, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
     }
 
     public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
-        this(key, name, contact, protocol, created, disabled, null);
+        this(key, name, contact, protocol, created, disabled, null, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
     }
 
     public static OperatorKey valueOf(JsonObject json) {
@@ -68,10 +60,6 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
 
     public String getKey() {
         return key;
-    }
-
-    public void setKey(String newKey) {
-        this.key = newKey;
     }
 
     public String getName() {
@@ -111,7 +99,12 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         return roles;
     }
 
-    public void setRoles(Set<Role> roles)  {
+    @Override
+    public boolean hasRole(Role role) {
+        return this.roles.contains(role);
+    }
+
+    public void setRoles(Set<Role> roles) {
         this.roles = this.reorderAndAddDefaultRole(roles);
     }
 
@@ -123,11 +116,6 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     public OperatorKey withRoles(Role... roles) {
         setRoles(new TreeSet<>(Arrays.asList(roles)));
         return this;
-    }
-
-    @Override
-    public boolean hasRole(Role role) {
-        return this.roles.contains(role);
     }
 
     private Set<Role> reorderAndAddDefaultRole(Set<Role> roles) {
