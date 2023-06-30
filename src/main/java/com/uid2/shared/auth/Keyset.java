@@ -71,13 +71,18 @@ public class Keyset {
 
         Keyset b = (Keyset) o;
 
-        return this.keysetId == b.keysetId
+        boolean compare = this.keysetId == b.keysetId
                 && this.siteId == b.siteId
                 && this.name.equals(b.name)
-                && this.allowedSites.equals(b.allowedSites)
                 && this.created == b.created
                 && this.isEnabled == b.isEnabled
                 && this.isDefault == b.isDefault;
+
+        if(this.allowedSites == null || this.allowedSites == null) {
+            return compare && this.allowedSites == b.allowedSites;
+        }
+
+        return compare && this.allowedSites.equals(b.allowedSites);
     }
 
     @Override
