@@ -22,9 +22,7 @@ import org.mockito.MockitoAnnotations;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static com.uid2.shared.TestUtilites.makeInputStream;
 import static com.uid2.shared.TestUtilites.toInputStream;
@@ -42,17 +40,22 @@ public class RotatingKeysetProviderTest {
         keysetProvider = new RotatingKeysetProvider(cloudStorage, new GlobalScope(new CloudPath("metadata")));
     }
 
-    private void addKeyset(JsonArray content, int siteId, int keysetId, int... listedSiteIds) {
+    private void addKeyset(JsonArray content, int siteId, int keysetId, Collection<Integer> allowedSites) {
         JsonObject entry = new JsonObject();
         entry.put("keyset_id", keysetId);
         entry.put("site_id", siteId);
         entry.put("name", "test");
 
-        JsonArray list = new JsonArray();
-        for (int listedSiteId : listedSiteIds) {
-            list.add(listedSiteId);
+        if(allowedSites == null) {
+            entry.put("allowed_sites", allowedSites);
+        } else {
+            JsonArray list = new JsonArray();
+            for (int allowedSiteId : allowedSites) {
+                list.add(allowedSiteId);
+            }
+            entry.put("allowed_sites", list);
         }
-        entry.put("allowed_sites", list);
+
         entry.put("created", Instant.now().getEpochSecond());
         entry.put("enabled", true);
         entry.put("default", true);
@@ -72,8 +75,8 @@ public class RotatingKeysetProviderTest {
     public void loadsContentToSiteScope() throws Exception{
         RotatingKeysetProvider provider = new RotatingKeysetProvider(cloudStorage, new SiteScope(new CloudPath("metadata"), 5));
         JsonArray content = new JsonArray();
-        addKeyset(content, 5, 1, 1, 2, 3);
-        addKeyset(content, 1, 2, 1,2,5);
+        addKeyset(content, 5, 1, List.of(1, 2, 3));
+        addKeyset(content, 1, 2, List.of(1,2,5));
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = provider.loadContent(makeMetadata("locationPath"));
         Assert.assertEquals(2, count);
@@ -96,7 +99,7 @@ public class RotatingKeysetProviderTest {
         cloudStorage.upload(toInputStream(makeMetadata(contentPath).encodePrettily()), metadataPath);
 
         JsonArray content = new JsonArray();
-        addKeyset(content, 1, 1, 1, 2,3);
+        addKeyset(content, 1, 1, List.of(1, 2,3));
         cloudStorage.upload(toInputStream(content.encodePrettily()), contentPath);
 
         RotatingKeysetProvider provider = new RotatingKeysetProvider(cloudStorage, new GlobalScope(new CloudPath(metadataPath)));
@@ -125,16 +128,27 @@ public class RotatingKeysetProviderTest {
     @Test
     public void loadContentMultipleEntries() throws Exception {
         JsonArray content = new JsonArray();
-        addKeyset(content, 1, 1, 2,3);
-        addKeyset(content, 2, 2, 3,4);
-        addKeyset(content, 3, 3, 5,6);
+        addKeyset(content, 1, 1, List.of(2,3));
+        addKeyset(content, 2, 2, List.of(3,4));
+        addKeyset(content, 3, 3, List.of(5,6));
+        addKeyset(content, 4, 4, null);
+        addKeyset(content, 5, 5, List.of(1,1,2,3));
+        addKeyset(content, 6, 6, List.of());
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = keysetProvider.loadContent(makeMetadata("locationPath"));
-        Assert.assertEquals(3, count);
+        Assert.assertEquals(6, count);
 
         // Site 2 can access 1, it can access its own, but not 3
         Assert.assertTrue(canAccessKey(2, 1));
         Assert.assertTrue(canAccessKey(2, 2));
         Assert.assertFalse(canAccessKey(2, 3));
+        //Only 4 can access null list
+        Assert.assertTrue(canAccessKey(4,4));
+        Assert.assertFalse(canAccessKey(2, 4));
+        //Can still access if there is a duplicate
+        Assert.assertTrue(canAccessKey(1, 5));
+        // Only 6 can access its empty list
+        Assert.assertTrue(canAccessKey(6,6));
+        Assert.assertFalse(canAccessKey(5,6));
     }
 }

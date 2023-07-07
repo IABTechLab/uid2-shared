@@ -24,9 +24,13 @@ public class KeysetParser implements Parser<KeysetSnapshot> {
             final String name = keysetSpec.getString("name");
 
             final JsonArray allowedSitesSpec = keysetSpec.getJsonArray("allowed_sites");
-            final HashSet<Integer> allowedSites = new HashSet<>();
-            for(int j = 0; j < allowedSitesSpec.size(); j++) {
-                allowedSites.add(allowedSitesSpec.getInteger(j));
+            HashSet<Integer> allowedSites = new HashSet<>();
+            if (allowedSitesSpec == null) {
+                allowedSites = null;
+            } else {
+                for (int j = 0; j < allowedSitesSpec.size(); j++) {
+                    allowedSites.add(allowedSitesSpec.getInteger(j));
+                }
             }
 
             long created = keysetSpec.getLong("created");
