@@ -27,6 +27,10 @@ public class RotatingKeysetProvider implements StoreReader<Map<Integer, Keyset>>
         return this.getSnapshot(Instant.now());
     }
 
+    public Keyset getKeyset(int keysetId) {
+        return reader.getSnapshot().getAllKeysets().get(keysetId);
+    }
+
     @Override
     public long getVersion(JsonObject metadata) {
         return metadata.getLong("version");

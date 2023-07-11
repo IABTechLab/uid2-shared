@@ -20,5 +20,8 @@ public class KeysetSnapshot implements IKeysetSnapshot {
         return keyset.canBeAccessedBySite(clientKey.getSiteId());
     }
 
-    public Map<Integer, Keyset> getAllKeysets() { return keysets; }
+    public Map<Integer, Keyset> getAllKeysets() { return this.keysets; }
+
+    @Override
+    public Keyset getKeyset(int keysetId) { return this.keysets.get(keysetId); }
 }
