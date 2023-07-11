@@ -88,6 +88,10 @@ public class Keyset {
 
     @Override
     public int hashCode() {
+        if(allowedSites == null)
+        {
+            return Objects.hash(keysetId, siteId, name, created, isEnabled, isDefault);
+        }
         return Objects.hash(keysetId, siteId, name, Arrays.hashCode(allowedSites.toArray()), created, isEnabled, isDefault);
     }
 }
