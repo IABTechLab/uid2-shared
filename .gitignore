@@ -2,3 +2,4 @@
 target/
 uid2-shared.iml
 dependencies/
+.pre-commit-trivy-cache/
