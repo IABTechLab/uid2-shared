@@ -61,7 +61,7 @@ public class Keyset {
 
     public boolean canBeAccessedBySite(Integer siteId) {
         if(!isEnabled) return false;
-        if(allowedSites == null) return false;
+        if(allowedSites == null || allowedSites.isEmpty()) return false;
         return allowedSites.contains(siteId);
     }
     @Override
@@ -79,7 +79,7 @@ public class Keyset {
                 && this.isEnabled == b.isEnabled
                 && this.isDefault == b.isDefault;
 
-        if(this.allowedSites == null || this.allowedSites == null) {
+        if(this.allowedSites == null || b.allowedSites == null) {
             return compare && this.allowedSites == b.allowedSites;
         }
 

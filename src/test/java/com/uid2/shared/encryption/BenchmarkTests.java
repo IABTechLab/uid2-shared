@@ -1,7 +1,7 @@
 package com.uid2.shared.encryption;
 
 import com.uid2.shared.model.EncryptedPayload;
-import com.uid2.shared.model.EncryptionKey;
+import com.uid2.shared.model.KeysetKey;
 import junit.framework.TestCase;
 
 import javax.crypto.SecretKey;
@@ -16,7 +16,7 @@ public class BenchmarkTests extends TestCase {
         }
         System.out.println("Java VM property java.security.egd: " + System.getProperty("java.security.egd"));
         final int runs = 1000000;
-        final EncryptionKey key = new EncryptionKey(1, Random.getRandomKeyBytes(), Instant.now(), Instant.now(), Instant.now(), -1);
+        final KeysetKey key = new KeysetKey(1, Random.getRandomKeyBytes(), Instant.now(), Instant.now(), Instant.now(), 123);
 
         final EncryptedPayload[] payloads = new EncryptedPayload[runs];
 
@@ -57,7 +57,7 @@ public class BenchmarkTests extends TestCase {
         }
         System.out.println("Java VM property java.security.egd: " + System.getProperty("java.security.egd"));
         final int runs = 1000000;
-        final EncryptionKey key = new EncryptionKey(1, Random.getRandomKeyBytes(), Instant.now(), Instant.now(), Instant.now(), -1);
+        final KeysetKey key = new KeysetKey(1, Random.getRandomKeyBytes(), Instant.now(), Instant.now(), Instant.now(), 123);
 
         final EncryptedPayload[] payloads = new EncryptedPayload[runs];
 

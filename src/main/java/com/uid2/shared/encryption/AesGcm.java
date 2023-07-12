@@ -1,7 +1,6 @@
 package com.uid2.shared.encryption;
 
 import com.uid2.shared.model.EncryptedPayload;
-import com.uid2.shared.model.EncryptionKey;
 import com.uid2.shared.model.KeysetKey;
 import io.vertx.core.buffer.Buffer;
 
@@ -15,23 +14,6 @@ public class AesGcm {
     private static final String cipherScheme = "AES/GCM/NoPadding";
     public static final int GCM_AUTHTAG_LENGTH = 16;
     public static final int GCM_IV_LENGTH = 12;
-
-    public static EncryptedPayload encrypt(byte[] b, EncryptionKey key) {
-        try {
-            byte[] encrypted = encrypt(b, key.getKeyBytes());
-            return new EncryptedPayload(key.getKeyIdentifier(), encrypted);
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Encrypt", e);
-        }
-    }
-
-    public static EncryptedPayload encrypt(String s, EncryptionKey key) {
-        try {
-            return encrypt(s.getBytes(StandardCharsets.UTF_8), key);
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Encrypt", e);
-        }
-    }
 
     public static EncryptedPayload encrypt(byte[] b, KeysetKey key) {
         try {
@@ -60,14 +42,6 @@ public class AesGcm {
             return Buffer.buffer().appendBytes(ivBytes).appendBytes(c.doFinal(b)).getBytes();
         } catch (Exception e) {
             throw new RuntimeException("Unable to Encrypt", e);
-        }
-    }
-
-    public static byte[] decrypt(byte[] encryptedBytes, int offset, EncryptionKey key) {
-        try {
-            return decrypt(encryptedBytes, offset, key.getKeyBytes());
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Decrypt", e);
         }
     }
 
