@@ -8,14 +8,14 @@ public interface IAttestationTokenService {
      * @param userToken
      * @return attestation token
      */
-    String createToken(String userToken);
+    AttestationToken createToken(String userToken);
 
     /**
-     * Get the expiresAt Instant for a encrypted user token
-     * @param encryptedUserToken
-     * @return the expires at Instant
+     * Create encrypted token from AttestationToken
+     * @param attToken
+     * @return encrypted attestation token
      */
-    Instant getExpiresAt(String encryptedUserToken);
+    public String createEncryptedToken(AttestationToken attToken);
 
     /**
      * Create attestation token from user token
