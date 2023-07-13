@@ -28,7 +28,7 @@ public class AttestationTokenTest {
     public void testAttestationToken() {
         final AttestationTokenService ats = new AttestationTokenService(ENCRYPTION_KEY, SALT, 3600);
         final String attestationToken = ats.createToken(
-                "userToken");
+                "userToken").getEncodedAttestationToken();
         Assertions.assertTrue(ats.validateToken("userToken", attestationToken));
     }
 
@@ -36,7 +36,7 @@ public class AttestationTokenTest {
     public void testAttestationTokenBadAlgorithm() {
         final AttestationTokenService ats = new AttestationTokenService(ENCRYPTION_KEY, SALT, 3600);
         final String attestationToken = ats.createToken(
-                "userToken");
+                "userToken").getEncodedAttestationToken();
         final String badAttestationToken =
                 attestationToken.substring(0, attestationToken.length() - 1) + "q";
         Assertions.assertFalse(ats.validateToken("userToken", badAttestationToken));
@@ -46,7 +46,7 @@ public class AttestationTokenTest {
     public void testAttestationTokenNoAlgorithm() {
         final AttestationTokenService ats = new AttestationTokenService(ENCRYPTION_KEY, SALT, 3600);
         final String attestationToken = ats.createToken(
-                "userToken");
+                "userToken").getEncodedAttestationToken();
         final String badAttestationToken = String.join("-",
                 Arrays.copyOfRange(attestationToken.split("-"), 0, 2));
         Assertions.assertFalse(ats.validateToken("userToken", badAttestationToken));
@@ -56,7 +56,7 @@ public class AttestationTokenTest {
     public void testAttestationTokenMalformed() {
         final AttestationTokenService ats = new AttestationTokenService(ENCRYPTION_KEY, SALT, 3600);
         final String attestationToken = ats.createToken(
-                "userToken");
+                "userToken").getEncodedAttestationToken();
         final String badAttestationToken = attestationToken + "-hoho";
         Assertions.assertFalse(ats.validateToken("userToken", badAttestationToken));
     }
@@ -71,7 +71,7 @@ public class AttestationTokenTest {
         final Instant targetLifetime = fixedInstant.plus(1800 + randomValue, ChronoUnit.SECONDS);
         final AttestationTokenService ats = new AttestationTokenService(ENCRYPTION_KEY, SALT, lifetime, random, clock);
 
-        final String attestationToken = ats.createToken("userToken");
+        final String attestationToken = ats.createToken("userToken").getEncodedAttestationToken();
         Assertions.assertTrue(ats.validateToken("userToken", attestationToken));
 
         final AttestationToken reconstructToken = AttestationToken.fromEncrypted(attestationToken, ENCRYPTION_KEY, SALT);
@@ -86,7 +86,7 @@ public class AttestationTokenTest {
         final Instant expiryUpperBound = Instant.now().plusSeconds(defaultLifetime + (10 * 60) - 1);
         final AttestationTokenService ats = new AttestationTokenService(ENCRYPTION_KEY, SALT); // until the default constructor is removed, this must use it for the test to be valid
 
-        final String attestationToken = ats.createToken("userToken");
+        final String attestationToken = ats.createToken("userToken").getEncodedAttestationToken();
         Assertions.assertTrue(ats.validateToken("userToken", attestationToken));
 
         final AttestationToken reconstructToken = AttestationToken.fromEncrypted(attestationToken, ENCRYPTION_KEY, SALT);

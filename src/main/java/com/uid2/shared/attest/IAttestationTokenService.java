@@ -6,16 +6,9 @@ public interface IAttestationTokenService {
     /**
      * Create attestation token from user token
      * @param userToken
-     * @return attestation token
+     * @return EncryptedAttestationToken object
      */
-    AttestationToken createToken(String userToken);
-
-    /**
-     * Create encrypted token from AttestationToken
-     * @param attToken
-     * @return encrypted attestation token
-     */
-    public String createEncryptedToken(AttestationToken attToken);
+    EncryptedAttestationToken createToken(String userToken);
 
     /**
      * Create attestation token from user token

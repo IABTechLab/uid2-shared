@@ -31,15 +31,11 @@ public class AttestationTokenService implements IAttestationTokenService {
     }
 
     @Override
-    public AttestationToken createToken(String userToken) {
+    public EncryptedAttestationToken createToken(String userToken) {
         long randomOffset = this.random.nextLong(300, 600); // random time between 5 and 10 minutes more to create some variation between when operators expire
         Instant expiresAt = this.clock.instant().plus(this.expiresAfterSeconds + randomOffset, ChronoUnit.SECONDS);
-        return new AttestationToken(userToken, expiresAt);
-    }
-
-    @Override
-    public String createEncryptedToken(AttestationToken attToken) {
-        return attToken.encode(encryptionKey, encryptionSalt);
+        AttestationToken attToken = new AttestationToken(userToken, expiresAt);
+        return new EncryptedAttestationToken(attToken.encode(encryptionKey, encryptionSalt), expiresAt);
     }
 
     @Deprecated
