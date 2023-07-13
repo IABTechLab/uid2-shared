@@ -5,9 +5,6 @@ import com.uid2.shared.secure.gcpoidc.ITokenSignatureValidator;
 import com.uid2.shared.secure.gcpoidc.TokenPayload;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import io.vertx.core.Vertx;
-import io.vertx.ext.unit.TestContext;
-import io.vertx.ext.web.client.WebClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,7 +28,7 @@ public class GcpOidcAttestationProviderTest {
 
     private static final String ENCLAVE_ID_2 = "test-enclave_2";
 
-    private static final TokenPayload VALID_TOKEN_PAYLOAD = new TokenPayload();
+    private static final TokenPayload VALID_TOKEN_PAYLOAD = TokenPayload.builder().build();
 
     @Mock private ITokenSignatureValidator alwaysPassTokenValidator;
     @Mock private ITokenSignatureValidator alwaysFailTokenValidator;
@@ -46,7 +42,7 @@ public class GcpOidcAttestationProviderTest {
 
     @Before
     public void setup() throws AttestationException {
-        when(alwaysPassTokenValidator.validate(any())).thenReturn(new TokenPayload());
+        when(alwaysPassTokenValidator.validate(any())).thenReturn(VALID_TOKEN_PAYLOAD);
         when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationException("token signature validation failed"));
         when(alwaysPassPolicyValidator1.validate(any())).thenReturn(ENCLAVE_ID_1);
         when(alwaysPassPolicyValidator2.validate(any())).thenReturn(ENCLAVE_ID_2);
