@@ -11,6 +11,13 @@ public interface IAttestationTokenService {
     String createToken(String userToken);
 
     /**
+     * Get the expiresAt Instant for a encrypted user token
+     * @param encryptedUserToken
+     * @return the expires at Instant
+     */
+    Instant getExpiresAt(String encryptedUserToken);
+
+    /**
      * Create attestation token from user token
      * @param userToken
      * @param expiresAt

@@ -38,6 +38,12 @@ public class AttestationTokenService implements IAttestationTokenService {
         return attToken.encode(encryptionKey, encryptionSalt);
     }
 
+    @Override
+    public Instant getExpiresAt(String encryptedUserToken) {
+        AttestationToken attToken = AttestationToken.fromEncrypted(encryptedUserToken, encryptionKey, encryptionSalt);
+        return attToken.getExpiresAt();
+    }
+
     @Deprecated
     @Override
     public String createToken(String userToken, Instant expiresAt) {
