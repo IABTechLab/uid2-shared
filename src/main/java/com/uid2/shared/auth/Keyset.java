@@ -14,14 +14,14 @@ public class Keyset {
     private final String name;
     @JsonProperty("allowed_sites")
     private final Set<Integer> allowedSites;
-    private final long created;
+    private final Instant created;
     @JsonProperty("enabled")
     private final boolean isEnabled;
     @JsonProperty("default")
     private final boolean isDefault;
 
     public Keyset(int keysetId, int siteId, String name, Set<Integer> allowedSites,
-                  long created, boolean isEnabled, boolean isDefault) {
+                  Instant created, boolean isEnabled, boolean isDefault) {
         this.keysetId = keysetId;
         this.siteId = siteId;
         this.name = name;
@@ -47,7 +47,7 @@ public class Keyset {
         return allowedSites;
     }
 
-    public long getCreated() {
+    public Instant getCreated() {
         return created;
     }
 
@@ -75,7 +75,7 @@ public class Keyset {
         boolean compare = this.keysetId == b.keysetId
                 && this.siteId == b.siteId
                 && this.name.equals(b.name)
-                && this.created == b.created
+                && this.created.equals(b.created)
                 && this.isEnabled == b.isEnabled
                 && this.isDefault == b.isDefault;
 
