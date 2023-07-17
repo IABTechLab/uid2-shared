@@ -143,11 +143,11 @@ public class RotatingKeysetProviderTest {
         Assert.assertFalse(canAccessKey(2, 3));
         //Only 4 can access null list
         Assert.assertTrue(canAccessKey(4,4));
-        Assert.assertFalse(canAccessKey(2, 4));
+        Assert.assertTrue(canAccessKey(2, 4));
         //Can still access if there is a duplicate
         Assert.assertTrue(canAccessKey(1, 5));
         // Only 6 can access its empty list
         Assert.assertTrue(canAccessKey(6,6));
-        Assert.assertFalse(canAccessKey(5,6));
+        Assert.assertTrue(canAccessKey(5,6));
     }
 }

@@ -2,16 +2,14 @@ package com.uid2.shared.auth;
 
 import com.uid2.shared.model.KeysetKey;
 import com.uid2.shared.store.ACLMode.MissingAclMode;
-import com.uid2.shared.store.IKeysetSnapshot;
 
 import java.util.Map;
 
-public class KeysetSnapshot implements IKeysetSnapshot {
+public class KeysetSnapshot {
     private final Map<Integer, Keyset> keysets;
 
     public KeysetSnapshot(Map<Integer, Keyset> keysets) { this.keysets = keysets; }
 
-    @Override
     public boolean canClientAccessKey(ClientKey clientKey, KeysetKey key, MissingAclMode accessMethod) {
         Keyset keyset = keysets.get(key.getKeysetId());
 

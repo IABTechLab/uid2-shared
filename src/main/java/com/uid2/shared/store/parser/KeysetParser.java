@@ -33,7 +33,7 @@ public class KeysetParser implements Parser<KeysetSnapshot> {
                 }
             }
 
-            Instant created = Instant.ofEpochSecond(keysetSpec.getLong("created"));
+            long created = keysetSpec.getLong("created");
             final boolean enabled = keysetSpec.getBoolean("enabled");
             final boolean isDefault = keysetSpec.getBoolean("default");
 

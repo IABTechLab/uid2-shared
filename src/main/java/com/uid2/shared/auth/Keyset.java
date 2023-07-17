@@ -2,7 +2,6 @@ package com.uid2.shared.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
@@ -14,14 +13,14 @@ public class Keyset {
     private final String name;
     @JsonProperty("allowed_sites")
     private final Set<Integer> allowedSites;
-    private final Instant created;
+    private final long created;
     @JsonProperty("enabled")
     private final boolean isEnabled;
     @JsonProperty("default")
     private final boolean isDefault;
 
     public Keyset(int keysetId, int siteId, String name, Set<Integer> allowedSites,
-                  Instant created, boolean isEnabled, boolean isDefault) {
+                  long created, boolean isEnabled, boolean isDefault) {
         this.keysetId = keysetId;
         this.siteId = siteId;
         this.name = name;
@@ -47,7 +46,7 @@ public class Keyset {
         return allowedSites;
     }
 
-    public Instant getCreated() {
+    public long getCreated() {
         return created;
     }
 
@@ -75,7 +74,7 @@ public class Keyset {
         boolean compare = this.keysetId == b.keysetId
                 && this.siteId == b.siteId
                 && this.name.equals(b.name)
-                && this.created.equals(b.created)
+                && this.created == b.created
                 && this.isEnabled == b.isEnabled
                 && this.isDefault == b.isDefault;
 
