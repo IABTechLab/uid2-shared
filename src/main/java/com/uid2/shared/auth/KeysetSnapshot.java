@@ -11,25 +11,18 @@ public class KeysetSnapshot implements IKeysetSnapshot {
 
     public KeysetSnapshot(Map<Integer, Keyset> keysets) { this.keysets = keysets; }
 
-    public boolean canClientAccessKey(ClientKey clientKey, KeysetKey key) {
-        Keyset keyset = keysets.get(key.getKeysetId());
-
-        if(!keyset.isEnabled()) return false;
-
-        if(keyset.getSiteId() == clientKey.getSiteId()) return true;
-
-        return keyset.canBeAccessedBySite(clientKey.getSiteId());
-    }
-
     @Override
     public boolean canClientAccessKey(ClientKey clientKey, KeysetKey key, MissingAclMode accessMethod) {
         Keyset keyset = keysets.get(key.getKeysetId());
 
-        if (keyset.isEnabled()
-                && accessMethod == MissingAclMode.ALLOW_ALL
-                && keyset.getAllowedSites() == null) return true;
+        if (keyset == null || !keyset.isEnabled() || clientKey == null) return false;
 
-        return this.canClientAccessKey(clientKey, key);
+        if (keyset.getSiteId() == clientKey.getSiteId()) return true;
+
+        if (accessMethod == MissingAclMode.ALLOW_ALL
+            && (keyset.getAllowedSites() == null || keyset.getAllowedSites().isEmpty())) return true;
+
+        return keyset.canBeAccessedBySite(clientKey.getSiteId());
     }
 
     public Map<Integer, Keyset> getAllKeysets() { return this.keysets; }

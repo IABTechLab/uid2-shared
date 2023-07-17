@@ -7,6 +7,7 @@ import com.uid2.shared.auth.KeysetSnapshot;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.cloud.InMemoryStorageMock;
 import com.uid2.shared.model.KeysetKey;
+import com.uid2.shared.store.ACLMode.MissingAclMode;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.scope.GlobalScope;
 import com.uid2.shared.store.scope.SiteScope;
@@ -120,7 +121,7 @@ public class RotatingKeysetProviderTest {
         return new KeysetKey(0, null, null, null, null, keysetId);
     }
     private boolean canAccessKey(int clientSiteId, int keySiteId) {
-        return keysetProvider.getSnapshot().canClientAccessKey(makeClientKey(clientSiteId), makeKey(keySiteId));
+        return keysetProvider.getSnapshot().canClientAccessKey(makeClientKey(clientSiteId), makeKey(keySiteId), MissingAclMode.ALLOW_ALL);
     }
 
     @Test
