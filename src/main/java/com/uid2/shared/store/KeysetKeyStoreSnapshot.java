@@ -30,7 +30,7 @@ public class KeysetKeyStoreSnapshot implements IKeysetKeyStore.IkeysetKeyStoreSn
     public KeysetKey getActiveKey(int keysetId, Instant now) {
         List<KeysetKey> keysetKeys = keysetMap.get(keysetId);
         if(keysetKeys == null || keysetKeys.isEmpty()) return null;
-        int keysetKeysIndex = Utils.upperBound(keysetKeys, now, (ts, k) -> !ts.isAfter(k.getActivates())); // before || equal
+        int keysetKeysIndex = Utils.upperBound(keysetKeys, now, (ts, k) -> ts.isBefore(k.getActivates()));
         while(keysetKeysIndex > 0) {
             KeysetKey key = keysetKeys.get(keysetKeysIndex-1);
             if(!key.isExpired(now)) {

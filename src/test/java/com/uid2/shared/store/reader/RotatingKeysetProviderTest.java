@@ -144,18 +144,28 @@ public class RotatingKeysetProviderTest {
         Assert.assertTrue(canAccessKey(2, 2, MissingAclMode.DENY_ALL));
         Assert.assertFalse(canAccessKey(2, 3, MissingAclMode.ALLOW_ALL));
         Assert.assertFalse(canAccessKey(2, 3, MissingAclMode.DENY_ALL));
-        //Only 4 can access null list
+        // null list
         Assert.assertTrue(canAccessKey(4,4, MissingAclMode.ALLOW_ALL));
         Assert.assertTrue(canAccessKey(4,4, MissingAclMode.DENY_ALL));
         Assert.assertTrue(canAccessKey(2, 4, MissingAclMode.ALLOW_ALL));
         Assert.assertFalse(canAccessKey(2, 4, MissingAclMode.DENY_ALL));
-        //Can still access if there is a duplicate
+        Assert.assertTrue(canAccessKey(5, 4, MissingAclMode.ALLOW_ALL));
+        Assert.assertFalse(canAccessKey(5, 4, MissingAclMode.DENY_ALL));
+        // list with duplicates
         Assert.assertTrue(canAccessKey(1, 5, MissingAclMode.ALLOW_ALL));
         Assert.assertTrue(canAccessKey(1, 5, MissingAclMode.DENY_ALL));
-        // Only 6 can access its empty list
+        Assert.assertTrue(canAccessKey(2, 5, MissingAclMode.ALLOW_ALL));
+        Assert.assertTrue(canAccessKey(2, 5, MissingAclMode.DENY_ALL));
+        Assert.assertFalse(canAccessKey(4, 5, MissingAclMode.ALLOW_ALL));
+        Assert.assertFalse(canAccessKey(4, 5, MissingAclMode.DENY_ALL));
+        Assert.assertTrue(canAccessKey(5, 5, MissingAclMode.ALLOW_ALL));
+        Assert.assertTrue(canAccessKey(5, 5, MissingAclMode.DENY_ALL));
+        // empty list
         Assert.assertTrue(canAccessKey(6,6, MissingAclMode.ALLOW_ALL));
         Assert.assertTrue(canAccessKey(6,6, MissingAclMode.DENY_ALL));
         Assert.assertTrue(canAccessKey(5,6, MissingAclMode.ALLOW_ALL));
         Assert.assertFalse(canAccessKey(5,6, MissingAclMode.DENY_ALL));
+        Assert.assertTrue(canAccessKey(4,6, MissingAclMode.ALLOW_ALL));
+        Assert.assertFalse(canAccessKey(4,6, MissingAclMode.DENY_ALL));
     }
 }
