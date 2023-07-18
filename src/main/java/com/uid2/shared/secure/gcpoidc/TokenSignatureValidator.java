@@ -72,7 +72,7 @@ public class TokenSignatureValidator implements ITokenSignatureValidator{
         var subModsDetails = TryGetField(rawPayload,"submods",  Map.class);
 
         if(subModsDetails != null){
-            var confidential_space = TryGetField(subModsDetails, "subModsDetails", Map.class);
+            var confidential_space = TryGetField(subModsDetails, "confidential_space", Map.class);
             if(confidential_space != null){
                 tokenPayloadBuilder.csSupportedAttributes(TryGetField(confidential_space, "support_attributes", List.class));
             }

@@ -83,7 +83,7 @@ public class PolicyValidator implements IPolicyValidator{
         // check all required env overrides
         for(var envKey: REQUIRED_ENV_OVERRIDES){
             if(Strings.isNullOrEmpty(envOverridesCopy.get(envKey))){
-                throw new AttestationException("Required env override is missing. ket: " + envKey);
+                throw new AttestationException("Required env override is missing. key: " + envKey);
             }
         }
 
