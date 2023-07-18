@@ -4,6 +4,7 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -44,6 +45,25 @@ public class CloudStorageS3 implements TaggableCloudStorage {
                     .build();
         }
         this.bucket = bucket;
+    }
+
+    public CloudStorageS3(String region, String bucket, String s3Endpoint) {
+        this.bucket = bucket;
+
+        InstanceProfileCredentialsProvider credentialsProvider = new InstanceProfileCredentialsProvider(false);
+        if (s3Endpoint.isEmpty()) {
+            this.s3 = AmazonS3ClientBuilder.standard()
+                    .withCredentials(credentialsProvider)
+                    .withRegion(region)
+                    .build();
+        } else {
+            this.s3 = AmazonS3ClientBuilder.standard()
+                    .withCredentials(credentialsProvider)
+                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint, region))
+                    .enablePathStyleAccess()
+                    .build();
+
+        }
     }
 
     @Override
@@ -211,7 +231,10 @@ public class CloudStorageS3 implements TaggableCloudStorage {
                 List<Tag> newTags = new ArrayList<>();
                 tags.forEach((k, v) -> newTags.add(new Tag(k, v)));
 
-                this.s3.setObjectTagging(new SetObjectTaggingRequest(this.bucket, cloudPath, new ObjectTagging(newTags)));
+                this.s3.setObjectTagging(new SetObjectTaggingRequest(
+                        this.bucket,
+                        cloudPath,
+                        new ObjectTagging(newTags)));
             } else {
                 LOGGER.warn("CloudPath: {} does not exist in bucket: {}. Tags not set", cloudPath, this.bucket);
             }
@@ -239,13 +262,21 @@ public class CloudStorageS3 implements TaggableCloudStorage {
         try {
             String versionId = putObjectResult.getVersionId();
             if (versionId == null || versionId.isEmpty()) {
-                LOGGER.warn("Bucket: {} in Region: {} does not have versioning configured. There is a potential for data loss", this.bucket, this.s3.getRegionName());
+                LOGGER.warn(
+                        "Bucket: {} in Region: {} does not have versioning configured. There is a potential for data loss",
+                        this.bucket,
+                        this.s3.getRegionName());
             } else {
-                LOGGER.info("Bucket: {} in Region: {} has versioning configured.", this.bucket, this.s3.getRegionName());
+                LOGGER.info(
+                        "Bucket: {} in Region: {} has versioning configured.",
+                        this.bucket,
+                        this.s3.getRegionName());
             }
         } catch (Throwable t) {
             // don't want this to fail when writing, but should be logged
-            LOGGER.error(String.format("Unable to determine if the S3 bucket: %s has versioning enabled", this.bucket), t);
+            LOGGER.error(
+                    String.format("Unable to determine if the S3 bucket: %s has versioning enabled", this.bucket),
+                    t);
         }
     }
 }

@@ -19,13 +19,21 @@ public class CloudUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudUtils.class);
     public static Proxy defaultProxy = getDefaultProxy();
 
+    public static TaggableCloudStorage createStorageWithIam(String cloudBucket) {
+        return new CloudStorageS3(
+                System.getProperty(Const.Config.AwsRegionProp),
+                cloudBucket,
+                System.getProperty(Const.Config.S3EndpointProp, "")
+        );
+    }
+
     public static TaggableCloudStorage createStorage(String cloudBucket) {
         return new CloudStorageS3(
-            System.getProperty(Const.Config.AccessKeyIdProp),
-            System.getProperty(Const.Config.SecretAccessKeyProp),
-            System.getProperty(Const.Config.AwsRegionProp),
-            cloudBucket,
-            System.getProperty(Const.Config.S3EndpointProp, "")
+                System.getProperty(Const.Config.AccessKeyIdProp),
+                System.getProperty(Const.Config.SecretAccessKeyProp),
+                System.getProperty(Const.Config.AwsRegionProp),
+                cloudBucket,
+                System.getProperty(Const.Config.S3EndpointProp, "")
         );
     }
 
@@ -46,7 +54,7 @@ public class CloudUtils {
             LOGGER.info("Requesting scope: " + ComputeScopes.COMPUTE_READONLY);
             credentials.createScoped(Collections.singletonList(ComputeScopes.COMPUTE_READONLY));
         }
-        return  credentials;
+        return credentials;
     }
 
     private static GoogleCredentials getGoogleCredentialsFromConfigInternal(JsonObject jsonConfig) {
@@ -70,8 +78,7 @@ public class CloudUtils {
             GoogleCredentials ret = GoogleCredentials.fromStream(new ByteArrayInputStream(credentials));
             LOGGER.info("Using google_credentials provided through vertx-config (env or config)");
             return ret;
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             LOGGER.error("Unable to read google credentials " + ex.getMessage(), ex);
             return null;
         }
