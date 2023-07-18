@@ -1,10 +1,8 @@
 package com.uid2.shared.secure.gcpoidc;
 
-import com.google.api.client.util.StringUtils;
 import com.google.common.base.Strings;
 import lombok.Getter;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
