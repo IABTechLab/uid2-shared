@@ -1,5 +1,6 @@
 package com.uid2.shared.secure.gcpoidc;
 
+import com.google.common.base.Strings;
 import lombok.Getter;
 
 import java.util.Map;
@@ -24,7 +25,10 @@ public enum IdentityScope {
         ENUM_MAP = Stream.of(IdentityScope.values()).collect(Collectors.toMap(i -> i.getName(), Function.identity()));
     }
 
-    public static IdentityScope fromString(String str){
+    public static IdentityScope fromString(String str) {
+        if (Strings.isNullOrEmpty(str)) {
+            return null;
+        }
         return ENUM_MAP.get(str.toLowerCase());
     }
 }
