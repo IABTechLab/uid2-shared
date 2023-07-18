@@ -15,15 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class PolicyValidator implements IPolicyValidator{
+public class PolicyValidator implements IPolicyValidator {
 
-    public static final String ENV_ENVIRONMENT = "env";
-    public static final String ENV_IDENTITY_SCOPE = "scope";
-    public static final String ENV_OPERATOR_API_KEY = "api_key";
-
-    public static final String ENV_CORE_ENDPOINT = "core_endpoint";
-
-    public static final String ENV_OPT_OUT_ENDPOINT = "opt_out_endpoint";
+    public static final String ENV_ENVIRONMENT = "DEPLOYMENT_ENVIRONMENT";
+    public static final String ENV_IDENTITY_SCOPE = "IDENTITY_SCOPE";
+    public static final String ENV_OPERATOR_API_KEY = "API_TOKEN";
+    public static final String ENV_CORE_ENDPOINT = "CORE_BASE_URL";
+    public static final String ENV_OPT_OUT_ENDPOINT = "OPTOUT_BASE_URL";
 
     private static final List<String> REQUIRED_ENV_OVERRIDES = ImmutableList.of(
             ENV_ENVIRONMENT,
@@ -32,7 +30,7 @@ public class PolicyValidator implements IPolicyValidator{
     );
 
     private static final Map<Environment, List<String>> OPTIONAL_ENV_OVERRIDES_MAP = ImmutableMap.of(
-        Environment.Integration, ImmutableList.of(ENV_CORE_ENDPOINT, ENV_OPT_OUT_ENDPOINT)
+            Environment.Integration, ImmutableList.of(ENV_CORE_ENDPOINT, ENV_OPT_OUT_ENDPOINT)
     );
 
     @Override

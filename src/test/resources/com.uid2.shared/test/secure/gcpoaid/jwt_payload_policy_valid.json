@@ -27,9 +27,9 @@
       "restart_policy": "Never",
       "image_id": "sha256:5be33a19451733a45ea1bdb340fcb858a0fc733e91ca0a0d99638652f6dcabd0",
       "env_override": {
-        "env": "prod",
-        "scope": "uid2",
-        "api_key": "dummy"
+        "DEPLOYMENT_ENVIRONMENT": "prod",
+        "IDENTITY_SCOPE": "uid2",
+        "API_TOKEN": "dummy"
       },
       "cmd_override": null,
       "env": {
