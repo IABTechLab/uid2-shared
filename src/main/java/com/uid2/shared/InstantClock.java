@@ -18,4 +18,3 @@ public class InstantClock implements IClock {
         return Instant.now();
     }
 }
-
