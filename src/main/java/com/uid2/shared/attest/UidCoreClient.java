@@ -20,12 +20,12 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private AttestationTokenRetriever attestationTokenRetriever;
     private AtomicReference<Handler<Integer>> responseWatcher;
 
-    public static UidCoreClient createNoAttest(String attestationEndpoint, String userToken, ApplicationVersion appVersion, boolean enforceHttps) {
+    public static UidCoreClient createNoAttest(String attestationEndpoint, String userToken, ApplicationVersion appVersion, boolean enforceHttps) throws IOException {
         return new UidCoreClient(attestationEndpoint, userToken, appVersion, CloudUtils.defaultProxy, new NoAttestationProvider(), enforceHttps);
     }
 
     public UidCoreClient(String attestationEndpoint, String userToken, ApplicationVersion appVersion, Proxy proxy,
-                         IAttestationProvider attestationProvider, boolean enforceHttps) {
+                         IAttestationProvider attestationProvider, boolean enforceHttps) throws IOException {
         this.proxy = proxy;
         this.contentStorage = new PreSignedURLStorage(proxy);
         this.attestationTokenRetriever = new AttestationTokenRetriever(

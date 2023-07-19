@@ -40,6 +40,7 @@ public class AttestationTokenRetriever {
     private final Proxy proxy;
     private final boolean enforceHttps;
     private boolean allowContentFromLocalFileSystem = false;
+    private URL url;
     private final IClock clock;
     private ScheduledThreadPoolExecutor executor;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
@@ -48,7 +49,7 @@ public class AttestationTokenRetriever {
     public AttestationTokenRetriever(String attestationEndpoint, String userToken, ApplicationVersion appVersion, Proxy proxy,
                                      IAttestationProvider attestationProvider, boolean enforceHttps,
                                      boolean allowContentFromLocalFileSystem, AtomicReference<Handler<Integer>> responseWatcher,
-                                     IClock clock) {
+                                     IClock clock) throws IOException {
         this.attestationEndpoint = attestationEndpoint;
         this.userToken = userToken;
         this.appVersion = appVersion;
@@ -59,6 +60,7 @@ public class AttestationTokenRetriever {
         this.allowContentFromLocalFileSystem = allowContentFromLocalFileSystem;
         this.responseWatcher = responseWatcher;
         this.clock = clock;
+        this.url = new URL(this.attestationEndpoint);
 
         String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
         for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet())
@@ -188,6 +190,10 @@ public class AttestationTokenRetriever {
         this.attestationTokenExpiresAt = Instant.parse(expiresAt);
     }
 
+    public void setUrl(URL url) {
+        this.url = url;
+    }
+
     private static String getAttestationToken(JsonObject responseJson) {
         final JsonObject body = responseJson.getJsonObject("body");
         if(body == null) return null;
@@ -229,7 +235,7 @@ public class AttestationTokenRetriever {
 
     // open connection with auth & attestation headers attached
     private URLConnection openConnection(String serviceEndpoint, String httpMethod) throws IOException {
-        final URLConnection urlConnection = (proxy == null ? new URL(serviceEndpoint).openConnection() : new URL(serviceEndpoint).openConnection(proxy));
+        final URLConnection urlConnection = (proxy == null ? this.url.openConnection() : this.url.openConnection(proxy));
 
         if(enforceHttps && !(urlConnection instanceof HttpsURLConnection)) {
             throw new IOException("UidCoreClient requires HTTPS connection");
