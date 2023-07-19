@@ -2,9 +2,7 @@ package com.uid2.shared.attest;
 
 import com.uid2.enclave.AttestationException;
 import com.uid2.enclave.IAttestationProvider;
-import com.uid2.shared.ApplicationVersion;
-import com.uid2.shared.Const;
-import com.uid2.shared.Utils;
+import com.uid2.shared.*;
 import io.vertx.core.Handler;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -42,13 +40,15 @@ public class AttestationTokenRetriever {
     private final Proxy proxy;
     private final boolean enforceHttps;
     private boolean allowContentFromLocalFileSystem = false;
+    private final IClock clock;
     private ScheduledThreadPoolExecutor executor;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
 
     public AttestationTokenRetriever(String attestationEndpoint, String userToken, ApplicationVersion appVersion, Proxy proxy,
                                      IAttestationProvider attestationProvider, boolean enforceHttps,
-                                     boolean allowContentFromLocalFileSystem, AtomicReference<Handler<Integer>> responseWatcher) {
+                                     boolean allowContentFromLocalFileSystem, AtomicReference<Handler<Integer>> responseWatcher,
+                                     IClock clock) {
         this.attestationEndpoint = attestationEndpoint;
         this.userToken = userToken;
         this.appVersion = appVersion;
@@ -58,6 +58,7 @@ public class AttestationTokenRetriever {
         this.enforceHttps = enforceHttps;
         this.allowContentFromLocalFileSystem = allowContentFromLocalFileSystem;
         this.responseWatcher = responseWatcher;
+        this.clock = clock;
 
         String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
         for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet())
@@ -69,9 +70,9 @@ public class AttestationTokenRetriever {
         this.executor = new ScheduledThreadPoolExecutor(numberOfThreads);
     }
 
-    private void attestationExpirationCheck(){
-        Instant currentTime = Instant.now();
-        Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minus(Duration.ofMinutes(10));
+    public void attestationExpirationCheck(){
+        Instant currentTime = clock.now();
+        Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
 
         if (currentTime.isAfter(tenMinutesBeforeExpire)) {
             LOGGER.info("Attestation token is 10 mins from the expiry timestamp %s. Re-attest...", attestationTokenExpiresAt);
@@ -85,12 +86,12 @@ public class AttestationTokenRetriever {
         }
     }
 
-    private void scheduleAttestationExpirationCheck() {
+    public void scheduleAttestationExpirationCheck() {
         // Schedule the task to run every 9 minutes
         executor.scheduleAtFixedRate(this::attestationExpirationCheck, 0, TimeUnit.MINUTES.toMillis(9), TimeUnit.MILLISECONDS);
     }
 
-    private void stopAttestationExpirationCheck() {
+    public void stopAttestationExpirationCheck() {
         executor.shutdown();
     }
 
@@ -98,7 +99,7 @@ public class AttestationTokenRetriever {
         attestInternal();
     }
 
-    private boolean attested() {
+    public boolean attested() {
         return this.attestationToken.get() != null;
     }
 
@@ -121,7 +122,7 @@ public class AttestationTokenRetriever {
         return attested;
     }
 
-    private void attestInternal() throws IOException, UidCoreClientException {
+    public void attestInternal() throws IOException, UidCoreClientException {
         try {
             JsonObject requestJson = new JsonObject();
             KeyPair keyPair = generateKeyPair();
@@ -168,8 +169,8 @@ public class AttestationTokenRetriever {
 
             atoken = new String(decrypt(Base64.getDecoder().decode(atoken), keyPair.getPrivate()), StandardCharsets.UTF_8);
             LOGGER.info("Attestation successful. Attestation token received.");
-            this.attestationToken.set(atoken);
-            this.attestationTokenExpiresAt = Instant.parse(expiresAt);
+            setAttestationToken(atoken);
+            setAttestationTokenExpiresAt(expiresAt);
 
             scheduleAttestationExpirationCheck();
         } catch (AttestationException ae) {
@@ -179,6 +180,12 @@ public class AttestationTokenRetriever {
         } catch (Exception e) {
             throw new UidCoreClientException(e);
         }
+    }
+    public void setAttestationToken(String atoken) {
+        this.attestationToken.set(atoken);
+    }
+    public void setAttestationTokenExpiresAt(String expiresAt) {
+        this.attestationTokenExpiresAt = Instant.parse(expiresAt);
     }
 
     private static String getAttestationToken(JsonObject responseJson) {
@@ -215,7 +222,7 @@ public class AttestationTokenRetriever {
             w.handle(statusCode);
     }
 
-    private URLConnection sendGet(String url) throws IOException {
+    public URLConnection sendGet(String url) throws IOException {
         final URLConnection conn = openConnection(url, "GET");
         return conn;
     }
