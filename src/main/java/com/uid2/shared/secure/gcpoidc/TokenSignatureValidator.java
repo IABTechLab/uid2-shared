@@ -1,17 +1,19 @@
 package com.uid2.shared.secure.gcpoidc;
 
+import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Clock;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Strings;
 import com.uid2.shared.secure.AttestationException;
 
+import java.io.IOException;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class TokenSignatureValidator implements ITokenSignatureValidator{
+public class TokenSignatureValidator implements ITokenSignatureValidator {
     private static final String PUBLIC_CERT_LOCATION =
             "https://www.googleapis.com/service_accounts/v1/metadata/jwk/signer@confidentialspace-sign.iam.gserviceaccount.com";
 
@@ -20,19 +22,22 @@ public class TokenSignatureValidator implements ITokenSignatureValidator{
     private static final String ISSUER = "https://confidentialcomputing.googleapis.com";
     private final TokenVerifier tokenVerifier;
 
-    public TokenSignatureValidator(){
+    // set to true to facilitate local test with self-signed cert.
+    public static final boolean BYPASS_SIGNATURE_CHECK = false;
+
+    public TokenSignatureValidator() {
         this(null, null);
     }
 
-    protected TokenSignatureValidator(PublicKey publicKeyOverride, Clock clockOverride){
+    protected TokenSignatureValidator(PublicKey publicKeyOverride, Clock clockOverride) {
         var verifierBuilder = TokenVerifier.newBuilder();
         verifierBuilder.setCertificatesLocation(PUBLIC_CERT_LOCATION);
 
-        if(publicKeyOverride != null){
+        if (publicKeyOverride != null) {
             verifierBuilder.setPublicKey(publicKeyOverride);
         }
 
-        if(clockOverride != null){
+        if (clockOverride != null) {
             verifierBuilder.setClock(clockOverride);
         }
 
@@ -50,11 +55,16 @@ public class TokenSignatureValidator implements ITokenSignatureValidator{
 
         // Validate Signature
         JsonWebSignature signature;
-        try{
-            signature = tokenVerifier.verify(tokenString);
-        }
-        catch (TokenVerifier.VerificationException e){
+        try {
+            if (BYPASS_SIGNATURE_CHECK) {
+                signature = JsonWebSignature.parse(GsonFactory.getDefaultInstance(), tokenString);
+            } else {
+                signature = tokenVerifier.verify(tokenString);
+            }
+        } catch (TokenVerifier.VerificationException e) {
             throw new AttestationException("Fail to validate the token signature, error: " + e.getMessage());
+        } catch (IOException e) {
+            throw new AttestationException("Fail to parse token, error: " + e.getMessage());
         }
 
         // Parse Payload
@@ -72,7 +82,7 @@ public class TokenSignatureValidator implements ITokenSignatureValidator{
         var subModsDetails = TryGetField(rawPayload,"submods",  Map.class);
 
         if(subModsDetails != null){
-            var confidential_space = TryGetField(subModsDetails, "subModsDetails", Map.class);
+            var confidential_space = TryGetField(subModsDetails, "confidential_space", Map.class);
             if(confidential_space != null){
                 tokenPayloadBuilder.csSupportedAttributes(TryGetField(confidential_space, "support_attributes", List.class));
             }
