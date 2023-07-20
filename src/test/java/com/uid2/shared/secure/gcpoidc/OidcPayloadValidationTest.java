@@ -10,7 +10,7 @@ public class OidcPayloadValidationTest {
     @Test
     public void testE2EPolicyCheck() throws Exception {
         // expire at 1688132564
-        var payloadPath = "/com.uid2.shared/test/secure/gcpoaid/jwt_payload_policy_valid.json";
+        var payloadPath = "/com.uid2.shared/test/secure/gcpoidc/jwt_payload_policy_valid.json";
         var payload = loadFromJson(payloadPath);
         var clock = new TestClock();
         clock.setCurrentTimeMs(1688132563000L);
