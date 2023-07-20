@@ -163,9 +163,9 @@ public class RotatingKeysetProviderTest {
         // empty list
         Assert.assertTrue(canAccessKey(6,6, MissingAclMode.ALLOW_ALL));
         Assert.assertTrue(canAccessKey(6,6, MissingAclMode.DENY_ALL));
-        Assert.assertTrue(canAccessKey(5,6, MissingAclMode.ALLOW_ALL));
+        Assert.assertFalse(canAccessKey(5,6, MissingAclMode.ALLOW_ALL));
         Assert.assertFalse(canAccessKey(5,6, MissingAclMode.DENY_ALL));
-        Assert.assertTrue(canAccessKey(4,6, MissingAclMode.ALLOW_ALL));
+        Assert.assertFalse(canAccessKey(4,6, MissingAclMode.ALLOW_ALL));
         Assert.assertFalse(canAccessKey(4,6, MissingAclMode.DENY_ALL));
     }
 }

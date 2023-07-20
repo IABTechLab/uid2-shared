@@ -18,7 +18,7 @@ public class KeysetSnapshot {
         if (keyset.getSiteId() == clientKey.getSiteId()) return true;
 
         if (accessMethod == MissingAclMode.ALLOW_ALL
-            && (keyset.getAllowedSites() == null || keyset.getAllowedSites().isEmpty())) return true;
+            && keyset.getAllowedSites() == null) return true;
 
         return keyset.canBeAccessedBySite(clientKey.getSiteId());
     }
