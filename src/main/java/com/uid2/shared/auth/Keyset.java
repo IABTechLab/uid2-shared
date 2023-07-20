@@ -2,7 +2,6 @@ package com.uid2.shared.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
@@ -79,7 +78,7 @@ public class Keyset {
                 && this.isEnabled == b.isEnabled
                 && this.isDefault == b.isDefault;
 
-        if(this.allowedSites == null || this.allowedSites == null) {
+        if(this.allowedSites == null || b.allowedSites == null) {
             return compare && this.allowedSites == b.allowedSites;
         }
 

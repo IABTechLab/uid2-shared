@@ -1,7 +1,7 @@
 package com.uid2.shared.encryption;
 
 import com.uid2.shared.model.EncryptedPayload;
-import com.uid2.shared.model.EncryptionKey;
+import com.uid2.shared.model.KeysetKey;
 import io.vertx.core.buffer.Buffer;
 
 import javax.crypto.Cipher;
@@ -15,7 +15,7 @@ public class AesGcm {
     public static final int GCM_AUTHTAG_LENGTH = 16;
     public static final int GCM_IV_LENGTH = 12;
 
-    public static EncryptedPayload encrypt(byte[] b, EncryptionKey key) {
+    public static EncryptedPayload encrypt(byte[] b, KeysetKey key) {
         try {
             byte[] encrypted = encrypt(b, key.getKeyBytes());
             return new EncryptedPayload(key.getKeyIdentifier(), encrypted);
@@ -24,7 +24,7 @@ public class AesGcm {
         }
     }
 
-    public static EncryptedPayload encrypt(String s, EncryptionKey key) {
+    public static EncryptedPayload encrypt(String s, KeysetKey key) {
         try {
             return encrypt(s.getBytes(StandardCharsets.UTF_8), key);
         } catch (Exception e) {
@@ -45,7 +45,7 @@ public class AesGcm {
         }
     }
 
-    public static byte[] decrypt(byte[] encryptedBytes, int offset, EncryptionKey key) {
+    public static byte[] decrypt(byte[] encryptedBytes, int offset, KeysetKey key) {
         try {
             return decrypt(encryptedBytes, offset, key.getKeyBytes());
         } catch (Exception e) {
