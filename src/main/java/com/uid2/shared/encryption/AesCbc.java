@@ -1,7 +1,7 @@
 package com.uid2.shared.encryption;
 
 import com.uid2.shared.model.EncryptedPayload;
-import com.uid2.shared.model.EncryptionKey;
+import com.uid2.shared.model.KeysetKey;
 import io.vertx.core.buffer.Buffer;
 
 import javax.crypto.Cipher;
@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 public class AesCbc {
     private static final String cipherScheme = "AES/CBC/PKCS5Padding";
 
-    public static EncryptedPayload encrypt(byte[] b, EncryptionKey key) {
+    public static EncryptedPayload encrypt(byte[] b, KeysetKey key) {
         try {
             final SecretKey k = new SecretKeySpec(key.getKeyBytes(), "AES");
             final Cipher c = Cipher.getInstance(cipherScheme);
@@ -27,7 +27,7 @@ public class AesCbc {
         }
     }
 
-    public static EncryptedPayload encrypt(String s, EncryptionKey key) {
+    public static EncryptedPayload encrypt(String s, KeysetKey key) {
         try {
             return encrypt(s.getBytes(StandardCharsets.UTF_8), key);
         } catch (Exception e) {
@@ -35,7 +35,7 @@ public class AesCbc {
         }
     }
 
-    public static byte[] decrypt(byte[] encryptedBytes, EncryptionKey key) {
+    public static byte[] decrypt(byte[] encryptedBytes, KeysetKey key) {
         try {
             final SecretKey k = new SecretKeySpec(key.getKeyBytes(), "AES");
             return decrypt(encryptedBytes, k);

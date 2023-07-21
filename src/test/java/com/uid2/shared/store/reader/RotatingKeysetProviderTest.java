@@ -1,13 +1,13 @@
 package com.uid2.shared.store.reader;
 
 import com.uid2.shared.Utils;
-import com.uid2.shared.auth.AclSnapshot;
 import com.uid2.shared.auth.ClientKey;
 import com.uid2.shared.auth.Keyset;
 import com.uid2.shared.auth.KeysetSnapshot;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.cloud.InMemoryStorageMock;
 import com.uid2.shared.model.KeysetKey;
+import com.uid2.shared.store.ACLMode.MissingAclMode;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.scope.GlobalScope;
 import com.uid2.shared.store.scope.SiteScope;
@@ -19,7 +19,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
@@ -121,8 +120,8 @@ public class RotatingKeysetProviderTest {
     private KeysetKey makeKey(int keysetId) {
         return new KeysetKey(0, null, null, null, null, keysetId);
     }
-    private boolean canAccessKey(int clientSiteId, int keySiteId) {
-        return keysetProvider.getSnapshot().canClientAccessKey(makeClientKey(clientSiteId), makeKey(keySiteId));
+    private boolean canAccessKey(int clientSiteId, int keySiteId, MissingAclMode mode) {
+        return keysetProvider.getSnapshot().canClientAccessKey(makeClientKey(clientSiteId), makeKey(keySiteId), mode);
     }
 
     @Test
@@ -139,16 +138,34 @@ public class RotatingKeysetProviderTest {
         Assert.assertEquals(6, count);
 
         // Site 2 can access 1, it can access its own, but not 3
-        Assert.assertTrue(canAccessKey(2, 1));
-        Assert.assertTrue(canAccessKey(2, 2));
-        Assert.assertFalse(canAccessKey(2, 3));
-        //Only 4 can access null list
-        Assert.assertTrue(canAccessKey(4,4));
-        Assert.assertFalse(canAccessKey(2, 4));
-        //Can still access if there is a duplicate
-        Assert.assertTrue(canAccessKey(1, 5));
-        // Only 6 can access its empty list
-        Assert.assertTrue(canAccessKey(6,6));
-        Assert.assertFalse(canAccessKey(5,6));
+        Assert.assertTrue(canAccessKey(2, 1, MissingAclMode.ALLOW_ALL));
+        Assert.assertTrue(canAccessKey(2, 1, MissingAclMode.DENY_ALL));
+        Assert.assertTrue(canAccessKey(2, 2, MissingAclMode.ALLOW_ALL));
+        Assert.assertTrue(canAccessKey(2, 2, MissingAclMode.DENY_ALL));
+        Assert.assertFalse(canAccessKey(2, 3, MissingAclMode.ALLOW_ALL));
+        Assert.assertFalse(canAccessKey(2, 3, MissingAclMode.DENY_ALL));
+        // null list
+        Assert.assertTrue(canAccessKey(4,4, MissingAclMode.ALLOW_ALL));
+        Assert.assertTrue(canAccessKey(4,4, MissingAclMode.DENY_ALL));
+        Assert.assertTrue(canAccessKey(2, 4, MissingAclMode.ALLOW_ALL));
+        Assert.assertFalse(canAccessKey(2, 4, MissingAclMode.DENY_ALL));
+        Assert.assertTrue(canAccessKey(5, 4, MissingAclMode.ALLOW_ALL));
+        Assert.assertFalse(canAccessKey(5, 4, MissingAclMode.DENY_ALL));
+        // list with duplicates
+        Assert.assertTrue(canAccessKey(1, 5, MissingAclMode.ALLOW_ALL));
+        Assert.assertTrue(canAccessKey(1, 5, MissingAclMode.DENY_ALL));
+        Assert.assertTrue(canAccessKey(2, 5, MissingAclMode.ALLOW_ALL));
+        Assert.assertTrue(canAccessKey(2, 5, MissingAclMode.DENY_ALL));
+        Assert.assertFalse(canAccessKey(4, 5, MissingAclMode.ALLOW_ALL));
+        Assert.assertFalse(canAccessKey(4, 5, MissingAclMode.DENY_ALL));
+        Assert.assertTrue(canAccessKey(5, 5, MissingAclMode.ALLOW_ALL));
+        Assert.assertTrue(canAccessKey(5, 5, MissingAclMode.DENY_ALL));
+        // empty list
+        Assert.assertTrue(canAccessKey(6,6, MissingAclMode.ALLOW_ALL));
+        Assert.assertTrue(canAccessKey(6,6, MissingAclMode.DENY_ALL));
+        Assert.assertFalse(canAccessKey(5,6, MissingAclMode.ALLOW_ALL));
+        Assert.assertFalse(canAccessKey(5,6, MissingAclMode.DENY_ALL));
+        Assert.assertFalse(canAccessKey(4,6, MissingAclMode.ALLOW_ALL));
+        Assert.assertFalse(canAccessKey(4,6, MissingAclMode.DENY_ALL));
     }
 }
