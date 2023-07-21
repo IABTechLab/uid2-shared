@@ -41,9 +41,8 @@ public class AttestationTokenRetriever {
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
 
-    public AttestationTokenRetriever(String attestationEndpoint, String userToken, ApplicationVersion appVersion, Proxy proxy,
-                                     IAttestationProvider attestationProvider, boolean enforceHttps,
-                                     boolean allowContentFromLocalFileSystem, AtomicReference<Handler<Integer>> responseWatcher,
+    public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion, Proxy proxy,
+                                     IAttestationProvider attestationProvider, AtomicReference<Handler<Integer>> responseWatcher,
                                      IClock clock) throws IOException {
         this.attestationEndpoint = attestationEndpoint;
         this.appVersion = appVersion;
@@ -62,6 +61,8 @@ public class AttestationTokenRetriever {
         Instant currentTime = clock.now();
         Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
 
+        stopAttestationExpirationCheck();
+
         if (currentTime.isAfter(tenMinutesBeforeExpire)) {
             LOGGER.info("Attestation token is 10 mins from the expiry timestamp %s. Re-attest...", attestationTokenExpiresAt);
             try {
@@ -75,8 +76,8 @@ public class AttestationTokenRetriever {
     }
 
     public void scheduleAttestationExpirationCheck() {
-        // Schedule the task to run every 9 minutes
-        executor.scheduleAtFixedRate(this::attestationExpirationCheck, 0, TimeUnit.MINUTES.toMillis(9), TimeUnit.MILLISECONDS);
+        // Schedule the task to run every minute
+        executor.scheduleAtFixedRate(this::attestationExpirationCheck, 0, TimeUnit.MINUTES.toMillis(1), TimeUnit.MILLISECONDS);
     }
 
     public void stopAttestationExpirationCheck() {
@@ -191,5 +192,10 @@ public class AttestationTokenRetriever {
         Handler<Integer> w = this.responseWatcher.get();
         if (w != null)
             w.handle(statusCode);
+    }
+
+    public boolean attested() {
+        if (this.attestationToken.get() != null && this.clock.now().isBefore(this.attestationTokenExpiresAt)) return true;
+        return false;
     }
 }

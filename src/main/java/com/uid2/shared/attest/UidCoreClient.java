@@ -10,11 +10,9 @@ import io.vertx.core.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Proxy;
-import java.net.URI;
+import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -24,9 +22,10 @@ import java.util.concurrent.atomic.AtomicReference;
 public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private static final Logger LOGGER = LoggerFactory.getLogger(UidCoreClient.class);
     private final ICloudStorage contentStorage;
-    private final String userToken;
+    private final Proxy proxy;
+    private String userToken;
     private final String appVersionHeader;
-    private AtomicReference<String> attestationToken;
+    private boolean enforceHttps;
     private boolean allowContentFromLocalFileSystem = false;
     private HttpClient httpClient;
     private AttestationTokenRetriever attestationTokenRetriever;
@@ -38,13 +37,13 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
     public UidCoreClient(String attestationEndpoint, String userToken, ApplicationVersion appVersion, Proxy proxy,
                          IAttestationProvider attestationProvider, boolean enforceHttps) throws IOException {
+        this.proxy = proxy;
         this.userToken = userToken;
         this.contentStorage = new PreSignedURLStorage(proxy);
-        this.attestationToken = new AtomicReference<>(null);
+        this.enforceHttps = enforceHttps;
         this.responseWatcher = new AtomicReference<Handler<Integer>>(null);
         this.attestationTokenRetriever = new AttestationTokenRetriever(
-                attestationEndpoint, userToken, appVersion, proxy, attestationProvider, enforceHttps,
-                allowContentFromLocalFileSystem, responseWatcher, new InstantClock());
+                attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, new InstantClock());
         this.httpClient = HttpClient.newHttpClient();
 
         String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
@@ -55,13 +54,13 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
     public UidCoreClient(String attestationEndpoint, String userToken, ApplicationVersion appVersion, Proxy proxy,
                          IAttestationProvider attestationProvider, boolean enforceHttps, HttpClient httpClient) throws IOException {
+        this.proxy = proxy;
         this.userToken = userToken;
         this.contentStorage = new PreSignedURLStorage(proxy);
-        this.attestationToken = new AtomicReference<>(null);
+        this.enforceHttps = enforceHttps;
         this.responseWatcher = new AtomicReference<Handler<Integer>>(null);
         this.attestationTokenRetriever = new AttestationTokenRetriever(
-                attestationEndpoint, userToken, appVersion, proxy, attestationProvider, enforceHttps,
-                allowContentFromLocalFileSystem, responseWatcher, new InstantClock());
+                attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, new InstantClock());
         this.httpClient = httpClient;
 
         String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
@@ -75,58 +74,56 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return this.contentStorage;
     }
 
-    public void setAllowContentFromLocalFileSystem(boolean allow) {
-        allowContentFromLocalFileSystem = allow;
-    }
-
-    public boolean attested() {
-        return this.attestationToken.get() != null;
-    }
-
     @Override
     public InputStream download(String path) throws CloudStorageException {
         try {
-            return getWithAttest(path);
+            InputStream inputStream;
+            if (allowContentFromLocalFileSystem && path.startsWith("file:/tmp/uid2")) {
+                // returns `file:/tmp/uid2` urlConnection directly
+                inputStream = readContentFromLocalFileSystem(path, this.proxy);
+            } else {
+                inputStream = getWithAttest(path);
+            }
+            return inputStream;
         } catch (Exception e) {
             throw new CloudStorageException("download " + path + " error: " + e.getMessage(), e);
         }
     }
 
-    private InputStream getWithAttest(String path) throws IOException, UidCoreClientException, InterruptedException {
-        if (!attested()) {
+    private InputStream readContentFromLocalFileSystem(String path, Proxy proxy) throws IOException {
+        return (proxy == null ? new URL(path).openConnection() : new URL(path).openConnection(proxy)).getInputStream();
+    }
+
+    private InputStream getWithAttest(String path) throws IOException, InterruptedException, AttestationTokenRetrieverException {
+        if (!attestationTokenRetriever.attested()) {
             attestationTokenRetriever.attestInternal();
-            setAttestationToken(attestationTokenRetriever.getAttestationToken());
         }
 
+        String attestationToken = attestationTokenRetriever.getAttestationToken();
         HttpResponse<String> httpResponse;
-        httpResponse = sendHttpRequest(path, attestationToken.get());
+        httpResponse = sendHttpRequest(path, attestationToken);
 
         if (httpResponse.statusCode() == 401) {
             LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
-            attestationTokenRetriever.notifyResponseStatusWatcher(401);
             attestationTokenRetriever.attestInternal();
-            setAttestationToken(attestationTokenRetriever.getAttestationToken());
-            httpResponse = sendHttpRequest(path, attestationToken.get());
+            attestationToken = attestationTokenRetriever.getAttestationToken();
+            httpResponse = sendHttpRequest(path, attestationToken);
         }
-
-        attestationTokenRetriever.notifyResponseStatusWatcher(httpResponse.statusCode());
 
         return Utils.convertHttpResponseToInputStream(httpResponse);
     }
 
     private HttpResponse sendHttpRequest(String path, String attestationToken) throws IOException, InterruptedException {
+        URI uri = URI.create(path);
+        if (this.enforceHttps && !"https".equalsIgnoreCase(uri.getScheme())) {
+            throw new IOException("UidCoreClient requires HTTPS connection");
+        }
+
         HttpRequest.Builder httpRequestBuilder = HttpRequest.newBuilder()
-                .uri(URI.create(path))
+                .uri(uri)
                 .GET()
                 .setHeader(Const.Http.AppVersionHeader, appVersionHeader);
-//        if(enforceHttps && !(urlConnection instanceof HttpsURLConnection)) {
-//            throw new IOException("UidCoreClient requires HTTPS connection");
-//        }
-//
-//        if (allowContentFromLocalFileSystem && serviceEndpoint.startsWith("file:/tmp/uid2")) {
-//            // returns `file:/tmp/uid2` urlConnection directly
-//            return urlConnection;
-//        }
+
         if(this.userToken != null && this.userToken.length() > 0) {
             httpRequestBuilder.setHeader("Authorization", "Bearer " + this.userToken);
         }
@@ -136,9 +133,9 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         HttpRequest httpRequest = httpRequestBuilder.build();
         HttpResponse<String> httpResponse = null;
         try {
-            System.out.println(HttpResponse.BodyHandlers.ofString());
             httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
+            LOGGER.error("Failed to send request with error: ", e);
             throw e;
         }
         return httpResponse;
@@ -148,15 +145,19 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         this.responseWatcher.set(watcher);
     }
 
-    public void setHttpClient(HttpClient httpClient) {
-        this.httpClient = httpClient;
-    }
-
     public void setAttestationTokenRetriever(AttestationTokenRetriever attestationTokenRetriever) {
         this.attestationTokenRetriever = attestationTokenRetriever;
     }
 
-    public void setAttestationToken(String attestationToken) {
-        this.attestationToken.set(attestationToken);
+    public void setUserToken(String userToken) {
+        this.userToken = userToken;
+    }
+
+    public void setAllowContentFromLocalFileSystem(boolean allowContentFromLocalFileSystem) {
+        this.allowContentFromLocalFileSystem = allowContentFromLocalFileSystem;
+    }
+
+    public void setEnforceHttps(boolean enforceHttps) {
+        this.enforceHttps = enforceHttps;
     }
 }

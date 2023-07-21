@@ -39,8 +39,7 @@ public class AttestationTokenRetrieverTest {
     private static final long A_HUNDRED_DAYS_IN_MILLI = 86400000000L;
 
     private AttestationTokenRetriever attestationTokenRetriever =
-            new AttestationTokenRetriever(attestationEndpoint, userToken, appVersion, proxy,
-                    attestationProvider, enforceHttps, allowContentFromLocalFileSystem, responseWatcher, clock);
+            new AttestationTokenRetriever(attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, clock);
 
     public AttestationTokenRetrieverTest() throws IOException {
     }
