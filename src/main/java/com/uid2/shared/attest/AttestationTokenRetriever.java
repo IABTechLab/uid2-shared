@@ -14,10 +14,10 @@ import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.Proxy;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.time.Duration;
@@ -33,14 +33,9 @@ public class AttestationTokenRetriever {
     private final IAttestationProvider attestationProvider;
     private final ApplicationVersion appVersion;
     private AtomicReference<String> attestationToken;
-    private final String userToken;
     private AtomicReference<Handler<Integer>> responseWatcher;
     private final String attestationEndpoint;
-    private final String appVersionHeader;
-    private final Proxy proxy;
-    private final boolean enforceHttps;
-    private boolean allowContentFromLocalFileSystem = false;
-    private URL url;
+    private HttpClient httpClient;
     private final IClock clock;
     private ScheduledThreadPoolExecutor executor;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
@@ -51,21 +46,12 @@ public class AttestationTokenRetriever {
                                      boolean allowContentFromLocalFileSystem, AtomicReference<Handler<Integer>> responseWatcher,
                                      IClock clock) throws IOException {
         this.attestationEndpoint = attestationEndpoint;
-        this.userToken = userToken;
         this.appVersion = appVersion;
-        this.proxy = proxy;
         this.attestationProvider = attestationProvider;
         this.attestationToken = new AtomicReference<>(null);
-        this.enforceHttps = enforceHttps;
-        this.allowContentFromLocalFileSystem = allowContentFromLocalFileSystem;
         this.responseWatcher = responseWatcher;
         this.clock = clock;
-        this.url = new URL(this.attestationEndpoint);
-
-        String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
-        for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet())
-            appVersionHeader += ";" + kv.getKey() + "=" + kv.getValue();
-        this.appVersionHeader = appVersionHeader;
+        this.httpClient = HttpClient.newHttpClient();
 
         // Create the ScheduledThreadPoolExecutor instance with the desired number of threads
         int numberOfThreads = 1;
@@ -97,33 +83,6 @@ public class AttestationTokenRetriever {
         executor.shutdown();
     }
 
-    public void attest() throws IOException, UidCoreClientException {
-        attestInternal();
-    }
-
-    public boolean attested() {
-        return this.attestationToken.get() != null;
-    }
-
-    public boolean attestIfRequired(HttpURLConnection conn) throws IOException, UidCoreClientException {
-        boolean attested = false;
-        int statusCode = conn.getResponseCode();
-        if (statusCode == 401) {
-            LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
-            attested = true;
-            try {
-                attestInternal();
-            }
-            catch (UidCoreClientException | IOException e) {
-                notifyResponseStatusWatcher(statusCode);
-                throw e;
-            }
-        } else {
-            notifyResponseStatusWatcher(statusCode);
-        }
-        return attested;
-    }
-
     public void attestInternal() throws IOException, UidCoreClientException {
         try {
             JsonObject requestJson = new JsonObject();
@@ -139,14 +98,22 @@ public class AttestationTokenRetriever {
             }
             requestJson.put("components", components);
 
-            HttpURLConnection connection = (HttpURLConnection) openConnection(attestationEndpoint, "POST");
-            connection.setDoOutput(true);
-            connection.setRequestProperty("Content-Type", "application/json");
-            try (OutputStream request = connection.getOutputStream()) {
-                request.write(requestJson.toString().getBytes(StandardCharsets.UTF_8));
-            }
+//            HttpURLConnection connection = (HttpURLConnection) openConnection(attestationEndpoint, "POST");
 
-            int statusCode = connection.getResponseCode();
+            HttpRequest httpRequest = HttpRequest.newBuilder()
+                    .setHeader("Content-Type", "application/json")
+                    .uri(URI.create(attestationEndpoint))
+                    .POST(HttpRequest.BodyPublishers.ofString(requestJson.toString(), StandardCharsets.UTF_8))
+                    .build();
+
+//            connection.setDoOutput(true);
+//            try (OutputStream request = connection.getOutputStream()) {
+//                request.write(requestJson.toString().getBytes(StandardCharsets.UTF_8));
+//            }
+
+            HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+
+            int statusCode = response.statusCode();
             notifyResponseStatusWatcher(statusCode);
 
             if (statusCode < 200 || statusCode >= 300) {
@@ -154,8 +121,8 @@ public class AttestationTokenRetriever {
                 throw new UidCoreClientException(statusCode, "unexpected status code from uid core service");
             }
 
-            String response = Utils.readToEnd(connection.getInputStream());
-            JsonObject responseJson = (JsonObject) Json.decodeValue(response);
+            String responseBody = response.body();
+            JsonObject responseJson = (JsonObject) Json.decodeValue(responseBody);
             if (isFailed(responseJson)) {
                 throw new UidCoreClientException(statusCode, "response did not return a successful status");
             }
@@ -183,15 +150,13 @@ public class AttestationTokenRetriever {
             throw new UidCoreClientException(e);
         }
     }
+
+    public String getAttestationToken() { return this.attestationToken.get(); }
     public void setAttestationToken(String atoken) {
         this.attestationToken.set(atoken);
     }
     public void setAttestationTokenExpiresAt(String expiresAt) {
         this.attestationTokenExpiresAt = Instant.parse(expiresAt);
-    }
-
-    public void setUrl(URL url) {
-        this.url = url;
     }
 
     private static String getAttestationToken(JsonObject responseJson) {
@@ -226,39 +191,5 @@ public class AttestationTokenRetriever {
         Handler<Integer> w = this.responseWatcher.get();
         if (w != null)
             w.handle(statusCode);
-    }
-
-    public URLConnection sendGet(String url) throws IOException {
-        final URLConnection conn = openConnection(url, "GET");
-        return conn;
-    }
-
-    // open connection with auth & attestation headers attached
-    private URLConnection openConnection(String serviceEndpoint, String httpMethod) throws IOException {
-        final URLConnection urlConnection = (proxy == null ? this.url.openConnection() : this.url.openConnection(proxy));
-
-        if(enforceHttps && !(urlConnection instanceof HttpsURLConnection)) {
-            throw new IOException("UidCoreClient requires HTTPS connection");
-        }
-
-        if (allowContentFromLocalFileSystem && serviceEndpoint.startsWith("file:/tmp/uid2")) {
-            // returns `file:/tmp/uid2` urlConnection directly
-            return urlConnection;
-        }
-
-        final HttpURLConnection connection = (HttpURLConnection) urlConnection;
-        connection.setRequestMethod(httpMethod);
-        connection.setRequestProperty(Const.Http.AppVersionHeader, appVersionHeader);
-
-        if(this.userToken != null && this.userToken.length() > 0) {
-            connection.setRequestProperty("Authorization", "Bearer " + this.userToken);
-        }
-
-        final String atoken = this.attestationToken.get();
-        if(atoken != null && atoken.length() > 0) {
-            connection.setRequestProperty("Attestation-Token", atoken);
-        }
-
-        return connection;
     }
 }
