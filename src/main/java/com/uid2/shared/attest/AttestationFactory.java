@@ -18,6 +18,12 @@ public class AttestationFactory {
         return (IAttestationProvider) c.newInstance();
     }
 
+    public static IAttestationProvider getGcpOidcAttestation() throws Exception {
+        Class<?> cls = Class.forName("com.uid2.attestation.gcp.OidcAttestationProvider");
+        Constructor<?> c = cls.getConstructor();
+        return (IAttestationProvider) c.newInstance();
+    }
+
     public static IAttestationProvider getAzureAttestation() throws Exception {
         Class<?> cls = Class.forName("com.uid2.attestation.azure.AzureAttestationProvider");
         Constructor<?> c = cls.getConstructor();
