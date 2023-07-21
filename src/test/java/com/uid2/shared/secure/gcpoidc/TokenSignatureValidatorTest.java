@@ -3,7 +3,7 @@ package com.uid2.shared.secure.gcpoidc;
 import com.uid2.shared.secure.AttestationException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static com.uid2.shared.secure.gcpoidc.TestUtils.loadFromJson;
 import static com.uid2.shared.secure.gcpoidc.TestUtils.validateAndParseToken;
@@ -13,7 +13,7 @@ public class TokenSignatureValidatorTest {
     @Test
     public void testFullPayload() throws Exception {
         // expire at 1688132564
-        var payloadPath = "/com.uid2.shared/test/secure/gcpoaid/jwt_payload_full.json";
+        var payloadPath = "/com.uid2.shared/test/secure/gcpoidc/jwt_payload_full.json";
         var payload = loadFromJson(payloadPath);
         var clock = new TestClock();
         clock.setCurrentTimeMs(1688132563000L);
@@ -42,7 +42,7 @@ public class TokenSignatureValidatorTest {
     @Test
     public void testPayloadWithNullValue() throws Exception {
         // expire at 1688132564
-        var payloadPath = "/com.uid2.shared/test/secure/gcpoaid/jwt_payload_null.json";
+        var payloadPath = "/com.uid2.shared/test/secure/gcpoidc/jwt_payload_null.json";
         var payload = loadFromJson(payloadPath);
         var clock = new TestClock();
         clock.setCurrentTimeMs(1688132563000L);
@@ -57,7 +57,7 @@ public class TokenSignatureValidatorTest {
     @Test
     public void testTokenExpired() throws Exception {
         // expire at 1688132564
-        var payloadPath = "/com.uid2.shared/test/secure/gcpoaid/jwt_payload_null.json";
+        var payloadPath = "/com.uid2.shared/test/secure/gcpoidc/jwt_payload_null.json";
         var payload = loadFromJson(payloadPath);
         var clock = new TestClock();
         clock.setCurrentTimeMs(1688132565_000L);
@@ -67,7 +67,7 @@ public class TokenSignatureValidatorTest {
     @Test
     public void testAudienceNotMatch() throws Exception {
         // expire at 1688132564
-        var payloadPath = "/com.uid2.shared/test/secure/gcpoaid/jwt_payload_null.json";
+        var payloadPath = "/com.uid2.shared/test/secure/gcpoidc/jwt_payload_null.json";
         var payload = loadFromJson(payloadPath);
         payload.addProperty("aud","dummy");
         var clock = new TestClock();
@@ -78,7 +78,7 @@ public class TokenSignatureValidatorTest {
     @Test
     public void testIssuerNotMatch() throws Exception {
         // expire at 1688132564
-        var payloadPath = "/com.uid2.shared/test/secure/gcpoaid/jwt_payload_null.json";
+        var payloadPath = "/com.uid2.shared/test/secure/gcpoidc/jwt_payload_null.json";
         var payload = loadFromJson(payloadPath);
         payload.addProperty("iss","dummy");
         var clock = new TestClock();
