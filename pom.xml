@@ -6,7 +6,6 @@
 
     <groupId>com.uid2</groupId>
     <artifactId>uid2-shared</artifactId>
-    <version>2.12.2-SNAPSHOT</version>
     <version>2.12.3-7a057c4834</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
