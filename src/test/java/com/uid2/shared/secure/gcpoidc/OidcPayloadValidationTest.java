@@ -1,6 +1,6 @@
 package com.uid2.shared.secure.gcpoidc;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static com.uid2.shared.secure.gcpoidc.TestUtils.loadFromJson;
 import static com.uid2.shared.secure.gcpoidc.TestUtils.validateAndParseToken;
