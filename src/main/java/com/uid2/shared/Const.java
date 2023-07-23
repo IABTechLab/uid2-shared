@@ -63,6 +63,9 @@ public class Const {
         public static final String OptOutMetadataPathProp = "optout_metadata_path";
         public static final String CoreAttestUrlProp = "core_attest_url";
         public static final String CoreApiTokenProp = "core_api_token";
+        public static final String AwsKmsJwtSigningKeyIdProp = "aws_kms_jwt_signing_key_id";
+        public static final String CorePublicUrlProp = "core_public_url";
+        public static final String OptOutUrlProp = "optout_url";
     }
 
     public static class Http {

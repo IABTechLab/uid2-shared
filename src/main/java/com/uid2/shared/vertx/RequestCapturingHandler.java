@@ -109,7 +109,8 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         incrementMetricCounter(apiContact, siteId, host, status, method, path);
 
         if (request.headers().contains(Const.Http.AppVersionHeader)) {
-            incrementAppVersionCounter(apiContact, request.headers().get(Const.Http.AppVersionHeader));
+            final String clientKey = incrementAppVersionCounter(apiContact, request.headers().get(Const.Http.AppVersionHeader));
+            context.data().put("ClientKey", clientKey);
         }
 
         if (AdminApi.instance.getCaptureFailureOnly() && status < 400) {
@@ -212,13 +213,13 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         _apiMetricCounters.get(key).increment();
     }
 
-    private void incrementAppVersionCounter(String apiContact, String appVersions) {
+    private String incrementAppVersionCounter(String apiContact, String appVersions) {
         assert apiContact != null;
         assert appVersions != null;
 
         AbstractMap.SimpleEntry<String, String> client = parseClientAppVersion(appVersions);
         if (client == null)
-            return;
+            return "";
 
         final String key = apiContact + "|" + client.getKey() + "|" + client.getValue();
         if (!_clientAppVersionCounters.containsKey(key)) {
@@ -231,6 +232,7 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         }
 
         _clientAppVersionCounters.get(key).increment();
+        return key;
     }
 
     private static AbstractMap.SimpleEntry<String, String> parseClientAppVersion(String appVersions) {
