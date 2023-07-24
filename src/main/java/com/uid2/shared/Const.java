@@ -96,7 +96,7 @@ public class Const {
 
         public static final int MasterKeysetId = 1;
         public static final int RefreshKeysetId = 2;
-        public static final int PublisherKeysetId = 3;
+        public static final int FallbackPublisherKeysetId = 3;
     }
 
     public static class RoutingContextData {
