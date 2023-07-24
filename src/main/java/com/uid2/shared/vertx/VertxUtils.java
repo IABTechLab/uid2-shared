@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.AbstractMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -79,7 +80,7 @@ public class VertxUtils {
         return ConfigRetriever.create(vertx, retrieverOptions);
     }
 
-    public static AbstractMap.SimpleEntry<String, String> parseClientAppVersion(String appVersions) {
+    public static Map.Entry<String, String> parseClientAppVersion(String appVersions) {
         final int eqpos = appVersions.indexOf('=');
         if (eqpos == -1) {
             return null;

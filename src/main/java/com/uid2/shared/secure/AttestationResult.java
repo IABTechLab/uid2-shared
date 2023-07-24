@@ -32,5 +32,7 @@ public class AttestationResult {
         return publicKey;
     }
 
-    public String getEnclaveId() { return enclaveId; }
+    public String getEnclaveId() {
+        return enclaveId;
+    }
 }

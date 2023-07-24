@@ -21,13 +21,10 @@ import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 import java.util.regex.Matcher;
-
-import static com.uid2.shared.vertx.VertxUtils.parseClientAppVersion;
 
 public class RequestCapturingHandler implements Handler<RoutingContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestCapturingHandler.class);
@@ -218,9 +215,10 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         assert apiContact != null;
         assert appVersions != null;
 
-        AbstractMap.SimpleEntry<String, String> client = parseClientAppVersion(appVersions);
-        if (client == null)
+        Map.Entry<String, String> client = VertxUtils.parseClientAppVersion(appVersions);
+        if (client == null) {
             return;
+        }
 
         final String key = apiContact + "|" + client.getKey() + "|" + client.getValue();
         if (!_clientAppVersionCounters.containsKey(key)) {
