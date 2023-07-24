@@ -108,5 +108,6 @@ public class RotatingKeysetKeyStoreTest {
         Assert.assertEquals(keysetKeyStore.getSnapshot().getKey(104), key4);
         //Check active key is correct
         Assert.assertEquals(keysetKeyStore.getSnapshot().getActiveKey(200, now), key3);
+        Assert.assertEquals(keysetKeyStore.getSnapshot().getActiveKey(200, keysetKeyStore.getSnapshot().getKey(103).getActivates()), key3);
     }
 }

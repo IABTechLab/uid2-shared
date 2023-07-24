@@ -5,11 +5,13 @@ import com.uid2.shared.secure.gcpoidc.ITokenSignatureValidator;
 import com.uid2.shared.secure.gcpoidc.TokenPayload;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -19,7 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class GcpOidcAttestationProviderTest {
     private static final String ATTESTATION_REQUEST = "test-attestation-request";
     private static final String PUBLIC_KEY = "test-public-key";
@@ -30,17 +33,22 @@ public class GcpOidcAttestationProviderTest {
 
     private static final TokenPayload VALID_TOKEN_PAYLOAD = TokenPayload.builder().build();
 
-    @Mock private ITokenSignatureValidator alwaysPassTokenValidator;
-    @Mock private ITokenSignatureValidator alwaysFailTokenValidator;
+    @Mock
+    private ITokenSignatureValidator alwaysPassTokenValidator;
+    @Mock
+    private ITokenSignatureValidator alwaysFailTokenValidator;
 
-    @Mock private IPolicyValidator alwaysPassPolicyValidator1;
+    @Mock
+    private IPolicyValidator alwaysPassPolicyValidator1;
 
-    @Mock private IPolicyValidator alwaysPassPolicyValidator2;
+    @Mock
+    private IPolicyValidator alwaysPassPolicyValidator2;
 
-    @Mock private IPolicyValidator alwaysFailPolicyValidator;
+    @Mock
+    private IPolicyValidator alwaysFailPolicyValidator;
 
 
-    @Before
+    @BeforeEach
     public void setup() throws AttestationException {
         when(alwaysPassTokenValidator.validate(any())).thenReturn(VALID_TOKEN_PAYLOAD);
         when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationException("token signature validation failed"));
