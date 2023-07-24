@@ -96,6 +96,10 @@ public class Const {
         public static final int DefaultClientSiteId = 1;
         // This site id is reserved. It may not be used for client keys.
         public static final int AdvertisingTokenSiteId = 2;
+
+        public static final int MasterKeysetId = 1;
+        public static final int RefreshKeysetId = 2;
+        public static final int FallbackPublisherKeysetId = 3;
     }
 
     public static class RoutingContextData {
