@@ -27,6 +27,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.regex.Matcher;
 
+import static com.uid2.shared.vertx.VertxUtils.parseClientAppVersion;
+
 public class RequestCapturingHandler implements Handler<RoutingContext> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestCapturingHandler.class);
     private static final ZoneId ZONE_GMT = ZoneId.of("GMT");
@@ -109,8 +111,7 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         incrementMetricCounter(apiContact, siteId, host, status, method, path);
 
         if (request.headers().contains(Const.Http.AppVersionHeader)) {
-            final String clientKey = incrementAppVersionCounter(apiContact, request.headers().get(Const.Http.AppVersionHeader));
-            context.data().put("ClientKey", clientKey);
+            incrementAppVersionCounter(apiContact, request.headers().get(Const.Http.AppVersionHeader));
         }
 
         if (AdminApi.instance.getCaptureFailureOnly() && status < 400) {
@@ -213,13 +214,13 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         _apiMetricCounters.get(key).increment();
     }
 
-    private String incrementAppVersionCounter(String apiContact, String appVersions) {
+    private void incrementAppVersionCounter(String apiContact, String appVersions) {
         assert apiContact != null;
         assert appVersions != null;
 
         AbstractMap.SimpleEntry<String, String> client = parseClientAppVersion(appVersions);
         if (client == null)
-            return "";
+            return;
 
         final String key = apiContact + "|" + client.getKey() + "|" + client.getValue();
         if (!_clientAppVersionCounters.containsKey(key)) {
@@ -232,21 +233,5 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         }
 
         _clientAppVersionCounters.get(key).increment();
-        return key;
-    }
-
-    private static AbstractMap.SimpleEntry<String, String> parseClientAppVersion(String appVersions) {
-        final int eqpos = appVersions.indexOf('=');
-        if (eqpos == -1) {
-            return null;
-        }
-        final String appName = appVersions.substring(0, eqpos);
-
-        final int seppos = appVersions.indexOf(';', eqpos + 1);
-        final String appVersion = seppos == -1
-                ? appVersions.substring(eqpos + 1)
-                : appVersions.substring(eqpos + 1, seppos);
-
-        return new AbstractMap.SimpleEntry<>(appName, appVersion);
     }
 }
