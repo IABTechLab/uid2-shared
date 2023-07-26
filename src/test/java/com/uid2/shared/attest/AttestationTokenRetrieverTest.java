@@ -41,9 +41,10 @@ public class AttestationTokenRetrieverTest {
     private IClock clock = mock(IClock.class);
     private static final long A_HUNDRED_DAYS_IN_MILLI = 86400000000L;
     private HttpClient mockHttpClient = mock(HttpClient.class);
+    private AttestationTokenDecryptor mockAttestationTokenDecryptor = mock(AttestationTokenDecryptor.class);
 
     private AttestationTokenRetriever attestationTokenRetriever =
-            new AttestationTokenRetriever(attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, clock, mockHttpClient);
+            new AttestationTokenRetriever(attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, clock, mockHttpClient, mockAttestationTokenDecryptor);
 
     public AttestationTokenRetrieverTest() throws IOException {
     }
@@ -71,6 +72,29 @@ public class AttestationTokenRetrieverTest {
 //        attestationTokenRetrieverSpy.attestationExpirationCheck();
 //        verify(attestationTokenRetrieverSpy, times(1)).attestInternal();
 //    }
+
+    @Test
+    public void testAttestInternalSuccess() throws Exception {
+        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+
+        JsonObject content = new JsonObject();
+        JsonObject body = new JsonObject();
+        body.put("expiresAt", "1970-01-01T00:00:00.111Z");
+        body.put("attestation_token", "pdA9stfFBTWsJGwOPjOsaMR7G5+mkxhOcc9xFnAM3RfSOpnmclaQCMmdhgNDY1Egtl9ejZQrCEs=-8RiWE9OEheFDnFkZ-g");
+        content.put("body", body);
+        content.put("status", "success");
+
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        String expectedResponseBody = "{\"attestation_token\": \"test\", \"expiresAt\": \"1970-01-01T00:00:00.111Z\", \"status\": \"success\"}";
+        when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
+        when(mockHttpResponse.statusCode()).thenReturn(200);
+
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
+
+        attestationTokenRetriever.attestInternal();
+        Assert.assertEquals("test_attestation_token", attestationTokenRetriever.getAttestationToken());
+    }
 
     @Test
     public void testAttestInternalFailedWithoutAttestationToken() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {

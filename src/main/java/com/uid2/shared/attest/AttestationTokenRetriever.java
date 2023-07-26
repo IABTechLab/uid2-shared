@@ -39,11 +39,12 @@ public class AttestationTokenRetriever {
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
     private final Lock lock;
+    private final AttestationTokenDecryptor attestationTokenDecryptor;
 
 
     public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion, Proxy proxy,
                                      IAttestationProvider attestationProvider, Handler<Integer> responseWatcher,
-                                     IClock clock, HttpClient httpClient) throws IOException {
+                                     IClock clock, HttpClient httpClient, AttestationTokenDecryptor attestationTokenDecryptor) throws IOException {
         this.attestationEndpoint = attestationEndpoint;
         this.appVersion = appVersion;
         this.attestationProvider = attestationProvider;
@@ -55,6 +56,11 @@ public class AttestationTokenRetriever {
             this.httpClient = HttpClient.newHttpClient();
         } else {
             this.httpClient = httpClient;
+        }
+        if (attestationTokenDecryptor == null) {
+            this.attestationTokenDecryptor = new AttestationTokenDecryptor();
+        } else {
+            this.attestationTokenDecryptor = attestationTokenDecryptor;
         }
 
         // Create the ScheduledThreadPoolExecutor instance with the desired number of threads
@@ -140,7 +146,7 @@ public class AttestationTokenRetriever {
                 throw new AttestationTokenRetrieverException(statusCode, "response json does not contain body.expiresAt");
             }
 
-            atoken = new String(decrypt(Base64.getDecoder().decode(atoken), keyPair.getPrivate()), StandardCharsets.UTF_8);
+            atoken = new String(attestationTokenDecryptor.decrypt(Base64.getDecoder().decode(atoken), keyPair.getPrivate()), StandardCharsets.UTF_8);
             LOGGER.info("Attestation successful. Attestation token received.");
             setAttestationToken(atoken);
             setAttestationTokenExpiresAt(expiresAt);
@@ -179,12 +185,6 @@ public class AttestationTokenRetriever {
         KeyPairGenerator gen = KeyPairGenerator.getInstance(Const.Name.AsymetricEncryptionKeyClass);
         gen.initialize(2048, new SecureRandom());
         return gen.generateKeyPair();
-    }
-
-    private static byte[] decrypt(byte[] payload, PrivateKey privateKey) throws Exception {
-        Cipher cipher = Cipher.getInstance(Const.Name.AsymetricEncryptionCipherClass);
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-        return cipher.doFinal(payload);
     }
 
     private void notifyResponseStatusWatcher(int statusCode) {
