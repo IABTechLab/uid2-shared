@@ -35,7 +35,6 @@ import static org.mockito.Mockito.*;
 public class AttestationTokenRetrieverTest {
     private String attestationEndpoint = "https://core-test.uidapi.com/attest";
     private ApplicationVersion appVersion = new ApplicationVersion("appName", "appVersion");
-    private Proxy proxy;
     private IAttestationProvider attestationProvider = mock(IAttestationProvider.class);
     private Handler<Integer> responseWatcher = mock(Handler.class);
     private IClock clock = mock(IClock.class);
@@ -44,7 +43,7 @@ public class AttestationTokenRetrieverTest {
     private AttestationTokenDecryptor mockAttestationTokenDecryptor = mock(AttestationTokenDecryptor.class);
 
     private AttestationTokenRetriever attestationTokenRetriever =
-            new AttestationTokenRetriever(attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, clock, mockHttpClient, mockAttestationTokenDecryptor);
+            new AttestationTokenRetriever(attestationEndpoint, appVersion, attestationProvider, responseWatcher, clock, mockHttpClient, mockAttestationTokenDecryptor);
 
     public AttestationTokenRetrieverTest() throws IOException {
     }

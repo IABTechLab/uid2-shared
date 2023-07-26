@@ -42,7 +42,7 @@ public class AttestationTokenRetriever {
     private final AttestationTokenDecryptor attestationTokenDecryptor;
 
 
-    public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion, Proxy proxy,
+    public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion,
                                      IAttestationProvider attestationProvider, Handler<Integer> responseWatcher,
                                      IClock clock, HttpClient httpClient, AttestationTokenDecryptor attestationTokenDecryptor) throws IOException {
         this.attestationEndpoint = attestationEndpoint;
