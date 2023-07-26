@@ -23,22 +23,26 @@ import java.util.Map;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class AttestationTokenRetriever {
     private static final Logger LOGGER = LoggerFactory.getLogger(UidCoreClient.class);
     private final IAttestationProvider attestationProvider;
     private final ApplicationVersion appVersion;
     private AtomicReference<String> attestationToken;
-    private AtomicReference<Handler<Integer>> responseWatcher;
+    private Handler<Integer> responseWatcher;
     private final String attestationEndpoint;
     private HttpClient httpClient;
     private final IClock clock;
     private ScheduledThreadPoolExecutor executor;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
+    private final Lock lock;
+
 
     public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion, Proxy proxy,
-                                     IAttestationProvider attestationProvider, AtomicReference<Handler<Integer>> responseWatcher,
+                                     IAttestationProvider attestationProvider, Handler<Integer> responseWatcher,
                                      IClock clock) throws IOException {
         this.attestationEndpoint = attestationEndpoint;
         this.appVersion = appVersion;
@@ -47,6 +51,7 @@ public class AttestationTokenRetriever {
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.httpClient = HttpClient.newHttpClient();
+        this.lock = new ReentrantLock();
 
         // Create the ScheduledThreadPoolExecutor instance with the desired number of threads
         int numberOfThreads = 1;
@@ -179,9 +184,13 @@ public class AttestationTokenRetriever {
     }
 
     private void notifyResponseStatusWatcher(int statusCode) {
-        Handler<Integer> w = this.responseWatcher.get();
-        if (w != null)
-            w.handle(statusCode);
+        this.lock.lock();
+        try {
+            if (this.responseWatcher != null)
+                this.responseWatcher.handle(statusCode);
+        } finally {
+            lock.unlock();
+        }
     }
 
     public boolean attested() {

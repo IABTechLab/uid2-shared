@@ -29,7 +29,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private boolean allowContentFromLocalFileSystem = false;
     private HttpClient httpClient;
     private AttestationTokenRetriever attestationTokenRetriever;
-    private AtomicReference<Handler<Integer>> responseWatcher;
+    private Handler<Integer> responseWatcher;
 
     public static UidCoreClient createNoAttest(String attestationEndpoint, String userToken, ApplicationVersion appVersion, boolean enforceHttps) throws IOException {
         return new UidCoreClient(attestationEndpoint, userToken, appVersion, CloudUtils.defaultProxy, new NoAttestationProvider(), enforceHttps);
@@ -41,7 +41,6 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         this.userToken = userToken;
         this.contentStorage = new PreSignedURLStorage(proxy);
         this.enforceHttps = enforceHttps;
-        this.responseWatcher = new AtomicReference<Handler<Integer>>(null);
         this.attestationTokenRetriever = new AttestationTokenRetriever(
                 attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, new InstantClock());
         this.httpClient = HttpClient.newHttpClient();
@@ -58,7 +57,6 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         this.userToken = userToken;
         this.contentStorage = new PreSignedURLStorage(proxy);
         this.enforceHttps = enforceHttps;
-        this.responseWatcher = new AtomicReference<Handler<Integer>>(null);
         this.attestationTokenRetriever = new AttestationTokenRetriever(
                 attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, new InstantClock());
         this.httpClient = httpClient;
@@ -142,7 +140,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     }
 
     public void setResponseStatusWatcher(Handler<Integer> watcher) {
-        this.responseWatcher.set(watcher);
+        this.responseWatcher = watcher;
     }
 
     public void setAttestationTokenRetriever(AttestationTokenRetriever attestationTokenRetriever) {

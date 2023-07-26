@@ -39,7 +39,7 @@ public class AttestationTokenRetrieverTest {
     private IAttestationProvider attestationProvider = mock(IAttestationProvider.class);
     private boolean enforceHttps;
     private boolean allowContentFromLocalFileSystem;
-    private AtomicReference<Handler<Integer>> responseWatcher = mock(AtomicReference.class);
+    private Handler<Integer> responseWatcher = mock(Handler.class);
     private IClock clock = mock(IClock.class);
     private static final long A_HUNDRED_DAYS_IN_MILLI = 86400000000L;
 
