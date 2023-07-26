@@ -19,14 +19,16 @@ public class CloudUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudUtils.class);
     public static Proxy defaultProxy = getDefaultProxy();
 
-    public static TaggableCloudStorage createStorageWithIam(String cloudBucket) {
+    public static TaggableCloudStorage createStorageWithIam(String cloudBucket, JsonObject jsonConfig) {
         return new CloudStorageS3(
-                System.getProperty(Const.Config.AwsRegionProp),
+                jsonConfig.getString(Const.Config.AwsRegionProp),
                 cloudBucket,
-                System.getProperty(Const.Config.S3EndpointProp, "")
+                jsonConfig.getString(Const.Config.S3EndpointProp, "")
         );
     }
 
+    // I think this is not used, Aleksandrs Ulme 26/07/2023
+    @Deprecated
     public static TaggableCloudStorage createStorage(String cloudBucket) {
         return new CloudStorageS3(
                 System.getProperty(Const.Config.AccessKeyIdProp),
