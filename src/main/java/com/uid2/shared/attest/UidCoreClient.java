@@ -6,6 +6,7 @@ import com.uid2.shared.ApplicationVersion;
 import com.uid2.shared.Const;
 import com.uid2.shared.Utils;
 import com.uid2.shared.cloud.*;
+import com.uid2.shared.middleware.AttestationMiddleware;
 import io.vertx.core.Handler;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
@@ -24,8 +25,6 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.util.Base64;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -39,6 +38,8 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private final ApplicationVersion appVersion;
     private final String appVersionHeader;
     private AtomicReference<String> attestationToken;
+    private AtomicReference<String> attestationJwt;
+
     private final boolean enforceHttps;
     private static boolean useSecureParameters = true;
     private boolean allowContentFromLocalFileSystem = false;
@@ -57,6 +58,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         this.attestationProvider = attestationProvider;
         this.contentStorage = new PreSignedURLStorage(proxy);
         this.attestationToken = new AtomicReference<>(null);
+        this.attestationJwt = new AtomicReference<>(null);
         this.enforceHttps = enforceHttps;
         this.responseWatcher = new AtomicReference<Handler<Integer>>(null);
 
@@ -95,8 +97,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
             attested = true;
             try {
                 attestInternal();
-            }
-            catch (UidCoreClientException | IOException e) {
+            } catch (UidCoreClientException | IOException e) {
                 notifyResponseStatusWatcher(statusCode);
                 throw e;
             }
@@ -119,7 +120,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private URLConnection openConnection(String serviceEndpoint, String httpMethod) throws IOException {
         final URLConnection urlConnection = (proxy == null ? new URL(serviceEndpoint).openConnection() : new URL(serviceEndpoint).openConnection(proxy));
 
-        if(enforceHttps && !(urlConnection instanceof HttpsURLConnection)) {
+        if (enforceHttps && !(urlConnection instanceof HttpsURLConnection)) {
             throw new IOException("UidCoreClient requires HTTPS connection");
         }
 
@@ -132,13 +133,18 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         connection.setRequestMethod(httpMethod);
         connection.setRequestProperty(Const.Http.AppVersionHeader, appVersionHeader);
 
-        if(this.userToken != null && this.userToken.length() > 0) {
+        if (this.userToken != null && this.userToken.length() > 0) {
             connection.setRequestProperty("Authorization", "Bearer " + this.userToken);
         }
 
         final String atoken = this.attestationToken.get();
-        if(atoken != null && atoken.length() > 0) {
-            connection.setRequestProperty("Attestation-Token", atoken);
+        if (atoken != null && atoken.length() > 0) {
+            connection.setRequestProperty(AttestationMiddleware.AttestationTokenHeader, atoken);
+        }
+
+        final String jwt = this.attestationJwt.get();
+        if (jwt != null && !jwt.isEmpty()) {
+            connection.setRequestProperty(AttestationMiddleware.AttestationJWTHeader, jwt);
         }
 
         return connection;
@@ -150,7 +156,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return this.attestationToken.get() != null;
     }
 
-    /// this also sets this.attestationToken
+    /// this also sets this.attestationToken and this.optoutJwt
     private void attestInternal() throws IOException, UidCoreClientException {
         try {
             JsonObject requestJson = new JsonObject();
@@ -191,10 +197,16 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
             if (atoken == null) {
                 throw new UidCoreClientException(statusCode, "response json does not contain body.attestation_token");
             }
-
             atoken = new String(decrypt(Base64.getDecoder().decode(atoken), keyPair.getPrivate()), StandardCharsets.UTF_8);
             LOGGER.info("Attestation successful. Attestation token received.");
             this.attestationToken.set(atoken);
+
+            String jwt = getAttestationJwt(responseJson);
+            if (jwt == null) {
+                throw new UidCoreClientException(statusCode, "response json does not contain body.attestation_jwt");
+            }
+            this.attestationJwt.set(jwt);
+
         } catch (AttestationException ae) {
             throw new UidCoreClientException(ae);
         } catch (IOException ioe) {
@@ -210,8 +222,15 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
     private static String getAttestationToken(JsonObject responseJson) {
         final JsonObject body = responseJson.getJsonObject("body");
-        if(body == null) return null;
+        if (body == null) return null;
         return body.getString("attestation_token");
+    }
+
+    // This will probably be removed when attestation is done pre-emptively
+    private static String getAttestationJwt(JsonObject responseJson) {
+        final JsonObject body = responseJson.getJsonObject("body");
+        if (body == null) return null;
+        return body.getString("attestation_jwt");
     }
 
     private static byte[] decrypt(byte[] payload, PrivateKey privateKey) throws Exception {

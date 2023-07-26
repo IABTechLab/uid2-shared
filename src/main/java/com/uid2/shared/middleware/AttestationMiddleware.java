@@ -16,6 +16,7 @@ public class AttestationMiddleware {
     //region RequestHandler
 
     public static final String AttestationTokenHeader = "Attestation-Token";
+    public static final String AttestationJWTHeader = "Attestation-JWT";
 
     public Handler<RoutingContext> handle(Handler<RoutingContext> handler) {
         final AttestationHandler wrapper = new AttestationHandler(handler, this.tokenService);
@@ -39,6 +40,8 @@ public class AttestationMiddleware {
             if (profile instanceof OperatorKey) {
                 final String protocol = ((OperatorKey) profile).getProtocol();
                 final String userToken = AuthMiddleware.getAuthToken(rc);
+                final String jwt = getAttestationJWT(rc);
+
                 final String encryptedToken = getAttestationToken(rc);
                 if ("trusted".equals(protocol)) {
                     // (pre-)trusted operator requires no-attestation
@@ -61,6 +64,10 @@ public class AttestationMiddleware {
 
         private String getAttestationToken(RoutingContext rc) {
             return rc.request().getHeader(AttestationTokenHeader);
+        }
+
+        private String getAttestationJWT(RoutingContext rc) {
+            return rc.request().getHeader(AttestationJWTHeader);
         }
     }
 
