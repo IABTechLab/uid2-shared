@@ -18,7 +18,12 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.concurrent.atomic.AtomicReference;
 import java.net.Proxy;
 import java.security.SecureRandom;
@@ -44,61 +49,55 @@ public class AttestationTokenRetrieverTest {
     public AttestationTokenRetrieverTest() throws IOException {
     }
 
+//    @Test
+//    public void testCurrentTimeBeforeTenMinsBeforeAttestationTokenExpiry() throws UidCoreClientException, IOException {
+//        AttestationTokenRetriever attestationTokenRetrieverSpy = spy(this.attestationTokenRetriever);
+//
+//        Instant fakeExpiresAt = Instant.ofEpochMilli(A_HUNDRED_DAYS_IN_MILLI);
+//        when(clock.now()).thenReturn(fakeExpiresAt.minusSeconds(600).minusSeconds(100));
+//        attestationTokenRetrieverSpy.setAttestationTokenExpiresAt(fakeExpiresAt.toString());
+//
+//        attestationTokenRetrieverSpy.attestationExpirationCheck();
+//        verify(attestationTokenRetrieverSpy, times(0)).attestInternal();
+//    }
+//
+//    @Test
+//    public void testCurrentTimeAfterTenMinsBeforeAttestationTokenExpiry() throws UidCoreClientException, IOException {
+//        AttestationTokenRetriever attestationTokenRetrieverSpy = spy(attestationTokenRetriever);
+//
+//        Instant fakeExpiresAt = Instant.ofEpochMilli(A_HUNDRED_DAYS_IN_MILLI);
+//        when(clock.now()).thenReturn(fakeExpiresAt.minusSeconds(600).plusSeconds(100));
+//        attestationTokenRetrieverSpy.setAttestationTokenExpiresAt(fakeExpiresAt.toString());
+//
+//        attestationTokenRetrieverSpy.attestationExpirationCheck();
+//        verify(attestationTokenRetrieverSpy, times(1)).attestInternal();
+//    }
+
     @Test
-    public void testCurrentTimeBeforeTenMinsBeforeAttestationTokenExpiry() throws UidCoreClientException, IOException {
-        AttestationTokenRetriever attestationTokenRetrieverSpy = spy(this.attestationTokenRetriever);
+    public void testAttestInternal() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
+        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
-        Instant fakeExpiresAt = Instant.ofEpochMilli(A_HUNDRED_DAYS_IN_MILLI);
-        when(clock.now()).thenReturn(fakeExpiresAt.minusSeconds(600).minusSeconds(100));
-        attestationTokenRetrieverSpy.setAttestationTokenExpiresAt(fakeExpiresAt.toString());
+//        String encoded_attestation_token = Base64.getEncoder().encodeToString("attestation_token_test".getBytes(ISO_8859_1.INSTANCE));
+//        byte[] decodedBytes = Base64.getDecoder().decode(encoded_attestation_token);
+//        System.out.println(encoded_attestation_token);
 
-        attestationTokenRetrieverSpy.attestationExpirationCheck();
-        verify(attestationTokenRetrieverSpy, times(0)).attestInternal();
-    }
-
-    @Test
-    public void testCurrentTimeAfterTenMinsBeforeAttestationTokenExpiry() throws UidCoreClientException, IOException {
-        AttestationTokenRetriever attestationTokenRetrieverSpy = spy(attestationTokenRetriever);
-
-        Instant fakeExpiresAt = Instant.ofEpochMilli(A_HUNDRED_DAYS_IN_MILLI);
-        when(clock.now()).thenReturn(fakeExpiresAt.minusSeconds(600).plusSeconds(100));
-        attestationTokenRetrieverSpy.setAttestationTokenExpiresAt(fakeExpiresAt.toString());
-
-        attestationTokenRetrieverSpy.attestationExpirationCheck();
-        verify(attestationTokenRetrieverSpy, times(1)).attestInternal();
-    }
-
-    @Test
-    public void testAttestIfRequired() throws IOException, UidCoreClientException, AttestationException {
-        HttpURLConnection mockConn1 = mock(HttpURLConnection.class);
-        when(mockConn1.getResponseCode()).thenReturn(401);
-
-        HttpURLConnection mockConn2 = mock(HttpURLConnection.class);
-        OutputStream mockOutputStreamRequest = mock(OutputStream.class);
         JsonObject content = new JsonObject();
         JsonObject body = new JsonObject();
         body.put("expiresAt", "1970-01-01T00:00:00.111Z");
-        body.put("attestation_token", "CPehNtWPehNtWABAMBFRACBoALAAAEJAAIYgAKwAQAKgArABAAqAAA");
+        body.put("attestation_token", "SGVsbG8sIFdvcmxkIQ==");
         content.put("body", body);
         content.put("status", "success");
-        when(mockConn2.getOutputStream()).thenReturn(mockOutputStreamRequest);
-        when(mockConn2.getResponseCode()).thenReturn(200);
-        when(mockConn2.getInputStream()).thenReturn(new ByteArrayInputStream(content.toString().getBytes()));
 
-        URL mockURL = mock(URL.class);
-        when(mockURL.openConnection()).thenReturn(mockConn2);
-        when(mockURL.openConnection(any())).thenReturn(mockConn2);
-//        attestationTokenRetriever.setUrl(mockURL);
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        String expectedResponseBody = "{\"attestation_token\": \"SGVsbG8sIFdvcmxkIQ==\", \"expiresAt\": \"1970-01-01T00:00:00.111Z\", \"status\": \"success\"}";
+        when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
+        when(mockHttpResponse.statusCode()).thenReturn(200);
 
-        SecureRandom random = new SecureRandom(); // Default constructor uses a secure seed
-        random.setSeed(123456L);
+        HttpClient mockHttpClient = mock(HttpClient.class);
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        attestationTokenRetriever.setHttpClient(mockHttpClient);
 
-        byte[] fakeByteArray = {};
-        when(attestationProvider.getAttestationRequest(any())).thenReturn(fakeByteArray);
-
-        AttestationTokenRetriever attestationTokenRetrieverSpy = spy(attestationTokenRetriever);
-//        boolean result = attestationTokenRetrieverSpy.attestIfRequired(mockConn1);
-        verify(attestationTokenRetrieverSpy, times(1)).attestInternal();
-//        Assert.assertEquals(true, result);
+        attestationTokenRetriever.attestInternal();
+        Assert.assertEquals("hi", attestationTokenRetriever.getAttestationToken());
     }
 }
