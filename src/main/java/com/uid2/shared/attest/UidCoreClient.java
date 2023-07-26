@@ -32,23 +32,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private Handler<Integer> responseWatcher;
 
     public static UidCoreClient createNoAttest(String attestationEndpoint, String userToken, ApplicationVersion appVersion, boolean enforceHttps) throws IOException {
-        return new UidCoreClient(attestationEndpoint, userToken, appVersion, CloudUtils.defaultProxy, new NoAttestationProvider(), enforceHttps);
-    }
-
-    public UidCoreClient(String attestationEndpoint, String userToken, ApplicationVersion appVersion, Proxy proxy,
-                         IAttestationProvider attestationProvider, boolean enforceHttps) throws IOException {
-        this.proxy = proxy;
-        this.userToken = userToken;
-        this.contentStorage = new PreSignedURLStorage(proxy);
-        this.enforceHttps = enforceHttps;
-        this.attestationTokenRetriever = new AttestationTokenRetriever(
-                attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, new InstantClock());
-        this.httpClient = HttpClient.newHttpClient();
-
-        String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
-        for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet())
-            appVersionHeader += ";" + kv.getKey() + "=" + kv.getValue();
-        this.appVersionHeader = appVersionHeader;
+        return new UidCoreClient(attestationEndpoint, userToken, appVersion, CloudUtils.defaultProxy, new NoAttestationProvider(), enforceHttps, null);
     }
 
     public UidCoreClient(String attestationEndpoint, String userToken, ApplicationVersion appVersion, Proxy proxy,
@@ -59,7 +43,10 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         this.enforceHttps = enforceHttps;
         this.attestationTokenRetriever = new AttestationTokenRetriever(
                 attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, new InstantClock());
-        this.httpClient = httpClient;
+        if (httpClient == null)
+            this.httpClient = HttpClient.newHttpClient();
+        else
+            this.httpClient = httpClient;
 
         String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
         for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet())
