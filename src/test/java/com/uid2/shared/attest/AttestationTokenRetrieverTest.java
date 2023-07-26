@@ -4,6 +4,7 @@ import com.uid2.enclave.AttestationException;
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.ApplicationVersion;
 import com.uid2.shared.IClock;
+import com.uid2.shared.cloud.CloudStorageException;
 import io.vertx.core.Handler;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
@@ -33,18 +34,16 @@ import static org.mockito.Mockito.*;
 
 public class AttestationTokenRetrieverTest {
     private String attestationEndpoint = "https://core-test.uidapi.com/attest";
-    private String userToken;
     private ApplicationVersion appVersion = new ApplicationVersion("appName", "appVersion");
     private Proxy proxy;
     private IAttestationProvider attestationProvider = mock(IAttestationProvider.class);
-    private boolean enforceHttps;
-    private boolean allowContentFromLocalFileSystem;
     private Handler<Integer> responseWatcher = mock(Handler.class);
     private IClock clock = mock(IClock.class);
     private static final long A_HUNDRED_DAYS_IN_MILLI = 86400000000L;
+    private HttpClient mockHttpClient = mock(HttpClient.class);
 
     private AttestationTokenRetriever attestationTokenRetriever =
-            new AttestationTokenRetriever(attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, clock);
+            new AttestationTokenRetriever(attestationEndpoint, appVersion, proxy, attestationProvider, responseWatcher, clock, mockHttpClient);
 
     public AttestationTokenRetrieverTest() throws IOException {
     }
@@ -74,30 +73,52 @@ public class AttestationTokenRetrieverTest {
 //    }
 
     @Test
-    public void testAttestInternal() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
+    public void testAttestInternalFailedWithoutAttestationToken() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
-
-//        String encoded_attestation_token = Base64.getEncoder().encodeToString("attestation_token_test".getBytes(ISO_8859_1.INSTANCE));
-//        byte[] decodedBytes = Base64.getDecoder().decode(encoded_attestation_token);
-//        System.out.println(encoded_attestation_token);
 
         JsonObject content = new JsonObject();
         JsonObject body = new JsonObject();
         body.put("expiresAt", "1970-01-01T00:00:00.111Z");
-        body.put("attestation_token", "SGVsbG8sIFdvcmxkIQ==");
+        body.put("attestation_token", "pdA9stfFBTWsJGwOPjOsaMR7G5+mkxhOcc9xFnAM3RfSOpnmclaQCMmdhgNDY1Egtl9ejZQrCEs=-8RiWE9OEheFDnFkZ-g");
         content.put("body", body);
         content.put("status", "success");
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        String expectedResponseBody = "{\"attestation_token\": \"SGVsbG8sIFdvcmxkIQ==\", \"expiresAt\": \"1970-01-01T00:00:00.111Z\", \"status\": \"success\"}";
+        String expectedResponseBody = "{\"expiresAt\": \"1970-01-01T00:00:00.111Z\", \"status\": \"success\"}";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
-        HttpClient mockHttpClient = mock(HttpClient.class);
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
-        attestationTokenRetriever.setHttpClient(mockHttpClient);
 
-        attestationTokenRetriever.attestInternal();
-        Assert.assertEquals("hi", attestationTokenRetriever.getAttestationToken());
+        AttestationTokenRetrieverException result = Assert.assertThrows(AttestationTokenRetrieverException.class, () -> {
+            attestationTokenRetriever.attestInternal();
+        });
+        String expectedExceptionMessage = "com.uid2.shared.attest.AttestationTokenRetrieverException: http status: 200, response json does not contain body.attestation_token";
+        Assert.assertEquals(expectedExceptionMessage, result.getMessage());
+    }
+
+    @Test
+    public void testAttestInternalFailedWithoutExpiredAt() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
+        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+
+        JsonObject content = new JsonObject();
+        JsonObject body = new JsonObject();
+        body.put("expiresAt", "1970-01-01T00:00:00.111Z");
+        body.put("attestation_token", "pdA9stfFBTWsJGwOPjOsaMR7G5+mkxhOcc9xFnAM3RfSOpnmclaQCMmdhgNDY1Egtl9ejZQrCEs=-8RiWE9OEheFDnFkZ-g");
+        content.put("body", body);
+        content.put("status", "success");
+
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        String expectedResponseBody = "{\"attestation_token\": \"pdA9stfFBTWsJGwOPjOsaMR7G5+mkxhOcc9xFnAM3RfSOpnmclaQCMmdhgNDY1Egtl9ejZQrCEs=-8RiWE9OEheFDnFkZ-g\", \"status\": \"success\"}";
+        when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
+        when(mockHttpResponse.statusCode()).thenReturn(200);
+
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+
+        AttestationTokenRetrieverException result = Assert.assertThrows(AttestationTokenRetrieverException.class, () -> {
+            attestationTokenRetriever.attestInternal();
+        });
+        String expectedExceptionMessage = "com.uid2.shared.attest.AttestationTokenRetrieverException: http status: 200, response json does not contain body.expiresAt";
+        Assert.assertEquals(expectedExceptionMessage, result.getMessage());
     }
 }

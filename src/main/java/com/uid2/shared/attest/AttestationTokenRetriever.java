@@ -33,7 +33,7 @@ public class AttestationTokenRetriever {
     private AtomicReference<String> attestationToken;
     private Handler<Integer> responseWatcher;
     private final String attestationEndpoint;
-    private HttpClient httpClient;
+    private final HttpClient httpClient;
     private final IClock clock;
     private ScheduledThreadPoolExecutor executor;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
@@ -43,15 +43,19 @@ public class AttestationTokenRetriever {
 
     public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion, Proxy proxy,
                                      IAttestationProvider attestationProvider, Handler<Integer> responseWatcher,
-                                     IClock clock) throws IOException {
+                                     IClock clock, HttpClient httpClient) throws IOException {
         this.attestationEndpoint = attestationEndpoint;
         this.appVersion = appVersion;
         this.attestationProvider = attestationProvider;
         this.attestationToken = new AtomicReference<>(null);
         this.responseWatcher = responseWatcher;
         this.clock = clock;
-        this.httpClient = HttpClient.newHttpClient();
         this.lock = new ReentrantLock();
+        if (httpClient == null) {
+            this.httpClient = HttpClient.newHttpClient();
+        } else {
+            this.httpClient = httpClient;
+        }
 
         // Create the ScheduledThreadPoolExecutor instance with the desired number of threads
         int numberOfThreads = 1;
@@ -171,16 +175,16 @@ public class AttestationTokenRetriever {
         return responseJson.getString("status") == null || !responseJson.getString("status").equals("success");
     }
 
-    private static byte[] decrypt(byte[] payload, PrivateKey privateKey) throws Exception {
-        Cipher cipher = Cipher.getInstance(Const.Name.AsymetricEncryptionCipherClass);
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-        return cipher.doFinal(payload);
-    }
-
     private static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator gen = KeyPairGenerator.getInstance(Const.Name.AsymetricEncryptionKeyClass);
         gen.initialize(2048, new SecureRandom());
         return gen.generateKeyPair();
+    }
+
+    private static byte[] decrypt(byte[] payload, PrivateKey privateKey) throws Exception {
+        Cipher cipher = Cipher.getInstance(Const.Name.AsymetricEncryptionCipherClass);
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        return cipher.doFinal(payload);
     }
 
     private void notifyResponseStatusWatcher(int statusCode) {
@@ -196,9 +200,5 @@ public class AttestationTokenRetriever {
     public boolean attested() {
         if (this.attestationToken.get() != null && this.clock.now().isBefore(this.attestationTokenExpiresAt)) return true;
         return false;
-    }
-
-    public void setHttpClient(HttpClient httpClient) {
-        this.httpClient = httpClient;
     }
 }
