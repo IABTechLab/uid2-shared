@@ -17,7 +17,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private static final Logger LOGGER = LoggerFactory.getLogger(UidCoreClient.class);
@@ -43,10 +42,11 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         this.enforceHttps = enforceHttps;
         this.attestationTokenRetriever = new AttestationTokenRetriever(
                 attestationEndpoint, appVersion, attestationProvider, responseWatcher, new InstantClock(), null, null, null);
-        if (httpClient == null)
+        if (httpClient == null) {
             this.httpClient = HttpClient.newHttpClient();
-        else
+        } else {
             this.httpClient = httpClient;
+        }
 
         String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
         for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet())
@@ -81,16 +81,17 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
     private InputStream getWithAttest(String path) throws IOException, InterruptedException, AttestationTokenRetrieverException {
         if (!attestationTokenRetriever.attested()) {
-            attestationTokenRetriever.attestInternal();
+            attestationTokenRetriever.attest();
         }
 
         String attestationToken = attestationTokenRetriever.getAttestationToken();
         HttpResponse<String> httpResponse;
         httpResponse = sendHttpRequest(path, attestationToken);
 
+        // This should never happen, but keeping this part of the code just to be extra safe.
         if (httpResponse.statusCode() == 401) {
             LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
-            attestationTokenRetriever.attestInternal();
+            attestationTokenRetriever.attest();
             attestationToken = attestationTokenRetriever.getAttestationToken();
             httpResponse = sendHttpRequest(path, attestationToken);
         }
@@ -109,10 +110,10 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
                 .GET()
                 .setHeader(Const.Http.AppVersionHeader, appVersionHeader);
 
-        if(this.userToken != null && this.userToken.length() > 0) {
+        if (this.userToken != null && this.userToken.length() > 0) {
             httpRequestBuilder.setHeader("Authorization", "Bearer " + this.userToken);
         }
-        if(attestationToken != null && attestationToken.length() > 0) {
+        if (attestationToken != null && attestationToken.length() > 0) {
             httpRequestBuilder.setHeader("Attestation-Token", attestationToken);
         }
         HttpRequest httpRequest = httpRequestBuilder.build();

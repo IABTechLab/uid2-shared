@@ -9,7 +9,6 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.crypto.Cipher;
 import java.io.IOException;
 import java.net.*;
 import java.net.http.HttpClient;
@@ -78,7 +77,7 @@ public class AttestationTokenRetriever {
         if (currentTime.isAfter(tenMinutesBeforeExpire)) {
             LOGGER.info("Attestation token is 10 mins from the expiry timestamp %s. Re-attest...", attestationTokenExpiresAt);
             try {
-                attestInternal();
+                attest();
             }
             catch (AttestationTokenRetrieverException | IOException e) {
                 notifyResponseStatusWatcher(401);
@@ -96,7 +95,7 @@ public class AttestationTokenRetriever {
         executor.shutdown();
     }
 
-    public void attestInternal() throws IOException, AttestationTokenRetrieverException {
+    public void attest() throws IOException, AttestationTokenRetrieverException {
         try {
             JsonObject requestJson = new JsonObject();
             KeyPair keyPair = generateKeyPair();

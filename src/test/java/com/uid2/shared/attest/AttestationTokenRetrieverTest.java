@@ -37,7 +37,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void AttestInternal_Succeed_AttestationTokenSet() throws Exception {
+    public void Attest_Succeed_AttestationTokenSet() throws Exception {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         JsonObject content = new JsonObject();
@@ -55,12 +55,12 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
-        attestationTokenRetriever.attestInternal();
+        attestationTokenRetriever.attest();
         Assert.assertEquals("test_attestation_token", attestationTokenRetriever.getAttestationToken());
     }
 
     @Test
-    public void AttestInternal_Succeed_ExpiryCheckScheduled() throws Exception {
+    public void Attest_Succeed_ExpiryCheckScheduled() throws Exception {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         JsonObject content = new JsonObject();
@@ -78,12 +78,12 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
-        attestationTokenRetriever.attestInternal();
+        attestationTokenRetriever.attest();
         verify(mockExecutor, times(1)).scheduleAtFixedRate(any(), eq((long) 0), eq(TimeUnit.MINUTES.toMillis(1)), eq(TimeUnit.MILLISECONDS));
     }
 
     @Test
-    public void AttestInternal_ResponseBodyHasNoAttestationToken_ExceptionThrown() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
+    public void Attest_ResponseBodyHasNoAttestationToken_ExceptionThrown() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         JsonObject content = new JsonObject();
@@ -101,14 +101,14 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
 
         AttestationTokenRetrieverException result = Assert.assertThrows(AttestationTokenRetrieverException.class, () -> {
-            attestationTokenRetriever.attestInternal();
+            attestationTokenRetriever.attest();
         });
         String expectedExceptionMessage = "com.uid2.shared.attest.AttestationTokenRetrieverException: http status: 200, response json does not contain body.attestation_token";
         Assert.assertEquals(expectedExceptionMessage, result.getMessage());
     }
 
     @Test
-    public void AttestAttestInternal_ResponseBodyHasNoExpiredAt_ExceptionThrown() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
+    public void Attest_ResponseBodyHasNoExpiredAt_ExceptionThrown() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         JsonObject content = new JsonObject();
@@ -126,7 +126,7 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
 
         AttestationTokenRetrieverException result = Assert.assertThrows(AttestationTokenRetrieverException.class, () -> {
-            attestationTokenRetriever.attestInternal();
+            attestationTokenRetriever.attest();
         });
         String expectedExceptionMessage = "com.uid2.shared.attest.AttestationTokenRetrieverException: http status: 200, response json does not contain body.expiresAt";
         Assert.assertEquals(expectedExceptionMessage, result.getMessage());

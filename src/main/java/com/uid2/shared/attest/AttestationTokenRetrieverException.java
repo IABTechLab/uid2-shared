@@ -16,7 +16,7 @@ public class AttestationTokenRetrieverException extends Exception {
         this.statusCode = statusCode;
     }
 
-    public boolean couldBeAttestationFailure() {
+    public boolean isAttestationFailure() {
         return statusCode == 401;
     }
 }
