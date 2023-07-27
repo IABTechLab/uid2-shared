@@ -8,10 +8,7 @@ import com.uid2.shared.cloud.CloudUtils;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.Proxy;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -22,36 +19,22 @@ import static org.mockito.Mockito.*;
 
 public class UidCoreClientTest{
     private Proxy proxy = CloudUtils.defaultProxy;
-    private AttestationTokenRetriever attestationTokenRetriever = mock(AttestationTokenRetriever.class);
+    private AttestationTokenRetriever mockAttestationTokenRetriever = mock(AttestationTokenRetriever.class);
 
     private HttpClient mockHttpClient = mock(HttpClient.class);
 
     private UidCoreClient uidCoreClient = new UidCoreClient(
             "core_attest_url", "userToken", new ApplicationVersion("appName", "appVersion"), proxy,
-            mock(IAttestationProvider.class), true, mockHttpClient);
+            mock(IAttestationProvider.class), true, mockHttpClient, mockAttestationTokenRetriever);
 
     public UidCoreClientTest() throws Exception {
-    }
-
-    public String convertInputStreamToString(InputStream inputStream) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String line;
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"))) {
-            while ((line = bufferedReader.readLine()) != null) {
-                stringBuilder.append(line).append("\n");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return stringBuilder.toString();
     }
 
     @Test
     public void Download_Succeed_RequestSentWithExpectedParameters() throws IOException, CloudStorageException, InterruptedException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
 
-        when(attestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
-        uidCoreClient.setAttestationTokenRetriever(attestationTokenRetriever);
+        when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
         uidCoreClient.setUserToken("testUserToken");
 
         String expectedResponseBody = "Hello, world!";
@@ -75,9 +58,7 @@ public class UidCoreClientTest{
 
     @Test
     public void Download_EnforceHttpWhenPathNoHttps_ExceptionThrown() {
-        when(attestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
-        uidCoreClient.setAttestationTokenRetriever(attestationTokenRetriever);
-        uidCoreClient.setEnforceHttps(true);
+        when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
 
         CloudStorageException result = Assert.assertThrows(CloudStorageException.class, () -> {
             uidCoreClient.download("http://download");
@@ -89,8 +70,7 @@ public class UidCoreClientTest{
     @Test
     public void Download_AttestInternalFail_ExceptionThrown() throws IOException, AttestationTokenRetrieverException {
         AttestationTokenRetrieverException exception = new AttestationTokenRetrieverException(401, "test failure");
-        doThrow(exception).when(attestationTokenRetriever).attest();
-        uidCoreClient.setAttestationTokenRetriever(attestationTokenRetriever);
+        doThrow(exception).when(mockAttestationTokenRetriever).attest();
 
         CloudStorageException result = Assert.assertThrows(CloudStorageException.class, () -> {
             uidCoreClient.download("https://download");
@@ -104,14 +84,12 @@ public class UidCoreClientTest{
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.statusCode()).thenReturn(401);
 
-        uidCoreClient.setAttestationTokenRetriever(attestationTokenRetriever);
-
         String expectedResponseBody = "Hello, world!";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
 
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
 
         uidCoreClient.download("https://download");
-        verify(attestationTokenRetriever, times(2)).attest();
+        verify(mockAttestationTokenRetriever, times(2)).attest();
     }
 }

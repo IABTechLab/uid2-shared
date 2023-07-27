@@ -31,21 +31,26 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private Handler<Integer> responseWatcher;
 
     public static UidCoreClient createNoAttest(String attestationEndpoint, String userToken, ApplicationVersion appVersion, boolean enforceHttps) throws IOException {
-        return new UidCoreClient(attestationEndpoint, userToken, appVersion, CloudUtils.defaultProxy, new NoAttestationProvider(), enforceHttps, null);
+        return new UidCoreClient(attestationEndpoint, userToken, appVersion, CloudUtils.defaultProxy, new NoAttestationProvider(), enforceHttps, null, null);
     }
 
     public UidCoreClient(String attestationEndpoint, String userToken, ApplicationVersion appVersion, Proxy proxy,
-                         IAttestationProvider attestationProvider, boolean enforceHttps, HttpClient httpClient) throws IOException {
+                         IAttestationProvider attestationProvider, boolean enforceHttps, HttpClient httpClient,
+                         AttestationTokenRetriever attestationTokenRetriever) throws IOException {
         this.proxy = proxy;
         this.userToken = userToken;
         this.contentStorage = new PreSignedURLStorage(proxy);
         this.enforceHttps = enforceHttps;
-        this.attestationTokenRetriever = new AttestationTokenRetriever(
-                attestationEndpoint, appVersion, attestationProvider, responseWatcher, new InstantClock(), null, null, null);
         if (httpClient == null) {
             this.httpClient = HttpClient.newHttpClient();
         } else {
             this.httpClient = httpClient;
+        }
+        if (attestationTokenRetriever == null) {
+            this.attestationTokenRetriever = new AttestationTokenRetriever(
+                    attestationEndpoint, appVersion, attestationProvider, responseWatcher, new InstantClock(), null, null, null);
+        } else {
+            this.attestationTokenRetriever = attestationTokenRetriever;
         }
 
         String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
@@ -131,19 +136,11 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         this.responseWatcher = watcher;
     }
 
-    public void setAttestationTokenRetriever(AttestationTokenRetriever attestationTokenRetriever) {
-        this.attestationTokenRetriever = attestationTokenRetriever;
-    }
-
     public void setUserToken(String userToken) {
         this.userToken = userToken;
     }
 
     public void setAllowContentFromLocalFileSystem(boolean allowContentFromLocalFileSystem) {
         this.allowContentFromLocalFileSystem = allowContentFromLocalFileSystem;
-    }
-
-    public void setEnforceHttps(boolean enforceHttps) {
-        this.enforceHttps = enforceHttps;
     }
 }
