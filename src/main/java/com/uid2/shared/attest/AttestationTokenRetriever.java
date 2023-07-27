@@ -42,9 +42,9 @@ public class AttestationTokenRetriever {
     private final AttestationTokenDecryptor attestationTokenDecryptor;
 
 
-    public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion,
-                                     IAttestationProvider attestationProvider, Handler<Integer> responseWatcher,
-                                     IClock clock, HttpClient httpClient, AttestationTokenDecryptor attestationTokenDecryptor) throws IOException {
+    public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion, IAttestationProvider attestationProvider,
+                                     Handler<Integer> responseWatcher, IClock clock, HttpClient httpClient,
+                                     AttestationTokenDecryptor attestationTokenDecryptor, ScheduledThreadPoolExecutor executor) throws IOException {
         this.attestationEndpoint = attestationEndpoint;
         this.appVersion = appVersion;
         this.attestationProvider = attestationProvider;
@@ -62,10 +62,11 @@ public class AttestationTokenRetriever {
         } else {
             this.attestationTokenDecryptor = attestationTokenDecryptor;
         }
-
-        // Create the ScheduledThreadPoolExecutor instance with the desired number of threads
-        int numberOfThreads = 1;
-        this.executor = new ScheduledThreadPoolExecutor(numberOfThreads);
+        if (executor == null) {
+            this.executor = new ScheduledThreadPoolExecutor(1);
+        } else {
+            this.executor = executor;
+        }
     }
 
     private void attestationExpirationCheck(){
