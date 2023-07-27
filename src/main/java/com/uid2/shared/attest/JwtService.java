@@ -13,6 +13,9 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.io.BaseEncoding;
+import com.uid2.shared.Const;
+import com.uid2.shared.cloud.CloudUtils;
+import io.vertx.core.json.JsonObject;
 import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
@@ -26,12 +29,16 @@ import com.google.auth.oauth2.TokenVerifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.uid2.shared.Const.Config.*;
+import static com.uid2.shared.Const.Config.AwsRegionProp;
+
 public class JwtService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JwtService.class);
-    private static AtomicReference<PublicKey> cachedPublicKey = new AtomicReference<>(null);
-    private static Instant nextCacheRefresh;
     private static final Integer cacheIntervalInSeconds = 3600;
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtService.class);
+    private PublicKey cachedPublicKey;
+    private Instant nextCacheRefresh;
+    private final JsonObject config;
     private final Clock clock;
     private final KmsClientBuilder kmsClientBuilder;
     private String localPublicKey;
@@ -40,27 +47,36 @@ public class JwtService {
 
     private KmsClient kmsClient = null;
 
-    public JwtService() {
-        this(Clock.systemUTC(), KmsClient.builder());
+    public JwtService(JsonObject config) {
+        this(config, Clock.systemUTC(), KmsClient.builder());
     }
 
-    public JwtService(Clock clock, KmsClientBuilder kmsClientBuilder) {
+    public JwtService(JsonObject config, Clock clock, KmsClientBuilder kmsClientBuilder) {
+        this.config = config;
         this.clock = clock;
         this.kmsClientBuilder = kmsClientBuilder;
+        String publicKey = config.getString(Const.Config.AwsKmsJwtSigningPublicKeyProp);
+        if (publicKey != null && !publicKey.isEmpty()) {
+            this.setPublicKey(publicKey);
+        } else {
+            this.setKmsKeyIdAndRegion(config.getString(AwsKmsJwtSigningKeyIdProp), config.getString(AwsRegionProp));
+        }
     }
 
-    public JwtService withPublicKey(String publicKey) {
-        if (this.localPublicKey != publicKey) {
-            cachedPublicKey.set(null);
+    public JwtService setPublicKey(String publicKey) {
+        if (publicKey != null && !publicKey.isEmpty() && this.localPublicKey != publicKey) {
+            cachedPublicKey = null;
             nextCacheRefresh = this.clock.instant();
             this.localPublicKey = publicKey;
         }
         return this;
     }
 
-    public JwtService withKmsKeyIdAndRegion(String kmsKeyId, String region) {
-        if (this.kmsKeyId != kmsKeyId || this.kmsRegion != region) {
-            cachedPublicKey.set(null);
+    public JwtService setKmsKeyIdAndRegion(String kmsKeyId, String region) {
+        if (kmsKeyId != null && !kmsKeyId.isEmpty()
+            && region != null && !region.isEmpty()
+            && (this.kmsKeyId != kmsKeyId || this.kmsRegion != region)) {
+            cachedPublicKey = null;
             nextCacheRefresh = this.clock.instant();
             this.kmsKeyId = kmsKeyId;
             this.kmsRegion = region;
@@ -122,7 +138,7 @@ public class JwtService {
     private PublicKey getPublicKey() throws ValidationException {
         if (this.localPublicKey != null && !this.localPublicKey.isEmpty()) {
             try {
-                if (cachedPublicKey.get() == null) {
+                if (cachedPublicKey == null) {
                     String publicKeyPEM = this.localPublicKey
                             .replace("-----BEGIN PUBLIC KEY-----", "")
                             .replaceAll(System.lineSeparator(), "")
@@ -136,7 +152,7 @@ public class JwtService {
                     this.cachePublicKey(key);
                 }
 
-                return cachedPublicKey.get();
+                return cachedPublicKey;
             } catch (NoSuchAlgorithmException | InvalidKeySpecException | IllegalArgumentException ex) {
                 LOGGER.error("Error reading Public key from configuration:", ex);
                 return null;
@@ -147,8 +163,8 @@ public class JwtService {
     }
 
     private PublicKey getPublicKeyFromKmsOrCache() throws ValidationException {
-        if (cachedPublicKey.get() != null && nextCacheRefresh.isAfter(this.clock.instant())) {
-            return cachedPublicKey.get();
+        if (cachedPublicKey != null && nextCacheRefresh.isAfter(this.clock.instant())) {
+            return cachedPublicKey;
         }
 
         return getPublicKeyFromKms();
@@ -167,10 +183,7 @@ public class JwtService {
                     .build();
 
             if (this.kmsClient == null) {
-                this.kmsClient = this.kmsClientBuilder
-                        .region(Region.of(this.kmsRegion))
-                        .credentialsProvider(InstanceProfileCredentialsProvider.create())
-                        .build();
+                this.kmsClient = CloudUtils.getKmsClient(this.kmsClientBuilder, this.config);
             }
 
             var response = this.kmsClient.getPublicKey(request);
@@ -179,7 +192,7 @@ public class JwtService {
                 X509EncodedKeySpec keySpec = new X509EncodedKeySpec(response.publicKey().asByteArray());
                 PublicKey key = keyFactory.generatePublic(keySpec);
                 this.cachePublicKey(key);
-                return cachedPublicKey.get();
+                return cachedPublicKey;
             } else {
                 LOGGER.error("Error response from AWS KMS: Response Code: {}, Response Text: {}", response.sdkHttpResponse().statusCode(), response.sdkHttpResponse().statusText());
             }
@@ -190,7 +203,7 @@ public class JwtService {
     }
 
     private void cachePublicKey(PublicKey key) {
-        cachedPublicKey.set(key);
+        cachedPublicKey = key;
         nextCacheRefresh = this.clock.instant().plusSeconds(cacheIntervalInSeconds);
     }
 

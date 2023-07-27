@@ -1,6 +1,9 @@
 package com.uid2.shared.attest;
 
 import com.amazonaws.util.Base64;
+import com.uid2.shared.Const;
+import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
@@ -39,10 +42,17 @@ public class JwtServiceTest {
 
     private KmsClient mockClient;
     private ArgumentCaptor<GetPublicKeyRequest> capturedGetPublicKeyRequest;
+    private JsonObject config;
+
+    @BeforeEach
+    void setUp() {
+        this.config = new JsonObject();
+    }
 
     @Test
     void validateTokenSucceeds() throws JwtService.ValidationException {
-        JwtService service = new JwtService().withPublicKey(PUBLIC_KEY_STRING);
+        config.put(Const.Config.AwsKmsJwtSigningPublicKeyProp, PUBLIC_KEY_STRING);
+        JwtService service = new JwtService(config);
         var validationResponse = service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
 
         assertNotNull(validationResponse);
@@ -52,7 +62,8 @@ public class JwtServiceTest {
 
     @Test
     void validationFailsInvalidToken() throws JwtService.ValidationException {
-        JwtService service = new JwtService().withPublicKey(PUBLIC_KEY_STRING);
+        config.put(Const.Config.AwsKmsJwtSigningPublicKeyProp, PUBLIC_KEY_STRING);
+        JwtService service = new JwtService(config);
         var validationResponse = service.validateJwt("eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjcyNTgxMTg0MDAsImlhdCI6MTY5MDM0ODk5OSwic3ViIjoiVGVzdCIsImF1ZCI6Imh0dHBzOi8vb3B0b3V0LWludGVnLnVpZGFwaS5jb20iLCJvcGVyYXRvclZlcnNpb24iOiJWZXJzaW9uIDEuMiIsImVuY2xhdmVUeXBlIjoidGVzdCBlbmNsYXZlIHR5cGUiLCJyb2xlcyI6Ik9QRVJBVE9SLE9QVE9VVCIsImlzcyI6Imh0dHBzOi8vY29yZS1pbnRlZy51aWRhcGkuY29tIiwic2l0ZUlkIjoiOTk5IiwiZW5jbGF2ZUlkIjoidGVzdCBlbmNsYXZlIGlkIn0.N9xYROMx2hnMIhtyyBLF-J13uWXpIU6jj_Tgufww6O8JBhrHHFliOF2xsPUcZ1sK6lGsmbHACwlPTRz8zhpKWKM0CMNjfiWHwBGykK32hDC321QEta0aX6utBAWIb1crb2JwZhPH1K0_4X-mxdiuxibgW3YNpQxm2kZDnQaR40py5JykVkPxzwhgzUCceDN5kL1kNEjnO", AUDIENCE, ISSUER);
 
         assertNotNull(validationResponse);
@@ -61,7 +72,8 @@ public class JwtServiceTest {
     }
     @Test
     void validationFailsExpiredToken() throws JwtService.ValidationException {
-        JwtService service = new JwtService().withPublicKey(PUBLIC_KEY_STRING);
+        config.put(Const.Config.AwsKmsJwtSigningPublicKeyProp, PUBLIC_KEY_STRING);
+        JwtService service = new JwtService(config);
         var validationResponse = service.validateJwt(EXPIRED_TOKEN, AUDIENCE, ISSUER);
 
         assertNotNull(validationResponse);
@@ -72,8 +84,10 @@ public class JwtServiceTest {
 
     @Test
     void getsPublicKeyFromKms() throws JwtService.ValidationException {
+        config.put(Const.Config.AwsKmsJwtSigningKeyIdProp, "123");
+        config.put(Const.Config.AwsRegionProp, "ap-southeast-2");
 
-        JwtService service = new JwtService(Clock.systemUTC(), this.getBuilder(true, null)).withKmsKeyIdAndRegion("123", "ap-southeast-2");
+        JwtService service = new JwtService(config, Clock.systemUTC(), this.getBuilder(true, null));
         var validationResponse = service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
 
         assertNotNull(validationResponse);
@@ -85,7 +99,10 @@ public class JwtServiceTest {
 
     @Test
     void publicKeyReusedWithinExpiry() throws JwtService.ValidationException {
-        JwtService service = new JwtService(Clock.systemUTC(), this.getBuilder(true, null)).withKmsKeyIdAndRegion("123", "ap-southeast-2");
+        config.put(Const.Config.AwsKmsJwtSigningKeyIdProp, "123");
+        config.put(Const.Config.AwsRegionProp, "ap-southeast-2");
+
+        JwtService service = new JwtService(config, Clock.systemUTC(), this.getBuilder(true, null));
         service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
         service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
 
@@ -94,13 +111,18 @@ public class JwtServiceTest {
 
     @Test
     void throwsErrorIfNoKeyId() {
-        JwtService service = new JwtService().withKmsKeyIdAndRegion("", "");
+        config.put(Const.Config.AwsKmsJwtSigningKeyIdProp, "");
+        config.put(Const.Config.AwsRegionProp, "");
+
+        JwtService service = new JwtService(config, Clock.systemUTC(), this.getBuilder(true, null));
         var ex = assertThrows(JwtService.ValidationException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER));
         assertEquals("KeyId or Public key must be specified", ex.getMessage());
     }
     @Test
     void throwsErrorIfInvalidPublicKey() {
-        JwtService service = new JwtService().withPublicKey("Invalid key");
+        config.put(Const.Config.AwsKmsJwtSigningPublicKeyProp, "Invalid key");
+        JwtService service = new JwtService(config);
+
         var ex = assertThrows(JwtService.ValidationException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER));
         assertEquals("Unable to get public key. Validation can not continue", ex.getMessage());
     }

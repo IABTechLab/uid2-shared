@@ -7,13 +7,20 @@ import com.uid2.shared.Utils;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.services.kms.KmsClientBuilder;
 
 import java.io.ByteArrayInputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.SocketAddress;
+import java.net.*;
 import java.nio.file.Path;
 import java.util.Collections;
+
+import static com.uid2.shared.Const.Config.*;
+import static com.uid2.shared.Const.Config.AwsRegionProp;
 
 public class CloudUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudUtils.class);
@@ -102,6 +109,38 @@ public class CloudUtils {
         else return pathStr + "/";
     }
 
+    public static KmsClient getKmsClient(KmsClientBuilder kmsClientBuilder, JsonObject config) {
+        KmsClient client = null;
+
+        String accessKeyId = config.getString(AccessKeyIdProp);
+        String secretAccessKey = config.getString(SecretAccessKeyProp);
+        String s3Endpoint = config.getString(S3EndpointProp);
+        String awsRegion = config.getString(AwsRegionProp);
+
+        if (accessKeyId != null && !accessKeyId.isEmpty() && secretAccessKey != null && !secretAccessKey.isEmpty()) {
+            AwsBasicCredentials basicCredentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+
+            software.amazon.awssdk.auth.credentials.StaticCredentialsProvider.create(basicCredentials);
+            try {
+                client = kmsClientBuilder
+                        .endpointOverride(new URI(s3Endpoint))
+                        .region(Region.of(awsRegion))
+                        .credentialsProvider(StaticCredentialsProvider.create(basicCredentials))
+                        .build();
+            } catch (URISyntaxException e) {
+                LOGGER.error("Error creating KMS Client Builder using static credentials.", e);
+            }
+        } else {
+            InstanceProfileCredentialsProvider credentialsProvider = InstanceProfileCredentialsProvider.create();
+
+            client = kmsClientBuilder
+                    .region(Region.of(awsRegion))
+                    .credentialsProvider(credentialsProvider)
+                    .build();
+        }
+
+        return client;
+    }
     private static Proxy getDefaultProxy() {
         String httpProxy = System.getProperty("http_proxy");
         if (httpProxy != null && httpProxy.startsWith("socks5://")) {
