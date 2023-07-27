@@ -1,7 +1,6 @@
 package com.uid2.shared.secret;
 
 import com.uid2.shared.model.KeyGenerationResult;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -9,53 +8,56 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class KeyGenerationTest {
-    private IKeyGenerator generator;
-
-    @BeforeEach
-    void setUp() {
-        this.generator = new SecureKeyGenerator();
-    }
+    private static final IKeyGenerator GENERATOR = new SecureKeyGenerator();
+    private static final String KEY_PREFIX = "UID2-C-L-999-";
 
     @Test
-    void formattedKeyHasCorrectFormat() throws Exception {
-        KeyGenerationResult kgr = this.generator.generateFormattedKeyStringAndKeyHash(32);
-        assertAll("formattedKeyHasCorrectFormat",
-                () -> assertEquals(45, kgr.getKey().length()),
-                () -> assertEquals(".", kgr.getKey().substring(6, 7)),
-                () -> assertEquals(getKeyHashLength(32), kgr.getKeyHash().length()));
+    void keyGenerationHasCorrectFormat() throws Exception {
+        KeyGenerationResult kgr = GENERATOR.generateFormattedKeyStringAndKeyHash(KEY_PREFIX, 32);
+
+        assertAll("keyGenerationHasCorrectFormat",
+                () -> assertTrue(kgr.getKey().matches(KEY_PREFIX + ".{6}\\..{38}")),
+                () -> assertTrue(kgr.getKeyHash().matches(KEY_PREFIX + ".{" + getKeyHashLength(32) + "}")));
     }
 
     @ParameterizedTest
     @ValueSource(ints = {1, 2, 3})
-    void formattedShortKeyHasCorrectFormat(Integer length) throws Exception {
-        KeyGenerationResult kgr = this.generator.generateFormattedKeyStringAndKeyHash(length);
-        assertAll("formattedShortKeyHasCorrectFormat",
-                () -> assertEquals(4, kgr.getKey().length()),
-                () -> assertFalse(kgr.getKey().contains(".")),
-                () -> assertEquals(getKeyHashLength(length), kgr.getKeyHash().length()));
+    void shortKeyGenerationHasCorrectFormat(Integer length) throws Exception {
+        KeyGenerationResult kgr = GENERATOR.generateFormattedKeyStringAndKeyHash(KEY_PREFIX, length);
+
+        assertAll("shortKeyGenerationHasCorrectFormat",
+                () -> assertTrue(kgr.getKey().matches(KEY_PREFIX + ".{4}")),
+                () -> assertTrue(kgr.getKeyHash().matches(KEY_PREFIX + ".{" + getKeyHashLength(length) + "}")));
     }
 
     @Test
-    void formattedKeyFor4HasCorrectFormat() throws Exception {
-        KeyGenerationResult kgr = this.generator.generateFormattedKeyStringAndKeyHash(4);
-        assertAll("formattedKeyFor4HasCorrectFormat",
-                () -> assertEquals(9, kgr.getKey().length()),
-                () -> assertEquals(".", kgr.getKey().substring(6, 7)),
-                () -> assertEquals(getKeyHashLength(4), kgr.getKeyHash().length()));
+    void keyGenerationFor4HasCorrectFormat() throws Exception {
+        KeyGenerationResult kgr = GENERATOR.generateFormattedKeyStringAndKeyHash(KEY_PREFIX, 4);
+
+        assertAll("keyGenerationFor4HasCorrectFormat",
+                () -> assertTrue(kgr.getKey().matches(KEY_PREFIX + ".{6}\\..{2}")),
+                () -> assertTrue(kgr.getKeyHash().matches(KEY_PREFIX + ".{" + getKeyHashLength(4) + "}")));
     }
 
     @Test
     void inputKeyAndKeyHashMatch() {
         String inputKey = "UID2-C-L-999-ZGdWcr.FLCaY73+ELYYVhYQPcvMF+VVaPa38Zc0RTVFk=";
-        String keyHash = "P7MIM/IqqkdIKFnm7T6dFSlL5DdZOAi11ll5/kVZk9SPc/CsLxziRRfklj7hEcOi99GOB/ynxZIgZP0Pwf7dYQ==$qJ+O3DQmu2elWU+WvvFJZtiPJVIcNd507gkgptSCo4A=";
-        assertTrue(this.generator.compareFormattedKeyStringAndKeyHash(inputKey, keyHash));
+        String keyHash = "UID2-C-L-999-P7MIM/IqqkdIKFnm7T6dFSlL5DdZOAi11ll5/kVZk9SPc/CsLxziRRfklj7hEcOi99GOB/ynxZIgZP0Pwf7dYQ==$qJ+O3DQmu2elWU+WvvFJZtiPJVIcNd507gkgptSCo4A=";
+        assertTrue(GENERATOR.compareFormattedKeyStringAndKeyHash(inputKey, keyHash));
+    }
+
+    @Test
+    void inputKeyPrefixAndKeyHashPrefixDoNotMatch() {
+        String inputKey = "UID2-C-L-99-ZGdWcr.FLCaY73+ELYYVhYQPcvMF+VVaPa38Zc0RTVFk=";
+        String keyHash = "UID2-C-L-999-P7MIM/IqqkdIKFnm7T6dFSlL5DdZOAi11ll5/kVZk9SPc/CsLxziRRfklj7hEcOi99GOB/ynxZIgZP0Pwf7dYQ==$qJ+O3DQmu2elWU+WvvFJZtiPJVIcNd507gkgptSCo4A=";
+        assertFalse(GENERATOR.compareFormattedKeyStringAndKeyHash(inputKey, keyHash));
     }
 
     @Test
     void inputKeyAndKeyHashDoNotMatch() {
         String inputKey = "UID2-C-L-999-Zabcr.LCaY73ELYYVhYQPvMF+VaPa38Zc0RTVFk";
-        String keyHash = "P7MIM/IqqkdIKFnm7T6dFSlL5DdZOAi11ll5/kVZk9SPc/CsLxziRRfklj7hEcOi99GOB/ynxZIgZP0Pwf7dYQ==$qJ+O3DQmu2elWU+WvvFJZtiPJVIcNd507gkgptSCo4A=";
-        assertFalse(this.generator.compareFormattedKeyStringAndKeyHash(inputKey, keyHash));
+        String keyHash = "UID2-C-L-999-P7MIM/IqqkdIKFnm7T6dFSlL5DdZOAi11ll5/kVZk9SPc/CsLxziRRfklj7hEcOi99GOB/ynxZIgZP0Pwf7dYQ==$qJ+O3DQmu2elWU+WvvFJZtiPJVIcNd507gkgptSCo4A=";
+        assertFalse(GENERATOR.compareFormattedKeyStringAndKeyHash(inputKey, keyHash));
     }
 
     private int getKeyHashLength(int keyLen) {

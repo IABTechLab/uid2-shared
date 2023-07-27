@@ -28,7 +28,7 @@ public class SecureKeyGenerator implements IKeyGenerator {
     }
 
     @Override
-    public KeyGenerationResult generateFormattedKeyStringAndKeyHash(int keyLen) {
+    public KeyGenerationResult generateFormattedKeyStringAndKeyHash(String keyPrefix, int keyLen) {
         String key = this.generateRandomKeyString(keyLen);
         String formattedKey = key.length() >= 6 ? new StringBuilder(key).insert(6, ".").toString() : key;
 
@@ -39,20 +39,25 @@ public class SecureKeyGenerator implements IKeyGenerator {
         md.update(saltBytes);
         byte[] hashBytes = md.digest(keyBytes); // This will always generate a byte array of length 512 (64 bytes)
 
-        String hash = Utils.toBase64String(hashBytes); // This will always generate a String with 88 chars (86 + 2 padding)
+        String hash = keyPrefix + Utils.toBase64String(hashBytes); // This will always convert the hashBytes to a String with 88 chars (86 + 2 padding)
         String salt = Utils.toBase64String(saltBytes);
         String keyHash = String.format("%s$%s", hash, salt);
 
-        return new KeyGenerationResult(formattedKey, keyHash);
+        return new KeyGenerationResult(keyPrefix + formattedKey, keyPrefix + keyHash);
     }
 
     @Override
-    public boolean compareFormattedKeyStringAndKeyHash(String formattedKey, String keyHash) {
-        String inputKey = formattedKey.substring(formattedKey.lastIndexOf("-") + 1).replace(".", "");
-        byte[] inputKeyBytes = Utils.decodeBase64String(inputKey);
+    public boolean compareFormattedKeyStringAndKeyHash(String formattedInputKey, String keyHash) {
+        if (!getPrefix(formattedInputKey).equals(getPrefix(keyHash))) {
+            return false;
+        }
 
-        byte[] hashBytes = Utils.decodeBase64String(keyHash.split("\\$")[0]);
-        byte[] saltBytes = Utils.decodeBase64String(keyHash.split("\\$")[1]);
+        String rawInputKey = removePrefix(formattedInputKey);
+        byte[] inputKeyBytes = Utils.decodeBase64String(rawInputKey);
+
+        String rawKeyHash = removePrefix(keyHash);
+        byte[] hashBytes = Utils.decodeBase64String(rawKeyHash.split("\\$")[0]);
+        byte[] saltBytes = Utils.decodeBase64String(rawKeyHash.split("\\$")[1]);
 
         MessageDigest md = createMessageDigest();
         md.update(saltBytes);
@@ -67,5 +72,13 @@ public class SecureKeyGenerator implements IKeyGenerator {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String getPrefix(String s) {
+        return s.substring(0, s.lastIndexOf("-"));
+    }
+
+    private String removePrefix(String s) {
+        return s.substring(getPrefix(s).length() + 1).replace(".", "");
     }
 }
