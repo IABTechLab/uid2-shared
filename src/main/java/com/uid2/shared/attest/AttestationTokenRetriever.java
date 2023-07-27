@@ -35,11 +35,11 @@ public class AttestationTokenRetriever {
     private final HttpClient httpClient;
     private final IClock clock;
     private ScheduledThreadPoolExecutor executor;
+    private boolean isExpiryCheckScheduled = false;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
     private final Lock lock;
     private final AttestationTokenDecryptor attestationTokenDecryptor;
-
 
     public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion, IAttestationProvider attestationProvider,
                                      Handler<Integer> responseWatcher, IClock clock, HttpClient httpClient,
@@ -82,17 +82,24 @@ public class AttestationTokenRetriever {
             catch (AttestationTokenRetrieverException | IOException e) {
                 notifyResponseStatusWatcher(401);
                 LOGGER.info("Re-attest failed: ", e.getMessage());
+                scheduleAttestationExpirationCheck();
             }
         }
     }
 
-    private void scheduleAttestationExpirationCheck() {
-        // Schedule the task to run every minute
-        executor.scheduleAtFixedRate(this::attestationExpirationCheck, 0, TimeUnit.MINUTES.toMillis(1), TimeUnit.MILLISECONDS);
+    public void scheduleAttestationExpirationCheck() {
+        if (!this.isExpiryCheckScheduled) {
+            // Schedule the task to run every minute
+            this.executor.scheduleAtFixedRate(this::attestationExpirationCheck, 0, TimeUnit.MINUTES.toMillis(1), TimeUnit.MILLISECONDS);
+            this.isExpiryCheckScheduled = true;
+        }
     }
 
     private void stopAttestationExpirationCheck() {
-        executor.shutdown();
+        if (this.isExpiryCheckScheduled) {
+            this.executor.shutdown();
+            this.isExpiryCheckScheduled = false;
+        }
     }
 
     public void attest() throws IOException, AttestationTokenRetrieverException {
