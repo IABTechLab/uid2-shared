@@ -37,7 +37,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void testAttestInternalSuccess() throws Exception {
+    public void AttestInternal_Succeed_AttestationTokenSet() throws Exception {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         JsonObject content = new JsonObject();
@@ -60,7 +60,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void testAttestInternalScheduleExpiryCheck() throws Exception {
+    public void AttestInternal_Succeed_ExpiryCheckScheduled() throws Exception {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         JsonObject content = new JsonObject();
@@ -83,7 +83,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void testAttestInternalFailedWithoutAttestationToken() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
+    public void AttestInternal_ResponseBodyHasNoAttestationToken_ExceptionThrown() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         JsonObject content = new JsonObject();
@@ -108,7 +108,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void testAttestInternalFailedWithoutExpiredAt() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
+    public void AttestAttestInternal_ResponseBodyHasNoExpiredAt_ExceptionThrown() throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         JsonObject content = new JsonObject();

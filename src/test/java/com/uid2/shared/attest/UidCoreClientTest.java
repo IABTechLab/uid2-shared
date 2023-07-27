@@ -57,7 +57,7 @@ public class UidCoreClientTest{
     }
 
     @Test
-    public void testDownloadWhenSucceed() throws IOException, CloudStorageException, InterruptedException {
+    public void Download_Succeed_RequestSentWithExpectedParameters() throws IOException, CloudStorageException, InterruptedException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
 
         when(attestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
@@ -84,7 +84,7 @@ public class UidCoreClientTest{
     }
 
     @Test
-    public void testDownloadWhenEnforceHttps() {
+    public void Download_EnforceHttpWhenPathNoHttps_ExceptionThrown() {
         when(attestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
         uidCoreClient.setAttestationTokenRetriever(attestationTokenRetriever);
         uidCoreClient.setEnforceHttps(true);
@@ -97,7 +97,7 @@ public class UidCoreClientTest{
     }
 
     @Test
-    public void testDownloadWhenAttestInternalFailed() throws IOException, AttestationTokenRetrieverException {
+    public void Download_AttestInternalFail_ExceptionThrown() throws IOException, AttestationTokenRetrieverException {
         AttestationTokenRetrieverException exception = new AttestationTokenRetrieverException(401, "test failure");
         doThrow(exception).when(attestationTokenRetriever).attestInternal();
         uidCoreClient.setAttestationTokenRetriever(attestationTokenRetriever);
@@ -110,7 +110,7 @@ public class UidCoreClientTest{
     }
 
     @Test
-    public void testDownloadWhenAttest401() throws CloudStorageException, IOException, InterruptedException, AttestationTokenRetrieverException {
+    public void Download_Attest401_AttestInternalCalledTwice() throws CloudStorageException, IOException, InterruptedException, AttestationTokenRetrieverException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.statusCode()).thenReturn(401);
 
