@@ -116,11 +116,6 @@ public class AttestationTokenRetriever {
                     .POST(HttpRequest.BodyPublishers.ofString(requestJson.toString(), StandardCharsets.UTF_8))
                     .build();
 
-//            connection.setDoOutput(true);
-//            try (OutputStream request = connection.getOutputStream()) {
-//                request.write(requestJson.toString().getBytes(StandardCharsets.UTF_8));
-//            }
-
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
             int statusCode = response.statusCode();
