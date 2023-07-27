@@ -34,21 +34,17 @@ public class JwtService {
     private static final Integer cacheIntervalInSeconds = 3600;
     private final Clock clock;
     private final KmsClientBuilder kmsClientBuilder;
-    private final String audience;
-    private final String issuer;
     private String localPublicKey;
     private String kmsKeyId;
     private String kmsRegion;
 
     private KmsClient kmsClient = null;
 
-    public JwtService(String audience, String issuer) {
-        this(audience, issuer, Clock.systemUTC(), KmsClient.builder());
+    public JwtService() {
+        this(Clock.systemUTC(), KmsClient.builder());
     }
 
-    public JwtService(String audience, String issuer, Clock clock, KmsClientBuilder kmsClientBuilder) {
-        this.audience = audience;
-        this.issuer = issuer;
+    public JwtService(Clock clock, KmsClientBuilder kmsClientBuilder) {
         this.clock = clock;
         this.kmsClientBuilder = kmsClientBuilder;
     }
@@ -83,7 +79,7 @@ public class JwtService {
      * If the Key Id is set, and validation fails, will try once to retrieve the public key again from AWS to validate
      * This is so that if they key is rotated, we don't have to wait for the cache expiry before validation passes
      */
-    public JwtValidationResponse validateJwt(String jwt) throws ValidationException {
+    public JwtValidationResponse validateJwt(String jwt, String audience, String issuer) throws ValidationException {
         JwtValidationResponse response = new JwtValidationResponse(false);
 
         PublicKey key = this.getPublicKey();
@@ -94,8 +90,8 @@ public class JwtService {
 
         var tokenVerifier = TokenVerifier.newBuilder()
                 .setPublicKey(key)
-                .setAudience(this.audience)
-                .setIssuer(this.issuer)
+                .setAudience(audience)
+                .setIssuer(issuer)
                 .build();
 
         try {
@@ -174,7 +170,6 @@ public class JwtService {
                 this.kmsClient = this.kmsClientBuilder
                         .region(Region.of(this.kmsRegion))
                         .credentialsProvider(InstanceProfileCredentialsProvider.create())
-                        //.credentialsProvider(ProfileCredentialsProvider.create("saml"))
                         .build();
             }
 
