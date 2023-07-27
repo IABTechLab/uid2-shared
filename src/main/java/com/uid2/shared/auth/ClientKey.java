@@ -15,6 +15,7 @@ import java.util.Set;
 
 public class ClientKey implements IRoleAuthorizable<Role> {
     private final String key;
+    private final String keyHash;
     private final String secret;
     private final byte[] secretBytes;
     private String name;
@@ -25,8 +26,9 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     private int siteId;
     private boolean disabled;
 
-    public ClientKey(String key, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId, boolean disabled) {
+    public ClientKey(String key, String keyHash, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId, boolean disabled) {
         this.key = key;
+        this.keyHash = keyHash;
         this.secret = secret;
         this.secretBytes = Utils.decodeBase64String(secret);
         this.name = name;
@@ -37,20 +39,22 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         this.disabled = disabled;
     }
 
-    public ClientKey(String key, String secret, String contact, Role... roles) {
-        this(key, secret, contact, contact, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false);
+    public ClientKey(String key, String keyHash, String secret, String contact, Role... roles) {
+        this(key, keyHash, secret, contact, contact, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false);
     }
 
-    public ClientKey(String key, String secret, Instant created) {
+    public ClientKey(String key, String keyHash, String secret, Instant created) {
         this.key = key;
+        this.keyHash = keyHash;
         this.secret = secret;
         this.secretBytes = Utils.decodeBase64String(secret);
         this.created = created.getEpochSecond();
         this.siteId = -1;
     }
 
-    public ClientKey(String key, String secret) {
+    public ClientKey(String key, String keyHash, String secret) {
         this.key = key;
+        this.keyHash = keyHash;
         this.secret = secret;
         this.secretBytes = Utils.decodeBase64String(secret);
         created = Instant.parse("2021-01-01T00:00:00.000Z").getEpochSecond();
@@ -60,6 +64,7 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     public static ClientKey valueOf(JsonObject json) {
         return new ClientKey(
                 json.getString("key"),
+                json.getString("key_hash"),
                 json.getString("secret"),
                 json.getString("name"),
                 json.getString("contact"),
@@ -72,6 +77,10 @@ public class ClientKey implements IRoleAuthorizable<Role> {
 
     public String getKey() {
         return key;
+    }
+
+    public String getKeyHash() {
+        return keyHash;
     }
 
     public String getSecret() {
@@ -160,6 +169,7 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         ClientKey b = (ClientKey) o;
 
         return this.key.equals(b.key)
+                && this.keyHash.equals(b.keyHash)
                 && this.secret.equals(b.secret)
                 && this.name.equals(b.name)
                 && this.contact.equals(b.contact)
@@ -172,6 +182,6 @@ public class ClientKey implements IRoleAuthorizable<Role> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, secret, name, contact, roles, created, siteId, disabled, Arrays.hashCode(secretBytes));
+        return Objects.hash(key, keyHash, secret, name, contact, roles, created, siteId, disabled, Arrays.hashCode(secretBytes));
     }
 }

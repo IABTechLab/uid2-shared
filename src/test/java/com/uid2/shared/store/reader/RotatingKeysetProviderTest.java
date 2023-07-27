@@ -115,7 +115,7 @@ public class RotatingKeysetProviderTest {
 
     }
     private ClientKey makeClientKey(int siteId) {
-        return new ClientKey("test-client-key", Utils.toBase64String("test-client-secret".getBytes(StandardCharsets.UTF_8))).withSiteId(siteId);
+        return new ClientKey("test-client-key", "test-client-keyHash", Utils.toBase64String("test-client-secret".getBytes(StandardCharsets.UTF_8))).withSiteId(siteId);
     }
     private KeysetKey makeKey(int keysetId) {
         return new KeysetKey(0, null, null, null, null, keysetId);

@@ -39,7 +39,7 @@ public class SecureKeyGenerator implements IKeyGenerator {
         md.update(saltBytes);
         byte[] hashBytes = md.digest(keyBytes); // This will always generate a byte array of length 512 (64 bytes)
 
-        String hash = keyPrefix + Utils.toBase64String(hashBytes); // This will always convert the hashBytes to a String with 88 chars (86 + 2 padding)
+        String hash = Utils.toBase64String(hashBytes); // This will always convert the hashBytes to a String with 88 chars (86 + 2 padding)
         String salt = Utils.toBase64String(saltBytes);
         String keyHash = String.format("%s$%s", hash, salt);
 

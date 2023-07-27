@@ -160,7 +160,7 @@ public class RequestCapturingHandlerTest {
         // Arguments are: routing context data key, routing context data value, site ID tag.
         return Stream.of(
                 Arguments.of(Const.RoutingContextData.SiteId, 100, "100"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new ClientKey("key", "secret").withSiteId(200), "200"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new ClientKey("key", "keyHash", "secret").withSiteId(200), "200"),
                 Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("key", "name", "contact", "protocol", 0, false), "null"),
                 Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("key", "name", "contact", "protocol", 0, false, 300), "300"),
                 Arguments.of(null, null, "null")
