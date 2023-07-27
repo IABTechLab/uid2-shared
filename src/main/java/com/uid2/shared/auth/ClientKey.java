@@ -15,6 +15,7 @@ import java.util.Set;
 
 public class ClientKey implements IRoleAuthorizable<Role> {
     private final String key;
+    @JsonProperty("key_hash")
     private final String keyHash;
     private final String secret;
     private final byte[] secretBytes;

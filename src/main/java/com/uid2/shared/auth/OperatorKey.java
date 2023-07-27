@@ -9,6 +9,8 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private static final OperatorType DEFAULT_OPERATOR_TYPE = OperatorType.PRIVATE;
 
     private final String key;
+    @JsonProperty("key_hash")
+    private final String keyHash;
     private final String name;
     private final String contact;
     private final String protocol;
@@ -20,8 +22,9 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     @JsonProperty("operator_type")
     private OperatorType operatorType;
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) {
+    public OperatorKey(String key, String keyHash, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) {
         this.key = key;
+        this.keyHash = keyHash;
         this.name = name;
         this.contact = contact;
         this.protocol = protocol;
@@ -32,21 +35,22 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.operatorType = operatorType;
     }
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
-        this(key, name, contact, protocol, created, disabled, siteId, roles, DEFAULT_OPERATOR_TYPE);
+    public OperatorKey(String key, String keyHash, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
+        this(key, keyHash, name, contact, protocol, created, disabled, siteId, roles, DEFAULT_OPERATOR_TYPE);
     }
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
-        this(key, name, contact, protocol, created, disabled, siteId, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
+    public OperatorKey(String key, String keyHash, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
+        this(key, keyHash, name, contact, protocol, created, disabled, siteId, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
     }
 
-    public OperatorKey(String key, String name, String contact, String protocol, long created, boolean disabled) {
-        this(key, name, contact, protocol, created, disabled, null, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
+    public OperatorKey(String key, String keyHash, String name, String contact, String protocol, long created, boolean disabled) {
+        this(key, keyHash, name, contact, protocol, created, disabled, null, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
     }
 
     public static OperatorKey valueOf(JsonObject json) {
         return new OperatorKey(
                 json.getString("key"),
+                json.getString("key_hash"),
                 json.getString("name"),
                 json.getString("contact"),
                 json.getString("protocol"),
@@ -60,6 +64,10 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
 
     public String getKey() {
         return key;
+    }
+
+    public String getKeyHash() {
+        return keyHash;
     }
 
     public String getName() {
@@ -148,6 +156,7 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
 
         // Compare the data members and return accordingly
         return this.key.equals(b.key)
+                && this.keyHash.equals(b.keyHash)
                 && this.name.equals(b.name)
                 && this.contact.equals(b.contact)
                 && this.protocol.equals(b.protocol)
@@ -160,6 +169,6 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, name, contact, protocol, created, disabled, siteId, roles, operatorType);
+        return Objects.hash(key, keyHash, name, contact, protocol, created, disabled, siteId, roles, operatorType);
     }
 }
