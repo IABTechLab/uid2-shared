@@ -6,8 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.concurrent.TimeUnit;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 public class KeyGenerationTest {
@@ -47,23 +45,17 @@ public class KeyGenerationTest {
     }
 
     @Test
-    void compare() {
+    void inputKeyAndKeyHashMatch() {
         String inputKey = "UID2-C-L-999-ZGdWcr.FLCaY73+ELYYVhYQPcvMF+VVaPa38Zc0RTVFk=";
         String keyHash = "P7MIM/IqqkdIKFnm7T6dFSlL5DdZOAi11ll5/kVZk9SPc/CsLxziRRfklj7hEcOi99GOB/ynxZIgZP0Pwf7dYQ==$qJ+O3DQmu2elWU+WvvFJZtiPJVIcNd507gkgptSCo4A=";
         assertTrue(this.generator.compareFormattedKeyStringAndKeyHash(inputKey, keyHash));
     }
 
     @Test
-    void compareBm() throws Exception {
-        long startTime = System.nanoTime();
-        for (int i = 0; i < 10000; i++) {
-            KeyGenerationResult kgr = this.generator.generateFormattedKeyStringAndKeyHash(32);
-            String inputKey = "UID2-C-L-999-" + kgr.getKey();
-            String keyHash = kgr.getKeyHash();
-            assertTrue(this.generator.compareFormattedKeyStringAndKeyHash(inputKey, keyHash));
-        }
-        long duration = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
-        System.out.println("Duration = " + duration);
+    void inputKeyAndKeyHashDoNotMatch() {
+        String inputKey = "UID2-C-L-999-Zabcr.LCaY73ELYYVhYQPvMF+VaPa38Zc0RTVFk";
+        String keyHash = "P7MIM/IqqkdIKFnm7T6dFSlL5DdZOAi11ll5/kVZk9SPc/CsLxziRRfklj7hEcOi99GOB/ynxZIgZP0Pwf7dYQ==$qJ+O3DQmu2elWU+WvvFJZtiPJVIcNd507gkgptSCo4A=";
+        assertFalse(this.generator.compareFormattedKeyStringAndKeyHash(inputKey, keyHash));
     }
 
     private int getKeyHashLength(int keyLen) {
