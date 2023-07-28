@@ -54,7 +54,8 @@ public class AttestationMiddleware {
 
             final IAuthorizable profile = AuthMiddleware.getAuthClient(rc);
             if (profile instanceof OperatorKey) {
-                final String protocol = ((OperatorKey) profile).getProtocol();
+                OperatorKey operatorKey = (OperatorKey)profile;
+                final String protocol = operatorKey.getProtocol();
                 final String userToken = AuthMiddleware.getAuthToken(rc);
                 final String jwt = getAttestationJWT(rc);
 
@@ -67,12 +68,14 @@ public class AttestationMiddleware {
                 }
 
                 if (success) {
-                    try {
-                        JwtValidationResponse response = jwtService.validateJwt(jwt, this.jwtAudience, this.jwtIssuer);
-                        success = response.getIsValid();
-                    } catch (JwtService.ValidationException e) {
-                        LOGGER.error("Error validating JWT. Attestation failed.", e);
-                        success = false;
+                    if ((jwt != null && !jwt.isEmpty())) {
+                        try {
+                            JwtValidationResponse response = jwtService.validateJwt(jwt, this.jwtAudience, this.jwtIssuer);
+                            success = response.getIsValid();
+                        } catch (JwtService.ValidationException e) {
+                            LOGGER.error("Error validating JWT. Attestation failed.", e);
+                            success = false;
+                        }
                     }
                 }
             }
