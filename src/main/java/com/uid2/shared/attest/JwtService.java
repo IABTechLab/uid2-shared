@@ -1,6 +1,6 @@
 package com.uid2.shared.attest;
 
-import java.io.IOException;
+import java.net.URISyntaxException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -10,16 +10,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
-import com.google.common.io.BaseEncoding;
 import com.uid2.shared.Const;
 import com.uid2.shared.cloud.CloudUtils;
 import io.vertx.core.json.JsonObject;
-import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
-import software.amazon.awssdk.core.SdkBytes;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.kms.KmsClient;
 import software.amazon.awssdk.services.kms.KmsClientBuilder;
 import software.amazon.awssdk.services.kms.model.*;
@@ -28,9 +22,6 @@ import com.google.api.client.json.webtoken.JsonWebToken;
 import com.google.auth.oauth2.TokenVerifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.uid2.shared.Const.Config.*;
-import static com.uid2.shared.Const.Config.AwsRegionProp;
 
 public class JwtService {
 
@@ -59,7 +50,7 @@ public class JwtService {
         if (publicKey != null && !publicKey.isEmpty()) {
             this.setPublicKey(publicKey);
         } else {
-            this.setKmsKeyIdAndRegion(config.getString(AwsKmsJwtSigningKeyIdProp), config.getString(AwsRegionProp));
+            this.setKmsKeyIdAndRegion(config.getString(Const.Config.AwsKmsJwtSigningKeyIdProp), config.getString(Const.Config.AwsRegionProp));
         }
     }
 
@@ -196,7 +187,7 @@ public class JwtService {
             } else {
                 LOGGER.error("Error response from AWS KMS: Response Code: {}, Response Text: {}", response.sdkHttpResponse().statusCode(), response.sdkHttpResponse().statusText());
             }
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | URISyntaxException e) {
             LOGGER.error("Error getting Public Key from KMS", e);
         }
         return null;

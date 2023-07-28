@@ -19,9 +19,6 @@ import java.net.*;
 import java.nio.file.Path;
 import java.util.Collections;
 
-import static com.uid2.shared.Const.Config.*;
-import static com.uid2.shared.Const.Config.AwsRegionProp;
-
 public class CloudUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudUtils.class);
     public static Proxy defaultProxy = getDefaultProxy();
@@ -109,18 +106,18 @@ public class CloudUtils {
         else return pathStr + "/";
     }
 
-    public static KmsClient getKmsClient(KmsClientBuilder kmsClientBuilder, JsonObject config) {
+    public static KmsClient getKmsClient(KmsClientBuilder kmsClientBuilder, JsonObject config) throws URISyntaxException {
         KmsClient client = null;
 
-        String accessKeyId = config.getString(AccessKeyIdProp);
-        String secretAccessKey = config.getString(SecretAccessKeyProp);
-        String s3Endpoint = config.getString(S3EndpointProp);
-        String awsRegion = config.getString(AwsRegionProp);
+        String accessKeyId = config.getString(Const.Config.AccessKeyIdProp);
+        String secretAccessKey = config.getString(Const.Config.SecretAccessKeyProp);
+        String s3Endpoint = config.getString(Const.Config.S3EndpointProp);
+        String awsRegion = config.getString(Const.Config.AwsRegionProp);
 
         if (accessKeyId != null && !accessKeyId.isEmpty() && secretAccessKey != null && !secretAccessKey.isEmpty()) {
             AwsBasicCredentials basicCredentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
 
-            software.amazon.awssdk.auth.credentials.StaticCredentialsProvider.create(basicCredentials);
+            StaticCredentialsProvider.create(basicCredentials);
             try {
                 client = kmsClientBuilder
                         .endpointOverride(new URI(s3Endpoint))
@@ -129,6 +126,7 @@ public class CloudUtils {
                         .build();
             } catch (URISyntaxException e) {
                 LOGGER.error("Error creating KMS Client Builder using static credentials.", e);
+                throw e;
             }
         } else {
             InstanceProfileCredentialsProvider credentialsProvider = InstanceProfileCredentialsProvider.create();
