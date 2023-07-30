@@ -46,16 +46,18 @@ public class RotatingClientSideKeypairStoreTest {
     private ClientSideKeypair addKeypair(JsonArray content, String subscriptionId, String publicKey, String privateKey, Integer siteId, String contact, Instant created, boolean disabled) {
         long created_secs = created.getEpochSecond();
 
+        ClientSideKeypair k = new ClientSideKeypair(subscriptionId, publicKey.getBytes(), privateKey.getBytes(), siteId, contact, Instant.ofEpochSecond(created_secs), disabled, "UID2-X-T-", "UID2-Y-T-");
+
         JsonObject keypair = new JsonObject();
         keypair.put("subscription_id", subscriptionId);
-        keypair.put("public_key", publicKey.getBytes());
-        keypair.put("private_key", privateKey.getBytes());
+        keypair.put("public_key", k.encodePublicKeyToString());
+        keypair.put("private_key", k.encodePrivateKeyToString());
         keypair.put("site_id", siteId);
         keypair.put("contact", contact);
         keypair.put("created", created.getEpochSecond());
         keypair.put("disabled", disabled);
         content.add(keypair);
-        return new ClientSideKeypair(subscriptionId, publicKey.getBytes(), privateKey.getBytes(), siteId, contact, Instant.ofEpochSecond(created_secs), disabled);
+        return k;
     }
 
     @Test

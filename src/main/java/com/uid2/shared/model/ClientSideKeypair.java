@@ -2,6 +2,7 @@ package com.uid2.shared.model;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Objects;
 
 public class ClientSideKeypair {
@@ -18,7 +19,10 @@ public class ClientSideKeypair {
 
     private final boolean disabled;
 
-    public ClientSideKeypair(String subscriptionId, byte[] publicKeyBytes, byte[] privateKeyBytes, int siteId, String contact, Instant created, boolean disabled){
+    private final String publicKeyPrefix;
+    private final String privateKeyPrefix;
+
+    public ClientSideKeypair(String subscriptionId, byte[] publicKeyBytes, byte[] privateKeyBytes, int siteId, String contact, Instant created, boolean disabled, String publicKeyPrefix, String privateKeyPrefix){
         this.subscriptionId = subscriptionId;
         this.publicKeyBytes = publicKeyBytes;
         this.privateKeyBytes = privateKeyBytes;
@@ -26,6 +30,16 @@ public class ClientSideKeypair {
         this.contact = contact;
         this.created = created;
         this.disabled = disabled;
+        this.publicKeyPrefix = publicKeyPrefix;
+        this.privateKeyPrefix = privateKeyPrefix;
+    }
+
+    public String getPublicKeyPrefix() {
+        return publicKeyPrefix;
+    }
+
+    public String getPrivateKeyPrefix() {
+        return privateKeyPrefix;
     }
 
     public String getSubscriptionId() {
@@ -38,6 +52,14 @@ public class ClientSideKeypair {
 
     public byte[] getPrivateKeyBytes() {
         return privateKeyBytes;
+    }
+
+    public String encodePublicKeyToString() {
+        return publicKeyPrefix + Base64.getEncoder().encodeToString(publicKeyBytes);
+    }
+
+    public String encodePrivateKeyToString() {
+        return privateKeyPrefix + Base64.getEncoder().encodeToString(privateKeyBytes);
     }
 
     public int getSiteId() {
