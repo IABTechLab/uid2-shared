@@ -7,6 +7,8 @@ import java.util.Objects;
 
 public class ClientSideKeypair {
 
+    public static final int KEYPAIR_KEY_PREFIX_LENGTH = 9;
+
     private final String subscriptionId;
     private final byte[] publicKeyBytes;
     private final byte[] privateKeyBytes;
@@ -91,12 +93,14 @@ public class ClientSideKeypair {
                 && this.siteId == b.siteId
                 && this.created.equals(b.created)
                 && this.contact.equals(b.contact)
-                && this.disabled == b.disabled;
+                && this.disabled == b.disabled
+                && this.publicKeyPrefix.equals(b.publicKeyPrefix)
+                && this.privateKeyPrefix.equals(b.privateKeyPrefix);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(subscriptionId, Arrays.hashCode(publicKeyBytes), Arrays.hashCode(privateKeyBytes), siteId, created, contact, disabled);
+        return Objects.hash(subscriptionId, Arrays.hashCode(publicKeyBytes), Arrays.hashCode(privateKeyBytes), siteId, created, contact, disabled, publicKeyPrefix, privateKeyPrefix);
     }
 
 }

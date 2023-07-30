@@ -29,14 +29,14 @@ public class ClientSideKeypairParser implements Parser<IClientSideKeypairStore.I
             Instant created = Instant.ofEpochSecond(pairSpec.getLong("created"));
             ClientSideKeypair keypair = new ClientSideKeypair(
                     subscriptionId,
-                    Base64.getDecoder().decode(pairSpec.getString("public_key").substring(9)),
-                    Base64.getDecoder().decode(pairSpec.getString("private_key").substring(9)),
+                    Base64.getDecoder().decode(pairSpec.getString("public_key").substring(ClientSideKeypair.KEYPAIR_KEY_PREFIX_LENGTH)),
+                    Base64.getDecoder().decode(pairSpec.getString("private_key").substring(ClientSideKeypair.KEYPAIR_KEY_PREFIX_LENGTH)),
                     siteId,
                     contact,
                     created,
                     disabled,
-                    pairSpec.getString("public_key").substring(0, 9),
-                    pairSpec.getString("private_key").substring(0, 9)
+                    pairSpec.getString("public_key").substring(0, ClientSideKeypair.KEYPAIR_KEY_PREFIX_LENGTH),
+                    pairSpec.getString("private_key").substring(0, ClientSideKeypair.KEYPAIR_KEY_PREFIX_LENGTH)
             );
             keypairMap.put(subscriptionId, keypair);
             siteKeypairMap.computeIfAbsent(siteId, id -> new ArrayList<>());
