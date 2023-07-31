@@ -32,26 +32,17 @@ public class ClientSideKeypairStoreSnapshot implements IClientSideKeypairStore.I
 
     @Override
     public ClientSideKeypair getKeypair(String subscriptionId) {
-        try {
-            return this.keypairMap.get(subscriptionId);
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("Subscription ID " + subscriptionId + " not supported");
-        }
+        return this.keypairMap.get(subscriptionId);
     }
 
     @Override
     public List<ClientSideKeypair> getSiteKeypairs(int sideId) {
-        try {
-            return siteKeypairMap.get(sideId);
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("Site ID " + String.valueOf(sideId) + " not supported");
-        }
+        return siteKeypairMap.get(sideId);
     }
 
     @Override
     public List<ClientSideKeypair> getEnabledKeypairs() {
         return this.enabledKeypairs;
     }
-
 
 }

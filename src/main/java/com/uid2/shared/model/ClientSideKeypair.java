@@ -1,5 +1,12 @@
 package com.uid2.shared.model;
 
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
@@ -10,8 +17,8 @@ public class ClientSideKeypair {
     public static final int KEYPAIR_KEY_PREFIX_LENGTH = 9;
 
     private final String subscriptionId;
-    private final byte[] publicKeyBytes;
-    private final byte[] privateKeyBytes;
+    private final PublicKey publicKey;
+    private final PrivateKey privateKey;
 
     private final int siteId;
 
@@ -24,16 +31,28 @@ public class ClientSideKeypair {
     private final String publicKeyPrefix;
     private final String privateKeyPrefix;
 
-    public ClientSideKeypair(String subscriptionId, byte[] publicKeyBytes, byte[] privateKeyBytes, int siteId, String contact, Instant created, boolean disabled, String publicKeyPrefix, String privateKeyPrefix){
+    public ClientSideKeypair(String subscriptionId, String publicKeyString, String privateKeyString, int siteId, String contact, Instant created, boolean disabled){
         this.subscriptionId = subscriptionId;
-        this.publicKeyBytes = publicKeyBytes;
-        this.privateKeyBytes = privateKeyBytes;
         this.siteId = siteId;
         this.contact = contact;
         this.created = created;
         this.disabled = disabled;
-        this.publicKeyPrefix = publicKeyPrefix;
-        this.privateKeyPrefix = privateKeyPrefix;
+        try {
+            this.publicKeyPrefix = publicKeyString.substring(0, KEYPAIR_KEY_PREFIX_LENGTH);
+            final KeyFactory kf = KeyFactory.getInstance("EC");
+            final X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyString.substring(KEYPAIR_KEY_PREFIX_LENGTH)));
+            this.publicKey = kf.generatePublic(keySpec);
+        } catch (Exception e) {
+            throw new RuntimeException("bad public key");
+        }
+        try {
+            this.privateKeyPrefix = privateKeyString.substring(0, KEYPAIR_KEY_PREFIX_LENGTH);
+            final KeyFactory kf = KeyFactory.getInstance("EC");
+            final PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(privateKeyString.substring(KEYPAIR_KEY_PREFIX_LENGTH)));
+            this.privateKey = kf.generatePrivate(keySpec);
+        } catch (Exception e) {
+            throw new RuntimeException("bad private key");
+        }
     }
 
     public String getPublicKeyPrefix() {
@@ -48,20 +67,20 @@ public class ClientSideKeypair {
         return subscriptionId;
     }
 
-    public byte[] getPublicKeyBytes() {
-        return publicKeyBytes;
+    public PublicKey getPublicKey()  {
+        return publicKey;
     }
 
-    public byte[] getPrivateKeyBytes() {
-        return privateKeyBytes;
+    public PrivateKey getPrivateKey() {
+        return privateKey;
     }
 
     public String encodePublicKeyToString() {
-        return publicKeyPrefix + Base64.getEncoder().encodeToString(publicKeyBytes);
+        return publicKeyPrefix + Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }
 
     public String encodePrivateKeyToString() {
-        return privateKeyPrefix + Base64.getEncoder().encodeToString(privateKeyBytes);
+        return privateKeyPrefix + Base64.getEncoder().encodeToString(privateKey.getEncoded());
     }
 
     public int getSiteId() {
@@ -88,8 +107,8 @@ public class ClientSideKeypair {
 
         ClientSideKeypair b = (ClientSideKeypair) o;
         return this.subscriptionId.equals(b.subscriptionId)
-                && Arrays.equals(this.publicKeyBytes, b.publicKeyBytes)
-                && Arrays.equals(this.privateKeyBytes, b.privateKeyBytes)
+                && Arrays.equals(this.publicKey.getEncoded(), b.publicKey.getEncoded())
+                && Arrays.equals(this.privateKey.getEncoded(), b.privateKey.getEncoded())
                 && this.siteId == b.siteId
                 && this.created.equals(b.created)
                 && this.contact.equals(b.contact)
@@ -100,7 +119,7 @@ public class ClientSideKeypair {
 
     @Override
     public int hashCode() {
-        return Objects.hash(subscriptionId, Arrays.hashCode(publicKeyBytes), Arrays.hashCode(privateKeyBytes), siteId, created, contact, disabled, publicKeyPrefix, privateKeyPrefix);
+        return Objects.hash(subscriptionId, Arrays.hashCode(publicKey.getEncoded()), Arrays.hashCode(privateKey.getEncoded()), siteId, created, contact, disabled, publicKeyPrefix, privateKeyPrefix);
     }
 
 }

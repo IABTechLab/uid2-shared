@@ -46,7 +46,7 @@ public class RotatingClientSideKeypairStoreTest {
     private ClientSideKeypair addKeypair(JsonArray content, String subscriptionId, String publicKey, String privateKey, Integer siteId, String contact, Instant created, boolean disabled) {
         long created_secs = created.getEpochSecond();
 
-        ClientSideKeypair k = new ClientSideKeypair(subscriptionId, publicKey.getBytes(), privateKey.getBytes(), siteId, contact, Instant.ofEpochSecond(created_secs), disabled, "UID2-X-T-", "UID2-Y-T-");
+        ClientSideKeypair k = new ClientSideKeypair(subscriptionId, "UID2-X-T-" + publicKey, "UID2-Y-T-" + privateKey, siteId, contact, Instant.ofEpochSecond(created_secs), disabled);
 
         JsonObject keypair = new JsonObject();
         keypair.put("subscription_id", subscriptionId);
@@ -76,10 +76,10 @@ public class RotatingClientSideKeypairStoreTest {
     @Test
     public void loadContentMultipleKeys() throws Exception {
         JsonArray content = new JsonArray();
-        ClientSideKeypair keypair1 = addKeypair(content, "id-1", "pub1", "priv1", 1, "email1@email.com", Instant.now(), false);
-        ClientSideKeypair keypair2 = addKeypair(content, "id-2", "pub2", "priv2", 2, "email2@email.com", Instant.now(), false);
-        ClientSideKeypair keypair3 = addKeypair(content, "id-3", "pub3", "priv3", 3, "email3@email.com", Instant.now(), true);
-        ClientSideKeypair keypair4 = addKeypair(content, "id-4", "pub4", "priv4", 3, "email3@email.com", Instant.now(), true);
+        ClientSideKeypair keypair1 = addKeypair(content, "id-1", "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEhQ9i767j9beaz8sUhxkgrnW38gIUgG07+8+4ubb80NnikzLhVE7ZHd22haNF6iNNu8O7t7h21IizIifRkCC8OQ==", "MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCAtmOklUGeCTv9XRp9cS9PIZAKW3bcntTVtzewaFw9/2A==", 1, "email1@email.com", Instant.now(), false);
+        ClientSideKeypair keypair2 = addKeypair(content, "id-2", "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE+igludojFNfaFcidrG13OdO8NnzMv6DfqCogaEP1JoQ/ciOA4RLx4djje8BtXddafFMPU8nG5qMomTSg67Lp+A==", "MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCAshNg/7jgVzpyueRlF73Y4YvH18P+4EUed5Pw5ZAbnqA==", 2, "email2@email.com", Instant.now(), false);
+        ClientSideKeypair keypair3 = addKeypair(content, "id-3", "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEoy42kazyAedMNvXoakdZWAMqbkr2TICCsAJzOpOtbYbxwsJgAFJso9NCJTSsvpb0ChivMkA6mesicVlGdLy1ng==", "MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCBt5EM8QQfaegeYWzxbFTkn+HRZmZ3kR0Eqeesv6aMHMA==", 3, "email3@email.com", Instant.now(), true);
+        ClientSideKeypair keypair4 = addKeypair(content, "id-4", "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEP5F7PslSFDWcTgasIc1x6183/JqI8WGOqXYxV2n7F6fAdZe8jLVvYtNhub2R+ZfXIDwdDepEZkuNSxfgwM27GA==", "MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCDe6TIHd+Eyoczq1a8xeNGw17OWjeJHZwSLXtuMcqCXZQ==", 3, "email3@email.com", Instant.now(), true);
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = keypairStore.loadContent(makeMetadata("locationPath"));
