@@ -204,6 +204,8 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
             String jwt = getAttestationJwt(responseJson);
             if (jwt == null) {
                 throw new UidCoreClientException(statusCode, "response json does not contain body.attestation_jwt");
+            } else {
+                LOGGER.info("Attestation JWT received");
             }
             this.attestationJwt.set(jwt);
 
