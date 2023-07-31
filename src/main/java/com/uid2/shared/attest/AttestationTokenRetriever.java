@@ -35,11 +35,13 @@ public class AttestationTokenRetriever {
     private final HttpClient httpClient;
     private final IClock clock;
     private ScheduledThreadPoolExecutor executor;
-    private boolean isExpiryCheckScheduled = false;
+    private boolean isExpiryCheckScheduled;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
     private final Lock lock;
     private final AttestationTokenDecryptor attestationTokenDecryptor;
+
+    private static boolean isGeneratorInitialised = false;
 
     public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion, IAttestationProvider attestationProvider,
                                      Handler<Integer> responseWatcher, IClock clock, HttpClient httpClient,
@@ -51,6 +53,7 @@ public class AttestationTokenRetriever {
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.lock = new ReentrantLock();
+        this.isExpiryCheckScheduled = false;
         if (httpClient == null) {
             this.httpClient = HttpClient.newHttpClient();
         } else {
@@ -68,7 +71,7 @@ public class AttestationTokenRetriever {
         }
     }
 
-    private void attestationExpirationCheck(){
+    private void attestationExpirationCheck() {
         Instant currentTime = clock.now();
         Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
 
@@ -87,7 +90,7 @@ public class AttestationTokenRetriever {
         }
     }
 
-    public void scheduleAttestationExpirationCheck() {
+    private void scheduleAttestationExpirationCheck() {
         if (!this.isExpiryCheckScheduled) {
             // Schedule the task to run every minute
             this.executor.scheduleAtFixedRate(this::attestationExpirationCheck, 0, TimeUnit.MINUTES.toMillis(1), TimeUnit.MILLISECONDS);
@@ -105,7 +108,16 @@ public class AttestationTokenRetriever {
     public void attest() throws IOException, AttestationTokenRetrieverException {
         try {
             JsonObject requestJson = new JsonObject();
+            System.out.println("kat1");
+//            KeyPair keyPair;
+//            try {
+//                keyPair = generateKeyPair();
+//            } catch (Throwable e) {
+//                System.out.println(e);
+//                throw e;
+//            }
             KeyPair keyPair = generateKeyPair();
+            System.out.println("kat2");
             byte[] publicKey = keyPair.getPublic().getEncoded();
             requestJson.put("attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey)));
             requestJson.put("public_key", Base64.getEncoder().encodeToString(publicKey));
@@ -185,8 +197,12 @@ public class AttestationTokenRetriever {
 
     private static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator gen = KeyPairGenerator.getInstance(Const.Name.AsymetricEncryptionKeyClass);
-        gen.initialize(2048, new SecureRandom());
-        return gen.generateKeyPair();
+        if (!isGeneratorInitialised) {
+            gen.initialize(2048, new SecureRandom());
+            isGeneratorInitialised = true;
+        }
+        KeyPair keyPair = gen.generateKeyPair();
+        return keyPair;
     }
 
     private void notifyResponseStatusWatcher(int statusCode) {

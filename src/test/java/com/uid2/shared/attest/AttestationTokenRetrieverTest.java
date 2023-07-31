@@ -14,8 +14,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.*;
 
@@ -28,7 +28,7 @@ public class AttestationTokenRetrieverTest {
     private static final long A_HUNDRED_DAYS_IN_MILLI = 86400000000L;
     private HttpClient mockHttpClient = mock(HttpClient.class);
     private AttestationTokenDecryptor mockAttestationTokenDecryptor = mock(AttestationTokenDecryptor.class);
-    private ScheduledThreadPoolExecutor mockExecutor = mock(ScheduledThreadPoolExecutor.class);
+    private ScheduledThreadPoolExecutor mockExecutor = new ScheduledThreadPoolExecutor(2);
 
     private AttestationTokenRetriever attestationTokenRetriever =
             new AttestationTokenRetriever(attestationEndpoint, appVersion, attestationProvider, responseWatcher, clock, mockHttpClient, mockAttestationTokenDecryptor, mockExecutor);
@@ -40,15 +40,8 @@ public class AttestationTokenRetrieverTest {
     public void Attest_Succeed_AttestationTokenSet() throws Exception {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
-        JsonObject content = new JsonObject();
-        JsonObject body = new JsonObject();
-        body.put("expiresAt", "1970-01-01T00:00:00.111Z");
-        body.put("attestation_token", "pdA9stfFBTWsJGwOPjOsaMR7G5+mkxhOcc9xFnAM3RfSOpnmclaQCMmdhgNDY1Egtl9ejZQrCEs=-8RiWE9OEheFDnFkZ-g");
-        content.put("body", body);
-        content.put("status", "success");
-
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        String expectedResponseBody = "{\"attestation_token\": \"test\", \"expiresAt\": \"1970-01-01T00:00:00.111Z\", \"status\": \"success\"}";
+        String expectedResponseBody = "{\"attestation_token\": \"test\", \"expiresAt\": \"2023-08-01T00:00:00.111Z\", \"status\": \"success\"}";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
@@ -60,18 +53,37 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void Attest_Succeed_ExpiryCheckScheduled() throws Exception {
+    public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ExpiryCheckCallsAttest() throws Exception {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
-        JsonObject content = new JsonObject();
-        JsonObject body = new JsonObject();
-        body.put("expiresAt", "1970-01-01T00:00:00.111Z");
-        body.put("attestation_token", "pdA9stfFBTWsJGwOPjOsaMR7G5+mkxhOcc9xFnAM3RfSOpnmclaQCMmdhgNDY1Egtl9ejZQrCEs=-8RiWE9OEheFDnFkZ-g");
-        content.put("body", body);
-        content.put("status", "success");
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        String expectedResponseBody = "{\"attestation_token\": \"test\", \"expiresAt\": \"2023-08-01T00:00:00.111Z\", \"status\": \"success\"}";
+        when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
+        when(mockHttpResponse.statusCode()).thenReturn(200);
+
+        HttpResponse<String> mockHttpResponseSecondAttest = mock(HttpResponse.class);
+        String expectedResponseBodySecondAttest = "{\"attestation_token\": \"test\", \"expiresAt\": \"2023-08-01T00:00:00.111Z\", \"status\": \"success\"}";
+        when(mockHttpResponseSecondAttest.body()).thenReturn(expectedResponseBodySecondAttest);
+        when(mockHttpResponseSecondAttest.statusCode()).thenReturn(300);
+
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse, mockHttpResponseSecondAttest);
+        when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
+
+        when(clock.now()).thenReturn(Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).plusSeconds(100));
+
+        AttestationTokenRetrieverException result = Assert.assertThrows(AttestationTokenRetrieverException.class, () -> {
+            attestationTokenRetriever.attest();
+        });
+        String expectedExceptionMessage = "com.uid2.shared.attest.AttestationTokenRetrieverException: http status: 200, response json does not contain body.expiresAt";
+        Assert.assertEquals(expectedExceptionMessage, result.getMessage());
+    }
+
+    @Test
+    public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ExpiryCheckDoesNotCallAttest() throws Exception {
+        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        String expectedResponseBody = "{\"attestation_token\": \"test\", \"expiresAt\": \"1970-01-01T00:00:00.111Z\", \"status\": \"success\"}";
+        String expectedResponseBody = "{\"attestation_token\": \"test\", \"expiresAt\": \"2023-08-01T00:00:00.111Z\", \"status\": \"success\"}";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
@@ -79,7 +91,10 @@ public class AttestationTokenRetrieverTest {
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         attestationTokenRetriever.attest();
-        verify(mockExecutor, times(1)).scheduleAtFixedRate(any(), eq((long) 0), eq(TimeUnit.MINUTES.toMillis(1)), eq(TimeUnit.MILLISECONDS));
+
+        when(clock.now()).thenReturn(Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).minusSeconds(100));
+        // Verify on httpClient because we can't mock attestationTokenRetriever
+        verify(mockHttpClient, times(1)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
     }
 
     @Test
@@ -88,13 +103,13 @@ public class AttestationTokenRetrieverTest {
 
         JsonObject content = new JsonObject();
         JsonObject body = new JsonObject();
-        body.put("expiresAt", "1970-01-01T00:00:00.111Z");
+        body.put("expiresAt", "2023-08-01T00:00:00.111Z");
         body.put("attestation_token", "pdA9stfFBTWsJGwOPjOsaMR7G5+mkxhOcc9xFnAM3RfSOpnmclaQCMmdhgNDY1Egtl9ejZQrCEs=-8RiWE9OEheFDnFkZ-g");
         content.put("body", body);
         content.put("status", "success");
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        String expectedResponseBody = "{\"expiresAt\": \"1970-01-01T00:00:00.111Z\", \"status\": \"success\"}";
+        String expectedResponseBody = "{\"expiresAt\": \"2023-08-01T00:00:00.111Z\", \"status\": \"success\"}";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
@@ -113,7 +128,7 @@ public class AttestationTokenRetrieverTest {
 
         JsonObject content = new JsonObject();
         JsonObject body = new JsonObject();
-        body.put("expiresAt", "1970-01-01T00:00:00.111Z");
+        body.put("expiresAt", "2023-08-01T00:00:00.111Z");
         body.put("attestation_token", "pdA9stfFBTWsJGwOPjOsaMR7G5+mkxhOcc9xFnAM3RfSOpnmclaQCMmdhgNDY1Egtl9ejZQrCEs=-8RiWE9OEheFDnFkZ-g");
         content.put("body", body);
         content.put("status", "success");
