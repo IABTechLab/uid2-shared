@@ -95,8 +95,11 @@ public class Const {
         public static final int AdvertisingTokenSiteId = 2;
 
         public static final int MasterKeysetId = 1;
+        public static final String MasterKeysetName = "Master";
         public static final int RefreshKeysetId = 2;
+        public static final String RefreshKeysetName = "Refresh";
         public static final int FallbackPublisherKeysetId = 3;
+        public static final String FallbackPublisherKeysetName = "FallbackPublisher";
     }
 
     public static class RoutingContextData {
