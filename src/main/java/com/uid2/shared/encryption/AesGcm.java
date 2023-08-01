@@ -18,28 +18,15 @@ public class AesGcm {
     public static final int GCM_IV_LENGTH = 12;
 
     public static EncryptedPayload encrypt(byte[] b, KeysetKey key) {
-        try {
-            return encrypt(b, key.getKeyBytes(), key.getKeyIdentifier());
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Encrypt", e);
-        }
+        return encrypt(b, key.getKeyBytes(), key.getKeyIdentifier());
     }
 
     public static EncryptedPayload encrypt(String s, KeysetKey key) {
-        try {
-            return encrypt(s.getBytes(StandardCharsets.UTF_8), key.getKeyBytes(), key.getKeyIdentifier());
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Encrypt", e);
-        }
+        return encrypt(s.getBytes(StandardCharsets.UTF_8), key.getKeyBytes(), key.getKeyIdentifier());
     }
 
     private static EncryptedPayload encrypt(byte[] b, byte[] secretBytes, KeyIdentifier keyIdentifier) {
-        try {
-            byte[] encrypted = encrypt(b, secretBytes);
-            return new EncryptedPayload(keyIdentifier, encrypted);
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Encrypt", e);
-        }
+        return new EncryptedPayload(keyIdentifier, encrypt(b, secretBytes));
     }
 
     public static byte[] encrypt(byte[] b, byte[] secretBytes) {
@@ -56,11 +43,7 @@ public class AesGcm {
     }
 
     public static byte[] decrypt(byte[] encryptedBytes, int offset, KeysetKey key) {
-        try {
-            return decrypt(encryptedBytes, offset, key.getKeyBytes());
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Decrypt", e);
-        }
+        return decrypt(encryptedBytes, offset, key.getKeyBytes());
     }
 
     public static byte[] decrypt(byte[] encryptedBytes, int offset, byte[] secretBytes) {
@@ -75,28 +58,15 @@ public class AesGcm {
         }
     }
 
-    // TODO: after KeySets fully migrated, below APIs shall be removed.
     public static EncryptedPayload encrypt(byte[] b, EncryptionKey key) {
-        try {
-            return encrypt(b, key.getKeyBytes(), key.getKeyIdentifier());
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Encrypt", e);
-        }
+        return encrypt(b, key.getKeyBytes(), key.getKeyIdentifier());
     }
 
     public static EncryptedPayload encrypt(String s, EncryptionKey key) {
-        try {
-            return encrypt(s.getBytes(StandardCharsets.UTF_8), key.getKeyBytes(), key.getKeyIdentifier());
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Encrypt", e);
-        }
+        return encrypt(s.getBytes(StandardCharsets.UTF_8), key.getKeyBytes(), key.getKeyIdentifier());
     }
 
     public static byte[] decrypt(byte[] encryptedBytes, int offset, EncryptionKey key) {
-        try {
-            return decrypt(encryptedBytes, offset, key.getKeyBytes());
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Decrypt", e);
-        }
+        return decrypt(encryptedBytes, offset, key.getKeyBytes());
     }
 }
