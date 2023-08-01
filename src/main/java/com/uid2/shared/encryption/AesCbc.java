@@ -2,6 +2,7 @@ package com.uid2.shared.encryption;
 
 import com.uid2.shared.model.EncryptedPayload;
 import com.uid2.shared.model.EncryptionKey;
+import com.uid2.shared.model.KeyIdentifier;
 import com.uid2.shared.model.KeysetKey;
 import io.vertx.core.buffer.Buffer;
 
@@ -16,13 +17,21 @@ public class AesCbc {
 
     public static EncryptedPayload encrypt(byte[] b, KeysetKey key) {
         try {
-            final SecretKey k = new SecretKeySpec(key.getKeyBytes(), "AES");
+            return encrypt(b, key.getKeyBytes(), key.getKeyIdentifier());
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to Encrypt", e);
+        }
+    }
+
+    private static EncryptedPayload encrypt(byte[] b, byte[] secretBytes, KeyIdentifier keyIdentifier) {
+        try {
+            final SecretKey k = new SecretKeySpec(secretBytes, "AES");
             final Cipher c = Cipher.getInstance(cipherScheme);
             final byte[] ivBytes = Random.getBytes(16);
             final IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
             c.init(Cipher.ENCRYPT_MODE, k, ivParameterSpec);
             final byte[] encryptedBytes = c.doFinal(b);
-            return new EncryptedPayload(key.getKeyIdentifier(), Buffer.buffer().appendBytes(ivBytes).appendBytes(encryptedBytes).getBytes());
+            return new EncryptedPayload(keyIdentifier, Buffer.buffer().appendBytes(ivBytes).appendBytes(encryptedBytes).getBytes());
         } catch (Exception e) {
             throw new RuntimeException("Unable to Encrypt", e);
         }
@@ -30,7 +39,7 @@ public class AesCbc {
 
     public static EncryptedPayload encrypt(String s, KeysetKey key) {
         try {
-            return encrypt(s.getBytes(StandardCharsets.UTF_8), key);
+            return encrypt(s.getBytes(StandardCharsets.UTF_8), key.getKeyBytes(), key.getKeyIdentifier());
         } catch (Exception e) {
             throw new RuntimeException("Unable to Encrypt", e);
         }
@@ -59,13 +68,7 @@ public class AesCbc {
     // TODO: after KeySets fully migrated, below APIs shall be removed.
     public static EncryptedPayload encrypt(byte[] b, EncryptionKey key) {
         try {
-            final SecretKey k = new SecretKeySpec(key.getKeyBytes(), "AES");
-            final Cipher c = Cipher.getInstance(cipherScheme);
-            final byte[] ivBytes = Random.getBytes(16);
-            final IvParameterSpec ivParameterSpec = new IvParameterSpec(ivBytes);
-            c.init(Cipher.ENCRYPT_MODE, k, ivParameterSpec);
-            final byte[] encryptedBytes = c.doFinal(b);
-            return new EncryptedPayload(key.getKeyIdentifier(), Buffer.buffer().appendBytes(ivBytes).appendBytes(encryptedBytes).getBytes());
+            return encrypt(b, key.getKeyBytes(), key.getKeyIdentifier());
         } catch (Exception e) {
             throw new RuntimeException("Unable to Encrypt", e);
         }
@@ -73,7 +76,7 @@ public class AesCbc {
 
     public static EncryptedPayload encrypt(String s, EncryptionKey key) {
         try {
-            return encrypt(s.getBytes(StandardCharsets.UTF_8), key);
+            return encrypt(s.getBytes(StandardCharsets.UTF_8), key.getKeyBytes(), key.getKeyIdentifier());
         } catch (Exception e) {
             throw new RuntimeException("Unable to Encrypt", e);
         }

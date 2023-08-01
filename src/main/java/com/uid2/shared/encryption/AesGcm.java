@@ -2,6 +2,7 @@ package com.uid2.shared.encryption;
 
 import com.uid2.shared.model.EncryptedPayload;
 import com.uid2.shared.model.EncryptionKey;
+import com.uid2.shared.model.KeyIdentifier;
 import com.uid2.shared.model.KeysetKey;
 import io.vertx.core.buffer.Buffer;
 
@@ -18,8 +19,7 @@ public class AesGcm {
 
     public static EncryptedPayload encrypt(byte[] b, KeysetKey key) {
         try {
-            byte[] encrypted = encrypt(b, key.getKeyBytes());
-            return new EncryptedPayload(key.getKeyIdentifier(), encrypted);
+            return encrypt(b, key.getKeyBytes(), key.getKeyIdentifier());
         } catch (Exception e) {
             throw new RuntimeException("Unable to Encrypt", e);
         }
@@ -27,7 +27,16 @@ public class AesGcm {
 
     public static EncryptedPayload encrypt(String s, KeysetKey key) {
         try {
-            return encrypt(s.getBytes(StandardCharsets.UTF_8), key);
+            return encrypt(s.getBytes(StandardCharsets.UTF_8), key.getKeyBytes(), key.getKeyIdentifier());
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to Encrypt", e);
+        }
+    }
+
+    private static EncryptedPayload encrypt(byte[] b, byte[] secretBytes, KeyIdentifier keyIdentifier) {
+        try {
+            byte[] encrypted = encrypt(b, secretBytes);
+            return new EncryptedPayload(keyIdentifier, encrypted);
         } catch (Exception e) {
             throw new RuntimeException("Unable to Encrypt", e);
         }
@@ -69,8 +78,7 @@ public class AesGcm {
     // TODO: after KeySets fully migrated, below APIs shall be removed.
     public static EncryptedPayload encrypt(byte[] b, EncryptionKey key) {
         try {
-            byte[] encrypted = encrypt(b, key.getKeyBytes());
-            return new EncryptedPayload(key.getKeyIdentifier(), encrypted);
+            return encrypt(b, key.getKeyBytes(), key.getKeyIdentifier());
         } catch (Exception e) {
             throw new RuntimeException("Unable to Encrypt", e);
         }
@@ -78,7 +86,7 @@ public class AesGcm {
 
     public static EncryptedPayload encrypt(String s, EncryptionKey key) {
         try {
-            return encrypt(s.getBytes(StandardCharsets.UTF_8), key);
+            return encrypt(s.getBytes(StandardCharsets.UTF_8), key.getKeyBytes(), key.getKeyIdentifier());
         } catch (Exception e) {
             throw new RuntimeException("Unable to Encrypt", e);
         }
