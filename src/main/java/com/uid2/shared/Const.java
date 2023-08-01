@@ -67,6 +67,7 @@ public class Const {
         public static final String CorePublicUrlProp = "core_public_url";
         public static final String OptOutUrlProp = "optout_url";
         public static final String AwsKmsJwtSigningPublicKeyProp = "aws_kms_jwt_signing_public_key";
+        public static final String EnforceJwtProp = "enforceJwt";
     }
 
     public static class Http {
@@ -105,5 +106,11 @@ public class Const {
 
     public static class RoutingContextData {
         public static final String SiteId = "site-id";
+    }
+
+    public static class Attestation {
+        public static final String AttestationTokenHeader = "Attestation-Token";
+        public static final String AttestationJWTHeader = "Attestation-JWT";
+
     }
 }

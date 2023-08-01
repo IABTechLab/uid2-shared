@@ -139,12 +139,12 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
         final String atoken = this.attestationToken.get();
         if (atoken != null && atoken.length() > 0) {
-            connection.setRequestProperty(AttestationMiddleware.AttestationTokenHeader, atoken);
+            connection.setRequestProperty(Const.Attestation.AttestationTokenHeader, atoken);
         }
 
         final String jwt = this.attestationJwt.get();
         if (jwt != null && !jwt.isEmpty()) {
-            connection.setRequestProperty(AttestationMiddleware.AttestationJWTHeader, jwt);
+            connection.setRequestProperty(Const.Attestation.AttestationJWTHeader, jwt);
         }
 
         return connection;
