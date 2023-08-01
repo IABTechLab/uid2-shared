@@ -1,6 +1,7 @@
 package com.uid2.shared.encryption;
 
 import com.uid2.shared.model.EncryptedPayload;
+import com.uid2.shared.model.EncryptionKey;
 import com.uid2.shared.model.KeysetKey;
 import io.vertx.core.buffer.Buffer;
 
@@ -60,6 +61,32 @@ public class AesGcm {
             final Cipher c = Cipher.getInstance(cipherScheme);
             c.init(Cipher.DECRYPT_MODE, key, gcmParameterSpec);
             return c.doFinal(encryptedBytes, offset + GCM_IV_LENGTH, encryptedBytes.length - offset - GCM_IV_LENGTH);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to Decrypt", e);
+        }
+    }
+
+    // TODO: after KeySets fully migrated, below APIs shall be removed.
+    public static EncryptedPayload encrypt(byte[] b, EncryptionKey key) {
+        try {
+            byte[] encrypted = encrypt(b, key.getKeyBytes());
+            return new EncryptedPayload(key.getKeyIdentifier(), encrypted);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to Encrypt", e);
+        }
+    }
+
+    public static EncryptedPayload encrypt(String s, EncryptionKey key) {
+        try {
+            return encrypt(s.getBytes(StandardCharsets.UTF_8), key);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to Encrypt", e);
+        }
+    }
+
+    public static byte[] decrypt(byte[] encryptedBytes, int offset, EncryptionKey key) {
+        try {
+            return decrypt(encryptedBytes, offset, key.getKeyBytes());
         } catch (Exception e) {
             throw new RuntimeException("Unable to Decrypt", e);
         }
