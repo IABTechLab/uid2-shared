@@ -20,14 +20,12 @@ import java.security.*;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class AttestationTokenRetriever {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UidCoreClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AttestationTokenRetriever.class);
     private final IAttestationProvider attestationProvider;
     private final ApplicationVersion appVersion;
     private AtomicReference<String> attestationToken;
@@ -36,13 +34,11 @@ public class AttestationTokenRetriever {
     private final HttpClient httpClient;
     private final IClock clock;
     private Vertx vertx;
-    private long timerId;
+    private boolean isExpiryCheckScheduled;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
     private final Lock lock;
     private final AttestationTokenDecryptor attestationTokenDecryptor;
-
-    private static boolean isGeneratorInitialised = false;
 
     public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion, IAttestationProvider attestationProvider,
                                      Handler<Integer> responseWatcher, IClock clock, HttpClient httpClient,
@@ -54,7 +50,7 @@ public class AttestationTokenRetriever {
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.lock = new ReentrantLock();
-        this.timerId = -1;
+        this.isExpiryCheckScheduled = false;
         if (httpClient == null) {
             this.httpClient = HttpClient.newHttpClient();
         } else {
@@ -73,10 +69,8 @@ public class AttestationTokenRetriever {
 
         if (currentTime.isAfter(tenMinutesBeforeExpire)) {
             LOGGER.info("Attestation token is 10 mins from the expiry timestamp %s. Re-attest...", attestationTokenExpiresAt);
-            long oldTimerId = this.timerId;
             try {
                 attest();
-                this.vertx.cancelTimer(oldTimerId);
             } catch (AttestationTokenRetrieverException | IOException e) {
                 notifyResponseStatusWatcher(401);
                 LOGGER.info("Re-attest failed: ", e.getMessage());
@@ -85,21 +79,23 @@ public class AttestationTokenRetriever {
     }
 
     private void scheduleAttestationExpirationCheck() {
-        if (this.timerId == -1) {
+        if (!this.isExpiryCheckScheduled) {
             // Schedule the task to run every minute
-            this.timerId = this.vertx.setPeriodic(0, 60000, this::attestationExpirationCheck);
+            this.vertx.setPeriodic(0, 60000, this::attestationExpirationCheck);
+            this.isExpiryCheckScheduled = true;
         }
     }
 
     public void attest() throws IOException, AttestationTokenRetrieverException {
         try {
-            JsonObject requestJson = new JsonObject();
             KeyPair keyPair = generateKeyPair();
             byte[] publicKey = keyPair.getPublic().getEncoded();
-            requestJson.put("attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey)));
-            requestJson.put("public_key", Base64.getEncoder().encodeToString(publicKey));
-            requestJson.put("application_name", appVersion.getAppName());
-            requestJson.put("application_version", appVersion.getAppVersion());
+            JsonObject requestJson = JsonObject.of(
+                    "attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey)),
+                    "public_key", Base64.getEncoder().encodeToString(publicKey),
+                    "application_name", appVersion.getAppName(),
+                    "application_version", appVersion.getAppVersion()
+            );
             JsonObject components = new JsonObject();
             for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet()) {
                 components.put(kv.getKey(), kv.getValue());
@@ -152,10 +148,14 @@ public class AttestationTokenRetriever {
         }
     }
 
-    public String getAttestationToken() { return this.attestationToken.get(); }
+    public String getAttestationToken() {
+        return this.attestationToken.get();
+    }
+
     private void setAttestationToken(String atoken) {
         this.attestationToken.set(atoken);
     }
+
     private void setAttestationTokenExpiresAt(String expiresAt) {
         this.attestationTokenExpiresAt = Instant.parse(expiresAt);
     }
@@ -174,12 +174,8 @@ public class AttestationTokenRetriever {
 
     private static KeyPair generateKeyPair() throws NoSuchAlgorithmException {
         KeyPairGenerator gen = KeyPairGenerator.getInstance(Const.Name.AsymetricEncryptionKeyClass);
-        if (!isGeneratorInitialised) {
-            gen.initialize(2048, new SecureRandom());
-            isGeneratorInitialised = true;
-        }
-        KeyPair keyPair = gen.generateKeyPair();
-        return keyPair;
+        gen.initialize(2048, new SecureRandom());
+        return gen.generateKeyPair();
     }
 
     private void notifyResponseStatusWatcher(int statusCode) {
@@ -193,7 +189,9 @@ public class AttestationTokenRetriever {
     }
 
     public boolean attested() {
-        if (this.attestationToken.get() != null && this.clock.now().isBefore(this.attestationTokenExpiresAt)) return true;
+        if (this.attestationToken.get() != null && this.clock.now().isBefore(this.attestationTokenExpiresAt)) {
+            return true;
+        }
         return false;
     }
 

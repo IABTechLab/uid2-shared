@@ -7,13 +7,10 @@ import com.uid2.shared.IClock;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.unit.Async;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.junit5.VertxExtension;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
@@ -22,7 +19,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.*;
@@ -34,7 +30,6 @@ public class AttestationTokenRetrieverTest {
     private IAttestationProvider attestationProvider = mock(IAttestationProvider.class);
     private Handler<Integer> responseWatcher = mock(Handler.class);
     private IClock clock = mock(IClock.class);
-    private static final long A_HUNDRED_DAYS_IN_MILLI = 86400000000L;
     private HttpClient mockHttpClient = mock(HttpClient.class);
     private AttestationTokenDecryptor mockAttestationTokenDecryptor = mock(AttestationTokenDecryptor.class);
     private AttestationTokenRetriever attestationTokenRetriever =
