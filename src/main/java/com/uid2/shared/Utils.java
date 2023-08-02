@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -181,5 +182,13 @@ public class Utils {
             }
         }
         return first;
+    }
+
+    public static InputStream convertHttpResponseToInputStream(HttpResponse<String> httpResponse) {
+        String responseBody = httpResponse.body();
+
+        byte[] responseBytes = responseBody.getBytes();
+
+        return new ByteArrayInputStream(responseBytes);
     }
 }
