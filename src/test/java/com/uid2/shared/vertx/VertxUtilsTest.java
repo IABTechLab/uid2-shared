@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class VertxUtilsTest {
     @Test
     void parseClientAppVersionSuccess() {
-        // example input uid2-operator=2.7.16-SNAPSHOT;uid2-attestation-api=1.1.0;uid2-shared=2.7.0-3e279acefa
         final String input = "uid2-operator=2.7.16-SNAPSHOT;uid2-attestation-api=1.1.0;uid2-shared=2.7.0-3e279acefa";
         var result = VertxUtils.parseClientAppVersion(input);
         assertEquals("uid2-operator", result.getKey());
