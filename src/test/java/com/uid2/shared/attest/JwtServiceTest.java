@@ -2,6 +2,7 @@ package com.uid2.shared.attest;
 
 import com.amazonaws.util.Base64;
 import com.uid2.shared.Const;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,8 +41,6 @@ public class JwtServiceTest {
     private final static String AUDIENCE = "https://optout-integ.uidapi.com";
     private final static String ISSUER = "https://core-integ.uidapi.com";
 
-    private KmsClient mockClient;
-    private ArgumentCaptor<GetPublicKeyRequest> capturedGetPublicKeyRequest;
     private JsonObject config;
 
     @BeforeEach
@@ -49,20 +48,36 @@ public class JwtServiceTest {
         this.config = new JsonObject();
     }
 
+    private void addPublicKeysToConfig(String... keys) {
+        JsonArray keysArray = new JsonArray();
+        for (String key :
+                keys) {
+            JsonObject keyJson = new JsonObject();
+            keyJson.put("publicKey", key);
+            keysArray.add(keyJson);
+        }
+        this.config.put(Const.Config.AwsKmsJwtSigningPublicKeysProp, keysArray);
+    }
+
     @Test
     void validateTokenSucceeds() throws JwtService.ValidationException {
-        config.put(Const.Config.AwsKmsJwtSigningPublicKeyProp, PUBLIC_KEY_STRING);
+        this.addPublicKeysToConfig(PUBLIC_KEY_STRING, COMPACT_PUBLIC_KEY);
         JwtService service = new JwtService(config);
         var validationResponse = service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
 
         assertNotNull(validationResponse);
         assertTrue(validationResponse.getIsValid());
+        assertEquals(AUDIENCE, validationResponse.getAudience());
+        assertEquals("test enclave id", validationResponse.getEnclaveId());
+        assertEquals("test enclave type", validationResponse.getEnclaveType());
+        assertEquals(999, validationResponse.getSiteId());
+        assertEquals("Version 1.2", validationResponse.getOperatorVersion());
         assertNull(validationResponse.getValidationException());
     }
 
     @Test
     void validationFailsInvalidToken() throws JwtService.ValidationException {
-        config.put(Const.Config.AwsKmsJwtSigningPublicKeyProp, PUBLIC_KEY_STRING);
+        this.addPublicKeysToConfig(PUBLIC_KEY_STRING, COMPACT_PUBLIC_KEY);
         JwtService service = new JwtService(config);
         var validationResponse = service.validateJwt("eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjcyNTgxMTg0MDAsImlhdCI6MTY5MDM0ODk5OSwic3ViIjoiVGVzdCIsImF1ZCI6Imh0dHBzOi8vb3B0b3V0LWludGVnLnVpZGFwaS5jb20iLCJvcGVyYXRvclZlcnNpb24iOiJWZXJzaW9uIDEuMiIsImVuY2xhdmVUeXBlIjoidGVzdCBlbmNsYXZlIHR5cGUiLCJyb2xlcyI6Ik9QRVJBVE9SLE9QVE9VVCIsImlzcyI6Imh0dHBzOi8vY29yZS1pbnRlZy51aWRhcGkuY29tIiwic2l0ZUlkIjoiOTk5IiwiZW5jbGF2ZUlkIjoidGVzdCBlbmNsYXZlIGlkIn0.N9xYROMx2hnMIhtyyBLF-J13uWXpIU6jj_Tgufww6O8JBhrHHFliOF2xsPUcZ1sK6lGsmbHACwlPTRz8zhpKWKM0CMNjfiWHwBGykK32hDC321QEta0aX6utBAWIb1crb2JwZhPH1K0_4X-mxdiuxibgW3YNpQxm2kZDnQaR40py5JykVkPxzwhgzUCceDN5kL1kNEjnO", AUDIENCE, ISSUER);
 
@@ -70,9 +85,10 @@ public class JwtServiceTest {
         assertFalse(validationResponse.getIsValid());
         assertNotNull(validationResponse.getValidationException());
     }
+
     @Test
     void validationFailsExpiredToken() throws JwtService.ValidationException {
-        config.put(Const.Config.AwsKmsJwtSigningPublicKeyProp, PUBLIC_KEY_STRING);
+        this.addPublicKeysToConfig(PUBLIC_KEY_STRING, COMPACT_PUBLIC_KEY);
         JwtService service = new JwtService(config);
         var validationResponse = service.validateJwt(EXPIRED_TOKEN, AUDIENCE, ISSUER);
 
@@ -83,69 +99,40 @@ public class JwtServiceTest {
     }
 
     @Test
-    void getsPublicKeyFromKms() throws JwtService.ValidationException {
-        config.put(Const.Config.AwsKmsJwtSigningKeyIdProp, "123");
-        config.put(Const.Config.AwsRegionProp, "ap-southeast-2");
+    void throwsErrorIfNoKeyId() {
+        JwtService service = new JwtService(config);
+        var ex = assertThrows(JwtService.ValidationException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER));
+        assertEquals("Unable to get public keys. Validation can not continue", ex.getMessage());
+    }
 
-        JwtService service = new JwtService(config, Clock.systemUTC(), this.getBuilder(true, null));
+    @Test
+    void throwsErrorIfInvalidPublicKey() throws JwtService.ValidationException {
+        this.addPublicKeysToConfig("Invalid key");
+        JwtService service = new JwtService(config);
+        var ex = assertThrows(JwtService.ValidationException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER));
+        assertEquals("Unable to get public keys. Validation can not continue", ex.getMessage());
+    }
+
+    @Test
+    void validateTokenSucceedsSecondPublicKeyValid() throws JwtService.ValidationException {
+        this.addPublicKeysToConfig("Invalid key", COMPACT_PUBLIC_KEY);
+        JwtService service = new JwtService(config);
         var validationResponse = service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
 
         assertNotNull(validationResponse);
         assertTrue(validationResponse.getIsValid());
         assertNull(validationResponse.getValidationException());
-        assertEquals("123", capturedGetPublicKeyRequest.getValue().keyId());
-
     }
 
     @Test
-    void publicKeyReusedWithinExpiry() throws JwtService.ValidationException {
-        config.put(Const.Config.AwsKmsJwtSigningKeyIdProp, "123");
-        config.put(Const.Config.AwsRegionProp, "ap-southeast-2");
-
-        JwtService service = new JwtService(config, Clock.systemUTC(), this.getBuilder(true, null));
-        service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
-        service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
-
-        verify(mockClient, times(1)).getPublicKey((GetPublicKeyRequest) any());
-    }
-
-    @Test
-    void throwsErrorIfNoKeyId() {
-        config.put(Const.Config.AwsKmsJwtSigningKeyIdProp, "");
-        config.put(Const.Config.AwsRegionProp, "");
-
-        JwtService service = new JwtService(config, Clock.systemUTC(), this.getBuilder(true, null));
-        var ex = assertThrows(JwtService.ValidationException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER));
-        assertEquals("KeyId or Public key must be specified", ex.getMessage());
-    }
-    @Test
-    void throwsErrorIfInvalidPublicKey() {
-        config.put(Const.Config.AwsKmsJwtSigningPublicKeyProp, "Invalid key");
+    void validateTokenEmptyAudienceSucceeds() throws JwtService.ValidationException {
+        this.addPublicKeysToConfig(PUBLIC_KEY_STRING, COMPACT_PUBLIC_KEY);
         JwtService service = new JwtService(config);
+        var validationResponse = service.validateJwt(VALID_TOKEN, ISSUER);
 
-        var ex = assertThrows(JwtService.ValidationException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER));
-        assertEquals("Unable to get public key. Validation can not continue", ex.getMessage());
+        assertNotNull(validationResponse);
+        assertTrue(validationResponse.getIsValid());
+        assertEquals(AUDIENCE, validationResponse.getAudience());
+        assertNull(validationResponse.getValidationException());
     }
-
-    private KmsClientBuilder getBuilder(boolean isSuccessful, Optional<String> statusText) {
-        SdkHttpResponse sdkHttpResponse = mock(SdkHttpResponse.class);
-        when(sdkHttpResponse.isSuccessful()).thenReturn(isSuccessful);
-        when(sdkHttpResponse.statusText()).thenReturn(statusText);
-
-        GetPublicKeyResponse response = mock(GetPublicKeyResponse.class);
-        when(response.sdkHttpResponse()).thenReturn(sdkHttpResponse);
-        when(response.publicKey()).thenReturn(SdkBytes.fromByteArray(Base64.decode(COMPACT_PUBLIC_KEY)));
-
-        mockClient = mock(KmsClient.class);
-        capturedGetPublicKeyRequest = ArgumentCaptor.forClass(GetPublicKeyRequest.class);
-        when(mockClient.getPublicKey(capturedGetPublicKeyRequest.capture())).thenReturn(response);
-
-        KmsClientBuilder builder = mock(KmsClientBuilder.class);
-        when(builder.region(any(Region.class))).thenReturn(builder);
-        when(builder.credentialsProvider(any(AwsCredentialsProvider.class))).thenReturn(builder);
-        when(builder.build()).thenReturn(mockClient);
-
-        return builder;
-    }
-
 }

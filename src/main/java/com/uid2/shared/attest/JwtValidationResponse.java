@@ -17,6 +17,8 @@ public class JwtValidationResponse {
     private String operatorVersion;
     private Exception validationException;
 
+    private String audience;
+
     public JwtValidationResponse(boolean isValid) {
         this.isValid = isValid;
     }
@@ -48,6 +50,11 @@ public class JwtValidationResponse {
 
     public JwtValidationResponse withOperatorVersion(String operatorVersion) {
         this.operatorVersion = operatorVersion;
+        return this;
+    }
+
+    public JwtValidationResponse withAudience(String audience) {
+        this.audience = audience;
         return this;
     }
 
@@ -87,5 +94,9 @@ public class JwtValidationResponse {
 
     public void setValidationException(Exception validationException) {
         this.validationException = validationException;
+    }
+
+    public String getAudience() {
+        return audience;
     }
 }
