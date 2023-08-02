@@ -5,9 +5,16 @@ import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.ApplicationVersion;
 import com.uid2.shared.IClock;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import org.junit.Assert;
-import org.junit.Test;
+import io.vertx.ext.unit.Async;
+import io.vertx.junit5.VertxTestContext;
+import io.vertx.junit5.VertxExtension;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -16,9 +23,11 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.*;
 
+@ExtendWith(VertxExtension.class)
 public class AttestationTokenRetrieverTest {
     private String attestationEndpoint = "https://core-test.uidapi.com/attest";
     private ApplicationVersion appVersion = new ApplicationVersion("appName", "appVersion");
@@ -28,16 +37,16 @@ public class AttestationTokenRetrieverTest {
     private static final long A_HUNDRED_DAYS_IN_MILLI = 86400000000L;
     private HttpClient mockHttpClient = mock(HttpClient.class);
     private AttestationTokenDecryptor mockAttestationTokenDecryptor = mock(AttestationTokenDecryptor.class);
-    private ScheduledThreadPoolExecutor mockExecutor = new ScheduledThreadPoolExecutor(2);
-
     private AttestationTokenRetriever attestationTokenRetriever =
-            new AttestationTokenRetriever(attestationEndpoint, appVersion, attestationProvider, responseWatcher, clock, mockHttpClient, mockAttestationTokenDecryptor, mockExecutor);
+            new AttestationTokenRetriever(attestationEndpoint, appVersion, attestationProvider, responseWatcher, clock, mockHttpClient, mockAttestationTokenDecryptor);
 
     public AttestationTokenRetrieverTest() throws IOException {
     }
 
     @Test
-    public void Attest_Succeed_AttestationTokenSet() throws Exception {
+    public void Attest_Succeed_AttestationTokenSet(Vertx vertx, VertxTestContext testContext) throws Exception {
+        attestationTokenRetriever.setVertx(vertx);
+
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
@@ -49,11 +58,14 @@ public class AttestationTokenRetrieverTest {
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         attestationTokenRetriever.attest();
-        Assert.assertEquals("test_attestation_token", attestationTokenRetriever.getAttestationToken());
+        testContext.completeNow();
+        Assertions.assertEquals("test_attestation_token", attestationTokenRetriever.getAttestationToken());
     }
 
     @Test
-    public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ExpiryCheckCallsAttest() throws Exception {
+    public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ExpiryCheckCallsAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
+        attestationTokenRetriever.setVertx(vertx);
+
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
@@ -69,17 +81,21 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse, mockHttpResponseSecondAttest);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
-        when(clock.now()).thenReturn(Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).plusSeconds(100));
+        Instant tenSecondsAfterTenMinutesBeforeExpiry = Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).plusSeconds(10);
+        Instant tenSecondsBeforeTenMinutesBeforeExpiry = Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).minusSeconds(10);
+        when(clock.now()).thenReturn(tenSecondsAfterTenMinutesBeforeExpiry, tenSecondsBeforeTenMinutesBeforeExpiry);
 
-        AttestationTokenRetrieverException result = Assert.assertThrows(AttestationTokenRetrieverException.class, () -> {
-            attestationTokenRetriever.attest();
-        });
-        String expectedExceptionMessage = "com.uid2.shared.attest.AttestationTokenRetrieverException: http status: 200, response json does not contain body.expiresAt";
-        Assert.assertEquals(expectedExceptionMessage, result.getMessage());
+        attestationTokenRetriever.attest();
+        testContext.awaitCompletion(1, TimeUnit.SECONDS);
+        // Verify on httpClient because we can't mock attestationTokenRetriever
+        verify(mockHttpClient, times(2)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        testContext.completeNow();
     }
 
     @Test
-    public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ExpiryCheckDoesNotCallAttest() throws Exception {
+    public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ExpiryCheckDoesNotCallAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
+        attestationTokenRetriever.setVertx(vertx);
+
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
@@ -90,11 +106,13 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
-        attestationTokenRetriever.attest();
-
         when(clock.now()).thenReturn(Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).minusSeconds(100));
+
+        attestationTokenRetriever.attest();
+        testContext.awaitCompletion(1, TimeUnit.SECONDS);
         // Verify on httpClient because we can't mock attestationTokenRetriever
         verify(mockHttpClient, times(1)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        testContext.completeNow();
     }
 
     @Test
@@ -115,11 +133,11 @@ public class AttestationTokenRetrieverTest {
 
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
 
-        AttestationTokenRetrieverException result = Assert.assertThrows(AttestationTokenRetrieverException.class, () -> {
+        AttestationTokenRetrieverException result = Assertions.assertThrows(AttestationTokenRetrieverException.class, () -> {
             attestationTokenRetriever.attest();
         });
         String expectedExceptionMessage = "com.uid2.shared.attest.AttestationTokenRetrieverException: http status: 200, response json does not contain body.attestation_token";
-        Assert.assertEquals(expectedExceptionMessage, result.getMessage());
+        Assertions.assertEquals(expectedExceptionMessage, result.getMessage());
     }
 
     @Test
@@ -140,10 +158,10 @@ public class AttestationTokenRetrieverTest {
 
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
 
-        AttestationTokenRetrieverException result = Assert.assertThrows(AttestationTokenRetrieverException.class, () -> {
+        AttestationTokenRetrieverException result = Assertions.assertThrows(AttestationTokenRetrieverException.class, () -> {
             attestationTokenRetriever.attest();
         });
         String expectedExceptionMessage = "com.uid2.shared.attest.AttestationTokenRetrieverException: http status: 200, response json does not contain body.expiresAt";
-        Assert.assertEquals(expectedExceptionMessage, result.getMessage());
+        Assertions.assertEquals(expectedExceptionMessage, result.getMessage());
     }
 }

@@ -4,6 +4,7 @@ import com.uid2.enclave.AttestationException;
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.*;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
@@ -34,8 +35,8 @@ public class AttestationTokenRetriever {
     private final String attestationEndpoint;
     private final HttpClient httpClient;
     private final IClock clock;
-    private ScheduledThreadPoolExecutor executor;
-    private boolean isExpiryCheckScheduled;
+    private Vertx vertx;
+    private long timerId;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
     private final Lock lock;
@@ -45,7 +46,7 @@ public class AttestationTokenRetriever {
 
     public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion, IAttestationProvider attestationProvider,
                                      Handler<Integer> responseWatcher, IClock clock, HttpClient httpClient,
-                                     AttestationTokenDecryptor attestationTokenDecryptor, ScheduledThreadPoolExecutor executor) throws IOException {
+                                     AttestationTokenDecryptor attestationTokenDecryptor) throws IOException {
         this.attestationEndpoint = attestationEndpoint;
         this.appVersion = appVersion;
         this.attestationProvider = attestationProvider;
@@ -53,7 +54,7 @@ public class AttestationTokenRetriever {
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.lock = new ReentrantLock();
-        this.isExpiryCheckScheduled = false;
+        this.timerId = -1;
         if (httpClient == null) {
             this.httpClient = HttpClient.newHttpClient();
         } else {
@@ -64,60 +65,36 @@ public class AttestationTokenRetriever {
         } else {
             this.attestationTokenDecryptor = attestationTokenDecryptor;
         }
-        if (executor == null) {
-            this.executor = new ScheduledThreadPoolExecutor(1);
-        } else {
-            this.executor = executor;
-        }
     }
 
-    private void attestationExpirationCheck() {
+    private void attestationExpirationCheck(long timerId) {
         Instant currentTime = clock.now();
         Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
 
-        stopAttestationExpirationCheck();
-
         if (currentTime.isAfter(tenMinutesBeforeExpire)) {
             LOGGER.info("Attestation token is 10 mins from the expiry timestamp %s. Re-attest...", attestationTokenExpiresAt);
+            long oldTimerId = this.timerId;
             try {
                 attest();
-            }
-            catch (AttestationTokenRetrieverException | IOException e) {
+                this.vertx.cancelTimer(oldTimerId);
+            } catch (AttestationTokenRetrieverException | IOException e) {
                 notifyResponseStatusWatcher(401);
                 LOGGER.info("Re-attest failed: ", e.getMessage());
-                scheduleAttestationExpirationCheck();
             }
         }
     }
 
     private void scheduleAttestationExpirationCheck() {
-        if (!this.isExpiryCheckScheduled) {
+        if (this.timerId == -1) {
             // Schedule the task to run every minute
-            this.executor.scheduleAtFixedRate(this::attestationExpirationCheck, 0, TimeUnit.MINUTES.toMillis(1), TimeUnit.MILLISECONDS);
-            this.isExpiryCheckScheduled = true;
-        }
-    }
-
-    private void stopAttestationExpirationCheck() {
-        if (this.isExpiryCheckScheduled) {
-            this.executor.shutdown();
-            this.isExpiryCheckScheduled = false;
+            this.timerId = this.vertx.setPeriodic(0, 60000, this::attestationExpirationCheck);
         }
     }
 
     public void attest() throws IOException, AttestationTokenRetrieverException {
         try {
             JsonObject requestJson = new JsonObject();
-            System.out.println("kat1");
-//            KeyPair keyPair;
-//            try {
-//                keyPair = generateKeyPair();
-//            } catch (Throwable e) {
-//                System.out.println(e);
-//                throw e;
-//            }
             KeyPair keyPair = generateKeyPair();
-            System.out.println("kat2");
             byte[] publicKey = keyPair.getPublic().getEncoded();
             requestJson.put("attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey)));
             requestJson.put("public_key", Base64.getEncoder().encodeToString(publicKey));
@@ -218,5 +195,9 @@ public class AttestationTokenRetriever {
     public boolean attested() {
         if (this.attestationToken.get() != null && this.clock.now().isBefore(this.attestationTokenExpiresAt)) return true;
         return false;
+    }
+
+    public void setVertx(Vertx vertx) {
+        this.vertx = vertx;
     }
 }

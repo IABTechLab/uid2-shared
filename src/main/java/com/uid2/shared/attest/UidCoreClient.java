@@ -48,7 +48,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         }
         if (attestationTokenRetriever == null) {
             this.attestationTokenRetriever = new AttestationTokenRetriever(
-                    attestationEndpoint, appVersion, attestationProvider, responseWatcher, new InstantClock(), null, null, null);
+                    attestationEndpoint, appVersion, attestationProvider, responseWatcher, new InstantClock(), null, null);
         } else {
             this.attestationTokenRetriever = attestationTokenRetriever;
         }
