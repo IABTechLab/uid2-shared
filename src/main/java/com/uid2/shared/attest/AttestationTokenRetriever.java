@@ -35,6 +35,7 @@ public class AttestationTokenRetriever {
     private final IClock clock;
     private Vertx vertx;
     private boolean isExpiryCheckScheduled;
+    private boolean isAttesting;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
     private final Lock lock;
@@ -51,6 +52,7 @@ public class AttestationTokenRetriever {
         this.clock = clock;
         this.lock = new ReentrantLock();
         this.isExpiryCheckScheduled = false;
+        this.isAttesting = false;
         if (httpClient == null) {
             this.httpClient = HttpClient.newHttpClient();
         } else {
@@ -64,16 +66,24 @@ public class AttestationTokenRetriever {
     }
 
     private void attestationExpirationCheck(long timerId) {
-        Instant currentTime = clock.now();
-        Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
+        // This check is to avoid the attest() function takes longer than 60sec and get called again from this method while attesting.
+        if (this.isAttesting) {
+            LOGGER.warn("In the process of attesting. Skip re-attest.");
+        } else {
+            Instant currentTime = clock.now();
+            Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
 
-        if (currentTime.isAfter(tenMinutesBeforeExpire)) {
-            LOGGER.info("Attestation token is 10 mins from the expiry timestamp %s. Re-attest...", attestationTokenExpiresAt);
-            try {
-                attest();
-            } catch (AttestationTokenRetrieverException | IOException e) {
-                notifyResponseStatusWatcher(401);
-                LOGGER.info("Re-attest failed: ", e.getMessage());
+            if (currentTime.isAfter(tenMinutesBeforeExpire)) {
+                LOGGER.info("Attestation token is 10 mins from the expiry timestamp %s. Re-attest...", attestationTokenExpiresAt);
+                try {
+                    this.isAttesting = true;
+                    attest();
+                } catch (AttestationTokenRetrieverException | IOException e) {
+                    notifyResponseStatusWatcher(401);
+                    LOGGER.info("Re-attest failed: ", e.getMessage());
+                } finally {
+                    this.isAttesting = false;
+                }
             }
         }
     }
