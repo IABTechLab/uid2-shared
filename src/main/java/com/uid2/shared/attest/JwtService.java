@@ -30,7 +30,7 @@ public class JwtService {
         this.config = config;
         JsonArray publicKeys = config.getJsonArray(Const.Config.AwsKmsJwtSigningPublicKeysProp);
         if (publicKeys == null || publicKeys.isEmpty()) {
-            LOGGER.error("Unable to read public keys from the configuration. JWTs can not be verified.");
+            LOGGER.info("Unable to read public keys from the configuration. JWTs can not be verified.");
             return;
         }
         this.parsePublicKeysFromConfig(publicKeys);
