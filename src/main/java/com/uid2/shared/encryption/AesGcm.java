@@ -1,6 +1,8 @@
 package com.uid2.shared.encryption;
 
 import com.uid2.shared.model.EncryptedPayload;
+import com.uid2.shared.model.EncryptionKey;
+import com.uid2.shared.model.KeyIdentifier;
 import com.uid2.shared.model.KeysetKey;
 import io.vertx.core.buffer.Buffer;
 
@@ -16,20 +18,15 @@ public class AesGcm {
     public static final int GCM_IV_LENGTH = 12;
 
     public static EncryptedPayload encrypt(byte[] b, KeysetKey key) {
-        try {
-            byte[] encrypted = encrypt(b, key.getKeyBytes());
-            return new EncryptedPayload(key.getKeyIdentifier(), encrypted);
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Encrypt", e);
-        }
+        return encrypt(b, key.getKeyBytes(), key.getKeyIdentifier());
     }
 
     public static EncryptedPayload encrypt(String s, KeysetKey key) {
-        try {
-            return encrypt(s.getBytes(StandardCharsets.UTF_8), key);
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Encrypt", e);
-        }
+        return encrypt(s.getBytes(StandardCharsets.UTF_8), key.getKeyBytes(), key.getKeyIdentifier());
+    }
+
+    private static EncryptedPayload encrypt(byte[] b, byte[] secretBytes, KeyIdentifier keyIdentifier) {
+        return new EncryptedPayload(keyIdentifier, encrypt(b, secretBytes));
     }
 
     public static byte[] encrypt(byte[] b, byte[] secretBytes) {
@@ -46,11 +43,7 @@ public class AesGcm {
     }
 
     public static byte[] decrypt(byte[] encryptedBytes, int offset, KeysetKey key) {
-        try {
-            return decrypt(encryptedBytes, offset, key.getKeyBytes());
-        } catch (Exception e) {
-            throw new RuntimeException("Unable to Decrypt", e);
-        }
+        return decrypt(encryptedBytes, offset, key.getKeyBytes());
     }
 
     public static byte[] decrypt(byte[] encryptedBytes, int offset, byte[] secretBytes) {
@@ -63,5 +56,17 @@ public class AesGcm {
         } catch (Exception e) {
             throw new RuntimeException("Unable to Decrypt", e);
         }
+    }
+
+    public static EncryptedPayload encrypt(byte[] b, EncryptionKey key) {
+        return encrypt(b, key.getKeyBytes(), key.getKeyIdentifier());
+    }
+
+    public static EncryptedPayload encrypt(String s, EncryptionKey key) {
+        return encrypt(s.getBytes(StandardCharsets.UTF_8), key.getKeyBytes(), key.getKeyIdentifier());
+    }
+
+    public static byte[] decrypt(byte[] encryptedBytes, int offset, EncryptionKey key) {
+        return decrypt(encryptedBytes, offset, key.getKeyBytes());
     }
 }
