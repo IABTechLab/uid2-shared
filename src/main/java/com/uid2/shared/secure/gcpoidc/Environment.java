@@ -10,9 +10,7 @@ import java.util.stream.Stream;
 
 public enum Environment {
     Production("prod"),
-    Integration("integ"),
-    Local("local"),
-    Test("test");
+    Integration("integ");
 
     @Getter
     private String name;
