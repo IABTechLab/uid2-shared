@@ -91,21 +91,23 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         }
 
         String attestationToken = attestationTokenRetriever.getAttestationToken();
+        String attestationJWT = attestationTokenRetriever.getAttestationJWT();
+
         HttpResponse<String> httpResponse;
-        httpResponse = sendHttpRequest(path, attestationToken);
+        httpResponse = sendHttpRequest(path, attestationToken, attestationJWT);
 
         // This should never happen, but keeping this part of the code just to be extra safe.
         if (httpResponse.statusCode() == 401) {
             LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
             attestationTokenRetriever.attest();
             attestationToken = attestationTokenRetriever.getAttestationToken();
-            httpResponse = sendHttpRequest(path, attestationToken);
+            httpResponse = sendHttpRequest(path, attestationToken, attestationJWT);
         }
 
         return Utils.convertHttpResponseToInputStream(httpResponse);
     }
 
-    private HttpResponse sendHttpRequest(String path, String attestationToken) throws IOException, InterruptedException {
+    private HttpResponse sendHttpRequest(String path, String attestationToken, String attestationJWT) throws IOException, InterruptedException {
         URI uri = URI.create(path);
         if (this.enforceHttps && !"https".equalsIgnoreCase(uri.getScheme())) {
             throw new IOException("UidCoreClient requires HTTPS connection");
@@ -116,11 +118,14 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
                 .GET()
                 .setHeader(Const.Http.AppVersionHeader, appVersionHeader);
 
-        if (this.userToken != null && this.userToken.length() > 0) {
+        if (this.userToken != null && !this.userToken.isBlank()) {
             httpRequestBuilder.setHeader("Authorization", "Bearer " + this.userToken);
         }
-        if (attestationToken != null && attestationToken.length() > 0) {
-            httpRequestBuilder.setHeader("Attestation-Token", attestationToken);
+        if (attestationToken != null && !attestationToken.isBlank()) {
+            httpRequestBuilder.setHeader(Const.Attestation.AttestationTokenHeader, attestationToken);
+        }
+        if (attestationJWT != null && !attestationJWT.isBlank()) {
+            httpRequestBuilder.setHeader(Const.Attestation.AttestationJWTHeader, attestationJWT);
         }
         HttpRequest httpRequest = httpRequestBuilder.build();
         HttpResponse<String> httpResponse = null;

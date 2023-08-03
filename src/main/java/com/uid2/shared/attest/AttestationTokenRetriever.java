@@ -29,6 +29,7 @@ public class AttestationTokenRetriever {
     private final IAttestationProvider attestationProvider;
     private final ApplicationVersion appVersion;
     private AtomicReference<String> attestationToken;
+    private AtomicReference<String> attestationJwt;
     private Handler<Integer> responseWatcher;
     private final String attestationEndpoint;
     private final HttpClient httpClient;
@@ -48,6 +49,7 @@ public class AttestationTokenRetriever {
         this.appVersion = appVersion;
         this.attestationProvider = attestationProvider;
         this.attestationToken = new AtomicReference<>(null);
+        this.attestationJwt = new AtomicReference<>(null);
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.lock = new ReentrantLock();
@@ -148,6 +150,14 @@ public class AttestationTokenRetriever {
             setAttestationToken(atoken);
             setAttestationTokenExpiresAt(expiresAt);
 
+            String jwt = getAttestationJWTFromResponse(requestJson);
+            if (jwt == null) {
+                LOGGER.info("Attestation JWT not received");
+            } else {
+                LOGGER.info("Attestation JWT received");
+                setAttestationJWT(jwt);
+            }
+
             scheduleAttestationExpirationCheck();
         } catch (AttestationException ae) {
             throw new AttestationTokenRetrieverException(ae);
@@ -166,6 +176,14 @@ public class AttestationTokenRetriever {
         this.attestationToken.set(atoken);
     }
 
+    public String getAttestationJWT() {
+        return this.attestationJwt.get();
+    }
+
+    private void setAttestationJWT(String jwt) {
+        this.attestationJwt.set(jwt);
+    }
+
     private void setAttestationTokenExpiresAt(String expiresAt) {
         this.attestationTokenExpiresAt = Instant.parse(expiresAt);
     }
@@ -176,6 +194,10 @@ public class AttestationTokenRetriever {
 
     private static String getAttestationTokenExpiresAt(JsonObject responseBody) {
         return responseBody.getString("expiresAt");
+    }
+
+    private static String getAttestationJWTFromResponse(JsonObject responseBody) {
+        return responseBody.getString("attestation_jwt");
     }
 
     private static boolean isFailed(JsonObject responseJson) {

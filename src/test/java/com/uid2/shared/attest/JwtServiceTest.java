@@ -50,8 +50,7 @@ public class JwtServiceTest {
 
     private void addPublicKeysToConfig(String... keys) {
         JsonArray keysArray = new JsonArray();
-        for (String key :
-                keys) {
+        for (String key : keys) {
             JsonObject keyJson = new JsonObject();
             keyJson.put("publicKey", key);
             keysArray.add(keyJson);
