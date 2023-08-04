@@ -124,14 +124,19 @@ public class JwtServiceTest {
     }
 
     @Test
-    void validateTokenEmptyAudienceSucceeds() throws JwtService.ValidationException {
+    void validateTokenEmptyAudienceThrows() {
         this.addPublicKeysToConfig(PUBLIC_KEY_STRING, COMPACT_PUBLIC_KEY);
         JwtService service = new JwtService(config);
-        var validationResponse = service.validateJwt(VALID_TOKEN, ISSUER);
 
-        assertNotNull(validationResponse);
-        assertTrue(validationResponse.getIsValid());
-        assertEquals(AUDIENCE, validationResponse.getAudience());
-        assertNull(validationResponse.getValidationException());
+        var ex = assertThrows(IllegalArgumentException.class, () -> service.validateJwt(VALID_TOKEN, null, ISSUER));
+        assertEquals("Audience can not be empty", ex.getMessage());
+    }
+    @Test
+    void validateTokenEmptyIssuerThrows() {
+        this.addPublicKeysToConfig(PUBLIC_KEY_STRING, COMPACT_PUBLIC_KEY);
+        JwtService service = new JwtService(config);
+
+        var ex = assertThrows(IllegalArgumentException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, null));
+        assertEquals("Issuer can not be empty", ex.getMessage());
     }
 }

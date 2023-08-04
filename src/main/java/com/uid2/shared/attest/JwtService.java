@@ -37,21 +37,20 @@ public class JwtService {
     }
 
     /*
-     * Validates the jwt token signature is valid, and then has the expected issuer
-     * Checks the config value for the public keys. Will loop though all the keys in the config
-     * so that when a key is rotated, or a new one give, we can still validate older tokens.
-     */
-    public JwtValidationResponse validateJwt(String jwt, String issuer) throws ValidationException {
-        return this.validateJwt(jwt, null, issuer);
-    }
-
-    /*
      * Validates the jwt token signature is valid, and then has the expected
      * iss and aud values.
      * Checks the config value for the public keys. Will loop though all the keys in the config
      * so that when a key is rotated, or a new one give, we can still validate older tokens.
      */
     public JwtValidationResponse validateJwt(String jwt, String audience, String issuer) throws ValidationException {
+        if (audience == null || audience.isBlank()) {
+            throw new IllegalArgumentException("Audience can not be empty");
+        }
+
+        if (issuer == null || issuer.isBlank()) {
+            throw new IllegalArgumentException("Issuer can not be empty");
+        }
+
         JwtValidationResponse response = new JwtValidationResponse(false);
 
         if (this.publicKeys.isEmpty()) {
