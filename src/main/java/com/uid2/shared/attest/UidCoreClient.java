@@ -1,13 +1,8 @@
 package com.uid2.shared.attest;
 
-import com.uid2.enclave.IAttestationProvider;
-import com.uid2.shared.ApplicationVersion;
 import com.uid2.shared.Const;
-import com.uid2.shared.InstantClock;
 import com.uid2.shared.Utils;
 import com.uid2.shared.cloud.*;
-import com.uid2.shared.middleware.AttestationMiddleware;
-import io.vertx.core.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +12,6 @@ import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Map;
 
 public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private static final Logger LOGGER = LoggerFactory.getLogger(UidCoreClient.class);
@@ -25,19 +19,27 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private final Proxy proxy;
     private String userToken;
     private final String appVersionHeader;
-    private boolean enforceHttps;
+    private final boolean enforceHttps;
     private boolean allowContentFromLocalFileSystem = false;
-    private HttpClient httpClient;
-    private AttestationTokenRetriever attestationTokenRetriever;
-    private Handler<Integer> responseWatcher;
+    private final HttpClient httpClient;
+    private final AttestationTokenRetriever attestationTokenRetriever;
 
-    public static UidCoreClient createNoAttest(String attestationEndpoint, String userToken, ApplicationVersion appVersion, boolean enforceHttps) throws IOException {
-        return new UidCoreClient(attestationEndpoint, userToken, appVersion, CloudUtils.defaultProxy, new NoAttestationProvider(), enforceHttps, null, null);
+    public static UidCoreClient createNoAttest(String userToken, boolean enforceHttps, AttestationTokenRetriever attestationTokenRetriever) {
+        return new UidCoreClient(userToken, CloudUtils.defaultProxy, enforceHttps, attestationTokenRetriever, null);
     }
 
-    public UidCoreClient(String attestationEndpoint, String userToken, ApplicationVersion appVersion, Proxy proxy,
-                         IAttestationProvider attestationProvider, boolean enforceHttps, HttpClient httpClient,
-                         AttestationTokenRetriever attestationTokenRetriever) throws IOException {
+    public UidCoreClient(String userToken,
+                         Proxy proxy,
+                         boolean enforceHttps,
+                         AttestationTokenRetriever attestationTokenRetriever) {
+        this(userToken, proxy, enforceHttps, attestationTokenRetriever, null);
+    }
+
+    public UidCoreClient(String userToken,
+                         Proxy proxy,
+                         boolean enforceHttps,
+                         AttestationTokenRetriever attestationTokenRetriever,
+                         HttpClient httpClient) {
         this.proxy = proxy;
         this.userToken = userToken;
         this.contentStorage = new PreSignedURLStorage(proxy);
@@ -48,16 +50,12 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
             this.httpClient = httpClient;
         }
         if (attestationTokenRetriever == null) {
-            this.attestationTokenRetriever = new AttestationTokenRetriever(
-                    attestationEndpoint, appVersion, attestationProvider, responseWatcher, new InstantClock(), null, null);
+            throw new IllegalArgumentException("AttestationTokenProvider can not be null");
         } else {
             this.attestationTokenRetriever = attestationTokenRetriever;
         }
 
-        String appVersionHeader = appVersion.getAppName() + "=" + appVersion.getAppVersion();
-        for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet())
-            appVersionHeader += ";" + kv.getKey() + "=" + kv.getValue();
-        this.appVersionHeader = appVersionHeader;
+        this.appVersionHeader = attestationTokenRetriever.getAppVersionHeader();
     }
 
     @Override
@@ -107,7 +105,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return Utils.convertHttpResponseToInputStream(httpResponse);
     }
 
-    private HttpResponse sendHttpRequest(String path, String attestationToken, String attestationJWT) throws IOException, InterruptedException {
+    private HttpResponse<String> sendHttpRequest(String path, String attestationToken, String attestationJWT) throws IOException, InterruptedException {
         URI uri = URI.create(path);
         if (this.enforceHttps && !"https".equalsIgnoreCase(uri.getScheme())) {
             throw new IOException("UidCoreClient requires HTTPS connection");
@@ -128,7 +126,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
             httpRequestBuilder.setHeader(Const.Attestation.AttestationJWTHeader, attestationJWT);
         }
         HttpRequest httpRequest = httpRequestBuilder.build();
-        HttpResponse<String> httpResponse = null;
+        HttpResponse<String> httpResponse;
         try {
             httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
@@ -136,10 +134,6 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
             throw e;
         }
         return httpResponse;
-    }
-
-    public void setResponseStatusWatcher(Handler<Integer> watcher) {
-        this.responseWatcher = watcher;
     }
 
     public void setUserToken(String userToken) {
