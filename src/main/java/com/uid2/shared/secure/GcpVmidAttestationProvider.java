@@ -95,7 +95,7 @@ public class GcpVmidAttestationProvider implements IAttestationProvider {
         LOGGER.debug("Successfully attested VmConfigId against registered enclaves");
 
         // return successful attestation with public key if all above checks pass
-        AttestationResult result = new AttestationResult(publicKey);
+        AttestationResult result = new AttestationResult(publicKey, vmConfigId.getValue());
         handler.handle(Future.succeededFuture(result));
     }
 

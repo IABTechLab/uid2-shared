@@ -54,7 +54,7 @@ public class NitroAttestationProvider implements IAttestationProvider {
             return new AttestationResult(AttestationFailure.FORBIDDEN_ENCLAVE);
         }
 
-        return new AttestationResult(aDoc.getPublicKey());
+        return new AttestationResult(aDoc.getPublicKey(), id.toString());
     }
 
     @Override

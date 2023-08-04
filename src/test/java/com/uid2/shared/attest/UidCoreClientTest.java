@@ -1,12 +1,14 @@
 package com.uid2.shared.attest;
 
-import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.ApplicationVersion;
 import com.uid2.shared.Const;
 import com.uid2.shared.cloud.CloudStorageException;
 import com.uid2.shared.cloud.CloudUtils;
 import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.net.Proxy;
@@ -17,43 +19,56 @@ import java.net.http.HttpResponse;
 
 import static org.mockito.Mockito.*;
 
-public class UidCoreClientTest{
+public class UidCoreClientTest {
     private Proxy proxy = CloudUtils.defaultProxy;
     private AttestationTokenRetriever mockAttestationTokenRetriever = mock(AttestationTokenRetriever.class);
 
     private HttpClient mockHttpClient = mock(HttpClient.class);
 
-    private UidCoreClient uidCoreClient = new UidCoreClient(
-            "core_attest_url", "userToken", new ApplicationVersion("appName", "appVersion"), proxy,
-            mock(IAttestationProvider.class), true, mockHttpClient, mockAttestationTokenRetriever);
+    private UidCoreClient uidCoreClient;
 
     public UidCoreClientTest() throws Exception {
     }
 
+    @BeforeEach
+    void setUp() {
+        when(mockAttestationTokenRetriever.getAppVersionHeader()).thenReturn("testAppVersionHeader");
+        uidCoreClient = new UidCoreClient(
+                "userToken", proxy,
+                true, mockAttestationTokenRetriever, mockHttpClient);
+    }
+
     @Test
     public void Download_Succeed_RequestSentWithExpectedParameters() throws IOException, CloudStorageException, InterruptedException {
+        ArgumentCaptor<HttpRequest> capturedRequest = ArgumentCaptor.forClass(HttpRequest.class);
+
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
 
         when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
+        when(mockAttestationTokenRetriever.getAttestationJWT()).thenReturn("testJWT");
         uidCoreClient.setUserToken("testUserToken");
 
         String expectedResponseBody = "Hello, world!";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
 
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
-        HttpRequest httpRequest = HttpRequest.newBuilder()
+
+        HttpRequest expectedHttpRequest = HttpRequest.newBuilder()
                 .uri(URI.create("https://download"))
                 .GET()
-                .setHeader(Const.Http.AppVersionHeader, "appName=appVersion")
+                .setHeader(Const.Http.AppVersionHeader, "testAppVersionHeader")
                 .setHeader("Authorization", "Bearer testUserToken")
                 .setHeader("Attestation-Token", "testAttestationToken")
+                .setHeader("Attestation-JWT", "testJWT")
                 .build();
 
         uidCoreClient.download("https://download");
-        verify(mockHttpClient).send(
-                argThat(request ->
-                    request.uri().equals(httpRequest.uri()) && request.headers().equals(httpRequest.headers())),
-                any());
+
+        verify(mockHttpClient).send(capturedRequest.capture(), any(HttpResponse.BodyHandler.class));
+        Assertions.assertEquals(expectedHttpRequest.method(), capturedRequest.getValue().method());
+        Assertions.assertEquals(expectedHttpRequest.uri(), capturedRequest.getValue().uri());
+        Assertions.assertEquals(expectedHttpRequest.headers(), capturedRequest.getValue().headers());
+
     }
 
     @Test

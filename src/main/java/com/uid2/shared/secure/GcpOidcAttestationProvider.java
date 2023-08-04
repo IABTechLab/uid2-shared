@@ -37,8 +37,9 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
             LOGGER.debug("Validating signature...");
             var tokenPayload = tokenSignatureValidator.validate(tokenString);
 
+            //TODO: set the enclaveId once the registration of oidc enclaves is done
             if(this.Validate(tokenPayload)){
-                handler.handle(Future.succeededFuture(new AttestationResult(publicKey)));
+                handler.handle(Future.succeededFuture(new AttestationResult(publicKey, "TODO")));
             }else {
                 throw new AttestationException("unauthorized token");
             }
