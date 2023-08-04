@@ -106,39 +106,6 @@ public class CloudUtils {
         else return pathStr + "/";
     }
 
-    public static KmsClient getKmsClient(KmsClientBuilder kmsClientBuilder, JsonObject config) throws URISyntaxException {
-        KmsClient client = null;
-
-        String accessKeyId = config.getString(Const.Config.AccessKeyIdProp);
-        String secretAccessKey = config.getString(Const.Config.SecretAccessKeyProp);
-        String s3Endpoint = config.getString(Const.Config.S3EndpointProp);
-        String awsRegion = config.getString(Const.Config.AwsRegionProp);
-
-        if (accessKeyId != null && !accessKeyId.isEmpty() && secretAccessKey != null && !secretAccessKey.isEmpty()) {
-            AwsBasicCredentials basicCredentials = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
-
-            StaticCredentialsProvider.create(basicCredentials);
-            try {
-                client = kmsClientBuilder
-                        .endpointOverride(new URI(s3Endpoint))
-                        .region(Region.of(awsRegion))
-                        .credentialsProvider(StaticCredentialsProvider.create(basicCredentials))
-                        .build();
-            } catch (URISyntaxException e) {
-                LOGGER.error("Error creating KMS Client Builder using static credentials.", e);
-                throw e;
-            }
-        } else {
-            InstanceProfileCredentialsProvider credentialsProvider = InstanceProfileCredentialsProvider.create();
-
-            client = kmsClientBuilder
-                    .region(Region.of(awsRegion))
-                    .credentialsProvider(credentialsProvider)
-                    .build();
-        }
-
-        return client;
-    }
     private static Proxy getDefaultProxy() {
         String httpProxy = System.getProperty("http_proxy");
         if (httpProxy != null && httpProxy.startsWith("socks5://")) {

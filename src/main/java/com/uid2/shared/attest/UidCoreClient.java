@@ -50,7 +50,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
             this.httpClient = httpClient;
         }
         if (attestationTokenRetriever == null) {
-            throw new IllegalArgumentException("AttestationTokenProvider can not be null");
+            throw new IllegalArgumentException("attestationTokenRetriever can not be null");
         } else {
             this.attestationTokenRetriever = attestationTokenRetriever;
         }

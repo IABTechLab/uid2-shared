@@ -98,7 +98,7 @@ public class JwtServiceTest {
     }
 
     @Test
-    void throwsErrorIfNoKeyId() {
+    void throwsErrorIfNoPublicKeys() {
         JwtService service = new JwtService(config);
         var ex = assertThrows(JwtService.ValidationException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER));
         assertEquals("Unable to get public keys. Validation can not continue", ex.getMessage());
