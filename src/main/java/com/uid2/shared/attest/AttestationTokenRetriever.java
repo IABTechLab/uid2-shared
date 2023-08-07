@@ -189,6 +189,14 @@ public class AttestationTokenRetriever {
             setOptoutJWTFromResponse(innerBody);
             setCoreJWTFromResponse(innerBody);
 
+            String jwt = getAttestationJWTFromResponse(innerBody);
+            if (jwt == null) {
+                LOGGER.info("Attestation JWT not received");
+            } else {
+                LOGGER.info("Attestation JWT received");
+                setAttestationJWT(jwt);
+            }
+
             scheduleAttestationExpirationCheck();
         } catch (IOException ioe) {
             throw ioe;
