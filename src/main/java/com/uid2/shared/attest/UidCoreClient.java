@@ -65,35 +65,29 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
     @Override
     public InputStream download(String path) throws CloudStorageException {
-        try {
-            InputStream inputStream;
-            if (allowContentFromLocalFileSystem && path.startsWith("file:/tmp/uid2")) {
-                // returns `file:/tmp/uid2` urlConnection directly
-                inputStream = readContentFromLocalFileSystem(path, this.proxy);
-            } else {
-                String coreJWT = attestationTokenRetriever.getCoreJWT();
-                inputStream = getWithAttest(path, coreJWT);
-            }
-            return inputStream;
-        } catch (Exception e) {
-            throw new CloudStorageException("download " + path + " error: " + e.getMessage(), e);
-        }
+        String coreJWT = attestationTokenRetriever.getCoreJWT();
+        return  this.internalDownload(path, coreJWT);
     }
 
     public InputStream downloadFromOptOut(String path) throws CloudStorageException {
+        String optOutJWT = attestationTokenRetriever.getOptOutJWT();
+        return this.internalDownload(path, optOutJWT);
+    }
+
+    private InputStream internalDownload(String path, String jwtToken) throws CloudStorageException {
         try {
             InputStream inputStream;
             if (allowContentFromLocalFileSystem && path.startsWith("file:/tmp/uid2")) {
                 // returns `file:/tmp/uid2` urlConnection directly
                 inputStream = readContentFromLocalFileSystem(path, this.proxy);
             } else {
-                String optOutJWT = attestationTokenRetriever.getOptOutJWT();
-                inputStream = getWithAttest(path, optOutJWT);
+                inputStream = getWithAttest(path, jwtToken);
             }
             return inputStream;
         } catch (Exception e) {
             throw new CloudStorageException("download " + path + " error: " + e.getMessage(), e);
         }
+
     }
 
     private InputStream readContentFromLocalFileSystem(String path, Proxy proxy) throws IOException {
