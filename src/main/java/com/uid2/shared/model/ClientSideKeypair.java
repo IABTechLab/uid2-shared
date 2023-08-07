@@ -8,6 +8,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Objects;
 
 public class ClientSideKeypair {
 
@@ -112,6 +113,11 @@ public class ClientSideKeypair {
                 && this.disabled == b.disabled
                 && this.publicKeyPrefix.equals(b.publicKeyPrefix)
                 && this.privateKeyPrefix.equals(b.privateKeyPrefix);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(subscriptionId, Arrays.hashCode(publicKey.getEncoded()), Arrays.hashCode(privateKey.getEncoded()), siteId, created, contact, disabled, publicKeyPrefix, privateKeyPrefix);
     }
 
 }
