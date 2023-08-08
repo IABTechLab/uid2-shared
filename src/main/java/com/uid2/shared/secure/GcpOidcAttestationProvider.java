@@ -88,8 +88,7 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
                     return true;
                 }
             } catch (Exception ex) {
-                // Do not use Warn or Error log here. It could happen as expected during version migration.
-                LOGGER.info("Fail to validator version: " + policyValidator.getVersion() + ", error :" + ex.getMessage());
+                LOGGER.warn("Fail to validator version: " + policyValidator.getVersion() + ", error :" + ex.getMessage());
             }
         }
         return false;

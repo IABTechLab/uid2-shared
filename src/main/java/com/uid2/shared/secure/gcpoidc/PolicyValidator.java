@@ -21,14 +21,12 @@ public class PolicyValidator implements IPolicyValidator {
     private static final Logger LOGGER = LoggerFactory.getLogger(PolicyValidator.class);
 
     public static final String ENV_ENVIRONMENT = "DEPLOYMENT_ENVIRONMENT";
-    public static final String ENV_IDENTITY_SCOPE = "IDENTITY_SCOPE";
     public static final String ENV_OPERATOR_API_KEY = "API_TOKEN";
     public static final String ENV_CORE_ENDPOINT = "CORE_BASE_URL";
     public static final String ENV_OPT_OUT_ENDPOINT = "OPTOUT_BASE_URL";
 
     private static final List<String> REQUIRED_ENV_OVERRIDES = ImmutableList.of(
             ENV_ENVIRONMENT,
-            ENV_IDENTITY_SCOPE,
             ENV_OPERATOR_API_KEY
     );
 
@@ -92,12 +90,6 @@ public class PolicyValidator implements IPolicyValidator {
         var env = Environment.fromString(envOverridesCopy.get(ENV_ENVIRONMENT));
         if(env == null){
             throw new AttestationException("Environment can not be parsed. " + envOverridesCopy.get(ENV_ENVIRONMENT));
-        }
-
-        // identityScope could be parsed
-        var identityScope = IdentityScope.fromString(envOverridesCopy.get(ENV_IDENTITY_SCOPE));
-        if(identityScope == null){
-            throw new AttestationException("IdentityScope can not be parsed. " + envOverridesCopy.get(ENV_IDENTITY_SCOPE));
         }
 
         // make sure there's no unexpected overrides
