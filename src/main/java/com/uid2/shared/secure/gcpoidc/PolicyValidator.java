@@ -7,6 +7,8 @@ import com.uid2.shared.Utils;
 import com.uid2.shared.secure.AttestationException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 
 public class PolicyValidator implements IPolicyValidator {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PolicyValidator.class);
 
     public static final String ENV_ENVIRONMENT = "DEPLOYMENT_ENVIRONMENT";
     public static final String ENV_IDENTITY_SCOPE = "IDENTITY_SCOPE";
@@ -117,6 +120,7 @@ public class PolicyValidator implements IPolicyValidator {
 
     private String generateEnclaveId(boolean isDebugMode, String imageDigest, Environment env) throws AttestationException {
         var str = String.format("%s,%s,%s", getVersion(), isDebugMode, imageDigest);
+        LOGGER.info("Meta used to generate GCP EnclaveId: " + str);
         try {
             return getSha256Base64Encoded(str);
         } catch (NoSuchAlgorithmException e) {
