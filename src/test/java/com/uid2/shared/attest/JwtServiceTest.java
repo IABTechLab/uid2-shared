@@ -49,12 +49,7 @@ public class JwtServiceTest {
     }
 
     private void addPublicKeysToConfig(String... keys) {
-        JsonArray keysArray = new JsonArray();
-        for (String key : keys) {
-            JsonObject keyJson = new JsonObject();
-            keyJson.put("publicKey", key);
-            keysArray.add(keyJson);
-        }
+        String keysArray = String.join(",", keys);
         this.config.put(Const.Config.AwsKmsJwtSigningPublicKeysProp, keysArray);
     }
 

@@ -54,7 +54,7 @@ public class AttestationTokenRetrieverTest {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-03T09:09:30.608597Z\",\"attestation_jwt\": \"\"},\"status\": \"success\"}";
+        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-03T09:09:30.608597Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
@@ -75,12 +75,12 @@ public class AttestationTokenRetrieverTest {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt\": \"\"},\"status\": \"success\"}";
+        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt_optout\": \"\", \"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
         HttpResponse<String> mockHttpResponseSecondAttest = mock(HttpResponse.class);
-        String expectedResponseBodySecondAttest = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt\": \"\"},\"status\": \"success\"}";
+        String expectedResponseBodySecondAttest = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
         when(mockHttpResponseSecondAttest.body()).thenReturn(expectedResponseBodySecondAttest);
         when(mockHttpResponseSecondAttest.statusCode()).thenReturn(300);
 
@@ -107,7 +107,7 @@ public class AttestationTokenRetrieverTest {
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt\": \"\"},\"status\": \"success\"}";
+        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
@@ -138,7 +138,7 @@ public class AttestationTokenRetrieverTest {
         content.put("status", "success");
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        String expectedResponseBody = "{\"body\": {\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt\": \"\"},\"status\": \"success\"}";
+        String expectedResponseBody = "{\"body\": {\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
@@ -166,7 +166,7 @@ public class AttestationTokenRetrieverTest {
         content.put("status", "success");
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\", \"attestation_jwt\": \"\"},\"status\": \"success\"}";
+        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\", \"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
@@ -182,13 +182,13 @@ public class AttestationTokenRetrieverTest {
         testContext.completeNow();
     }
     @Test
-    public void Attest_Succeed_AttestationJWTSet(Vertx vertx, VertxTestContext testContext) throws Exception {
+    public void Attest_Succeed_OptOutJWTSet(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-03T09:09:30.608597Z\",\"attestation_jwt\": \"test_jwt\"},\"status\": \"success\"}";
+        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-03T09:09:30.608597Z\",\"attestation_jwt_optout\": \"test_jwt\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
@@ -196,12 +196,31 @@ public class AttestationTokenRetrieverTest {
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         attestationTokenRetriever.attest();
-        Assertions.assertEquals("test_jwt", attestationTokenRetriever.getAttestationJWT());
+        Assertions.assertEquals("test_jwt", attestationTokenRetriever.getOptOutJWT());
         verify(this.responseWatcher, times(1)).handle(200);
         testContext.completeNow();
     }
     @Test
-    public void Attest_Succeed_AttestationJWTNull(Vertx vertx, VertxTestContext testContext) throws Exception {
+    public void Attest_Succeed_CoreJWTSet(Vertx vertx, VertxTestContext testContext) throws Exception {
+        attestationTokenRetriever = getAttestationTokenRetriever(vertx);
+
+        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-03T09:09:30.608597Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"test_jwt_core\"},\"status\": \"success\"}";
+        when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
+        when(mockHttpResponse.statusCode()).thenReturn(200);
+
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
+
+        attestationTokenRetriever.attest();
+        Assertions.assertEquals("test_jwt_core", attestationTokenRetriever.getCoreJWT());
+        verify(this.responseWatcher, times(1)).handle(200);
+        testContext.completeNow();
+    }
+    @Test
+    public void Attest_Succeed_JWTsNull(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
@@ -215,7 +234,8 @@ public class AttestationTokenRetrieverTest {
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         attestationTokenRetriever.attest();
-        Assertions.assertNull(attestationTokenRetriever.getAttestationJWT());
+        Assertions.assertNull(attestationTokenRetriever.getOptOutJWT());
+        Assertions.assertNull(attestationTokenRetriever.getCoreJWT());
         verify(this.responseWatcher, times(1)).handle(200);
         testContext.completeNow();
     }

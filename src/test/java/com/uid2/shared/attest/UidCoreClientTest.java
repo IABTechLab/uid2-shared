@@ -1,6 +1,5 @@
 package com.uid2.shared.attest;
 
-import com.uid2.shared.ApplicationVersion;
 import com.uid2.shared.Const;
 import com.uid2.shared.cloud.CloudStorageException;
 import com.uid2.shared.cloud.CloudUtils;
@@ -45,7 +44,8 @@ public class UidCoreClientTest {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
 
         when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
-        when(mockAttestationTokenRetriever.getAttestationJWT()).thenReturn("testJWT");
+        when(mockAttestationTokenRetriever.getCoreJWT()).thenReturn("testCoreJWT");
+        when(mockAttestationTokenRetriever.getOptOutJWT()).thenReturn("testOptOutJWT");
         uidCoreClient.setUserToken("testUserToken");
 
         String expectedResponseBody = "Hello, world!";
@@ -59,7 +59,7 @@ public class UidCoreClientTest {
                 .setHeader(Const.Http.AppVersionHeader, "testAppVersionHeader")
                 .setHeader("Authorization", "Bearer testUserToken")
                 .setHeader("Attestation-Token", "testAttestationToken")
-                .setHeader("Attestation-JWT", "testJWT")
+                .setHeader("Attestation-JWT", "testCoreJWT")
                 .build();
 
         uidCoreClient.download("https://download");

@@ -65,41 +65,51 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
     @Override
     public InputStream download(String path) throws CloudStorageException {
+        String coreJWT = attestationTokenRetriever.getCoreJWT();
+        return  this.internalDownload(path, coreJWT);
+    }
+
+    public InputStream downloadFromOptOut(String path) throws CloudStorageException {
+        String optOutJWT = attestationTokenRetriever.getOptOutJWT();
+        return this.internalDownload(path, optOutJWT);
+    }
+
+    private InputStream internalDownload(String path, String jwtToken) throws CloudStorageException {
         try {
             InputStream inputStream;
             if (allowContentFromLocalFileSystem && path.startsWith("file:/tmp/uid2")) {
                 // returns `file:/tmp/uid2` urlConnection directly
                 inputStream = readContentFromLocalFileSystem(path, this.proxy);
             } else {
-                inputStream = getWithAttest(path);
+                inputStream = getWithAttest(path, jwtToken);
             }
             return inputStream;
         } catch (Exception e) {
             throw new CloudStorageException("download " + path + " error: " + e.getMessage(), e);
         }
+
     }
 
     private InputStream readContentFromLocalFileSystem(String path, Proxy proxy) throws IOException {
         return (proxy == null ? new URL(path).openConnection() : new URL(path).openConnection(proxy)).getInputStream();
     }
 
-    private InputStream getWithAttest(String path) throws IOException, InterruptedException, AttestationTokenRetrieverException {
+    private InputStream getWithAttest(String path, String jwtToken) throws IOException, InterruptedException, AttestationTokenRetrieverException {
         if (!attestationTokenRetriever.attested()) {
             attestationTokenRetriever.attest();
         }
 
         String attestationToken = attestationTokenRetriever.getAttestationToken();
-        String attestationJWT = attestationTokenRetriever.getAttestationJWT();
 
         HttpResponse<String> httpResponse;
-        httpResponse = sendHttpRequest(path, attestationToken, attestationJWT);
+        httpResponse = sendHttpRequest(path, attestationToken, jwtToken);
 
         // This should never happen, but keeping this part of the code just to be extra safe.
         if (httpResponse.statusCode() == 401) {
             LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
             attestationTokenRetriever.attest();
             attestationToken = attestationTokenRetriever.getAttestationToken();
-            httpResponse = sendHttpRequest(path, attestationToken, attestationJWT);
+            httpResponse = sendHttpRequest(path, attestationToken, jwtToken);
         }
 
         return Utils.convertHttpResponseToInputStream(httpResponse);

@@ -1,6 +1,5 @@
 package com.uid2.shared.attest;
 
-import com.uid2.enclave.AttestationException;
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.*;
 import io.vertx.core.Handler;
@@ -31,7 +30,8 @@ public class AttestationTokenRetriever {
     private final String clientApiToken;
     private final ApplicationVersion appVersion;
     private final AtomicReference<String> attestationToken;
-    private final AtomicReference<String> attestationJwt;
+    private final AtomicReference<String> optOutJwt;
+    private final AtomicReference<String> coreJwt;
     private final Handler<Integer> responseWatcher;
     private final String attestationEndpoint;
     private final HttpClient httpClient;
@@ -68,7 +68,8 @@ public class AttestationTokenRetriever {
         this.appVersion = appVersion;
         this.attestationProvider = attestationProvider;
         this.attestationToken = new AtomicReference<>(null);
-        this.attestationJwt = new AtomicReference<>(null);
+        this.optOutJwt = new AtomicReference<>(null);
+        this.coreJwt = new AtomicReference<>(null);
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.lock = new ReentrantLock();
@@ -185,14 +186,8 @@ public class AttestationTokenRetriever {
             LOGGER.info("Attestation successful. Attestation token received.");
             setAttestationToken(atoken);
             setAttestationTokenExpiresAt(expiresAt);
-
-            String jwt = getAttestationJWTFromResponse(innerBody);
-            if (jwt == null) {
-                LOGGER.info("Attestation JWT not received");
-            } else {
-                LOGGER.info("Attestation JWT received");
-                setAttestationJWT(jwt);
-            }
+            setOptoutJWTFromResponse(innerBody);
+            setCoreJWTFromResponse(innerBody);
 
             scheduleAttestationExpirationCheck();
         } catch (IOException ioe) {
@@ -210,16 +205,16 @@ public class AttestationTokenRetriever {
         this.attestationToken.set(atoken);
     }
 
-    public String getAttestationJWT() {
-        return this.attestationJwt.get();
+    public String getOptOutJWT() {
+        return this.optOutJwt.get();
+    }
+
+    public String getCoreJWT() {
+        return this.coreJwt.get();
     }
 
     public String getAppVersionHeader() {
         return this.appVersionHeader;
-    }
-
-    private void setAttestationJWT(String jwt) {
-        this.attestationJwt.set(jwt);
     }
 
     private void setAttestationTokenExpiresAt(String expiresAt) {
@@ -234,8 +229,24 @@ public class AttestationTokenRetriever {
         return responseBody.getString("expiresAt");
     }
 
-    private static String getAttestationJWTFromResponse(JsonObject responseBody) {
-        return responseBody.getString("attestation_jwt");
+    private void setOptoutJWTFromResponse(JsonObject responseBody) {
+        String jwt = responseBody.getString("attestation_jwt_optout");
+        if (jwt == null) {
+            LOGGER.info("Optout JWT not received");
+        } else {
+            LOGGER.info("Optout JWT received");
+            this.optOutJwt.set(jwt);
+        }
+    }
+
+    private void setCoreJWTFromResponse(JsonObject responseBody) {
+        String jwt = responseBody.getString("attestation_jwt_core");
+        if (jwt == null) {
+            LOGGER.info("Core JWT not received");
+        } else {
+            LOGGER.info("Core JWT received");
+            this.coreJwt.set(jwt);
+        }
     }
 
     private static boolean isFailed(JsonObject responseJson) {

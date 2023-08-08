@@ -5,6 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Optional;
@@ -28,12 +29,13 @@ public class JwtService {
 
     public JwtService(JsonObject config) {
         this.config = config;
-        JsonArray publicKeys = config.getJsonArray(Const.Config.AwsKmsJwtSigningPublicKeysProp);
-        if (publicKeys == null || publicKeys.isEmpty()) {
+        String keysData = config.getString(Const.Config.AwsKmsJwtSigningPublicKeysProp, "");
+        String[] keys = keysData.split(",");
+        if (keys == null || keys.length == 0) {
             LOGGER.info("Unable to read public keys from the configuration. JWTs can not be verified.");
             return;
         }
-        this.parsePublicKeysFromConfig(publicKeys);
+        this.parsePublicKeysFromConfig(keys);
     }
 
     /*
@@ -94,18 +96,15 @@ public class JwtService {
         return response;
     }
 
-    private void parsePublicKeysFromConfig(JsonArray publicKeys) {
-
-        publicKeys.forEach(key -> {
-            JsonObject instance = (JsonObject) key;
-            String publicKeyString = instance.getString("publicKey");
+    private void parsePublicKeysFromConfig(String[] publicKeys) {
+        Arrays.stream(publicKeys).forEach(key -> {
             try {
-                PublicKey publicKey = this.getPublicKeyFromString(publicKeyString);
+                PublicKey publicKey = this.getPublicKeyFromString(key);
                 if (publicKey != null) {
                     this.publicKeys.add(publicKey);
                 }
             } catch (ValidationException e) {
-                LOGGER.error("Unable to parse Public Key string that starts with: {}", publicKeyString.substring(0, publicKeyString.length() > 50 ? 50 : publicKeyString.length()));
+                LOGGER.error("Unable to parse Public Key string that starts with: {}", key.substring(0, key.length() > 15 ? 15 : key.length()));
             }
         });
     }
