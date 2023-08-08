@@ -22,6 +22,11 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private final boolean enforceHttps;
     private boolean allowContentFromLocalFileSystem = false;
     private final HttpClient httpClient;
+
+    protected AttestationTokenRetriever getAttestationTokenRetriever() {
+        return attestationTokenRetriever;
+    }
+
     private final AttestationTokenRetriever attestationTokenRetriever;
 
     public static UidCoreClient createNoAttest(String userToken, boolean enforceHttps, AttestationTokenRetriever attestationTokenRetriever) {
@@ -65,13 +70,17 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
     @Override
     public InputStream download(String path) throws CloudStorageException {
-        String coreJWT = attestationTokenRetriever.getCoreJWT();
+        String coreJWT = this.getJWT();
         return  this.internalDownload(path, coreJWT);
     }
 
     public InputStream downloadFromOptOut(String path) throws CloudStorageException {
         String optOutJWT = attestationTokenRetriever.getOptOutJWT();
         return this.internalDownload(path, optOutJWT);
+    }
+
+    protected  String getJWT(){
+        return this.getAttestationTokenRetriever().getCoreJWT();
     }
 
     private InputStream internalDownload(String path, String jwtToken) throws CloudStorageException {
