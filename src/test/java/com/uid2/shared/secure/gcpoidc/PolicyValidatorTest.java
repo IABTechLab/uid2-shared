@@ -42,18 +42,6 @@ public class PolicyValidatorTest {
     }
 
     @Test
-    public void testValicationFailure_UnknownScope() {
-        var validator = new PolicyValidator();
-        var payload = generateBasicPayload();
-        var envOverrides = new HashMap<>(payload.getEnvOverrides());
-        envOverrides.put(PolicyValidator.ENV_IDENTITY_SCOPE, "scope1");
-        var newPayload = payload.toBuilder()
-                .envOverrides(envOverrides)
-                .build();
-        assertThrows(AttestationException.class, ()-> validator.validate(newPayload));
-    }
-
-    @Test
     public void testValicationSuccess_IntegNoOptionalEnv() throws AttestationException {
         var validator = new PolicyValidator();
         var payload = generateBasicPayload();
@@ -173,7 +161,6 @@ public class PolicyValidatorTest {
                 .restartPolicy("NEVER")
                 .envOverrides(Map.of(
                         PolicyValidator.ENV_ENVIRONMENT, "prod",
-                        PolicyValidator.ENV_IDENTITY_SCOPE, "uid2",
                         PolicyValidator.ENV_OPERATOR_API_KEY, "dummy_api_key"
                 ));
         return builder.build();

@@ -78,17 +78,17 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
     // Pass as long as one of supported policy validator check pass.
     private boolean Validate(TokenPayload tokenPayload) {
         for (var policyValidator : supportedPolicyValidators) {
-            LOGGER.debug("Validating policy... Validator version: " + policyValidator.getVersion());
+            LOGGER.info("Validating policy... Validator version: " + policyValidator.getVersion());
             try {
                 var enclaveId = policyValidator.validate(tokenPayload);
-                LOGGER.debug("Validator version: " + policyValidator.getVersion() + ", result: " + enclaveId);
+                LOGGER.info("Validator version: " + policyValidator.getVersion() + ", result: " + enclaveId);
 
                 if (allowedEnclaveIds.contains(enclaveId)) {
-                    LOGGER.debug("Successfully attested OIDC against registered enclaves");
+                    LOGGER.info("Successfully attested OIDC against registered enclaves");
                     return true;
                 }
             } catch (Exception ex) {
-                LOGGER.debug("Fail to validator version: " + policyValidator.getVersion() + ", error :" + ex.getMessage());
+                LOGGER.warn("Fail to validator version: " + policyValidator.getVersion() + ", error :" + ex.getMessage());
             }
         }
         return false;
