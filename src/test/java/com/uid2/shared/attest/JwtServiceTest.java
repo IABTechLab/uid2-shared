@@ -6,6 +6,9 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.core.SdkBytes;
@@ -49,8 +52,10 @@ public class JwtServiceTest {
     }
 
     private void addPublicKeysToConfig(String... keys) {
-        String keysArray = String.join(",", keys);
-        this.config.put(Const.Config.AwsKmsJwtSigningPublicKeysProp, keysArray);
+        if (keys != null) {
+            String keysArray = String.join(",", keys);
+            this.config.put(Const.Config.AwsKmsJwtSigningPublicKeysProp, keysArray);
+        }
     }
 
     @Test
@@ -134,4 +139,19 @@ public class JwtServiceTest {
         var ex = assertThrows(IllegalArgumentException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, null));
         assertEquals("Issuer can not be empty", ex.getMessage());
     }
-}
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "")
+    void nullPublicKeysPasses(String key) {
+        this.addPublicKeysToConfig(key);
+        JwtService service = new JwtService(config);
+        var ex = assertThrows(JwtService.ValidationException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER));
+        assertEquals("Unable to get public keys. Validation can not continue", ex.getMessage());
+    }
+    @Test
+    void noPublicKeysConfigPasses() {
+        JwtService service = new JwtService(config);
+        var ex = assertThrows(JwtService.ValidationException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER));
+        assertEquals("Unable to get public keys. Validation can not continue", ex.getMessage());
+    }}

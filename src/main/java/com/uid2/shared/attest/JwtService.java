@@ -31,7 +31,7 @@ public class JwtService {
         this.config = config;
         String keysData = config.getString(Const.Config.AwsKmsJwtSigningPublicKeysProp, "");
         String[] keys = keysData.split(",");
-        if (keys == null || keys.length == 0) {
+        if (keysData.isBlank() || keys == null || keys.length == 0) {
             LOGGER.info("Unable to read public keys from the configuration. JWTs can not be verified.");
             return;
         }
@@ -99,9 +99,11 @@ public class JwtService {
     private void parsePublicKeysFromConfig(String[] publicKeys) {
         Arrays.stream(publicKeys).forEach(key -> {
             try {
-                PublicKey publicKey = this.getPublicKeyFromString(key);
-                if (publicKey != null) {
-                    this.publicKeys.add(publicKey);
+                if (key != null && !key.isBlank()) {
+                    PublicKey publicKey = this.getPublicKeyFromString(key);
+                    if (publicKey != null) {
+                        this.publicKeys.add(publicKey);
+                    }
                 }
             } catch (ValidationException e) {
                 LOGGER.error("Unable to parse Public Key string that starts with: {}", key.substring(0, key.length() > 15 ? 15 : key.length()));
