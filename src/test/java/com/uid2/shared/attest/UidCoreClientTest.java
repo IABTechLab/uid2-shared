@@ -107,4 +107,11 @@ public class UidCoreClientTest {
         uidCoreClient.download("https://download");
         verify(mockAttestationTokenRetriever, times(2)).attest();
     }
+
+    @Test
+    void getJwtReturnsCoreToken() {
+        when(mockAttestationTokenRetriever.getOptOutJWT()).thenReturn("optOutJWT");
+        when(mockAttestationTokenRetriever.getCoreJWT()).thenReturn("coreJWT");
+        Assertions.assertEquals("coreJWT", this.uidCoreClient.getJWT());
+    }
 }
