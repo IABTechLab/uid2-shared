@@ -97,7 +97,7 @@ public class AttestationMiddleware {
                         }
                     }
                 } else {
-                    LOGGER.info("Attestation failed. SiteId: {}, Name: {}, Contact: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
+                    LOGGER.info("Attestation failed. SiteId: {}, Name: {}, Contact: {}, Protocol: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), protocol);
                 }
             }
 
