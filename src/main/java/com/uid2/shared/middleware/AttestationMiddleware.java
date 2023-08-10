@@ -87,17 +87,15 @@ public class AttestationMiddleware {
                                 LOGGER.info("JWT missing required role. Required roles: {}, JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}", this.roleBasedJwtClaimValidator.getRequiredRoles(), response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
                             }
                         } catch (JwtService.ValidationException e) {
-                            LOGGER.info("Error validating JWT. Attestation failed. SiteId: {}, Name: {}, Contact: {}. Error: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), e);
+                            LOGGER.info("Error validating JWT. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}. Error: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), e);
                             success = false;
                         }
                     } else {
                         if (this.enforceJwt) {
-                            LOGGER.info("JWT is required, but was not received. Attestation failed. SiteId: {}, Name: {}, Contact: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
+                            LOGGER.info("JWT is required, but was not received. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
                             success = false;
                         }
                     }
-                } else {
-                    LOGGER.info("Attestation failed. SiteId: {}, Name: {}, Contact: {}, Protocol: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), protocol);
                 }
             }
 
