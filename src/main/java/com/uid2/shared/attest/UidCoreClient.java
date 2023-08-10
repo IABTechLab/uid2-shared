@@ -74,6 +74,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return  this.internalDownload(path, coreJWT);
     }
 
+    @Deprecated
     public InputStream downloadFromOptOut(String path) throws CloudStorageException {
         String optOutJWT = attestationTokenRetriever.getOptOutJWT();
         return this.internalDownload(path, optOutJWT);
