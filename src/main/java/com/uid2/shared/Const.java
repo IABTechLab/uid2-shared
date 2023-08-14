@@ -90,19 +90,17 @@ public class Const {
     }
 
     public static class Data {
-        // This side id is reserved. It is used to encrypt refresh token.
-        public static final int RefreshKeySiteId = -2;
-        // This side id is reserved. It is assigned to master keys.
-        public static final int MasterKeySiteId = -1;
-        // This site id is reserved. It is assigned to client access keys by default.
-        @Deprecated
-        public static final int DefaultClientSiteId = 1;
-        // This site id is reserved. It may not be used for client keys.
-        public static final int AdvertisingTokenSiteId = 2;
 
-        public static final int MasterKeysetId = 1;
-        public static final int RefreshKeysetId = 2;
-        public static final int FallbackPublisherKeysetId = 3;
+        public static final int MasterKeySiteId = -1; // This site id is reserved. It is assigned to master keys.
+        public static final int RefreshKeySiteId = -2; // This site id is reserved. It is used to encrypt refresh token.
+        @Deprecated
+        public static final int DefaultClientSiteId = 1; // This site id is reserved. It is assigned to client access keys by default.
+        public static final int AdvertisingTokenSiteId = 2; // This site id is reserved. It may not be used for client keys.
+
+
+        public static final int MasterKeysetId = -1; //keyset used by MasterKeySiteId
+        public static final int RefreshKeysetId = -2; //keyset used by RefreshKeySiteId
+        public static final int FallbackPublisherKeysetId = 2; //keyset used by AdvertisingTokenSiteId
     }
 
     public static class RoutingContextData {
