@@ -19,8 +19,8 @@ public class KeyHasherTest {
     @Test
     public void HashKey_ReturnsNewHashEverytime_WithRandomSalt() {
         KeyHasher hasher = new KeyHasher();
-        KeyHashResult result1 = hasher.hashKey("test--key");
-        KeyHashResult result2 = hasher.hashKey("test--key");
+        KeyHashResult result1 = hasher.hashKey("test-key");
+        KeyHashResult result2 = hasher.hashKey("test-key");
 
         assertNotEquals(result1.hash, result2.hash);
         assertNotEquals(result1.salt, result2.salt);
