@@ -9,16 +9,6 @@ import java.security.SecureRandom;
 public class KeyHasher {
     private static final int SALT_BYTES = 32;
 
-    public static class KeyHashResult {
-        public final String hash;
-        public final String salt;
-
-        public KeyHashResult(String hash, String salt) {
-            this.hash = hash;
-            this.salt = salt;
-        }
-    }
-
     private static byte[] generateSaltBytes() {
         final SecureRandom random = new SecureRandom();
         final byte[] bytes = new byte[SALT_BYTES];
