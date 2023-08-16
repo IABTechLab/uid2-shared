@@ -7,13 +7,13 @@ import java.time.Instant;
 import java.util.*;
 
 public class KeysetKeyStoreSnapshot implements IKeysetKeyStore.IkeysetKeyStoreSnapshot {
-    private final HashMap<Integer, KeysetKey> keyIdToKeyMap;
-    private final HashMap<Integer, List<KeysetKey>> keysetIdToKeyListMap;
+    private final HashMap<Integer, KeysetKey> keyIdToKeysetKey;
+    private final HashMap<Integer, List<KeysetKey>> keysetIdToKeysetKeyList;
     private final List<KeysetKey> allKeys;
 
     public KeysetKeyStoreSnapshot(HashMap<Integer, KeysetKey> keyIdToKeysetKey, HashMap<Integer, List<KeysetKey>> keysetIdToKeysetKeyList) {
-        this.keyIdToKeyMap = keyIdToKeysetKey;
-        this.keysetIdToKeyListMap = keysetIdToKeysetKeyList;
+        this.keyIdToKeysetKey = keyIdToKeysetKey;
+        this.keysetIdToKeysetKeyList = keysetIdToKeysetKeyList;
         this.allKeys = new ArrayList<>(keyIdToKeysetKey.values());
 
         for(Map.Entry<Integer, List<KeysetKey>> entry : keysetIdToKeysetKeyList.entrySet()) {
@@ -28,7 +28,7 @@ public class KeysetKeyStoreSnapshot implements IKeysetKeyStore.IkeysetKeyStoreSn
 
     @Override
     public KeysetKey getActiveKey(int keysetId, Instant now) {
-        List<KeysetKey> keysetKeys = keysetIdToKeyListMap.get(keysetId);
+        List<KeysetKey> keysetKeys = keysetIdToKeysetKeyList.get(keysetId);
         if(keysetKeys == null || keysetKeys.isEmpty()) return null;
         int keysetKeysIndex = Utils.upperBound(keysetKeys, now, (ts, k) -> ts.isBefore(k.getActivates()));
         while(keysetKeysIndex > 0) {
@@ -44,7 +44,7 @@ public class KeysetKeyStoreSnapshot implements IKeysetKeyStore.IkeysetKeyStoreSn
     @Override
     public KeysetKey getKey(int keyId) {
         try {
-            return this.keyIdToKeyMap.get(keyId);
+            return this.keyIdToKeysetKey.get(keyId);
         } catch (Exception ex) {
             throw new IllegalArgumentException("Key ID " + keyId + " not supported");
         }

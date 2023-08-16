@@ -19,8 +19,8 @@ public class KeysetKeyParser implements Parser<IKeysetKeyStore.IkeysetKeyStoreSn
     @Override
     public ParsingResult<IKeysetKeyStore.IkeysetKeyStoreSnapshot> deserialize(InputStream inputStream) throws IOException {
         JsonArray keysSpec = Utils.toJsonArray(inputStream);
-        final HashMap<Integer, KeysetKey> keyIdToKeyMap = new HashMap<>();
-        final HashMap<Integer, List<KeysetKey>> keysetIdToKeyListMap = new HashMap<>();
+        final HashMap<Integer, KeysetKey> keyIdToKeysetKey = new HashMap<>();
+        final HashMap<Integer, List<KeysetKey>> keysetIdToKeysetKeyList = new HashMap<>();
         for (int i = 0; i < keysSpec.size(); i++) {
             JsonObject keySpec = keysSpec.getJsonObject(i);
             int keysetId = keySpec.getInteger("keyset_id");
@@ -32,10 +32,10 @@ public class KeysetKeyParser implements Parser<IKeysetKeyStore.IkeysetKeyStoreSn
                     Base64.getDecoder().decode(keySpec.getString("secret")),
                     created, activates, expires, keysetId
                     );
-            keyIdToKeyMap.put(keysetKey.getId(), keysetKey);
-            keysetIdToKeyListMap.computeIfAbsent(keysetId, k -> new ArrayList<>()).add(keysetKey);
+            keyIdToKeysetKey.put(keysetKey.getId(), keysetKey);
+            keysetIdToKeysetKeyList.computeIfAbsent(keysetId, k -> new ArrayList<>()).add(keysetKey);
         }
-        KeysetKeyStoreSnapshot snapshot = new KeysetKeyStoreSnapshot(keyIdToKeyMap, keysetIdToKeyListMap);
+        KeysetKeyStoreSnapshot snapshot = new KeysetKeyStoreSnapshot(keyIdToKeysetKey, keysetIdToKeysetKeyList);
         return new ParsingResult<>(snapshot, keysSpec.size());
     }
 }
