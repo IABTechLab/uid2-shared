@@ -11,7 +11,7 @@ public interface IKeysetKeyStore {
 
 
     public interface IkeysetKeyStoreSnapshot {
-        public List<KeysetKey> getActiveKeysetKeys();
+        public List<KeysetKey> getAllKeysetKeys();
         public KeysetKey getActiveKey(int keysetId, Instant now);
         public KeysetKey getKey(int keyId);
     }

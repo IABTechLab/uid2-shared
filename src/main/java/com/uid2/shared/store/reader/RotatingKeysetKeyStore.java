@@ -31,7 +31,7 @@ public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Coll
 
     @Override
     public Collection<KeysetKey> getAll() {
-        return reader.getSnapshot().getActiveKeysetKeys();
+        return reader.getSnapshot().getAllKeysetKeys();
     }
 
     @Override
