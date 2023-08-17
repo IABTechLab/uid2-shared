@@ -6,7 +6,7 @@ import com.uid2.shared.Utils;
 import java.time.Instant;
 import java.util.*;
 
-public class KeysetKeyStoreSnapshot implements IKeysetKeyStore.IkeysetKeyStoreSnapshot {
+public class KeysetKeyStoreSnapshot {
     private final HashMap<Integer, KeysetKey> keyIdToKeysetKey;
     private final HashMap<Integer, List<KeysetKey>> keysetIdToKeysetKeyList;
     private final List<KeysetKey> allKeys;
@@ -21,12 +21,10 @@ public class KeysetKeyStoreSnapshot implements IKeysetKeyStore.IkeysetKeyStoreSn
         }
     }
 
-    @Override
     public List<KeysetKey> getAllKeysetKeys() {
         return this.allKeys;
     }
 
-    @Override
     public KeysetKey getActiveKey(int keysetId, Instant now) {
         List<KeysetKey> keysetKeys = keysetIdToKeysetKeyList.get(keysetId);
         if(keysetKeys == null || keysetKeys.isEmpty()) return null;
@@ -41,7 +39,6 @@ public class KeysetKeyStoreSnapshot implements IKeysetKeyStore.IkeysetKeyStoreSn
         return null;
     }
 
-    @Override
     public KeysetKey getKey(int keyId) {
         try {
             return this.keyIdToKeysetKey.get(keyId);
