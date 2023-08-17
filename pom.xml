@@ -53,7 +53,7 @@
         <dependency>
             <groupId>com.uid2</groupId>
             <artifactId>uid2-attestation-api</artifactId>
-            <version>1.1.0</version>
+            <version>1.4.0-e5df2e10aa</version>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>

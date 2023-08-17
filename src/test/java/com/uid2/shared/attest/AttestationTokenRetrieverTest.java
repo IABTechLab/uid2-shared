@@ -52,6 +52,8 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
+        when(clock.now()).thenReturn(Instant.parse("2023-08-01T00:00:00.111Z"));
+
         attestationTokenRetriever.attest();
         testContext.completeNow();
         Assertions.assertEquals("test_attestation_token", attestationTokenRetriever.getAttestationToken());
@@ -61,6 +63,7 @@ public class AttestationTokenRetrieverTest {
     public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ExpiryCheckCallsAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever.setVertx(vertx);
 
+        when(attestationProvider.isReady()).thenReturn(true);
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
@@ -91,6 +94,7 @@ public class AttestationTokenRetrieverTest {
     public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ExpiryCheckDoesNotCallAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever.setVertx(vertx);
 
+        when(attestationProvider.isReady()).thenReturn(true);
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
@@ -102,6 +106,30 @@ public class AttestationTokenRetrieverTest {
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         when(clock.now()).thenReturn(Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).minusSeconds(100));
+
+        attestationTokenRetriever.attest();
+        testContext.awaitCompletion(1, TimeUnit.SECONDS);
+        // Verify on httpClient because we can't mock attestationTokenRetriever
+        verify(mockHttpClient, times(1)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        testContext.completeNow();
+    }
+
+    @Test
+    public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ProviderNotReadyDoesNotCallAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
+        attestationTokenRetriever.setVertx(vertx);
+
+        when(attestationProvider.isReady()).thenReturn(false);
+        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        String expectedResponseBody = "{\"attestation_token\": \"test\", \"expiresAt\": \"2023-08-01T00:00:00.111Z\", \"status\": \"success\"}";
+        when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
+        when(mockHttpResponse.statusCode()).thenReturn(200);
+
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
+
+        when(clock.now()).thenReturn(Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).plusSeconds(100));
 
         attestationTokenRetriever.attest();
         testContext.awaitCompletion(1, TimeUnit.SECONDS);
