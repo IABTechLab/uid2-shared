@@ -3,6 +3,7 @@ package com.uid2.shared.store.reader;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.model.KeysetKey;
 import com.uid2.shared.store.CloudPath;
+import com.uid2.shared.store.IKeysetKeyStore;
 import com.uid2.shared.store.KeysetKeyStoreSnapshot;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.KeysetKeyParser;
@@ -12,7 +13,7 @@ import io.vertx.core.json.JsonObject;
 import java.time.Instant;
 import java.util.Collection;
 
-public class RotatingKeysetKeyStore implements StoreReader<Collection<KeysetKey>> {
+public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Collection<KeysetKey>> {
     private final ScopedStoreReader<KeysetKeyStoreSnapshot> reader;
 
     public RotatingKeysetKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
@@ -49,10 +50,12 @@ public class RotatingKeysetKeyStore implements StoreReader<Collection<KeysetKey>
         return reader.getMetadataPath();
     }
 
+    @Override
     public KeysetKeyStoreSnapshot getSnapshot(Instant asOf) {
         return reader.getSnapshot();
     }
 
+    @Override
     public KeysetKeyStoreSnapshot getSnapshot() {
         return this.getSnapshot(Instant.now());
     }
