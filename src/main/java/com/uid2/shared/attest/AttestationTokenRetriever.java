@@ -1,6 +1,5 @@
 package com.uid2.shared.attest;
 
-import com.uid2.enclave.AttestationException;
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.*;
 import io.vertx.core.Handler;
@@ -20,6 +19,7 @@ import java.security.*;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -27,27 +27,49 @@ import java.util.concurrent.locks.ReentrantLock;
 public class AttestationTokenRetriever {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttestationTokenRetriever.class);
     private final IAttestationProvider attestationProvider;
+    private final String clientApiToken;
     private final ApplicationVersion appVersion;
-    private AtomicReference<String> attestationToken;
-    private Handler<Integer> responseWatcher;
+    private final AtomicReference<String> attestationToken;
+    private final AtomicReference<String> optOutJwt;
+    private final AtomicReference<String> coreJwt;
+    private final Handler<Integer> responseWatcher;
     private final String attestationEndpoint;
     private final HttpClient httpClient;
     private final IClock clock;
-    private Vertx vertx;
+    private final Vertx vertx;
     private boolean isExpiryCheckScheduled;
     private boolean isAttesting;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
     private final Lock lock;
     private final AttestationTokenDecryptor attestationTokenDecryptor;
+    private final String appVersionHeader;
 
-    public AttestationTokenRetriever(String attestationEndpoint, ApplicationVersion appVersion, IAttestationProvider attestationProvider,
-                                     Handler<Integer> responseWatcher, IClock clock, HttpClient httpClient,
-                                     AttestationTokenDecryptor attestationTokenDecryptor) throws IOException {
+    public AttestationTokenRetriever(Vertx vertx,
+                                     String attestationEndpoint,
+                                     String clientApiToken,
+                                     ApplicationVersion appVersion,
+                                     IAttestationProvider attestationProvider,
+                                     Handler<Integer> responseWatcher) {
+        this(vertx, attestationEndpoint, clientApiToken, appVersion, attestationProvider, responseWatcher, new InstantClock(), null, null);
+    }
+    public AttestationTokenRetriever(Vertx vertx,
+                                     String attestationEndpoint,
+                                     String clientApiToken,
+                                     ApplicationVersion appVersion,
+                                     IAttestationProvider attestationProvider,
+                                     Handler<Integer> responseWatcher,
+                                     IClock clock,
+                                     HttpClient httpClient,
+                                     AttestationTokenDecryptor attestationTokenDecryptor) {
+        this.vertx = vertx;
         this.attestationEndpoint = attestationEndpoint;
+        this.clientApiToken = clientApiToken;
         this.appVersion = appVersion;
         this.attestationProvider = attestationProvider;
         this.attestationToken = new AtomicReference<>(null);
+        this.optOutJwt = new AtomicReference<>(null);
+        this.coreJwt = new AtomicReference<>(null);
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.lock = new ReentrantLock();
@@ -58,11 +80,21 @@ public class AttestationTokenRetriever {
         } else {
             this.httpClient = httpClient;
         }
-        if (attestationTokenDecryptor == null) {
-            this.attestationTokenDecryptor = new AttestationTokenDecryptor();
-        } else {
-            this.attestationTokenDecryptor = attestationTokenDecryptor;
+        this.attestationTokenDecryptor = Objects.requireNonNullElseGet(attestationTokenDecryptor, AttestationTokenDecryptor::new);
+
+        StringBuilder builder = new StringBuilder();
+        builder.append(appVersion.getAppName())
+                .append("=")
+                .append(appVersion.getAppVersion());
+
+        for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet()) {
+            builder.append(";")
+                    .append(kv.getKey())
+                    .append("=")
+                    .append(kv.getValue());
         }
+        this.appVersionHeader = builder.toString();
+
     }
 
     private void attestationExpirationCheck(long timerId) {
@@ -74,8 +106,7 @@ public class AttestationTokenRetriever {
             Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
 
             if (currentTime.isAfter(tenMinutesBeforeExpire)) {
-                LOGGER.info("Attestation token is 10 mins from the expiry timestamp %s. Re-attest...", attestationTokenExpiresAt);
-
+                LOGGER.info("Attestation token is 10 mins from the expiry timestamp {}. Re-attest...", attestationTokenExpiresAt);
                 if (!attestationProvider.isReady()) {
                     LOGGER.warn("Attestation provider is not ready. Skip re-attest.");
                 } else {
@@ -84,7 +115,7 @@ public class AttestationTokenRetriever {
                         attest();
                     } catch (AttestationTokenRetrieverException | IOException e) {
                         notifyResponseStatusWatcher(401);
-                        LOGGER.info("Re-attest failed: ", e.getMessage());
+                        LOGGER.info("Re-attest failed: ", e);
                     } finally {
                         this.isAttesting = false;
                     }
@@ -119,6 +150,8 @@ public class AttestationTokenRetriever {
 
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .setHeader("Content-Type", "application/json")
+                    .setHeader("Authorization", "Bearer " + this.clientApiToken)
+                    .setHeader(Const.Http.AppVersionHeader, this.appVersionHeader)
                     .uri(URI.create(attestationEndpoint))
                     .POST(HttpRequest.BodyPublishers.ofString(requestJson.toString(), StandardCharsets.UTF_8))
                     .build();
@@ -139,11 +172,16 @@ public class AttestationTokenRetriever {
                 throw new AttestationTokenRetrieverException(statusCode, "response did not return a successful status");
             }
 
-            String atoken = getAttestationToken(responseJson);
+            JsonObject innerBody = responseJson.getJsonObject("body");
+            if (innerBody == null) {
+                throw new AttestationTokenRetrieverException(statusCode, "response did not contain a body object");
+            }
+
+            String atoken = getAttestationToken(innerBody);
             if (atoken == null) {
                 throw new AttestationTokenRetrieverException(statusCode, "response json does not contain body.attestation_token");
             }
-            String expiresAt = getAttestationTokenExpiresAt(responseJson);
+            String expiresAt = getAttestationTokenExpiresAt(innerBody);
             if (expiresAt == null) {
                 throw new AttestationTokenRetrieverException(statusCode, "response json does not contain body.expiresAt");
             }
@@ -152,10 +190,10 @@ public class AttestationTokenRetriever {
             LOGGER.info("Attestation successful. Attestation token received.");
             setAttestationToken(atoken);
             setAttestationTokenExpiresAt(expiresAt);
+            setOptoutJWTFromResponse(innerBody);
+            setCoreJWTFromResponse(innerBody);
 
             scheduleAttestationExpirationCheck();
-        } catch (AttestationException ae) {
-            throw new AttestationTokenRetrieverException(ae);
         } catch (IOException ioe) {
             throw ioe;
         } catch (Exception e) {
@@ -171,6 +209,18 @@ public class AttestationTokenRetriever {
         this.attestationToken.set(atoken);
     }
 
+    public String getOptOutJWT() {
+        return this.optOutJwt.get();
+    }
+
+    public String getCoreJWT() {
+        return this.coreJwt.get();
+    }
+
+    public String getAppVersionHeader() {
+        return this.appVersionHeader;
+    }
+
     private void setAttestationTokenExpiresAt(String expiresAt) {
         this.attestationTokenExpiresAt = Instant.parse(expiresAt);
     }
@@ -181,6 +231,26 @@ public class AttestationTokenRetriever {
 
     private static String getAttestationTokenExpiresAt(JsonObject responseBody) {
         return responseBody.getString("expiresAt");
+    }
+
+    private void setOptoutJWTFromResponse(JsonObject responseBody) {
+        String jwt = responseBody.getString("attestation_jwt_optout");
+        if (jwt == null) {
+            LOGGER.info("Optout JWT not received");
+        } else {
+            LOGGER.info("Optout JWT received");
+            this.optOutJwt.set(jwt);
+        }
+    }
+
+    private void setCoreJWTFromResponse(JsonObject responseBody) {
+        String jwt = responseBody.getString("attestation_jwt_core");
+        if (jwt == null) {
+            LOGGER.info("Core JWT not received");
+        } else {
+            LOGGER.info("Core JWT received");
+            this.coreJwt.set(jwt);
+        }
     }
 
     private static boolean isFailed(JsonObject responseJson) {
@@ -204,13 +274,6 @@ public class AttestationTokenRetriever {
     }
 
     public boolean attested() {
-        if (this.attestationToken.get() != null && this.clock.now().isBefore(this.attestationTokenExpiresAt)) {
-            return true;
-        }
-        return false;
-    }
-
-    public void setVertx(Vertx vertx) {
-        this.vertx = vertx;
+        return this.attestationToken.get() != null && this.clock.now().isBefore(this.attestationTokenExpiresAt);
     }
 }

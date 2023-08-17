@@ -21,7 +21,6 @@ import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -216,9 +215,10 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         assert apiContact != null;
         assert appVersions != null;
 
-        AbstractMap.SimpleEntry<String, String> client = parseClientAppVersion(appVersions);
-        if (client == null)
+        Map.Entry<String, String> client = VertxUtils.parseClientAppVersion(appVersions);
+        if (client == null) {
             return;
+        }
 
         final String key = apiContact + "|" + client.getKey() + "|" + client.getValue();
         if (!_clientAppVersionCounters.containsKey(key)) {
@@ -231,20 +231,5 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         }
 
         _clientAppVersionCounters.get(key).increment();
-    }
-
-    private static AbstractMap.SimpleEntry<String, String> parseClientAppVersion(String appVersions) {
-        final int eqpos = appVersions.indexOf('=');
-        if (eqpos == -1) {
-            return null;
-        }
-        final String appName = appVersions.substring(0, eqpos);
-
-        final int seppos = appVersions.indexOf(';', eqpos + 1);
-        final String appVersion = seppos == -1
-                ? appVersions.substring(eqpos + 1)
-                : appVersions.substring(eqpos + 1, seppos);
-
-        return new AbstractMap.SimpleEntry<>(appName, appVersion);
     }
 }

@@ -374,6 +374,7 @@ public class AzureAttestationProviderTest {
             AttestationResult result = ar.result();
             ctx.assertTrue(result.isSuccess());
             ctx.assertEquals(publicKey, new String(result.getPublicKey()));
+            ctx.assertEquals(expectedMrEnclave, result.getEnclaveId());
         });
     }
 }

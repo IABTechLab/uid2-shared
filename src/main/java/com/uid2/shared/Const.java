@@ -58,11 +58,17 @@ public class Const {
         public static final String KeysAclMetadataPathProp = "keys_acl_metadata_path";
         public static final String KeysetsMetadataPathProp = "keysets_metadata_path";
         public static final String KeysetKeysMetadataPathProp = "keyset_keys_metadata_path";
+        public static final String ClientSideKeypairsMetadataPathProp = "client_side_keypairs_metadata_path";
         public static final String OperatorsMetadataPathProp = "operators_metadata_path";
         public static final String SaltsMetadataPathProp = "salts_metadata_path";
         public static final String OptOutMetadataPathProp = "optout_metadata_path";
         public static final String CoreAttestUrlProp = "core_attest_url";
         public static final String CoreApiTokenProp = "core_api_token";
+        public static final String AwsKmsJwtSigningKeyIdProp = "aws_kms_jwt_signing_key_id";
+        public static final String CorePublicUrlProp = "core_public_url";
+        public static final String OptOutUrlProp = "optout_url";
+        public static final String AwsKmsJwtSigningPublicKeysProp = "aws_kms_jwt_signing_public_keys";
+        public static final String EnforceJwtProp = "enforceJwt";
     }
 
     public static class Http {
@@ -84,22 +90,26 @@ public class Const {
     }
 
     public static class Data {
-        // This side id is reserved. It is used to encrypt refresh token.
-        public static final int RefreshKeySiteId = -2;
-        // This side id is reserved. It is assigned to master keys.
-        public static final int MasterKeySiteId = -1;
-        // This site id is reserved. It is assigned to client access keys by default.
-        @Deprecated
-        public static final int DefaultClientSiteId = 1;
-        // This site id is reserved. It may not be used for client keys.
-        public static final int AdvertisingTokenSiteId = 2;
 
-        public static final int MasterKeysetId = 1;
-        public static final int RefreshKeysetId = 2;
-        public static final int FallbackPublisherKeysetId = 3;
+        public static final int MasterKeySiteId = -1; // This site id is reserved. It is assigned to master keys.
+        public static final int RefreshKeySiteId = -2; // This site id is reserved. It is used to encrypt refresh token.
+        @Deprecated
+        public static final int DefaultClientSiteId = 1; // This site id is reserved. It is assigned to client access keys by default.
+        public static final int AdvertisingTokenSiteId = 2; // This site id is reserved. It may not be used for client keys.
+
+
+        public static final int MasterKeysetId = -1; //keyset used by MasterKeySiteId
+        public static final int RefreshKeysetId = -2; //keyset used by RefreshKeySiteId
+        public static final int FallbackPublisherKeysetId = 2; //keyset used by AdvertisingTokenSiteId
     }
 
     public static class RoutingContextData {
         public static final String SiteId = "site-id";
+    }
+
+    public static class Attestation {
+        public static final String AttestationTokenHeader = "Attestation-Token";
+        public static final String AttestationJWTHeader = "Attestation-JWT";
+
     }
 }

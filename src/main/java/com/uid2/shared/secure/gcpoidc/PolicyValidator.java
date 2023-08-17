@@ -7,6 +7,8 @@ import com.uid2.shared.Utils;
 import com.uid2.shared.secure.AttestationException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -16,16 +18,15 @@ import java.util.List;
 import java.util.Map;
 
 public class PolicyValidator implements IPolicyValidator {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PolicyValidator.class);
 
     public static final String ENV_ENVIRONMENT = "DEPLOYMENT_ENVIRONMENT";
-    public static final String ENV_IDENTITY_SCOPE = "IDENTITY_SCOPE";
     public static final String ENV_OPERATOR_API_KEY = "API_TOKEN";
     public static final String ENV_CORE_ENDPOINT = "CORE_BASE_URL";
     public static final String ENV_OPT_OUT_ENDPOINT = "OPTOUT_BASE_URL";
 
     private static final List<String> REQUIRED_ENV_OVERRIDES = ImmutableList.of(
             ENV_ENVIRONMENT,
-            ENV_IDENTITY_SCOPE,
             ENV_OPERATOR_API_KEY
     );
 
@@ -91,12 +92,6 @@ public class PolicyValidator implements IPolicyValidator {
             throw new AttestationException("Environment can not be parsed. " + envOverridesCopy.get(ENV_ENVIRONMENT));
         }
 
-        // identityScope could be parsed
-        var identityScope = IdentityScope.fromString(envOverridesCopy.get(ENV_IDENTITY_SCOPE));
-        if(identityScope == null){
-            throw new AttestationException("IdentityScope can not be parsed. " + envOverridesCopy.get(ENV_IDENTITY_SCOPE));
-        }
-
         // make sure there's no unexpected overrides
         for(var envKey: REQUIRED_ENV_OVERRIDES){
             envOverridesCopy.remove(envKey);
@@ -117,6 +112,7 @@ public class PolicyValidator implements IPolicyValidator {
 
     private String generateEnclaveId(boolean isDebugMode, String imageDigest, Environment env) throws AttestationException {
         var str = String.format("%s,%s,%s", getVersion(), isDebugMode, imageDigest);
+        LOGGER.info("Meta used to generate GCP EnclaveId: " + str);
         try {
             return getSha256Base64Encoded(str);
         } catch (NoSuchAlgorithmException e) {

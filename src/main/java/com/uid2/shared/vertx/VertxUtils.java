@@ -9,6 +9,8 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -76,6 +78,21 @@ public class VertxUtils {
         }
 
         return ConfigRetriever.create(vertx, retrieverOptions);
+    }
+
+    public static Map.Entry<String, String> parseClientAppVersion(String appVersions) {
+        final int eqpos = appVersions.indexOf('=');
+        if (eqpos == -1) {
+            return null;
+        }
+        final String appName = appVersions.substring(0, eqpos);
+
+        final int seppos = appVersions.indexOf(';', eqpos + 1);
+        final String appVersion = seppos == -1
+                ? appVersions.substring(eqpos + 1)
+                : appVersions.substring(eqpos + 1, seppos);
+
+        return new AbstractMap.SimpleEntry<>(appName, appVersion);
     }
 
     static String extractFormatFromFileExtension(String path) {
