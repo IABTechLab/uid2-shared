@@ -2,8 +2,8 @@ package com.uid2.shared.store.parser;
 
 import com.uid2.shared.Utils;
 import com.uid2.shared.model.KeysetKey;
-import com.uid2.shared.store.IKeysetKeyStore;
 import com.uid2.shared.store.KeysetKeyStoreSnapshot;
+import com.uid2.shared.store.reader.RotatingKeysetKeyStore;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
@@ -15,12 +15,12 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 
-public class KeysetKeyParser implements Parser<IKeysetKeyStore.IkeysetKeyStoreSnapshot> {
+public class KeysetKeyParser implements Parser<KeysetKeyStoreSnapshot> {
     @Override
-    public ParsingResult<IKeysetKeyStore.IkeysetKeyStoreSnapshot> deserialize(InputStream inputStream) throws IOException {
+    public ParsingResult<KeysetKeyStoreSnapshot> deserialize(InputStream inputStream) throws IOException {
         JsonArray keysSpec = Utils.toJsonArray(inputStream);
-        final HashMap<Integer, KeysetKey> keyMap = new HashMap<>();
-        final HashMap<Integer, List<KeysetKey>> keysetMap = new HashMap<>();
+        final HashMap<Integer, KeysetKey> keyIdToKeysetKey = new HashMap<>();
+        final HashMap<Integer, List<KeysetKey>> keysetIdToKeysetKeyList = new HashMap<>();
         for (int i = 0; i < keysSpec.size(); i++) {
             JsonObject keySpec = keysSpec.getJsonObject(i);
             int keysetId = keySpec.getInteger("keyset_id");
@@ -32,10 +32,10 @@ public class KeysetKeyParser implements Parser<IKeysetKeyStore.IkeysetKeyStoreSn
                     Base64.getDecoder().decode(keySpec.getString("secret")),
                     created, activates, expires, keysetId
                     );
-            keyMap.put(keysetKey.getId(), keysetKey);
-            keysetMap.computeIfAbsent(keysetId, k -> new ArrayList<>()).add(keysetKey);
+            keyIdToKeysetKey.put(keysetKey.getId(), keysetKey);
+            keysetIdToKeysetKeyList.computeIfAbsent(keysetId, k -> new ArrayList<>()).add(keysetKey);
         }
-        KeysetKeyStoreSnapshot snapshot = new KeysetKeyStoreSnapshot(keyMap, keysetMap);
+        KeysetKeyStoreSnapshot snapshot = new KeysetKeyStoreSnapshot(keyIdToKeysetKey, keysetIdToKeysetKeyList);
         return new ParsingResult<>(snapshot, keysSpec.size());
     }
 }

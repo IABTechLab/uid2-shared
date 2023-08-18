@@ -6,29 +6,27 @@ import com.uid2.shared.Utils;
 import java.time.Instant;
 import java.util.*;
 
-public class KeysetKeyStoreSnapshot implements IKeysetKeyStore.IkeysetKeyStoreSnapshot {
-    private final HashMap<Integer, KeysetKey> keyMap;
-    private final HashMap<Integer, List<KeysetKey>> keysetMap;
-    private final List<KeysetKey> activeKeys;
+public class KeysetKeyStoreSnapshot {
+    private final HashMap<Integer, KeysetKey> keyIdToKeysetKey;
+    private final HashMap<Integer, List<KeysetKey>> keysetIdToKeysetKeyList;
+    private final List<KeysetKey> allKeys;
 
-    public KeysetKeyStoreSnapshot(HashMap<Integer, KeysetKey> keyMap, HashMap<Integer, List<KeysetKey>> keysetMap) {
-        this.keyMap = keyMap;
-        this.keysetMap = keysetMap;
-        this.activeKeys = new ArrayList<>(keyMap.values());
+    public KeysetKeyStoreSnapshot(HashMap<Integer, KeysetKey> keyIdToKeysetKey, HashMap<Integer, List<KeysetKey>> keysetIdToKeysetKeyList) {
+        this.keyIdToKeysetKey = keyIdToKeysetKey;
+        this.keysetIdToKeysetKeyList = keysetIdToKeysetKeyList;
+        this.allKeys = new ArrayList<>(keyIdToKeysetKey.values());
 
-        for(Map.Entry<Integer, List<KeysetKey>> entry : keysetMap.entrySet()) {
+        for(Map.Entry<Integer, List<KeysetKey>> entry : keysetIdToKeysetKeyList.entrySet()) {
             entry.getValue().sort(Comparator.comparing(KeysetKey::getActivates));
         }
     }
 
-    @Override
-    public List<KeysetKey> getActiveKeysetKeys() {
-        return this.activeKeys;
+    public List<KeysetKey> getAllKeysetKeys() {
+        return this.allKeys;
     }
 
-    @Override
     public KeysetKey getActiveKey(int keysetId, Instant now) {
-        List<KeysetKey> keysetKeys = keysetMap.get(keysetId);
+        List<KeysetKey> keysetKeys = keysetIdToKeysetKeyList.get(keysetId);
         if(keysetKeys == null || keysetKeys.isEmpty()) return null;
         int keysetKeysIndex = Utils.upperBound(keysetKeys, now, (ts, k) -> ts.isBefore(k.getActivates()));
         while(keysetKeysIndex > 0) {
@@ -41,10 +39,9 @@ public class KeysetKeyStoreSnapshot implements IKeysetKeyStore.IkeysetKeyStoreSn
         return null;
     }
 
-    @Override
     public KeysetKey getKey(int keyId) {
         try {
-            return this.keyMap.get(keyId);
+            return this.keyIdToKeysetKey.get(keyId);
         } catch (Exception ex) {
             throw new IllegalArgumentException("Key ID " + keyId + " not supported");
         }

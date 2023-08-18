@@ -14,9 +14,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
 import static org.mockito.Mockito.when;
@@ -74,7 +71,7 @@ public class RotatingKeysetKeyStoreTest {
         Assert.assertEquals(0, count);
         Assert.assertNull(keysetKeyStore.getSnapshot().getKey(1));
         Assert.assertNull(keysetKeyStore.getSnapshot().getActiveKey(1, Instant.now()));
-        Assert.assertTrue(keysetKeyStore.getSnapshot().getActiveKeysetKeys().isEmpty());
+        Assert.assertTrue(keysetKeyStore.getSnapshot().getAllKeysetKeys().isEmpty());
     }
 
     @Test
