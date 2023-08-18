@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -38,7 +39,7 @@ public class AttestationTokenRetriever {
     private final IClock clock;
     private final Vertx vertx;
     private boolean isExpiryCheckScheduled;
-    private boolean isAttesting;
+    private AtomicBoolean isAttesting;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
     private final Lock lock;
@@ -74,7 +75,7 @@ public class AttestationTokenRetriever {
         this.clock = clock;
         this.lock = new ReentrantLock();
         this.isExpiryCheckScheduled = false;
-        this.isAttesting = false;
+        this.isAttesting = new AtomicBoolean(false);
         if (httpClient == null) {
             this.httpClient = HttpClient.newHttpClient();
         } else {
@@ -99,32 +100,31 @@ public class AttestationTokenRetriever {
 
     private void attestationExpirationCheck(long timerId) {
         // This check is to avoid the attest() function takes longer than 60sec and get called again from this method while attesting.
-        if (this.isAttesting) {
+        if (!this.isAttesting.compareAndSet(false, true)) {
             LOGGER.warn("In the process of attesting. Skip re-attest.");
             return;
         }
 
-        Instant currentTime = clock.now();
-        Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
-        if (!currentTime.isAfter(tenMinutesBeforeExpire)) {
-            return;
-        }
-
-        LOGGER.info("Attestation token is 10 mins from the expiry timestamp {}. Re-attest...", attestationTokenExpiresAt);
-
-        if (!attestationProvider.isReady()) {
-            LOGGER.warn("Attestation provider is not ready. Skip re-attest.");
-            return;
-        }
-
         try {
-            this.isAttesting = true;
+            Instant currentTime = clock.now();
+            Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
+            if (!currentTime.isAfter(tenMinutesBeforeExpire)) {
+                return;
+            }
+
+            LOGGER.info("Attestation token is 10 mins from the expiry timestamp {}. Re-attest...", attestationTokenExpiresAt);
+
+            if (!attestationProvider.isReady()) {
+                LOGGER.warn("Attestation provider is not ready. Skip re-attest.");
+                return;
+            }
+
             attest();
         } catch (AttestationTokenRetrieverException | IOException e) {
             notifyResponseStatusWatcher(401);
             LOGGER.info("Re-attest failed: ", e);
         } finally {
-            this.isAttesting = false;
+            this.isAttesting.set(false);
         }
     }
 
