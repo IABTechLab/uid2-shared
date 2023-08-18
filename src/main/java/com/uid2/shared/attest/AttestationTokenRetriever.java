@@ -106,22 +106,25 @@ public class AttestationTokenRetriever {
 
         Instant currentTime = clock.now();
         Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
-        if (currentTime.isAfter(tenMinutesBeforeExpire)) {
-            LOGGER.info("Attestation token is 10 mins from the expiry timestamp {}. Re-attest...", attestationTokenExpiresAt);
-            if (!attestationProvider.isReady()) {
-                LOGGER.warn("Attestation provider is not ready. Skip re-attest.");
-                return;
-            }
+        if (!currentTime.isAfter(tenMinutesBeforeExpire)) {
+            return;
+        }
 
-            try {
-                this.isAttesting = true;
-                attest();
-            } catch (AttestationTokenRetrieverException | IOException e) {
-                notifyResponseStatusWatcher(401);
-                LOGGER.info("Re-attest failed: ", e);
-            } finally {
-                this.isAttesting = false;
-            }
+        LOGGER.info("Attestation token is 10 mins from the expiry timestamp {}. Re-attest...", attestationTokenExpiresAt);
+
+        if (!attestationProvider.isReady()) {
+            LOGGER.warn("Attestation provider is not ready. Skip re-attest.");
+            return;
+        }
+
+        try {
+            this.isAttesting = true;
+            attest();
+        } catch (AttestationTokenRetrieverException | IOException e) {
+            notifyResponseStatusWatcher(401);
+            LOGGER.info("Re-attest failed: ", e);
+        } finally {
+            this.isAttesting = false;
         }
     }
 
