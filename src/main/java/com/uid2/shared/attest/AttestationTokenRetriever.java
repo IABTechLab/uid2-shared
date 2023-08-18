@@ -101,25 +101,26 @@ public class AttestationTokenRetriever {
         // This check is to avoid the attest() function takes longer than 60sec and get called again from this method while attesting.
         if (this.isAttesting) {
             LOGGER.warn("In the process of attesting. Skip re-attest.");
-        } else {
-            Instant currentTime = clock.now();
-            Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
+            return;
+        }
 
-            if (currentTime.isAfter(tenMinutesBeforeExpire)) {
-                LOGGER.info("Attestation token is 10 mins from the expiry timestamp {}. Re-attest...", attestationTokenExpiresAt);
-                if (!attestationProvider.isReady()) {
-                    LOGGER.warn("Attestation provider is not ready. Skip re-attest.");
-                } else {
-                    try {
-                        this.isAttesting = true;
-                        attest();
-                    } catch (AttestationTokenRetrieverException | IOException e) {
-                        notifyResponseStatusWatcher(401);
-                        LOGGER.info("Re-attest failed: ", e);
-                    } finally {
-                        this.isAttesting = false;
-                    }
-                }
+        Instant currentTime = clock.now();
+        Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
+        if (currentTime.isAfter(tenMinutesBeforeExpire)) {
+            LOGGER.info("Attestation token is 10 mins from the expiry timestamp {}. Re-attest...", attestationTokenExpiresAt);
+            if (!attestationProvider.isReady()) {
+                LOGGER.warn("Attestation provider is not ready. Skip re-attest.");
+                return;
+            }
+
+            try {
+                this.isAttesting = true;
+                attest();
+            } catch (AttestationTokenRetrieverException | IOException e) {
+                notifyResponseStatusWatcher(401);
+                LOGGER.info("Re-attest failed: ", e);
+            } finally {
+                this.isAttesting = false;
             }
         }
     }
