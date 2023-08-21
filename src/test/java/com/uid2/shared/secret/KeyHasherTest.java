@@ -11,6 +11,11 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class KeyHasherTest {
     @Test
+    public void test() {
+        KeyHasher keyHasher = new KeyHasher();
+    }
+
+    @Test
     public void hashKey_returnsKnownHash_withGivenSalt() {
         KeyHasher hasher = new KeyHasher();
         byte[] hashedBytes = hasher.hashKey("test-key", "test-salt".getBytes(StandardCharsets.UTF_8));

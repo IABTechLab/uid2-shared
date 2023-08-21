@@ -25,6 +25,12 @@ import java.util.Optional;
 import static org.mockito.Mockito.*;
 
 public class AttestationMiddlewareTest {
+    private final static String KEY_PREFIX = "UID2-O-L-5-";
+    private final static String EXPECTED_OPERATOR_KEY = KEY_PREFIX + "abcdef.abcdefabcdefabcdef";
+    private final static String EXPECTED_OPERATOR_KEY_HASH = KEY_PREFIX + "abcdefabcdefabcdefabcdef";
+    private final static String JWT_AUDIENCE = "testJwtAudience";
+    private final static String JWT_ISSUER = "testJwtIssuer";
+    
     @Mock
     private IAttestationTokenService attestationTokenService;
     @Mock
@@ -37,9 +43,6 @@ public class AttestationMiddlewareTest {
     private Handler<RoutingContext> nextHandler;
     private OperatorKey operatorKey;
 
-    private final String jwtAudience = "testJwtAudience";
-    private final String jwtIssuer = "testJwtIssuer";
-
     private final HashMap<String, Object> data = new HashMap<>();
 
     @BeforeEach
@@ -49,7 +52,7 @@ public class AttestationMiddlewareTest {
         HashSet<Role> roles = new HashSet<>();
         roles.add(Role.OPERATOR);
 
-        this.operatorKey = new OperatorKey("key", "name", "contact", "trusted", 1000, false, 999, roles, OperatorType.PUBLIC);
+        this.operatorKey = new OperatorKey(EXPECTED_OPERATOR_KEY, EXPECTED_OPERATOR_KEY_HASH, "name", "contact", "trusted", 1000, false, 999, roles, OperatorType.PUBLIC);
 
         when(this.request.getHeader(Const.Attestation.AttestationJWTHeader)).thenReturn("dummy jwt");
         when(this.routingContext.request()).thenReturn(this.request);
@@ -62,7 +65,7 @@ public class AttestationMiddlewareTest {
     void trustedValidJwtNoRolesReturnsSuccess() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true);
-        when(this.jwtService.validateJwt("dummy jwt", this.jwtAudience, this.jwtIssuer)).thenReturn(response);
+        when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler);
         handler.handle(this.routingContext);
@@ -75,7 +78,7 @@ public class AttestationMiddlewareTest {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
                 .withRoles(Role.OPERATOR, Role.ADMINISTRATOR, Role.OPTOUT);
-        when(this.jwtService.validateJwt("dummy jwt", this.jwtAudience, this.jwtIssuer)).thenReturn(response);
+        when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR);
         handler.handle(this.routingContext);
@@ -88,7 +91,7 @@ public class AttestationMiddlewareTest {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
                 .withRoles(Role.OPERATOR, Role.ADMINISTRATOR, Role.OPTOUT);
-        when(this.jwtService.validateJwt("dummy jwt", this.jwtAudience, this.jwtIssuer)).thenReturn(response);
+        when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR, Role.ADMINISTRATOR);
         handler.handle(this.routingContext);
@@ -101,7 +104,7 @@ public class AttestationMiddlewareTest {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
                 .withRoles(Role.OPTOUT);
-        when(this.jwtService.validateJwt("dummy jwt", this.jwtAudience, this.jwtIssuer)).thenReturn(response);
+        when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR);
         handler.handle(this.routingContext);
@@ -142,7 +145,7 @@ public class AttestationMiddlewareTest {
     void trustedInvalidJwtReturns401() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(false);
-        when(this.jwtService.validateJwt("dummy jwt", this.jwtAudience, this.jwtIssuer)).thenReturn(response);
+        when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR);
         handler.handle(this.routingContext);
@@ -154,7 +157,7 @@ public class AttestationMiddlewareTest {
     @Test
     void trustedJwtValidationThrowsErrorReturns401() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
-        when(this.jwtService.validateJwt("dummy jwt", this.jwtAudience, this.jwtIssuer)).thenThrow(this.jwtService.new ValidationException(Optional.of("test error")));
+        when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenThrow(this.jwtService.new ValidationException(Optional.of("test error")));
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR);
         handler.handle(this.routingContext);
@@ -165,7 +168,7 @@ public class AttestationMiddlewareTest {
 
     @Test
     void notTrustedNoAttestationTokenReturns401() throws JwtService.ValidationException {
-        this.operatorKey = new OperatorKey("key", "name", "contact", "not-trusted", 1000, false, 999, null, OperatorType.PUBLIC);
+        this.operatorKey = new OperatorKey(EXPECTED_OPERATOR_KEY, EXPECTED_OPERATOR_KEY_HASH, "name", "contact", "not-trusted", 1000, false, 999, null, OperatorType.PUBLIC);
         this.data.put(AuthMiddleware.API_CLIENT_PROP, this.operatorKey);
 
         var attestationMiddleware = getAttestationMiddleware(true);
@@ -179,7 +182,7 @@ public class AttestationMiddlewareTest {
 
     @Test
     void notTrustedWithAttestationTokenReturns401() throws JwtService.ValidationException {
-        this.operatorKey = new OperatorKey("key", "name", "contact", "not-trusted", 1000, false, 999, null, OperatorType.PUBLIC);
+        this.operatorKey = new OperatorKey(EXPECTED_OPERATOR_KEY, EXPECTED_OPERATOR_KEY_HASH, "name", "contact", "not-trusted", 1000, false, 999, null, OperatorType.PUBLIC);
         this.data.put(AuthMiddleware.API_CLIENT_PROP, this.operatorKey);
         when(this.request.getHeader(Const.Attestation.AttestationTokenHeader)).thenReturn("dummy attestation token");
         when(this.request.getHeader("Authorization")).thenReturn("BEARER dummy");
@@ -195,6 +198,6 @@ public class AttestationMiddlewareTest {
     }
 
     private AttestationMiddleware getAttestationMiddleware(boolean enforceJwt) {
-        return new AttestationMiddleware(this.attestationTokenService, this.jwtService, this.jwtAudience, this.jwtIssuer, enforceJwt);
+        return new AttestationMiddleware(this.attestationTokenService, this.jwtService, JWT_AUDIENCE, JWT_ISSUER, enforceJwt);
     }
 }
