@@ -12,7 +12,7 @@ public class TrustedAttestationProvider implements IAttestationProvider {
 
     @Override
     public void attest(byte[] attestationRequest, byte[] publicKey, Handler<AsyncResult<AttestationResult>> handler) {
-        handler.handle(Future.succeededFuture(new AttestationResult(publicKey)));
+        handler.handle(Future.succeededFuture(new AttestationResult(publicKey, "Trusted")));
     }
 
     @Override

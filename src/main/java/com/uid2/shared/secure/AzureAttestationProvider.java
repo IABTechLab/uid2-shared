@@ -134,7 +134,7 @@ public class AzureAttestationProvider implements IAttestationProvider {
             return new AttestationResult(AttestationFailure.BAD_PAYLOAD);
         }
 
-        return new AttestationResult(publicKey);
+        return new AttestationResult(publicKey, mrEnclave);
     }
 
     @Override

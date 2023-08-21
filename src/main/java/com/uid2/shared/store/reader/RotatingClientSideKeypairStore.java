@@ -1,23 +1,22 @@
 package com.uid2.shared.store.reader;
 
 import com.uid2.shared.cloud.DownloadCloudStorage;
-import com.uid2.shared.model.KeysetKey;
+import com.uid2.shared.model.ClientSideKeypair;
 import com.uid2.shared.store.CloudPath;
-import com.uid2.shared.store.IKeysetKeyStore;
-import com.uid2.shared.store.KeysetKeyStoreSnapshot;
+import com.uid2.shared.store.IClientSideKeypairStore;
 import com.uid2.shared.store.ScopedStoreReader;
-import com.uid2.shared.store.parser.KeysetKeyParser;
+import com.uid2.shared.store.parser.ClientSideKeypairParser;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Instant;
 import java.util.Collection;
 
-public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Collection<KeysetKey>> {
-    private final ScopedStoreReader<KeysetKeyStoreSnapshot> reader;
+public class RotatingClientSideKeypairStore implements IClientSideKeypairStore, StoreReader<Collection<ClientSideKeypair>> {
+    private final ScopedStoreReader<IClientSideKeypairStoreSnapshot> reader;
 
-    public RotatingKeysetKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
-        this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeysetKeyParser(), "keyset_keys");
+    public RotatingClientSideKeypairStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
+        this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientSideKeypairParser(), "client_side_keypairs");
     }
 
     @Override
@@ -27,12 +26,12 @@ public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Coll
 
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
-        return reader.loadContent(metadata, "keyset_keys");
+        return reader.loadContent(metadata, "client_side_keypairs");
     }
 
     @Override
-    public Collection<KeysetKey> getAll() {
-        return reader.getSnapshot().getAllKeysetKeys();
+    public Collection<ClientSideKeypair> getAll() {
+        return reader.getSnapshot().getAll();
     }
 
     @Override
@@ -46,17 +45,18 @@ public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Coll
     }
 
     @Override
-    public CloudPath getMetadataPath() {
+    public CloudPath getMetadataPath(){
         return reader.getMetadataPath();
     }
 
     @Override
-    public KeysetKeyStoreSnapshot getSnapshot(Instant asOf) {
+    public IClientSideKeypairStoreSnapshot getSnapshot(Instant asOf) {
         return reader.getSnapshot();
     }
 
     @Override
-    public KeysetKeyStoreSnapshot getSnapshot() {
+    public IClientSideKeypairStoreSnapshot getSnapshot() {
         return this.getSnapshot(Instant.now());
     }
+
 }

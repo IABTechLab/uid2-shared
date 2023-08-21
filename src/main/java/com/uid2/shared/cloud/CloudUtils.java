@@ -7,11 +7,15 @@ import com.uid2.shared.Utils;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.kms.KmsClient;
+import software.amazon.awssdk.services.kms.KmsClientBuilder;
 
 import java.io.ByteArrayInputStream;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
-import java.net.SocketAddress;
+import java.net.*;
 import java.nio.file.Path;
 import java.util.Collections;
 
@@ -19,14 +23,24 @@ public class CloudUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudUtils.class);
     public static Proxy defaultProxy = getDefaultProxy();
 
-    public static TaggableCloudStorage createStorageWithIam(String cloudBucket) {
-        return new CloudStorageS3(
-                System.getProperty(Const.Config.AwsRegionProp),
-                cloudBucket,
-                System.getProperty(Const.Config.S3EndpointProp, "")
-        );
+    public static TaggableCloudStorage createStorage(String cloudBucket, JsonObject jsonConfig) {
+        var accessKeyId = jsonConfig.getString(Const.Config.AccessKeyIdProp);
+        var secretAccessKey = jsonConfig.getString(Const.Config.SecretAccessKeyProp);
+        var region = jsonConfig.getString(Const.Config.AwsRegionProp);
+        var s3Endpoint = jsonConfig.getString(Const.Config.S3EndpointProp, "");
+
+        if (accessKeyId == null || secretAccessKey == null) {
+            // IAM authentication
+            return new CloudStorageS3(region, cloudBucket, s3Endpoint);
+        }
+
+        // User access key authentication
+        return new CloudStorageS3(accessKeyId, secretAccessKey, region, cloudBucket, s3Endpoint);
+
     }
 
+    // I think this is not used, Aleksandrs Ulme 26/07/2023
+    @Deprecated
     public static TaggableCloudStorage createStorage(String cloudBucket) {
         return new CloudStorageS3(
                 System.getProperty(Const.Config.AccessKeyIdProp),
@@ -34,16 +48,6 @@ public class CloudUtils {
                 System.getProperty(Const.Config.AwsRegionProp),
                 cloudBucket,
                 System.getProperty(Const.Config.S3EndpointProp, "")
-        );
-    }
-
-    public static TaggableCloudStorage createStorage(String cloudBucket, JsonObject jsonConfig) {
-        return new CloudStorageS3(
-            jsonConfig.getString(Const.Config.AccessKeyIdProp),
-            jsonConfig.getString(Const.Config.SecretAccessKeyProp),
-            jsonConfig.getString(Const.Config.AwsRegionProp),
-            cloudBucket,
-            jsonConfig.getString(Const.Config.S3EndpointProp, "")
         );
     }
 

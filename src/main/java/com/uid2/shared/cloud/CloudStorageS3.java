@@ -4,7 +4,7 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -50,7 +50,16 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     public CloudStorageS3(String region, String bucket, String s3Endpoint) {
         this.bucket = bucket;
 
-        InstanceProfileCredentialsProvider credentialsProvider = new InstanceProfileCredentialsProvider(false);
+        // In theory `new InstanceProfileCredentialsProvider()` or even omitting credentials provider should work,
+        // but for some unknown reason it doesn't. The credential it provides look realistic, but are not valid.
+        // After a lot of experimentation and help of Abu Abraham and Isaac Wilson the only working solution we've
+        // found was to explicitly extract env vars populated by the service account from the role and to
+        // manually set it on the credentials provider.
+        WebIdentityTokenCredentialsProvider credentialsProvider = WebIdentityTokenCredentialsProvider.builder()
+                .roleArn(System.getenv("AWS_ROLE_ARN"))
+                .webIdentityTokenFile(System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE"))
+                .build();
+
         if (s3Endpoint.isEmpty()) {
             this.s3 = AmazonS3ClientBuilder.standard()
                     .withCredentials(credentialsProvider)
