@@ -137,6 +137,10 @@ public class AttestationTokenRetriever {
     }
 
     public void attest() throws IOException, AttestationTokenRetrieverException {
+        if (!attestationProvider.isReady()) {
+            throw new AttestationTokenRetrieverException("attestation provider is not ready");
+        }
+
         try {
             KeyPair keyPair = generateKeyPair();
             byte[] publicKey = keyPair.getPublic().getEncoded();
