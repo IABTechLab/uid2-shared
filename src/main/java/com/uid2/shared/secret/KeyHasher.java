@@ -9,14 +9,6 @@ import java.security.SecureRandom;
 public class KeyHasher {
     private static final int SALT_BYTES = 32;
 
-    private static byte[] generateSaltBytes() {
-        final SecureRandom random = new SecureRandom();
-        final byte[] bytes = new byte[SALT_BYTES];
-        random.nextBytes(bytes);
-
-        return bytes;
-    }
-
     public byte[] hashKey(String key, byte[] salt) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-512");
@@ -31,5 +23,13 @@ public class KeyHasher {
         byte[] saltBytes = generateSaltBytes();
         byte[] hashBytes = hashKey(key, saltBytes);
         return new KeyHashResult(Utils.toBase64String(hashBytes), Utils.toBase64String(saltBytes));
+    }
+
+    private static byte[] generateSaltBytes() {
+        final SecureRandom random = new SecureRandom();
+        final byte[] bytes = new byte[SALT_BYTES];
+        random.nextBytes(bytes);
+
+        return bytes;
     }
 }
