@@ -12,6 +12,8 @@ import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
@@ -190,5 +192,12 @@ public class Utils {
         byte[] responseBytes = responseBody.getBytes();
 
         return new ByteArrayInputStream(responseBytes);
+    }
+    public static MessageDigest createMessageDigest() {
+        try {
+            return MessageDigest.getInstance("SHA-512");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

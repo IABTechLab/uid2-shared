@@ -13,10 +13,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+
+import static com.uid2.shared.Utils.createMessageDigest;
 
 public class AttestationMiddleware {
 
@@ -143,15 +144,6 @@ public class AttestationMiddleware {
             String keyHash = Utils.toBase64String(hashBytes);
             return keyHash.equals(response.getSubject());
         }
-
-        private static MessageDigest createMessageDigest() {
-            try {
-                return MessageDigest.getInstance("SHA-512");
-            } catch (NoSuchAlgorithmException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
     }
 
     //endregion RequestHandler
