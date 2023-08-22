@@ -74,6 +74,7 @@ public class JwtService {
                 JsonWebSignature signature = tokenVerifier.verify(jwt);
                 JsonWebToken.Payload webToken = signature.getPayload();
                 response = new JwtValidationResponse(true)
+                        .withSubject(webToken.get("sub").toString())
                         .withRoles(webToken.get("roles").toString())
                         .withEnclaveId(webToken.get("enclaveId").toString())
                         .withEnclaveType(webToken.get("enclaveType").toString())

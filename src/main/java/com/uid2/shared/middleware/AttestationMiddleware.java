@@ -1,6 +1,7 @@
 package com.uid2.shared.middleware;
 
 import com.uid2.shared.Const;
+import com.uid2.shared.Utils;
 import com.uid2.shared.attest.IAttestationTokenService;
 import com.uid2.shared.attest.JwtService;
 import com.uid2.shared.attest.JwtValidationResponse;
@@ -11,6 +12,8 @@ import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -82,9 +85,16 @@ public class AttestationMiddleware {
                         try {
                             JwtValidationResponse response = jwtService.validateJwt(jwt, this.jwtAudience, this.jwtIssuer);
                             success = response.getIsValid();
-                            if (success && !this.roleBasedJwtClaimValidator.hasRequiredRoles(response)) {
-                                success = false;
-                                LOGGER.info("JWT missing required role. Required roles: {}, JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}", this.roleBasedJwtClaimValidator.getRequiredRoles(), response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
+                            if (success) {
+                                if (!this.roleBasedJwtClaimValidator.hasRequiredRoles(response)) {
+                                    success = false;
+                                    LOGGER.info("JWT missing required role. Required roles: {}, JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}", this.roleBasedJwtClaimValidator.getRequiredRoles(), response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
+                                }
+
+                                if (!validateSubject(response, operatorKey)) {
+                                    success = false;
+                                    LOGGER.info("JWT failed validation of Subject. JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}", response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
+                                }
                             }
                         } catch (JwtService.ValidationException e) {
                             LOGGER.info("Error validating JWT. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}. Error: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), e);
@@ -117,6 +127,28 @@ public class AttestationMiddleware {
         private String getAttestationJWT(RoutingContext rc) {
             return rc.request().getHeader(Const.Attestation.AttestationJWTHeader);
         }
+
+        private static Boolean validateSubject(JwtValidationResponse response, OperatorKey operatorKey) {
+
+            if (response.getSubject() == null || response.getSubject().isBlank() || operatorKey.getKey() == null || operatorKey.getKey().isBlank()) {
+                return false;
+            }
+
+            byte[] keyBytes = operatorKey.getKey().getBytes();
+            MessageDigest md = createMessageDigest();
+            byte[] hashBytes = md.digest(keyBytes);
+            String keyHash = Utils.toBase64String(hashBytes);
+            return keyHash.equals(response.getSubject());
+        }
+
+        private static MessageDigest createMessageDigest() {
+            try {
+                return MessageDigest.getInstance("SHA-512");
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
     }
 
     //endregion RequestHandler
