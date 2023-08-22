@@ -40,6 +40,9 @@ public class AttestationMiddlewareTest {
     private final String jwtAudience = "testJwtAudience";
     private final String jwtIssuer = "testJwtIssuer";
 
+    private final String operatorKeyId = "key";
+    private final String hashedKey = "gzX6VtSHVi3iSPR778cnQzNAUd3/zCwJJ19mVFSZAxdZR0XuF8CPeYzX3OC6gVXc2hT2OYwdFUURZSChMwF8CQ==";
+
     private final HashMap<String, Object> data = new HashMap<>();
 
     @BeforeEach
@@ -49,7 +52,8 @@ public class AttestationMiddlewareTest {
         HashSet<Role> roles = new HashSet<>();
         roles.add(Role.OPERATOR);
 
-        this.operatorKey = new OperatorKey("key", "name", "contact", "trusted", 1000, false, 999, roles, OperatorType.PUBLIC);
+
+        this.operatorKey = new OperatorKey(operatorKeyId, "name", "contact", "trusted", 1000, false, 999, roles, OperatorType.PUBLIC);
 
         when(this.request.getHeader(Const.Attestation.AttestationJWTHeader)).thenReturn("dummy jwt");
         when(this.routingContext.request()).thenReturn(this.request);
@@ -61,7 +65,7 @@ public class AttestationMiddlewareTest {
     @Test
     void trustedValidJwtNoRolesReturnsSuccess() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
-        JwtValidationResponse response = new JwtValidationResponse(true);
+        JwtValidationResponse response = new JwtValidationResponse(true).withSubject(hashedKey);
         when(this.jwtService.validateJwt("dummy jwt", this.jwtAudience, this.jwtIssuer)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler);
@@ -74,7 +78,8 @@ public class AttestationMiddlewareTest {
     void trustedValidJwtHasRequiredRoleReturnsSuccess() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
-                .withRoles(Role.OPERATOR, Role.ADMINISTRATOR, Role.OPTOUT);
+                .withRoles(Role.OPERATOR, Role.ADMINISTRATOR, Role.OPTOUT)
+                .withSubject(hashedKey);
         when(this.jwtService.validateJwt("dummy jwt", this.jwtAudience, this.jwtIssuer)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR);
@@ -87,7 +92,8 @@ public class AttestationMiddlewareTest {
     void trustedValidJwtHasMultipleRolesReturnsSuccess() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
-                .withRoles(Role.OPERATOR, Role.ADMINISTRATOR, Role.OPTOUT);
+                .withRoles(Role.OPERATOR, Role.ADMINISTRATOR, Role.OPTOUT)
+                .withSubject(hashedKey);
         when(this.jwtService.validateJwt("dummy jwt", this.jwtAudience, this.jwtIssuer)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR, Role.ADMINISTRATOR);
@@ -100,7 +106,8 @@ public class AttestationMiddlewareTest {
     void trustedValidJwtMissingRequiredRoleReturns401() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
-                .withRoles(Role.OPTOUT);
+                .withRoles(Role.OPTOUT)
+                .withSubject(hashedKey);
         when(this.jwtService.validateJwt("dummy jwt", this.jwtAudience, this.jwtIssuer)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR);
@@ -179,7 +186,7 @@ public class AttestationMiddlewareTest {
 
     @Test
     void notTrustedWithAttestationTokenReturns401() throws JwtService.ValidationException {
-        this.operatorKey = new OperatorKey("key", "name", "contact", "not-trusted", 1000, false, 999, null, OperatorType.PUBLIC);
+        this.operatorKey = new OperatorKey(operatorKeyId, "name", "contact", "not-trusted", 1000, false, 999, null, OperatorType.PUBLIC);
         this.data.put(AuthMiddleware.API_CLIENT_PROP, this.operatorKey);
         when(this.request.getHeader(Const.Attestation.AttestationTokenHeader)).thenReturn("dummy attestation token");
         when(this.request.getHeader("Authorization")).thenReturn("BEARER dummy");
