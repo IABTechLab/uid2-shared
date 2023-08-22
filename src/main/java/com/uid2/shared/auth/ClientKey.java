@@ -25,7 +25,11 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     private int siteId;
     private boolean disabled;
 
-    public ClientKey(String key, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId, boolean disabled) {
+    @JsonProperty("cloud_account_id")
+    private String cloudAccountId;
+
+    public ClientKey(String key, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId,
+                     boolean disabled, String cloudAccountId) {
         this.key = key;
         this.secret = secret;
         this.secretBytes = Utils.decodeBase64String(secret);
@@ -35,10 +39,11 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         this.roles = Collections.unmodifiableSet(roles);
         this.siteId = siteId;
         this.disabled = disabled;
+        this.cloudAccountId = cloudAccountId;
     }
 
     public ClientKey(String key, String secret, String contact, Role... roles) {
-        this(key, secret, contact, contact, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false);
+        this(key, secret, contact, contact, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false, null);
     }
 
     public ClientKey(String key, String secret, Instant created) {
@@ -66,7 +71,8 @@ public class ClientKey implements IRoleAuthorizable<Role> {
                 Instant.ofEpochSecond(json.getLong("created")),
                 Roles.getRoles(Role.class, json),
                 json.getInteger("site_id"),
-                json.getBoolean("disabled", false)
+                json.getBoolean("disabled", false),
+                json.getString("cloud_account_id")
         );
     }
 
@@ -143,12 +149,24 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         return this;
     }
 
+    public ClientKey withCloudAccountId(String cloudAccountId) {
+        this.cloudAccountId = cloudAccountId;
+        return this;
+    }
+
     public boolean isDisabled() {
         return disabled;
     }
 
     public void setDisabled(boolean disabled) {
         this.disabled = disabled;
+    }
+
+    public String getCloudAccountId() {
+        return this.cloudAccountId;
+    }
+    public void setCloudAccountId(String cloudAccountId) {
+        this.cloudAccountId = cloudAccountId;
     }
 
     @Override
@@ -167,11 +185,12 @@ public class ClientKey implements IRoleAuthorizable<Role> {
                 && this.created == b.created
                 && this.siteId == b.siteId
                 && this.disabled == b.disabled
+                && this.cloudAccountId == b.cloudAccountId
                 && Arrays.equals(this.secretBytes, b.secretBytes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, secret, name, contact, roles, created, siteId, disabled, Arrays.hashCode(secretBytes));
+        return Objects.hash(key, secret, name, contact, roles, created, siteId, disabled, cloudAccountId, Arrays.hashCode(secretBytes));
     }
 }
