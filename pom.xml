@@ -6,7 +6,7 @@
 
     <groupId>com.uid2</groupId>
     <artifactId>uid2-shared</artifactId>
-    <version>4.1.18-beaf2cbae3</version>
+    <version>4.5.0-f86b3279e1</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Library for all the shared uid2 operations</description>
     <url>https://github.com/IABTechLab/uid2docs</url>
@@ -64,7 +64,7 @@
         <dependency>
             <groupId>com.uid2</groupId>
             <artifactId>uid2-attestation-api</artifactId>
-            <version>1.1.0</version>
+            <version>1.4.0-e5df2e10aa</version>
         </dependency>
         <dependency>
             <groupId>io.vertx</groupId>

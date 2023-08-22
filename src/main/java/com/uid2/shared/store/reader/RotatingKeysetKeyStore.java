@@ -4,6 +4,7 @@ import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.model.KeysetKey;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.IKeysetKeyStore;
+import com.uid2.shared.store.KeysetKeyStoreSnapshot;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.KeysetKeyParser;
 import com.uid2.shared.store.scope.StoreScope;
@@ -13,7 +14,7 @@ import java.time.Instant;
 import java.util.Collection;
 
 public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Collection<KeysetKey>> {
-    private final ScopedStoreReader<IkeysetKeyStoreSnapshot> reader;
+    private final ScopedStoreReader<KeysetKeyStoreSnapshot> reader;
 
     public RotatingKeysetKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeysetKeyParser(), "keyset_keys");
@@ -31,7 +32,7 @@ public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Coll
 
     @Override
     public Collection<KeysetKey> getAll() {
-        return reader.getSnapshot().getActiveKeysetKeys();
+        return reader.getSnapshot().getAllKeysetKeys();
     }
 
     @Override
@@ -50,12 +51,12 @@ public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Coll
     }
 
     @Override
-    public IkeysetKeyStoreSnapshot getSnapshot(Instant asOf) {
+    public KeysetKeyStoreSnapshot getSnapshot(Instant asOf) {
         return reader.getSnapshot();
     }
 
     @Override
-    public IkeysetKeyStoreSnapshot getSnapshot() {
+    public KeysetKeyStoreSnapshot getSnapshot() {
         return this.getSnapshot(Instant.now());
     }
 }
