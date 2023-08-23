@@ -193,7 +193,7 @@ public class Utils {
 
         return new ByteArrayInputStream(responseBytes);
     }
-    public static MessageDigest createMessageDigest() {
+    public static MessageDigest createMessageDigestSHA512() {
         try {
             return MessageDigest.getInstance("SHA-512");
         } catch (NoSuchAlgorithmException e) {

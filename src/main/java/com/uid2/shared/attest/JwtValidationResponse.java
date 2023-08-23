@@ -33,6 +33,8 @@ public class JwtValidationResponse {
             String[] parts = roles.split(",");
             var t = Arrays.stream(parts).map(r -> Role.valueOf(r)).collect(Collectors.toList());
             this.roles = Set.copyOf(t);
+        } else {
+            this.roles = Set.of();
         }
         return this;
     }

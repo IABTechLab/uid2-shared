@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 
-import static com.uid2.shared.Utils.createMessageDigest;
+import static com.uid2.shared.Utils.createMessageDigestSHA512;
 
 public class AttestationMiddleware {
 
@@ -137,7 +137,7 @@ public class AttestationMiddleware {
             }
 
             byte[] keyBytes = operatorKey.getKey().getBytes();
-            MessageDigest md = createMessageDigest();
+            MessageDigest md = createMessageDigestSHA512();
             byte[] hashBytes = md.digest(keyBytes);
             String keyHash = Utils.toBase64String(hashBytes);
             return keyHash.equals(response.getSubject());
