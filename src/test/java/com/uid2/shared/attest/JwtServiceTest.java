@@ -27,22 +27,22 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class JwtServiceTest {
-    private final static String VALID_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjcyNTgxMTg0MDAsImlhdCI6MTY5MDM0ODk5OSwic3ViIjoiVGVzdCIsImF1ZCI6Imh0dHBzOi8vb3B0b3V0LWludGVnLnVpZGFwaS5jb20iLCJvcGVyYXRvclZlcnNpb24iOiJWZXJzaW9uIDEuMiIsImVuY2xhdmVUeXBlIjoidGVzdCBlbmNsYXZlIHR5cGUiLCJyb2xlcyI6Ik9QRVJBVE9SLE9QVE9VVCIsImlzcyI6Imh0dHBzOi8vY29yZS1pbnRlZy51aWRhcGkuY29tIiwic2l0ZUlkIjoiOTk5IiwiZW5jbGF2ZUlkIjoidGVzdCBlbmNsYXZlIGlkIn0.N9xYROMx2hnMIhtyyBLF-J13uWXpIU6jj_Tgufww6O8JBhrHHFliOF2xsPUcZ1sK6lGsmbHACwlPTRz8zhpKWKM0CMNjfiWHwBGykK32hDC321QEta0aX6utBAWIb1crb2JwZhPH1K0_4X-mxdiuxibgW3YNpQxm2kZDnQaR40py5JykVkPxzwhgzUCceDN5kL1kNEjnO-X8fBDnTh_HIcRISfe1bluMbV4kzTv1EunlhG8rLpCvCOjK3ZLgipQa4vpKvaD7VH4wtvO13MbKjWNPLrFzhMwwonccPmM7ZHrHusq0SRFtspNZNwcV5AIKmHR2_Y1RdL-JnHmAC4cSYA";
-    private final static String EXPIRED_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjk0NjY4NDgwMCwiaWF0IjoxNjkwNDE5MjczLCJzdWIiOiJUZXN0IiwiYXVkIjoiaHR0cHM6Ly9vcHRvdXQtaW50ZWcudWlkYXBpLmNvbSIsIm9wZXJhdG9yVmVyc2lvbiI6IlZlcnNpb24gMS4yIiwiZW5jbGF2ZVR5cGUiOiJ0ZXN0IGVuY2xhdmUgdHlwZSIsInJvbGVzIjoiT1BFUkFUT1IsT1BUT1VUIiwiaXNzIjoiaHR0cHM6Ly9jb3JlLWludGVnLnVpZGFwaS5jb20iLCJzaXRlSWQiOiI5OTkiLCJlbmNsYXZlSWQiOiJ0ZXN0IGVuY2xhdmUgaWQifQ.YVZcIDTxJMLonFffK4gKCYRRIAYTfSFwbeYcmXethoGt96TieajFMzy9TmEo7KdoLfRQCRKhdGD0TLU16v8euS2M151x0I97lrUujXC2zYlgXARS3YwdxatcvieQ_1NTIPr2Lg-y8BTScLmT65IFqQXiVz4dnYbyEmvdVBLxy-49XKW0CapApLE1TBNHMs8ktRVu61v_H9fpiZ2A0L8KzjgIgYeHYRTjvOL5cH8yeRGioZE7WLLGphz6STLgx6qrT5Z2i4IoVHUY8bPmj0EwQXMPuGCr3ds9gabUmTgpNMcR30sr2VFsz0TPDcVfv6vaXpEtztlzdx_umWayMO1ALA";
+    private final static String VALID_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjQ4NDgzNjAxNjgsImlhdCI6MTY5MjY4NjU3NCwic3ViIjoiS0FPUnhzUGRycDRqVnBQcWIwS2dwWWFsRjVSekJwZXAwZGR2UStsakYzdnltaFJYdjNDNkNJWERmaE5KV2RvYmN6bW9pZWU5R0kwMFZybHRMYm1xVUE9PSIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA5MCIsIm9wZXJhdG9yVmVyc2lvbiI6IlNwZWNpYWx8dWlkMi1vcGVyYXRvcnwyLjcuMTYtU05BUFNIT1QiLCJlbmNsYXZlVHlwZSI6InRydXN0ZWQiLCJyb2xlcyI6Ik9QVE9VVCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4OCIsIm5hbWUiOiJTcGVjaWFsIiwic2l0ZUlkIjoiOTk5IiwiZW5jbGF2ZUlkIjoiVHJ1c3RlZCJ9.ICbHPZnm25hIa69A06aNfduyh1xSdXDgxI0_ORGqdNdrop_6CCqk5HtM5uS2hJ_1opjNAjQdfE_CMaAfda13_bnOaZSPe-aQLQBx6vCEjYCRUaAvD7p4NgHnEz9u0nf-ijFBZh0MZR8MV2s3pcEcSbZ7rkSFYW73n2KuACDQxCRdl39wQ-Bs222pm0Q-BkCZlb6OFp6pd-SUT_VWHeSeWbSyXQpfald1WAmH1rHyUdWzfz005Jv8JCucgyorhInQZY0O7wQ-UPk5nuVqz0QkT7w2S4pa4gopLpsi0BM6gu5jDfQredy49v3wuuZRAiefw4ueGBevMA6RxAqtjGEAiA";
+    private final static String EXPIRED_TOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjE2OTIzODE2MzMsImlhdCI6MTY5MjY3OTg3NSwic3ViIjoiZ1k1b1hUNmZaeG5xcVZhdFNHVnE4dU9xOW1tcVEvc1A4cU9SRzZ5UStraUZyNHJCQWR6SFBORXpQTXFxK3JlNFEvb1ovaXFqa0IvL3dBLzAxT2w3RkE9PSIsImF1ZCI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA5MCIsIm9wZXJhdG9yVmVyc2lvbiI6IlNwZWNpYWwgKE9sZCwgUHJpdmF0ZSl8dWlkMi1vcGVyYXRvcnwyLjcuMTYtU05BUFNIT1QiLCJlbmNsYXZlVHlwZSI6InRydXN0ZWQiLCJyb2xlcyI6Ik9QVE9VVCIsImlzcyI6Imh0dHA6Ly9sb2NhbGhvc3Q6ODA4OCIsIm5hbWUiOiJTcGVjaWFsIChPbGQsIFByaXZhdGUpIiwic2l0ZUlkIjoiOTk5IiwiZW5jbGF2ZUlkIjoiVHJ1c3RlZCJ9.gRdwQqNc7IHuPBSVjtjuBoEpr4n6vwZIFh0LbW1cqeYZd7uORYyizLyyPtG_Mh_A73LoiYQ4Rn0q1VnMdBqIqsDFYILP182XGNvsToTj_HlpP95DbKs7RfdZ7XTxKflG00M156xdJmieY_v1OQiOjw3vYt82F4QUOaIm5M_k7TAs6GgYPmhinILIJWWgljk7reGmEuWl_abU0wU4cQilwL9F9Byto5Ba8CHLAmv62PcsjbuU8LN-RrkCTYzgIqUUdRceIyrfnxP4UgKqijrjIMbeVvYyTY43anQHicoRYZCQXMaUQWk57xipFTCc-J6QKNPvh198PqtuBUBbg073Mw";
     private final static String PUBLIC_KEY_STRING = "-----BEGIN PUBLIC KEY-----\n" +
-            "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1T9DPF3nn6DcDviAXzEE\n" +
-            "YQl5kHF0324dXeVpYuVINfq34hBrv6OpvRAb62KrOnQvalGjumuwQed9lKLwKUYl\n" +
-            "tZorHlped8oA8C5smKoOqn1scBLCFBw1XH3hOVOsC8g0NXYvsg+WpM5mQD65hAaK\n" +
-            "ew3YoLftO3YVNvDP/RJ9AdbE/2thZMUMIXa1RB34dCFrMe8jViYVhQf9WRc4khsa\n" +
-            "lo0MaKz+lBmx+xQkqJHn9t+DiFY1HZUhM6sb3n2E+ttrtMxMh2WXMswyqxUBIrEN\n" +
-            "P434UchtgCQvTdtAbMFu1B25HHFtPkIggulXt4Fli0WEn7PFUr9qbmgv7RYsQBED\n" +
-            "4QIDAQAB\n" +
-            "-----END PUBLIC KEY-----";
+            "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmvwB41qI5Fe41PDbXqcX\n" +
+            "5uOvSvfKh8l9QV0O3M+NsB4lKqQEP0t1hfoiXTpOgKz1ArYxHsQ2LeXifX4uwEbY\n" +
+            "JFlpVM+tyQkTWQjBOw6fsLYK2Xk4X2ylNXUUf7x3SDiOVxyvTh3OZW9kqrDBN9Jx\n" +
+            "SoraNLyfw0hhW0SHpfs699SehgbQ7QWep/gVlKRLIz0XAXaZNw24s79ORcQlrCE6\n" +
+            "YD0PgQmpI/dK5xMML82n6y3qcTlywlGaU7OGIMdD+CTXA3BcOkgXeqZTXNaX1u6j\n" +
+            "CTa1lvAczun6avp5VZ4TFiuPo+y4rJ3GU+14cyT5NckEcaTKSvd86UdwK5Id9tl3\n" +
+            "bQIDAQAB\n" +
+            "-----END PUBLIC KEY-----\n";
 
-    private final static String COMPACT_PUBLIC_KEY = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1T9DPF3nn6DcDviAXzEEYQl5kHF0324dXeVpYuVINfq34hBrv6OpvRAb62KrOnQvalGjumuwQed9lKLwKUYltZorHlped8oA8C5smKoOqn1scBLCFBw1XH3hOVOsC8g0NXYvsg+WpM5mQD65hAaKew3YoLftO3YVNvDP/RJ9AdbE/2thZMUMIXa1RB34dCFrMe8jViYVhQf9WRc4khsalo0MaKz+lBmx+xQkqJHn9t+DiFY1HZUhM6sb3n2E+ttrtMxMh2WXMswyqxUBIrENP434UchtgCQvTdtAbMFu1B25HHFtPkIggulXt4Fli0WEn7PFUr9qbmgv7RYsQBED4QIDAQAB";
+    private final static String COMPACT_PUBLIC_KEY = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmvwB41qI5Fe41PDbXqcX5uOvSvfKh8l9QV0O3M+NsB4lKqQEP0t1hfoiXTpOgKz1ArYxHsQ2LeXifX4uwEbYJFlpVM+tyQkTWQjBOw6fsLYK2Xk4X2ylNXUUf7x3SDiOVxyvTh3OZW9kqrDBN9JxSoraNLyfw0hhW0SHpfs699SehgbQ7QWep/gVlKRLIz0XAXaZNw24s79ORcQlrCE6YD0PgQmpI/dK5xMML82n6y3qcTlywlGaU7OGIMdD+CTXA3BcOkgXeqZTXNaX1u6jCTa1lvAczun6avp5VZ4TFiuPo+y4rJ3GU+14cyT5NckEcaTKSvd86UdwK5Id9tl3bQIDAQAB";
 
-    private final static String AUDIENCE = "https://optout-integ.uidapi.com";
-    private final static String ISSUER = "https://core-integ.uidapi.com";
+    private final static String AUDIENCE = "http://localhost:8090"; // e2e Optout URL
+    private final static String ISSUER = "http://localhost:8088"; // e2e Core URL
 
     private JsonObject config;
 
@@ -67,10 +67,10 @@ public class JwtServiceTest {
         assertNotNull(validationResponse);
         assertTrue(validationResponse.getIsValid());
         assertEquals(AUDIENCE, validationResponse.getAudience());
-        assertEquals("test enclave id", validationResponse.getEnclaveId());
-        assertEquals("test enclave type", validationResponse.getEnclaveType());
+        assertEquals("Trusted", validationResponse.getEnclaveId());
+        assertEquals("trusted", validationResponse.getEnclaveType());
         assertEquals(999, validationResponse.getSiteId());
-        assertEquals("Version 1.2", validationResponse.getOperatorVersion());
+        assertEquals("Special|uid2-operator|2.7.16-SNAPSHOT", validationResponse.getOperatorVersion());
         assertNull(validationResponse.getValidationException());
     }
 

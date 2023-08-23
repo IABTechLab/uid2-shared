@@ -18,6 +18,7 @@ public class JwtValidationResponse {
     private Exception validationException;
 
     private String audience;
+    private String subject;
 
     public JwtValidationResponse(boolean isValid) {
         this.isValid = isValid;
@@ -28,9 +29,13 @@ public class JwtValidationResponse {
         return this;
     }
     public JwtValidationResponse withRoles(String roles) {
-        String[] parts = roles.split(",");
-        var t = Arrays.stream(parts).map(r -> Role.valueOf(r)).collect(Collectors.toList());
-        this.roles = Set.copyOf(t);
+        if (roles != null && !roles.isBlank()) {
+            String[] parts = roles.split(",");
+            var t = Arrays.stream(parts).map(r -> Role.valueOf(r)).collect(Collectors.toList());
+            this.roles = Set.copyOf(t);
+        } else {
+            this.roles = Set.of();
+        }
         return this;
     }
 
@@ -55,6 +60,10 @@ public class JwtValidationResponse {
 
     public JwtValidationResponse withAudience(String audience) {
         this.audience = audience;
+        return this;
+    }
+    public JwtValidationResponse withSubject(String subject) {
+        this.subject = subject;
         return this;
     }
 
@@ -98,5 +107,9 @@ public class JwtValidationResponse {
 
     public String getAudience() {
         return audience;
+    }
+
+    public String getSubject() {
+        return subject;
     }
 }
