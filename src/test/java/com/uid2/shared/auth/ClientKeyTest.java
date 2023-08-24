@@ -1,6 +1,5 @@
 package com.uid2.shared.auth;
 
-import com.uid2.shared.Utils;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.junit.Assert;

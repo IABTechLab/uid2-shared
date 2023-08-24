@@ -1,6 +1,5 @@
 package com.uid2.shared.auth;
 
-import com.google.api.client.util.Sets;
 import com.uid2.shared.Utils;
 import com.uid2.shared.cloud.InMemoryStorageMock;
 import com.uid2.shared.model.EncryptionKey;
@@ -74,7 +73,7 @@ public class RotatingKeyAclProviderTest {
     }
 
     private ClientKey makeClientKey(int siteId) {
-        return new ClientKey("test-client-key", "test-client-keyHash", Utils.toBase64String("test-client-secret".getBytes(StandardCharsets.UTF_8))).withSiteId(siteId);
+        return new ClientKey("test-client-key", "test-client-keyHash", "test-client-keySalt", Utils.toBase64String("test-client-secret".getBytes(StandardCharsets.UTF_8))).withSiteId(siteId);
     }
 
     private EncryptionKey makeKey(int siteId) {

@@ -6,7 +6,6 @@ import com.uid2.shared.auth.OperatorKey;
 import com.uid2.shared.middleware.AuthMiddleware;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -160,9 +159,9 @@ public class RequestCapturingHandlerTest {
         // Arguments are: routing context data key, routing context data value, site ID tag.
         return Stream.of(
                 Arguments.of(Const.RoutingContextData.SiteId, 100, "100"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new ClientKey("key", "keyHash", "secret").withSiteId(200), "200"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("key", "test-keyHash", "name", "contact", "protocol", 0, false), "null"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("key", "test-keyHash", "name", "contact", "protocol", 0, false, 300), "300"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new ClientKey("key", "keyHash", "keySalt", "secret").withSiteId(200), "200"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("key", "test-keyHash", "test-keySalt", "name", "contact", "protocol", 0, false), "null"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("key", "test-keyHash", "test-keySalt", "name", "contact", "protocol", 0, false, 300), "300"),
                 Arguments.of(null, null, "null")
         );
     }
