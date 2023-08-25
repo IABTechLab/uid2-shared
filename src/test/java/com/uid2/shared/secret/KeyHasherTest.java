@@ -25,8 +25,8 @@ public class KeyHasherTest {
 
         assertAll(
                 "hashKey returns new hash every time with random salt",
-                () -> assertNotEquals(result1.hash, result2.hash),
-                () -> assertNotEquals(result1.salt, result2.salt)
+                () -> assertNotEquals(result1.getHash(), result2.getHash()),
+                () -> assertNotEquals(result1.getSalt(), result2.getSalt())
         );
     }
 }
