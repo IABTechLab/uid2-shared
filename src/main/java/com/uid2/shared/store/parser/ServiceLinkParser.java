@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ServiceLinkParser implements Parser<Map<String, ServiceLink>> {
+
     @Override
     public ParsingResult<Map<String, ServiceLink>> deserialize(InputStream inputStream) throws IOException {
         JsonArray spec = Utils.toJsonArray(inputStream);

@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 public class RotatingServiceLinkStoreTest {
+
     private AutoCloseable mocks;
     @Mock
     ICloudStorage cloudStorage;
