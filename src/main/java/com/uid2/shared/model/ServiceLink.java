@@ -8,23 +8,23 @@ public class ServiceLink {
     private final String linkId;
     private final String name;
 
-    public ServiceLink(int siteId, int serviceId, String linkId, String name) {
-        this.siteId = siteId;
-        this.serviceId = serviceId;
+    public ServiceLink(String linkId, int serviceId, int siteId, String name) {
         this.linkId = linkId;
+        this.serviceId = serviceId;
+        this.siteId = siteId;
         this.name = name;
     }
 
-    public int getSiteId() {
-        return siteId;
+    public String getLinkId() {
+        return linkId;
     }
 
     public int getServiceId() {
         return serviceId;
     }
 
-    public String getLinkId() {
-        return linkId;
+    public int getSiteId() {
+        return siteId;
     }
 
     public String getName() {
