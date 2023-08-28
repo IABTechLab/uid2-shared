@@ -25,7 +25,10 @@ public class SiteParser implements Parser<Map<Integer, Site>> {
             final String name = siteSpec.getString("name");
             final Boolean enabled = siteSpec.getBoolean("enabled", false);
             final JsonArray domainNamesJson = siteSpec.getJsonArray("domain_names");
-            Set<String> domainNames = domainNamesJson.stream().map(String::valueOf).collect(Collectors.toSet());
+            Set<String> domainNames = new HashSet<>();
+            if(domainNamesJson != null) {
+                domainNames = domainNamesJson.stream().map(String::valueOf).collect(Collectors.toSet());
+            }
             JsonArray clientTypeSpec = siteSpec.getJsonArray("clientTypes");
             HashSet<ClientType> clientTypes = new HashSet<>();
             if(clientTypeSpec != null) {
