@@ -5,9 +5,6 @@ import com.uid2.shared.Utils;
 import java.security.SecureRandom;
 
 public class SecureKeyGenerator implements IKeyGenerator {
-    public SecureKeyGenerator() {
-    }
-
     @Override
     public byte[] generateRandomKey(int keyLen) {
         final SecureRandom random = new SecureRandom();

@@ -9,7 +9,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.junit5.VertxTestContext;
 import io.vertx.junit5.VertxExtension;
-import org.junit.Ignore;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,17 +28,19 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(VertxExtension.class)
 public class AttestationTokenRetrieverTest {
-    private final String attestationEndpoint = "https://core-test.uidapi.com/attest";
-    private final ApplicationVersion appVersion = new ApplicationVersion("appName", "appVersion", new HashMap<String, String>()
+    private static final String ATTESTATION_ENDPOINT = "https://core-test.uidapi.com/attest";
+    private static final ApplicationVersion APP_VERSION = new ApplicationVersion("appName", "appVersion", new HashMap<String, String>()
     {{
         put("Component1", "Value1");
         put("Component2", "Value2");
     }});
+
     private final IAttestationProvider attestationProvider = mock(IAttestationProvider.class);
     private final Handler<Integer> responseWatcher = mock(Handler.class);
     private final IClock clock = mock(IClock.class);
     private final HttpClient mockHttpClient = mock(HttpClient.class);
     private final AttestationTokenDecryptor mockAttestationTokenDecryptor = mock(AttestationTokenDecryptor.class);
+
     private AttestationTokenRetriever attestationTokenRetriever = null;
 
     @BeforeEach
@@ -48,7 +49,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void Attest_Succeed_AttestationTokenSet(Vertx vertx, VertxTestContext testContext) throws Exception {
+    public void attest_succeed_attestationTokenSet(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
@@ -72,7 +73,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ExpiryCheckCallsAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
+    public void attest_currentTimeAfterTenMinsBeforeAttestationTokenExpiry_expiryCheckCallsAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
@@ -105,7 +106,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ExpiryCheckDoesNotCallAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
+    public void attest_currentTimeAfterTenMinsBeforeAttestationTokenExpiry_expiryCheckDoesNotCallAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
@@ -130,7 +131,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void Attest_CurrentTimeAfterTenMinsBeforeAttestationTokenExpiry_ProviderNotReadyDoesNotCallAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
+    public void attest_currentTimeAfterTenMinsBeforeAttestationTokenExpiry_providerNotReadyDoesNotCallAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         // isReady will be called twice:
@@ -159,7 +160,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void Attest_ResponseBodyHasNoAttestationToken_ExceptionThrown(Vertx vertx, VertxTestContext testContext) throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
+    public void attest_responseBodyHasNoAttestationToken_exceptionThrown(Vertx vertx, VertxTestContext testContext) throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
@@ -189,7 +190,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void Attest_ResponseBodyHasNoExpiredAt_ExceptionThrown(Vertx vertx, VertxTestContext testContext) throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
+    public void attest_responseBodyHasNoExpiredAt_exceptionThrown(Vertx vertx, VertxTestContext testContext) throws IOException, AttestationException, AttestationTokenRetrieverException, InterruptedException {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
@@ -220,7 +221,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void Attest_ProviderNotReady_ExceptionThrown(Vertx vertx, VertxTestContext testContext) throws Exception {
+    public void attest_providerNotReady_exceptionThrown(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(false);
@@ -235,7 +236,7 @@ public class AttestationTokenRetrieverTest {
         testContext.completeNow();
     }
     @Test
-    public void Attest_Succeed_OptOutJWTSet(Vertx vertx, VertxTestContext testContext) throws Exception {
+    public void attest_succeed_optOutJwtSet(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
@@ -255,7 +256,7 @@ public class AttestationTokenRetrieverTest {
         testContext.completeNow();
     }
     @Test
-    public void Attest_Succeed_CoreJWTSet(Vertx vertx, VertxTestContext testContext) throws Exception {
+    public void attest_succeed_coreJwtSet(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
@@ -275,7 +276,7 @@ public class AttestationTokenRetrieverTest {
         testContext.completeNow();
     }
     @Test
-    public void Attest_Succeed_JWTsNull(Vertx vertx, VertxTestContext testContext) throws Exception {
+    public void attest_succeed_jwtsNull(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
@@ -295,8 +296,8 @@ public class AttestationTokenRetrieverTest {
         verify(this.responseWatcher, times(1)).handle(200);
         testContext.completeNow();
     }
-    private AttestationTokenRetriever getAttestationTokenRetriever(Vertx vertx) {
-        return new AttestationTokenRetriever(vertx, attestationEndpoint, "testApiKey", appVersion, attestationProvider, responseWatcher, clock, mockHttpClient, mockAttestationTokenDecryptor);
-    }
 
+    private AttestationTokenRetriever getAttestationTokenRetriever(Vertx vertx) {
+        return new AttestationTokenRetriever(vertx, ATTESTATION_ENDPOINT, "testApiKey", APP_VERSION, attestationProvider, responseWatcher, clock, mockHttpClient, mockAttestationTokenDecryptor);
+    }
 }

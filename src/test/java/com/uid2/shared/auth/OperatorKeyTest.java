@@ -168,10 +168,12 @@ public class OperatorKeyTest {
                 "\"created\":1617149276," +
                 "\"disabled\":false," +
                 "\"roles\":[\"OPERATOR\",\"OPTOUT\"]," +
+                "\"key_hash\":\"test-keyHash\"," +
+                "\"key_salt\":\"test-keySalt\"," +
                 "\"site_id\":1," +
                 "\"operator_type\":\"PRIVATE\"" +
                 "}";
-        OperatorKey k = new OperatorKey("test-admin-key", "admin@uid2.com", "admin@uid2.com", "protocol1", 1617149276, false, 1, new HashSet<>(Arrays.asList(Role.OPTOUT, Role.OPERATOR)));
+        OperatorKey k = new OperatorKey("test-admin-key", "test-keyHash", "test-keySalt", "admin@uid2.com", "admin@uid2.com", "protocol1", 1617149276, false, 1, new HashSet<>(Arrays.asList(Role.OPTOUT, Role.OPERATOR)));
         ObjectMapper objectMapper = new ObjectMapper();
         Assert.assertEquals(expectJson, objectMapper.writeValueAsString(k));
     }
@@ -225,15 +227,15 @@ public class OperatorKeyTest {
 
     @Test
     public void verifyConstructorStartsWithPrivateOperator() {
-        OperatorKey k1 = new OperatorKey("key1", "name1", "contact1", "protocol1", 1, true);
+        OperatorKey k1 = new OperatorKey("key1", "test-keyHash1", "test-keySalt1", "name1", "contact1", "protocol1", 1, true);
         Assert.assertEquals(OperatorType.PRIVATE, k1.getOperatorType());
-        OperatorKey k2 = new OperatorKey("key2", "name2", "contact2", "protocol2", 2, true, 2);
+        OperatorKey k2 = new OperatorKey("key2", "test-keyHash2", "test-keySalt2", "name2", "contact2", "protocol2", 2, true, 2);
         Assert.assertEquals(OperatorType.PRIVATE, k2.getOperatorType());
-        OperatorKey k3 = new OperatorKey("key3", "name3", "contact3", "protocol3", 3, true, 3,  null);
+        OperatorKey k3 = new OperatorKey("key3", "test-keyHash3", "test-keySalt3", "name3", "contact3", "protocol3", 3, true, 3,  null);
         Assert.assertEquals(OperatorType.PRIVATE, k3.getOperatorType());
-        OperatorKey k4 = new OperatorKey("key4", "name4", "contact4", "protocol4", 4, true, 4,  null, OperatorType.PUBLIC);
+        OperatorKey k4 = new OperatorKey("key4", "test-keyHash4", "test-keySalt4", "name4", "contact4", "protocol4", 4, true, 4,  null, OperatorType.PUBLIC);
         Assert.assertEquals(OperatorType.PUBLIC, k4.getOperatorType());
-        OperatorKey k5 = new OperatorKey("key5", "name5", "contact5", "protocol5", 5, true, 5,  null, OperatorType.PRIVATE);
+        OperatorKey k5 = new OperatorKey("key5", "test-keyHash5", "test-keySalt5", "name5", "contact5", "protocol5", 5, true, 5,  null, OperatorType.PRIVATE);
         Assert.assertEquals(OperatorType.PRIVATE, k5.getOperatorType());
     }
 }
