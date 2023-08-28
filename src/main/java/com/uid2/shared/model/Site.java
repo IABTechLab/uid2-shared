@@ -71,6 +71,6 @@ public class Site {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, enabled, domainNames) + Arrays.hashCode(clientTypes.toArray());
+        return Objects.hash(id, name, enabled, domainNames,Arrays.hashCode(clientTypes.toArray()));
     }
 }
