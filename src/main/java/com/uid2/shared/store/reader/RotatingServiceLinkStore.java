@@ -4,7 +4,7 @@ import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.model.ServiceLink;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.ScopedStoreReader;
-import com.uid2.shared.store.parser.IServiceLinkStore;
+import com.uid2.shared.store.IServiceLinkStore;
 import com.uid2.shared.store.parser.ServiceLinkParser;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
