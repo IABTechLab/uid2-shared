@@ -15,11 +15,13 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
         public AuthorizableStoreSnapshot(Collection<T> authorizables) {
             this.authorizables = authorizables.stream()
+                    .filter(a -> a.getKeyHash() != null) // TODO: remove this filter when all keys have hashes
                     .collect(Collectors.toMap(
                             a -> ByteBuffer.wrap(Base64.getDecoder().decode(a.getKeyHash())),
                             a -> a
                     ));
             this.salts = authorizables.stream()
+                    .filter(a -> a.getKeySalt() != null) // TODO: remove this filter when all keys have salts
                     .map(a -> Base64.getDecoder().decode(a.getKeySalt()))
                     .collect(Collectors.toList());
         }
