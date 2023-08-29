@@ -1,5 +1,6 @@
 package com.uid2.shared.store.reader;
 
+import com.uid2.shared.auth.AuthorizableStore;
 import com.uid2.shared.auth.ClientKey;
 import com.uid2.shared.auth.IAuthorizable;
 import com.uid2.shared.cloud.DownloadCloudStorage;
@@ -39,8 +40,10 @@ import java.util.Map;
 */
 public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReader<Collection<ClientKey>> {
     private final ScopedStoreReader<Map<String, ClientKey>> reader;
+    private final AuthorizableStore<ClientKey> authorizableStore;
     public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys");
+        this.authorizableStore = new AuthorizableStore<>();
     }
 
     @Override
@@ -55,12 +58,18 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
 
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
-        return reader.loadContent(metadata, "client_keys");
+        long version = reader.loadContent(metadata, "client_keys");
+        this.authorizableStore.refresh(this.getAll());
+        return version;
     }
 
     @Override
     public ClientKey getClientKey(String token) {
         return reader.getSnapshot().get(token);
+    }
+
+    public ClientKey getClientKeyFromHash(String hash) {
+        return this.authorizableStore.getFromKeyHash(hash);
     }
 
     @Override
