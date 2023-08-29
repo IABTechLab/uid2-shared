@@ -60,7 +60,13 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
     public T getFromKeyHash(String keyHash) {
         AuthorizableStoreSnapshot latest = authorizables.get();
-        byte[] keyHashBytes = Base64.getDecoder().decode(keyHash);
+
+        byte[] keyHashBytes;
+        try {
+            keyHashBytes = Base64.getDecoder().decode(keyHash);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
 
         return latest.getAuthorizables().get(ByteBuffer.wrap(keyHashBytes));
     }

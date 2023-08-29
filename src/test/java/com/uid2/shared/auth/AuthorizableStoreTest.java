@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class AuthorizableStoreTest {
     private AuthorizableStore<ClientKey> store;
@@ -39,8 +40,8 @@ public class AuthorizableStoreTest {
     }
 
     @Test
-    public void getFromKey_returnsNull_withInvalidKey() {
-        ClientKey client = this.store.getFromKey("test-key-99");
+    public void getFromKey_returnsNull_withUnknownKey() {
+        ClientKey client = this.store.getFromKey("invalid-key");
         Assert.assertNull(client);
     }
 
@@ -50,5 +51,29 @@ public class AuthorizableStoreTest {
 
         ClientKey client = this.store.getFromKeyHash(client1KeyHash);
         Assert.assertEquals("client1", client.getName());
+    }
+
+    @Test
+    public void getFromKeyHash_returnsNull_withInvalidBase64KeyHash() {
+        ClientKey client = this.store.getFromKeyHash("invalid-key-hash");
+        Assert.assertNull(client);
+    }
+
+    @Test
+    public void getFromKeyHash_returnsNull_withUnknownKeyHash() {
+        ClientKey client = this.store.getFromKeyHash("invalidkeyhash");
+        Assert.assertNull(client);
+    }
+
+    @Test
+    public void refresh_returnsNewClients_afterRefresh() {
+        KeyHasher keyHasher = new KeyHasher();
+        KeyHashResult clientHash1 = keyHasher.hashKey("test-key-4");
+        ClientKey client4 = new ClientKey("", clientHash1.getHash(), clientHash1.getSalt(), "", "client4");
+
+        this.store.refresh(List.of(client4));
+
+        Assert.assertEquals("client4", this.store.getFromKey("test-key-4").getName());
+        Assert.assertNull(this.store.getFromKey("test-key-1"));
     }
 }
