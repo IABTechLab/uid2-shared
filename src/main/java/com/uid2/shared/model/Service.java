@@ -1,12 +1,15 @@
 package com.uid2.shared.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.uid2.shared.auth.Role;
 
 import java.util.Objects;
 import java.util.Set;
 
 public class Service {
+    @JsonProperty("service_id")
     private final int serviceId;
+    @JsonProperty("site_id")
     private final int siteId;
     private final String name;
     private Set<Role> roles;

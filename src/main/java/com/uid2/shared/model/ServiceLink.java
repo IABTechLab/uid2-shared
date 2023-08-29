@@ -1,10 +1,15 @@
 package com.uid2.shared.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
 public class ServiceLink {
+    @JsonProperty("site_id")
     private final int siteId;
+    @JsonProperty("service_id")
     private final int serviceId;
+    @JsonProperty("link_id")
     private final String linkId;
     private final String name;
 
