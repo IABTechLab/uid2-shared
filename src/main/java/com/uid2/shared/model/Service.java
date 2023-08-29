@@ -3,6 +3,7 @@ package com.uid2.shared.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.uid2.shared.auth.Role;
 
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -18,7 +19,7 @@ public class Service {
         this.serviceId = serviceId;
         this.siteId = siteId;
         this.name = name;
-        this.roles = roles;
+        this.roles = Objects.requireNonNullElseGet(roles, HashSet::new);
     }
 
     public int getServiceId() {
@@ -35,6 +36,10 @@ public class Service {
 
     public Set<Role> getRoles() {
         return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = Objects.requireNonNullElseGet(roles, HashSet::new);
     }
 
     @Override
