@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Set;
 
 import static com.uid2.shared.TestUtilites.makeInputStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
