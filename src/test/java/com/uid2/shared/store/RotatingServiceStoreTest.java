@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import static com.uid2.shared.TestUtilites.makeInputStream;
@@ -47,22 +48,10 @@ public class RotatingServiceStoreTest {
     }
 
     private Service addService(JsonArray content, int serviceId, int siteId, String name, Set<Role> roles) {
-
-        Service s = new Service(serviceId, siteId, name, roles);
-
-        JsonArray ja = new JsonArray();
-        for (Role role : roles) {
-            ja.add(role.toString());
-        }
-
-        JsonObject service = new JsonObject();
-        service.put("service_id", serviceId);
-        service.put("site_id", siteId);
-        service.put("name", name);
-        service.put("roles", ja);
-
-        content.add(service);
-        return s;
+        Service service = new Service(serviceId, siteId, name, roles);
+        JsonObject jo = JsonObject.mapFrom(service);
+        content.add(jo);
+        return service;
     }
 
     @Test
@@ -91,9 +80,6 @@ public class RotatingServiceStoreTest {
         assertEquals(s3, serviceStore.getService(3));
         assertEquals(s4, serviceStore.getService(4));
 
-        assertTrue(serviceStore.getAllServices().contains(s1));
-        assertTrue(serviceStore.getAllServices().contains(s2));
-        assertTrue(serviceStore.getAllServices().contains(s3));
-        assertTrue(serviceStore.getAllServices().contains(s4));
+        assertTrue(serviceStore.getAllServices().containsAll(Arrays.asList(s1, s2, s3, s4)));
     }
 }

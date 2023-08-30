@@ -13,6 +13,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 
+import java.util.Arrays;
+
 import static com.uid2.shared.TestUtilites.makeInputStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,18 +47,10 @@ public class RotatingServiceLinkStoreTest {
     }
 
     private ServiceLink addServiceLink(JsonArray content, String linkId, int serviceId, int siteId, String name) {
-
-        ServiceLink l = new ServiceLink(linkId, serviceId, siteId, name);
-
-
-        JsonObject service = new JsonObject();
-        service.put("link_id", linkId);
-        service.put("service_id", serviceId);
-        service.put("site_id", siteId);
-        service.put("name", name);
-
-        content.add(service);
-        return l;
+        ServiceLink link = new ServiceLink(linkId, serviceId, siteId, name);
+        JsonObject jo = JsonObject.mapFrom(link);
+        content.add(jo);
+        return link;
     }
 
     @Test
@@ -79,15 +73,6 @@ public class RotatingServiceLinkStoreTest {
 
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
         assertEquals(4, count);
-
-        assertEquals(l1, serviceLinkStore.getServiceLink("abc123"));
-        assertEquals(l2, serviceLinkStore.getServiceLink("def456"));
-        assertEquals(l3, serviceLinkStore.getServiceLink("ghi789"));
-        assertEquals(l4, serviceLinkStore.getServiceLink("jkl1011"));
-
-        assertTrue(serviceLinkStore.getAllServiceLinks().contains(l1));
-        assertTrue(serviceLinkStore.getAllServiceLinks().contains(l2));
-        assertTrue(serviceLinkStore.getAllServiceLinks().contains(l3));
-        assertTrue(serviceLinkStore.getAllServiceLinks().contains(l4));
+        assertTrue(serviceLinkStore.getAllServiceLinks().containsAll(Arrays.asList(l1, l2, l3, l4)));
     }
 }

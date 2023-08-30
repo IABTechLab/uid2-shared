@@ -10,10 +10,9 @@ import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Collection;
-import java.util.Map;
 
 public class RotatingServiceLinkStore implements IServiceLinkStore, StoreReader<Collection<ServiceLink>> {
-    private final ScopedStoreReader<Map<String, ServiceLink>> reader;
+    private final ScopedStoreReader<Collection<ServiceLink>> reader;
 
     public RotatingServiceLinkStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ServiceLinkParser(), "service_links");
@@ -45,13 +44,8 @@ public class RotatingServiceLinkStore implements IServiceLinkStore, StoreReader<
     }
 
     @Override
-    public ServiceLink getServiceLink(String linkId) {
-        return reader.getSnapshot().get(linkId);
-    }
-
-    @Override
     public Collection<ServiceLink> getAll() {
-        return reader.getSnapshot().values();
+        return reader.getSnapshot();
     }
 
     @Override

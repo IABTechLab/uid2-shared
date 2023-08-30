@@ -7,15 +7,14 @@ import io.vertx.core.json.JsonObject;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
-public class ServiceLinkParser implements Parser<Map<String, ServiceLink>> {
+public class ServiceLinkParser implements Parser<Collection<ServiceLink>> {
 
     @Override
-    public ParsingResult<Map<String, ServiceLink>> deserialize(InputStream inputStream) throws IOException {
+    public ParsingResult<Collection<ServiceLink>> deserialize(InputStream inputStream) throws IOException {
         JsonArray spec = Utils.toJsonArray(inputStream);
-        final HashMap<String, ServiceLink> serviceLinkMap = new HashMap<>();
+        final List<ServiceLink> serviceLinkList = new ArrayList<>();
         for (int i = 0; i < spec.size(); i++) {
             JsonObject serviceLinkSpec = spec.getJsonObject(i);
             String linkId = serviceLinkSpec.getString("link_id");
@@ -25,9 +24,9 @@ public class ServiceLinkParser implements Parser<Map<String, ServiceLink>> {
 
             ServiceLink serviceLink = new ServiceLink(linkId, serviceId, siteId, name);
 
-            serviceLinkMap.put(linkId, serviceLink);
+            serviceLinkList.add(serviceLink);
         }
-        return new ParsingResult<>(serviceLinkMap, serviceLinkMap.size());
+        return new ParsingResult<>(serviceLinkList, serviceLinkList.size());
     }
 }
 
