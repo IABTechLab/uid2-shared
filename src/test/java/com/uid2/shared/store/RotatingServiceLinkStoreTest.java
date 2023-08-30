@@ -66,9 +66,9 @@ public class RotatingServiceLinkStoreTest {
     public void loadContentMultipleServices() throws Exception {
         JsonArray content = new JsonArray();
         ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "AWS Venice");
-        ServiceLink l2 = addServiceLink(content, "def456", 1, 123, "test1");
-        ServiceLink l3 = addServiceLink(content, "ghi789", 2, 124, "AWS Venice");
-        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 125, "test2");
+        ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1");
+        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "AWS Venice");
+        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2");
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
