@@ -35,8 +35,8 @@ public class AuthorizableStore<T extends IAuthorizable> {
         }
     }
 
-    private static final KeyHasher keyHasher = new KeyHasher();
-    private static final Logger logger = LoggerFactory.getLogger(AuthorizableStore.class);
+    private static final KeyHasher KEY_HASHER = new KeyHasher();
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizableStore.class);
 
     private final AtomicReference<AuthorizableStoreSnapshot> authorizables;
 
@@ -52,7 +52,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
         AuthorizableStoreSnapshot latest = authorizables.get();
         // TODO: add caching
         for (byte[] salt : latest.getSalts()) {
-            byte[] keyHash = keyHasher.hashKey(key, salt);
+            byte[] keyHash = KEY_HASHER.hashKey(key, salt);
             T authorizable = latest.getAuthorizables().get(ByteBuffer.wrap(keyHash));
             if (authorizable != null) {
                 return authorizable;
@@ -68,7 +68,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
         try {
             keyHashBytes = Base64.getDecoder().decode(keyHash);
         } catch (IllegalArgumentException e) {
-            logger.error("Invalid base64 key hash: {}", keyHash);
+            LOGGER.error("Invalid base64 key hash: {}", keyHash);
             return null;
         }
 
