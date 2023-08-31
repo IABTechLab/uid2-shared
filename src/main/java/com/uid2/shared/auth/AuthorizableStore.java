@@ -35,14 +35,13 @@ public class AuthorizableStore<T extends IAuthorizable> {
         }
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizableStore.class);
+    private static final KeyHasher keyHasher = new KeyHasher();
+    private static final Logger logger = LoggerFactory.getLogger(AuthorizableStore.class);
 
     private final AtomicReference<AuthorizableStoreSnapshot> authorizables;
-    private final KeyHasher keyHasher;
 
     public AuthorizableStore() {
         this.authorizables = new AtomicReference<>(new AuthorizableStoreSnapshot(new ArrayList<>()));
-        this.keyHasher = new KeyHasher();
     }
 
     public void refresh(Collection<T> authorizablesToRefresh) {
@@ -69,7 +68,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
         try {
             keyHashBytes = Base64.getDecoder().decode(keyHash);
         } catch (IllegalArgumentException e) {
-            LOGGER.error("Invalid base64 key hash: {}", keyHash);
+            logger.error("Invalid base64 key hash: {}", keyHash);
             return null;
         }
 
