@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-// change to return simple list
 public class ClientParser implements Parser<Map<String, ClientKey>> {
     @Override
     public ParsingResult<Map<String, ClientKey>> deserialize(InputStream inputStream) throws IOException {

@@ -41,6 +41,7 @@ import java.util.Map;
 public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReader<Collection<ClientKey>> {
     private final ScopedStoreReader<Map<String, ClientKey>> reader;
     private final AuthorizableStore<ClientKey> authorizableStore;
+
     public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys");
         this.authorizableStore = new AuthorizableStore<>();

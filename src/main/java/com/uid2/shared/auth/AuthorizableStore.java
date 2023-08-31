@@ -1,6 +1,8 @@
 package com.uid2.shared.auth;
 
 import com.uid2.shared.secret.KeyHasher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -15,13 +17,11 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
         public AuthorizableStoreSnapshot(Collection<T> authorizables) {
             this.authorizables = authorizables.stream()
-                    .filter(a -> a.getKeyHash() != null) // TODO: remove this filter when all keys have hashes
                     .collect(Collectors.toMap(
                             a -> ByteBuffer.wrap(Base64.getDecoder().decode(a.getKeyHash())),
                             a -> a
                     ));
             this.salts = authorizables.stream()
-                    .filter(a -> a.getKeySalt() != null) // TODO: remove this filter when all keys have salts
                     .map(a -> Base64.getDecoder().decode(a.getKeySalt()))
                     .collect(Collectors.toList());
         }
@@ -35,6 +35,8 @@ public class AuthorizableStore<T extends IAuthorizable> {
         }
     }
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizableStore.class);
+
     private final AtomicReference<AuthorizableStoreSnapshot> authorizables;
     private final KeyHasher keyHasher;
 
@@ -43,8 +45,8 @@ public class AuthorizableStore<T extends IAuthorizable> {
         this.keyHasher = new KeyHasher();
     }
 
-    public void refresh(Collection<T> authorizables) {
-        this.authorizables.set(new AuthorizableStoreSnapshot(authorizables));
+    public void refresh(Collection<T> authorizablesToRefresh) {
+        authorizables.set(new AuthorizableStoreSnapshot(authorizablesToRefresh));
     }
 
     public T getFromKey(String key) {
@@ -67,6 +69,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
         try {
             keyHashBytes = Base64.getDecoder().decode(keyHash);
         } catch (IllegalArgumentException e) {
+            LOGGER.error("Invalid base64 key hash: {}", keyHash);
             return null;
         }
 
