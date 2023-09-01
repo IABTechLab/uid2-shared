@@ -7,5 +7,6 @@ import java.util.Collection;
 
 public interface IClientKeyProvider extends IAuthorizableProvider {
     ClientKey getClientKey(String token);
+    ClientKey getClientKeyFromHash(String hash);
     Collection<ClientKey> getAll();
 }
