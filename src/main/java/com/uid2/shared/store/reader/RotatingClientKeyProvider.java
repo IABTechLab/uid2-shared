@@ -60,7 +60,7 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
         long version = reader.loadContent(metadata, "client_keys");
-        this.authorizableStore.refresh(this.getAll());
+        authorizableStore.refresh(getAll());
         return version;
     }
 
@@ -69,8 +69,9 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
         return reader.getSnapshot().get(token);
     }
 
+    @Override
     public ClientKey getClientKeyFromHash(String hash) {
-        return this.authorizableStore.getFromKeyHash(hash);
+        return authorizableStore.getFromKeyHash(hash);
     }
 
     @Override
@@ -79,7 +80,7 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
     }
 
     public void loadContent() throws Exception {
-        this.loadContent(this.getMetadata());
+        loadContent(getMetadata());
     }
 
     @Override

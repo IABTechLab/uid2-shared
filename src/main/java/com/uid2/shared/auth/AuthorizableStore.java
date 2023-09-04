@@ -9,34 +9,9 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-
 public class AuthorizableStore<T extends IAuthorizable> {
-    private class AuthorizableStoreSnapshot {
-        private final Map<ByteBuffer, T> authorizables;
-        private final Collection<byte[]> salts;
-
-        public AuthorizableStoreSnapshot(Collection<T> authorizables) {
-            this.authorizables = authorizables.stream()
-                    .collect(Collectors.toMap(
-                            a -> ByteBuffer.wrap(Base64.getDecoder().decode(a.getKeyHash())),
-                            a -> a
-                    ));
-            this.salts = authorizables.stream()
-                    .map(a -> Base64.getDecoder().decode(a.getKeySalt()))
-                    .collect(Collectors.toList());
-        }
-
-        public Map<ByteBuffer, T> getAuthorizables() {
-            return authorizables;
-        }
-
-        public Collection<byte[]> getSalts() {
-            return salts;
-        }
-    }
-
-    private static final KeyHasher KEY_HASHER = new KeyHasher();
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizableStore.class);
+    private static final KeyHasher KEY_HASHER = new KeyHasher();
 
     private final AtomicReference<AuthorizableStoreSnapshot> authorizables;
 
@@ -73,5 +48,28 @@ public class AuthorizableStore<T extends IAuthorizable> {
         }
 
         return latest.getAuthorizables().get(ByteBuffer.wrap(keyHashBytes));
+    }
+
+    private class AuthorizableStoreSnapshot {
+        private final Map<ByteBuffer, T> authorizables;
+        private final Collection<byte[]> salts;
+
+        public AuthorizableStoreSnapshot(Collection<T> authorizables) {
+            this.authorizables = authorizables.stream()
+                    .collect(Collectors.toMap(
+                            a -> ByteBuffer.wrap(Base64.getDecoder().decode(a.getKeyHash())),
+                            a -> a));
+            this.salts = authorizables.stream()
+                    .map(a -> Base64.getDecoder().decode(a.getKeySalt()))
+                    .collect(Collectors.toList());
+        }
+
+        public Map<ByteBuffer, T> getAuthorizables() {
+            return authorizables;
+        }
+
+        public Collection<byte[]> getSalts() {
+            return salts;
+        }
     }
 }
