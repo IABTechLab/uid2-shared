@@ -1,10 +1,13 @@
 package com.uid2.shared.auth;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.uid2.shared.secret.KeyHasher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -14,9 +17,14 @@ public class AuthorizableStore<T extends IAuthorizable> {
     private static final KeyHasher KEY_HASHER = new KeyHasher();
 
     private final AtomicReference<AuthorizableStoreSnapshot> authorizables;
+    private final Cache<String, String> plaintextToHashedKeyCache;
 
     public AuthorizableStore() {
         this.authorizables = new AtomicReference<>(new AuthorizableStoreSnapshot(new ArrayList<>()));
+        this.plaintextToHashedKeyCache = Caffeine.newBuilder()
+                .expireAfterWrite(Duration.ofMinutes(1))
+                .recordStats()
+                .build();
     }
 
     public void refresh(Collection<T> authorizablesToRefresh) {
@@ -24,12 +32,18 @@ public class AuthorizableStore<T extends IAuthorizable> {
     }
 
     public T getFromKey(String key) {
+        if (plaintextToHashedKeyCache.asMap().containsKey(key)) {
+            String hash = plaintextToHashedKeyCache.getIfPresent(key);
+            return getFromKeyHash(hash);
+        }
+
         AuthorizableStoreSnapshot latest = authorizables.get();
-        // TODO: add caching
+
         for (byte[] salt : latest.getSalts()) {
             byte[] keyHash = KEY_HASHER.hashKey(key, salt);
             T authorizable = latest.getAuthorizables().get(ByteBuffer.wrap(keyHash));
             if (authorizable != null) {
+                plaintextToHashedKeyCache.put(key, authorizable.getKeyHash());
                 return authorizable;
             }
         }
