@@ -43,10 +43,16 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         this.disabled = disabled;
     }
 
+    public ClientKey(String key, String keyHash, String keySalt, String secret, String name, Instant created, Set<Role> roles, int siteId) {
+        this(key, keyHash, keySalt, secret, name, name, created, roles, siteId, false);
+    }
+
+    @Deprecated
     public ClientKey(String key, String keyHash, String keySalt, String secret, String contact, Role... roles) {
         this(key, keyHash, keySalt, secret, contact, contact, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false);
     }
 
+    @Deprecated
     public ClientKey(String key, String keyHash, String keySalt, String secret, Instant created) {
         this.key = key;
         this.keyHash = keyHash;
@@ -57,6 +63,7 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         this.siteId = -1;
     }
 
+    @Deprecated
     public ClientKey(String key, String keyHash, String keySalt, String secret) {
         this.key = key;
         this.keyHash = keyHash;
@@ -148,6 +155,7 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         return this;
     }
 
+    @Deprecated
     public ClientKey withRoles(Set<Role> roles) {
         this.roles = Collections.unmodifiableSet(roles);
         return this;
@@ -162,6 +170,7 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         return SiteUtil.isValidSiteId(siteId);
     }
 
+    @Deprecated
     public ClientKey withSiteId(int siteId) {
         this.siteId = siteId;
         return this;
