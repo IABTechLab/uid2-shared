@@ -65,8 +65,8 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
     }
 
     @Override
-    public ClientKey getClientKey(String token) {
-        return reader.getSnapshot().get(token);
+    public ClientKey getClientKey(String key) {
+        return authorizableStore.getFromKey(key);
     }
 
     @Override
