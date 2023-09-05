@@ -5,7 +5,6 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.uid2.shared.secret.KeyHasher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.utils.StringUtils;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -21,112 +20,117 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
     private final AtomicReference<AuthorizableStoreSnapshot> authorizables;
     private final Cache<String, String> keyToHashCache;
-    private final Cache<Integer, String> siteIdToHashCache;
 
     public AuthorizableStore() {
         this.authorizables = new AtomicReference<>(new AuthorizableStoreSnapshot(new ArrayList<>()));
-        this.keyToHashCache = createToHashCache(String.class, 10);
-        this.siteIdToHashCache = createToHashCache(Integer.class, 10);
+        this.keyToHashCache = createToHashCacheBuilder(10).build();
     }
 
     public void refresh(Collection<T> authorizablesToRefresh) {
         authorizables.set(new AuthorizableStoreSnapshot(authorizablesToRefresh));
     }
 
-    public T getFromKey(String key) {
+    public T getAuthorizableByKey(String key) {
         AuthorizableStoreSnapshot latest = authorizables.get();
+
         Integer siteId = getSiteIdFromKey(key);
-
-        T cachedAuthorizable = getFromCache(key, siteId);
-        if (cachedAuthorizable != null) {
-            return cachedAuthorizable;
-        }
-
         if (siteId != null) {
             T authorizable = latest.getAuthorizableBySiteId(siteId);
-            siteIdToHashCache.put(siteId, authorizable == null ? "" : authorizable.getKeyHash());
-            return authorizable;
-        } else {
-            for (byte[] salt : latest.getSalts()) {
-                byte[] keyHash = KEY_HASHER.hashKey(key, salt);
-                T authorizable = latest.getAuthorizableByHash(ByteBuffer.wrap(keyHash));
-                if (authorizable != null) {
-                    keyToHashCache.put(key, authorizable.getKeyHash());
-                    return authorizable;
-                }
+            if (authorizable == null) {
+                return null;
             }
-            keyToHashCache.put(key, "");
-            return null;
+
+            byte[] hash = KEY_HASHER.hashKey(key, convertBase64StringToBytes(authorizable.getKeySalt()));
+            return latest.getAuthorizableByHash(ByteBuffer.wrap(hash));
         }
+
+        String cachedHash = keyToHashCache.getIfPresent(key);
+        if (cachedHash != null) {
+            return cachedHash.isBlank() ? null : latest.getAuthorizableByHash(wrapHashToByteBuffer(cachedHash));
+        }
+
+        T authorizable = hashAndCompareKeyAgainstAuthorizables(key, latest);
+        keyToHashCache.put(key, authorizable == null ? "" : authorizable.getKeyHash());
+        return authorizable;
     }
 
-    public T getFromKeyHash(String keyHash) {
+    public T getAuthorizableByHash(String hash) {
+        ByteBuffer hashBytes = wrapHashToByteBuffer(hash);
+        if (hashBytes == null) {
+            return null;
+        }
+
         AuthorizableStoreSnapshot latest = authorizables.get();
-
-        byte[] keyHashBytes;
-        try {
-            keyHashBytes = Base64.getDecoder().decode(keyHash);
-        } catch (IllegalArgumentException e) {
-            LOGGER.error("Invalid base64 key hash: {}", keyHash);
-            return null;
-        }
-        return latest.getAuthorizableByHash(ByteBuffer.wrap(keyHashBytes));
+        return latest.getAuthorizableByHash(hashBytes);
     }
 
-    private <K> Cache<K, String> createToHashCache(Class<K> clazz, int expireMinutes) {
-        return Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofMinutes(expireMinutes))
-                .recordStats()
-                .build();
-    }
-
-    private Integer getSiteIdFromKey(String key) {
-        Pattern keyPattern = Pattern.compile("(?:UID2|EUID)-[CO]-[LTIP]-([0-9]+)-.{6}\\..{38}");
-        Matcher matcher = keyPattern.matcher(key);
-        if (matcher.find()) {
-            return Integer.valueOf(matcher.group(1));
+    private T hashAndCompareKeyAgainstAuthorizables(String key, AuthorizableStoreSnapshot latest) {
+        for (byte[] salt : latest.getSalts()) {
+            byte[] keyHash = KEY_HASHER.hashKey(key, salt);
+            T authorizable = latest.getAuthorizableByHash(ByteBuffer.wrap(keyHash));
+            if (authorizable != null) {
+                return authorizable;
+            }
         }
         return null;
     }
 
-    private T getFromCache(String key, Integer siteId) {
-        String hash = null;
+    private static Caffeine<Object, Object> createToHashCacheBuilder(int expireMinutes) {
+        return Caffeine.newBuilder()
+                .expireAfterWrite(Duration.ofMinutes(expireMinutes))
+                .recordStats();
+    }
 
-        if (siteId != null && siteIdToHashCache.asMap().containsKey(siteId)) {
-            hash = siteIdToHashCache.getIfPresent(siteId);
-        }
-        if (keyToHashCache.asMap().containsKey(key)) {
-            hash = keyToHashCache.getIfPresent(key);
-        }
+    private static ByteBuffer wrapHashToByteBuffer(String hash) {
+        byte[] hashBytes = convertBase64StringToBytes(hash);
+        return hashBytes == null ? null : ByteBuffer.wrap(hashBytes);
+    }
 
-        return StringUtils.isBlank(hash) ? null : getFromKeyHash(hash);
+    private static byte[] convertBase64StringToBytes(String str) {
+        try {
+            return Base64.getDecoder().decode(str);
+        } catch (IllegalArgumentException e) {
+            LOGGER.error("Invalid base64 string: {}", str);
+            return null;
+        }
+    }
+
+    private static Integer getSiteIdFromKey(String key) {
+        Pattern keyPattern = Pattern.compile("(?:UID2|EUID)-[CO]-[LTIP]-([0-9]+)-.{6}\\..{38}");
+        Matcher matcher = keyPattern.matcher(key);
+        if (matcher.find()) {
+            return Integer.valueOf(matcher.group(1));
+        } else {
+            return null;
+        }
     }
 
     private class AuthorizableStoreSnapshot {
-        private final Map<ByteBuffer, T> authorizablesKeyMap;
-        private final Map<Integer, T> authorizablesSiteMap;
-        private final Collection<byte[]> salts;
+        private final Map<ByteBuffer, T> hashToAuthorizableMap;
+        private final Map<Integer, T> siteIdToAuthorizableMap;
+        private final Set<byte[]> salts;
 
-        public AuthorizableStoreSnapshot(Collection<T> authorizablesKeyMap) {
-            this.authorizablesKeyMap = authorizablesKeyMap.stream()
+        public AuthorizableStoreSnapshot(Collection<T> hashToAuthorizableMap) {
+            this.hashToAuthorizableMap = hashToAuthorizableMap.stream()
                     .collect(Collectors.toMap(
-                            a -> ByteBuffer.wrap(Base64.getDecoder().decode(a.getKeyHash())),
+                            a -> wrapHashToByteBuffer(a.getKeyHash()),
                             a -> a));
-            this.authorizablesSiteMap = authorizablesKeyMap.stream()
+            this.siteIdToAuthorizableMap = hashToAuthorizableMap.stream()
+                    .filter(a -> a.getSiteId() != null)
                     .collect(Collectors.toMap(
                             IAuthorizable::getSiteId,
                             a -> a));
-            this.salts = authorizablesKeyMap.stream()
-                    .map(a -> Base64.getDecoder().decode(a.getKeySalt()))
-                    .collect(Collectors.toList());
+            this.salts = hashToAuthorizableMap.stream()
+                    .map(a -> convertBase64StringToBytes(a.getKeySalt()))
+                    .collect(Collectors.toSet());
         }
 
         public T getAuthorizableByHash(ByteBuffer hashBytes) {
-            return authorizablesKeyMap.get(hashBytes);
+            return hashToAuthorizableMap.get(hashBytes);
         }
 
         public T getAuthorizableBySiteId(int siteId) {
-            return authorizablesSiteMap.get(siteId);
+            return siteIdToAuthorizableMap.get(siteId);
         }
 
         public Collection<byte[]> getSalts() {

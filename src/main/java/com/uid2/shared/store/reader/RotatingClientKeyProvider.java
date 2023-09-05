@@ -66,12 +66,12 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
 
     @Override
     public ClientKey getClientKey(String key) {
-        return authorizableStore.getFromKey(key);
+        return authorizableStore.getAuthorizableByKey(key);
     }
 
     @Override
     public ClientKey getClientKeyFromHash(String hash) {
-        return authorizableStore.getFromKeyHash(hash);
+        return authorizableStore.getAuthorizableByHash(hash);
     }
 
     @Override
@@ -79,6 +79,7 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
         return reader.getSnapshot().values();
     }
 
+    @Override
     public void loadContent() throws Exception {
         loadContent(getMetadata());
     }
