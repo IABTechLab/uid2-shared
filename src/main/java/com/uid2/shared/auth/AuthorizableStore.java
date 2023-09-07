@@ -7,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
@@ -23,7 +22,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
     public AuthorizableStore() {
         this.authorizables = new AtomicReference<>(new AuthorizableStoreSnapshot(new ArrayList<>()));
-        this.keyToHashCache = createToHashCacheBuilder(10).build();
+        this.keyToHashCache = createToHashCacheBuilder().build();
     }
 
     public void refresh(Collection<T> authorizablesToRefresh) {
@@ -44,7 +43,6 @@ public class AuthorizableStore<T extends IAuthorizable> {
             return latest.getAuthorizableByHash(ByteBuffer.wrap(hash));
         }
 
-        // TODO: Remove after all authorizables are moved to new format
         String cachedHash = keyToHashCache.getIfPresent(key);
         if (cachedHash != null) {
             return cachedHash.isBlank() ? null : latest.getAuthorizableByHash(wrapHashToByteBuffer(cachedHash));
@@ -77,9 +75,8 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return null;
     }
 
-    private static Caffeine<Object, Object> createToHashCacheBuilder(int expireMinutes) {
+    private static Caffeine<Object, Object> createToHashCacheBuilder() {
         return Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofMinutes(expireMinutes))
                 .recordStats();
     }
 

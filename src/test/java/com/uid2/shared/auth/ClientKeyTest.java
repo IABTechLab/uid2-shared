@@ -1,13 +1,19 @@
 package com.uid2.shared.auth;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.junit.Assert;
 import org.junit.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class ClientKeyTest {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     @Test
-    public void verifyDisabledPropIsOptional() {
+    public void verifyDisabledPropIsOptional() throws Exception {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"secret\": \"\",\n" +
@@ -17,14 +23,13 @@ public class ClientKeyTest {
                 "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
+        ClientKey c = OBJECT_MAPPER.readValue(testJson, ClientKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        ClientKey c = ClientKey.valueOf(jo);
-        Assert.assertFalse(c.isDisabled());
+        assertFalse(c.isDisabled());
     }
 
     @Test
-    public void verifyDisabledPropSetTrue() {
+    public void verifyDisabledPropSetTrue() throws Exception {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"secret\": \"\",\n" +
@@ -35,14 +40,13 @@ public class ClientKeyTest {
                 "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
+        ClientKey c = OBJECT_MAPPER.readValue(testJson, ClientKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        ClientKey c = ClientKey.valueOf(jo);
-        Assert.assertTrue(c.isDisabled());
+        assertTrue(c.isDisabled());
     }
 
     @Test
-    public void verifyDisabledPropSetFalse() {
+    public void verifyDisabledPropSetFalse() throws Exception {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"secret\": \"\",\n" +
@@ -53,9 +57,8 @@ public class ClientKeyTest {
                 "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
+        ClientKey c = OBJECT_MAPPER.readValue(testJson, ClientKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        ClientKey c = ClientKey.valueOf(jo);
-        Assert.assertFalse(c.isDisabled());
+        assertFalse(c.isDisabled());
     }
 }
