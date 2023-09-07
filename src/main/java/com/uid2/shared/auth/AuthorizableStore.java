@@ -44,6 +44,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
             return latest.getAuthorizableByHash(ByteBuffer.wrap(hash));
         }
 
+        // TODO: Remove after all authorizables are moved to new format
         String cachedHash = keyToHashCache.getIfPresent(key);
         if (cachedHash != null) {
             return cachedHash.isBlank() ? null : latest.getAuthorizableByHash(wrapHashToByteBuffer(cachedHash));
@@ -51,6 +52,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
         T authorizable = hashAndCompareKeyAgainstAuthorizables(key, latest);
         keyToHashCache.put(key, authorizable == null ? "" : authorizable.getKeyHash());
+
         return authorizable;
     }
 
