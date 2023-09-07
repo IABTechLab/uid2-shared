@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 public class AuthorizableStore<T extends IAuthorizable> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizableStore.class);
+    private static final Pattern KEY_PATTERN = Pattern.compile("(?:UID2|EUID)-[CO]-[LTIP]-([0-9]+)-.{6}\\..{38}");
     private static final KeyHasher KEY_HASHER = new KeyHasher();
     private static final int CACHE_MAX_SIZE = 100_000;
 
@@ -109,8 +110,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
     }
 
     private static Integer getSiteIdFromKey(String key) {
-        Pattern keyPattern = Pattern.compile("(?:UID2|EUID)-[CO]-[LTIP]-([0-9]+)-.{6}\\..{38}");
-        Matcher matcher = keyPattern.matcher(key);
+        Matcher matcher = KEY_PATTERN.matcher(key);
         if (matcher.find()) {
             return Integer.valueOf(matcher.group(1));
         } else {
