@@ -127,7 +127,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
         }
 
         public List<byte[]> getSaltsBySiteId(int siteId) {
-            return siteIdToSaltsMap.get(siteId);
+            return siteIdToSaltsMap.getOrDefault(siteId, List.of());
         }
 
         public List<byte[]> getSalts() {
