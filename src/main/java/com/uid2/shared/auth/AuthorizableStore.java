@@ -45,7 +45,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
             return cachedHash.isBlank() ? null : latest.getAuthorizableByHash(wrapHashToByteBuffer(cachedHash));
         }
 
-        authorizable = hashAndCompareKeyAgainstAuthorizables(latest, key);
+        authorizable = getAuthorizableIfKeyExists(latest, key);
         keyToHashCache.put(key, authorizable == null ? "" : authorizable.getKeyHash());
 
         return authorizable;
@@ -77,7 +77,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return null;
     }
 
-    private T hashAndCompareKeyAgainstAuthorizables(AuthorizableStoreSnapshot snapshot, String key) {
+    private T getAuthorizableIfKeyExists(AuthorizableStoreSnapshot snapshot, String key) {
         for (byte[] salt : snapshot.getSalts()) {
             byte[] keyHash = KEY_HASHER.hashKey(key, salt);
             T authorizable = snapshot.getAuthorizableByHash(ByteBuffer.wrap(keyHash));
@@ -91,7 +91,6 @@ public class AuthorizableStore<T extends IAuthorizable> {
     private static LoadingCache<String, String> createCache() {
         return Caffeine.newBuilder()
                 .maximumSize(CACHE_MAX_SIZE)
-                .recordStats()
                 .build(k -> k);
     }
 
