@@ -23,7 +23,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
     public AuthorizableStore() {
         this.authorizables = new AtomicReference<>(new AuthorizableStoreSnapshot(new ArrayList<>()));
-        this.keyToHashCache = createToHashCacheBuilder();
+        this.keyToHashCache = createCache();
     }
 
     public void refresh(Collection<T> authorizablesToRefresh) {
@@ -76,7 +76,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return null;
     }
 
-    private static LoadingCache<String, String> createToHashCacheBuilder() {
+    private static LoadingCache<String, String> createCache() {
         return Caffeine.newBuilder()
                 .maximumSize(CACHE_MAX_SIZE)
                 .recordStats()
