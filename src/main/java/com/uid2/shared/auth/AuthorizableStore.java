@@ -1,7 +1,7 @@
 package com.uid2.shared.auth;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.uid2.shared.secret.KeyHasher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
     private static final int CACHE_MAX_SIZE = 100_000;
 
     private final AtomicReference<AuthorizableStoreSnapshot> authorizables;
-    private final LoadingCache<String, String> keyToHashCache;
+    private final Cache<String, String> keyToHashCache;
 
     public AuthorizableStore() {
         this.authorizables = new AtomicReference<>(new AuthorizableStoreSnapshot(new ArrayList<>()));
@@ -34,19 +34,15 @@ public class AuthorizableStore<T extends IAuthorizable> {
     public T getAuthorizableByKey(String key) {
         AuthorizableStoreSnapshot latest = authorizables.get();
 
-        T authorizable;
-
-        authorizable = getAuthorizableBySiteId(latest, key);
-        if (authorizable != null) {
-            return authorizable;
-        }
-
-        String cachedHash = keyToHashCache.get(key);
+        String cachedHash = keyToHashCache.getIfPresent(key);
         if (cachedHash != null) {
             return cachedHash.isBlank() ? null : latest.getAuthorizableByHash(wrapHashToByteBuffer(cachedHash));
         }
 
-        authorizable = getAuthorizableIfKeyExists(latest, key);
+        Integer siteId = getSiteIdFromKey(key);
+        List<byte[]> salts = siteId == null ? latest.getSalts() : latest.getSaltsBySiteId(siteId);
+        T authorizable = getAuthorizableIfHashExists(key, salts, latest);
+
         keyToHashCache.put(key, authorizable == null ? "" : authorizable.getKeyHash());
 
         return authorizable;
@@ -62,24 +58,8 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return latest.getAuthorizableByHash(hashBytes);
     }
 
-    private T getAuthorizableBySiteId(AuthorizableStoreSnapshot snapshot, String key) {
-        Integer siteId = getSiteIdFromKey(key);
-
-        if (siteId != null) {
-            T authorizable = snapshot.getAuthorizableBySiteId(siteId);
-            if (authorizable == null) {
-                return null;
-            }
-
-            byte[] hash = KEY_HASHER.hashKey(key, convertBase64StringToBytes(authorizable.getKeySalt()));
-            return snapshot.getAuthorizableByHash(ByteBuffer.wrap(hash));
-        }
-
-        return null;
-    }
-
-    private T getAuthorizableIfKeyExists(AuthorizableStoreSnapshot snapshot, String key) {
-        for (byte[] salt : snapshot.getSalts()) {
+    private T getAuthorizableIfHashExists(String key, List<byte[]> salts, AuthorizableStoreSnapshot snapshot) {
+        for (byte[] salt : salts) {
             byte[] keyHash = KEY_HASHER.hashKey(key, salt);
             T authorizable = snapshot.getAuthorizableByHash(ByteBuffer.wrap(keyHash));
             if (authorizable != null) {
@@ -89,7 +69,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return null;
     }
 
-    private static LoadingCache<String, String> createCache() {
+    private static Cache<String, String> createCache() {
         return Caffeine.newBuilder()
                 .maximumSize(CACHE_MAX_SIZE)
                 .build(k -> k);
@@ -120,33 +100,37 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
     private class AuthorizableStoreSnapshot {
         private final Map<ByteBuffer, T> hashToAuthorizableMap;
-        private final Map<Integer, T> siteIdToAuthorizableMap;
-        private final Set<byte[]> salts;
+        private final Map<Integer, List<byte[]>> siteIdToSaltsMap;
+        private final List<byte[]> salts;
 
-        public AuthorizableStoreSnapshot(Collection<T> hashToAuthorizableMap) {
-            this.hashToAuthorizableMap = hashToAuthorizableMap.stream()
+        public AuthorizableStoreSnapshot(Collection<T> authorizables) {
+            this.hashToAuthorizableMap = authorizables.stream()
                     .collect(Collectors.toMap(
                             a -> wrapHashToByteBuffer(a.getKeyHash()),
-                            a -> a));
-            this.siteIdToAuthorizableMap = hashToAuthorizableMap.stream()
+                            a -> a
+                    ));
+
+            this.siteIdToSaltsMap = authorizables.stream()
                     .filter(a -> a.getSiteId() != null)
-                    .collect(Collectors.toMap(
+                    .collect(Collectors.groupingBy(
                             IAuthorizable::getSiteId,
-                            a -> a));
-            this.salts = hashToAuthorizableMap.stream()
+                            Collectors.mapping(a -> convertBase64StringToBytes(a.getKeySalt()), Collectors.toList())
+                    ));
+
+            this.salts = authorizables.stream()
                     .map(a -> convertBase64StringToBytes(a.getKeySalt()))
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toList());
         }
 
         public T getAuthorizableByHash(ByteBuffer hashBytes) {
             return hashToAuthorizableMap.get(hashBytes);
         }
 
-        public T getAuthorizableBySiteId(int siteId) {
-            return siteIdToAuthorizableMap.get(siteId);
+        public List<byte[]> getSaltsBySiteId(int siteId) {
+            return siteIdToSaltsMap.get(siteId);
         }
 
-        public Collection<byte[]> getSalts() {
+        public List<byte[]> getSalts() {
             return salts;
         }
     }
