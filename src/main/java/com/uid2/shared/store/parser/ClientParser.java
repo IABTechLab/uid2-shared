@@ -1,14 +1,10 @@
 package com.uid2.shared.store.parser;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.uid2.shared.Utils;
 import com.uid2.shared.auth.ClientKey;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;

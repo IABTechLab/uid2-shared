@@ -1,5 +1,6 @@
 package com.uid2.shared.auth;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,7 +31,18 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     private int siteId;
     private boolean disabled;
 
-    public ClientKey(String key, String keyHash, String keySalt, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId, boolean disabled) {
+    @JsonCreator
+    public ClientKey(
+            @JsonProperty("key") String key,
+            @JsonProperty("key_hash") String keyHash,
+            @JsonProperty("key_salt") String keySalt,
+            @JsonProperty("secret") String secret,
+            @JsonProperty("name") String name,
+            @JsonProperty("contact") String contact,
+            @JsonProperty("created") long created,
+            @JsonProperty("roles") Set<Role> roles,
+            @JsonProperty("site_id") int siteId,
+            @JsonProperty("disabled") boolean disabled) {
         this.key = key;
         this.keyHash = keyHash;
         this.keySalt = keySalt;
@@ -38,19 +50,23 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         this.secretBytes = Utils.decodeBase64String(secret);
         this.name = name;
         this.contact = contact;
-        this.created = created.getEpochSecond();
+        this.created = created;
         this.roles = Collections.unmodifiableSet(roles);
         this.siteId = siteId;
         this.disabled = disabled;
     }
 
+    public ClientKey(String key, String keyHash, String keySalt, String secret, String name, Instant created, Set<Role> roles, int siteId, boolean disabled) {
+        this(key, keyHash, keySalt, secret, name, name, created.getEpochSecond(), roles, siteId, disabled);
+    }
+
     public ClientKey(String key, String keyHash, String keySalt, String secret, String name, Instant created, Set<Role> roles, int siteId) {
-        this(key, keyHash, keySalt, secret, name, name, created, roles, siteId, false);
+        this(key, keyHash, keySalt, secret, name, created, roles, siteId, false);
     }
 
     @Deprecated // N/A
-    public ClientKey(String key, String keyHash, String keySalt, String secret, String contact, Role... roles) {
-        this(key, keyHash, keySalt, secret, contact, contact, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false);
+    public ClientKey(String key, String keyHash, String keySalt, String secret, String name, Role... roles) {
+        this(key, keyHash, keySalt, secret, name, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false);
     }
 
     @Deprecated // uid2-admin
