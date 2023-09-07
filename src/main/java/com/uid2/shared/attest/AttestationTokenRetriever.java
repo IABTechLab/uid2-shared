@@ -27,6 +27,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class AttestationTokenRetriever {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttestationTokenRetriever.class);
+
     private final IAttestationProvider attestationProvider;
     private final String clientApiToken;
     private final ApplicationVersion appVersion;

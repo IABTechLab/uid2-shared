@@ -1,13 +1,14 @@
 package com.uid2.shared.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uid2.shared.utils.ObjectMapperFactory;
 import org.junit.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ClientKeyTest {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.build();
 
     @Test
     public void verifyDisabledPropIsOptional() throws Exception {
