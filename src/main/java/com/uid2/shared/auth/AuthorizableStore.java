@@ -33,15 +33,11 @@ public class AuthorizableStore<T extends IAuthorizable> {
     public T getAuthorizableByKey(String key) {
         AuthorizableStoreSnapshot latest = authorizables.get();
 
-        Integer siteId = getSiteIdFromKey(key);
-        if (siteId != null) {
-            T authorizable = latest.getAuthorizableBySiteId(siteId);
-            if (authorizable == null) {
-                return null;
-            }
+        T authorizable;
 
-            byte[] hash = KEY_HASHER.hashKey(key, convertBase64StringToBytes(authorizable.getKeySalt()));
-            return latest.getAuthorizableByHash(ByteBuffer.wrap(hash));
+        authorizable = getAuthorizableBySiteId(latest, key);
+        if (authorizable != null) {
+            return authorizable;
         }
 
         String cachedHash = keyToHashCache.get(key);
@@ -49,7 +45,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
             return cachedHash.isBlank() ? null : latest.getAuthorizableByHash(wrapHashToByteBuffer(cachedHash));
         }
 
-        T authorizable = hashAndCompareKeyAgainstAuthorizables(key, latest);
+        authorizable = hashAndCompareKeyAgainstAuthorizables(latest, key);
         keyToHashCache.put(key, authorizable == null ? "" : authorizable.getKeyHash());
 
         return authorizable;
@@ -65,10 +61,26 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return latest.getAuthorizableByHash(hashBytes);
     }
 
-    private T hashAndCompareKeyAgainstAuthorizables(String key, AuthorizableStoreSnapshot latest) {
-        for (byte[] salt : latest.getSalts()) {
+    private T getAuthorizableBySiteId(AuthorizableStoreSnapshot snapshot, String key) {
+        Integer siteId = getSiteIdFromKey(key);
+
+        if (siteId != null) {
+            T authorizable = snapshot.getAuthorizableBySiteId(siteId);
+            if (authorizable == null) {
+                return null;
+            }
+
+            byte[] hash = KEY_HASHER.hashKey(key, convertBase64StringToBytes(authorizable.getKeySalt()));
+            return snapshot.getAuthorizableByHash(ByteBuffer.wrap(hash));
+        }
+
+        return null;
+    }
+
+    private T hashAndCompareKeyAgainstAuthorizables(AuthorizableStoreSnapshot snapshot, String key) {
+        for (byte[] salt : snapshot.getSalts()) {
             byte[] keyHash = KEY_HASHER.hashKey(key, salt);
-            T authorizable = latest.getAuthorizableByHash(ByteBuffer.wrap(keyHash));
+            T authorizable = snapshot.getAuthorizableByHash(ByteBuffer.wrap(keyHash));
             if (authorizable != null) {
                 return authorizable;
             }
