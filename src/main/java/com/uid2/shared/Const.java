@@ -25,7 +25,7 @@ public class Const {
         public static final String DEFAULT_CONFIG_PATH = "conf" + File.separator + "default-config.json";
         // this files stores override config values that supersede everything else
         public static final String OVERRIDE_CONFIG_PATH = "conf" + File.separator + "config.json";
-        // this file stores local debug config values, e.g. the it runs standalone, not relying on other uid2 services.
+        // this file stores local debug config values, e.g. it runs standalone, not relying on other uid2 services.
         public static final String LOCAL_CONFIG_PATH = "conf" + File.separator + "local-config.json";
         // this file stores integration config values, e.g. it communicates with other uid2 services that runs locally.
         public static final String INTEG_CONFIG_PATH = "conf" + File.separator + "integ-config.json";
@@ -99,9 +99,9 @@ public class Const {
         public static final int AdvertisingTokenSiteId = 2; // This site id is reserved. It may not be used for client keys.
 
 
-        public static final int MasterKeysetId = -1; //keyset used by MasterKeySiteId
-        public static final int RefreshKeysetId = -2; //keyset used by RefreshKeySiteId
-        public static final int FallbackPublisherKeysetId = 2; //keyset used by AdvertisingTokenSiteId
+        public static final int MasterKeysetId = -1; // Keyset used by MasterKeySiteId
+        public static final int RefreshKeysetId = -2; // Keyset used by RefreshKeySiteId
+        public static final int FallbackPublisherKeysetId = 2; // Keyset used by AdvertisingTokenSiteId
     }
 
     public static class RoutingContextData {
