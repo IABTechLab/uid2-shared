@@ -1,7 +1,7 @@
 package com.uid2.shared.auth;
 
-import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.uid2.shared.secret.KeyHasher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,13 +16,14 @@ import java.util.stream.Collectors;
 public class AuthorizableStore<T extends IAuthorizable> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizableStore.class);
     private static final KeyHasher KEY_HASHER = new KeyHasher();
+    private static final int CACHE_MAX_SIZE = 100_000;
 
     private final AtomicReference<AuthorizableStoreSnapshot> authorizables;
-    private final Cache<String, String> keyToHashCache;
+    private final LoadingCache<String, String> keyToHashCache;
 
     public AuthorizableStore() {
         this.authorizables = new AtomicReference<>(new AuthorizableStoreSnapshot(new ArrayList<>()));
-        this.keyToHashCache = createToHashCacheBuilder().build();
+        this.keyToHashCache = createToHashCacheBuilder();
     }
 
     public void refresh(Collection<T> authorizablesToRefresh) {
@@ -43,7 +44,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
             return latest.getAuthorizableByHash(ByteBuffer.wrap(hash));
         }
 
-        String cachedHash = keyToHashCache.getIfPresent(key);
+        String cachedHash = keyToHashCache.get(key);
         if (cachedHash != null) {
             return cachedHash.isBlank() ? null : latest.getAuthorizableByHash(wrapHashToByteBuffer(cachedHash));
         }
@@ -75,9 +76,11 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return null;
     }
 
-    private static Caffeine<Object, Object> createToHashCacheBuilder() {
+    private static LoadingCache<String, String> createToHashCacheBuilder() {
         return Caffeine.newBuilder()
-                .recordStats();
+                .maximumSize(CACHE_MAX_SIZE)
+                .recordStats()
+                .build(k -> k);
     }
 
     private static ByteBuffer wrapHashToByteBuffer(String hash) {
