@@ -29,7 +29,10 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     private int siteId;
     private boolean disabled;
 
-    public ClientKey(String key, String keyHash, String keySalt, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId, boolean disabled) {
+    @JsonProperty("service_id")
+    private int serviceId;
+
+    public ClientKey(String key, String keyHash, String keySalt, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId, boolean disabled, int serviceId) {
         this.key = key;
         this.keyHash = keyHash;
         this.keySalt = keySalt;
@@ -41,10 +44,15 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         this.roles = Collections.unmodifiableSet(roles);
         this.siteId = siteId;
         this.disabled = disabled;
+        this.serviceId = serviceId;
+    }
+
+    public ClientKey(String key, String keyHash, String keySalt, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId, boolean disabled) {
+        this(key, keyHash, keySalt, secret, name, contact, created, roles, siteId, disabled, 0);
     }
 
     public ClientKey(String key, String keyHash, String keySalt, String secret, String contact, Role... roles) {
-        this(key, keyHash, keySalt, secret, contact, contact, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false);
+        this(key, keyHash, keySalt, secret, contact, contact, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false, 0);
     }
 
     public ClientKey(String key, String keyHash, String keySalt, String secret, Instant created) {
@@ -78,7 +86,8 @@ public class ClientKey implements IRoleAuthorizable<Role> {
                 Instant.ofEpochSecond(json.getLong("created")),
                 Roles.getRoles(Role.class, json),
                 json.getInteger("site_id"),
-                json.getBoolean("disabled", false)
+                json.getBoolean("disabled", false),
+                json.getInteger("service_id", 0)
         );
     }
 
@@ -175,6 +184,10 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         this.disabled = disabled;
     }
 
+    public int getServiceId() {
+        return serviceId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this) return true;
@@ -193,11 +206,12 @@ public class ClientKey implements IRoleAuthorizable<Role> {
                 && this.created == b.created
                 && this.siteId == b.siteId
                 && this.disabled == b.disabled
-                && Arrays.equals(this.secretBytes, b.secretBytes);
+                && Arrays.equals(this.secretBytes, b.secretBytes)
+                && this.serviceId == b.serviceId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, keyHash, keySalt, secret, name, contact, roles, created, siteId, disabled, Arrays.hashCode(secretBytes));
+        return Objects.hash(key, keyHash, keySalt, secret, name, contact, roles, created, siteId, disabled, Arrays.hashCode(secretBytes), serviceId);
     }
 }

@@ -9,12 +9,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-public class ServiceLinkParser implements Parser<Collection<ServiceLink>> {
+public class ServiceLinkParser implements Parser<Map<String, ServiceLink>> {
 
     @Override
-    public ParsingResult<Collection<ServiceLink>> deserialize(InputStream inputStream) throws IOException {
+    public ParsingResult<Map<String, ServiceLink>> deserialize(InputStream inputStream) throws IOException {
         JsonArray spec = Utils.toJsonArray(inputStream);
-        final List<ServiceLink> serviceLinkList = new ArrayList<>();
+        final HashMap<String, ServiceLink> serviceLinkList = new HashMap<>();
         for (int i = 0; i < spec.size(); i++) {
             JsonObject serviceLinkSpec = spec.getJsonObject(i);
             String linkId = serviceLinkSpec.getString("link_id");
@@ -23,8 +23,8 @@ public class ServiceLinkParser implements Parser<Collection<ServiceLink>> {
             String name = serviceLinkSpec.getString("name");
 
             ServiceLink serviceLink = new ServiceLink(linkId, serviceId, siteId, name);
-
-            serviceLinkList.add(serviceLink);
+            String key = serviceId + linkId;
+            serviceLinkList.put(key, serviceLink);
         }
         return new ParsingResult<>(serviceLinkList, serviceLinkList.size());
     }
