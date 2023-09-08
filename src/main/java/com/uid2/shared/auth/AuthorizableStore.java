@@ -41,7 +41,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
         Integer siteId = getSiteIdFromKey(key);
         List<byte[]> salts = siteId == null ? latest.getSalts() : latest.getSaltsBySiteId(siteId);
-        T authorizable = getAuthorizableIfHashExists(key, salts, latest);
+        T authorizable = getAuthorizable(key, salts, latest);
 
         keyToHashCache.put(key, authorizable == null ? "" : authorizable.getKeyHash());
 
@@ -58,7 +58,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return latest.getAuthorizableByHash(hashBytes);
     }
 
-    private T getAuthorizableIfHashExists(String key, List<byte[]> salts, AuthorizableStoreSnapshot snapshot) {
+    private T getAuthorizable(String key, List<byte[]> salts, AuthorizableStoreSnapshot snapshot) {
         for (byte[] salt : salts) {
             byte[] keyHash = KEY_HASHER.hashKey(key, salt);
             T authorizable = snapshot.getAuthorizableByHash(ByteBuffer.wrap(keyHash));
