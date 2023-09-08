@@ -82,7 +82,6 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         );
     }
 
-    @Override
     public String getKey() {
         return key;
     }
