@@ -19,7 +19,7 @@ public class AuthorizableStoreTest {
     private static final String SITE_12_CLIENT_KEY_1 = "UID2-C-L-12-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
     private static final String SITE_12_CLIENT_KEY_2 = "UID2-C-L-12-ghijkl.ghijklghijklghijklghijklghijklghijklgh";
     private static final String SITE_13_CLIENT_KEY = "UID2-C-L-13-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
-    private static final String SITE_14_CLIENT_KEY = "UID2-C-L-14-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
+    private static final String SITE_13_CLIENT_KEY_LEGACY = "abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
 
     private AuthorizableStore<ClientKey> clientKeyStore;
 
@@ -29,7 +29,8 @@ public class AuthorizableStoreTest {
                 createClientKey(KEY_HASHER.hashKey(SITE_11_CLIENT_KEY), "client11", 11),
                 createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_1), "client12_1", 12),
                 createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_2), "client12_2", 12),
-                createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY), "client13", 13)
+                createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY), "client13", 13),
+                createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY_LEGACY), "client13_legacy", 13)
         );
 
         this.clientKeyStore = new AuthorizableStore<>();
@@ -48,6 +49,13 @@ public class AuthorizableStoreTest {
         ClientKey client = clientKeyStore.getAuthorizableByKey(SITE_12_CLIENT_KEY_1);
 
         assertEquals("client12_1", client.getName());
+    }
+
+    @Test
+    public void getAuthorizableByKey_returnsClientKey_withLegacyFormat() {
+        ClientKey client = clientKeyStore.getAuthorizableByKey(SITE_13_CLIENT_KEY_LEGACY);
+
+        assertEquals("client13_legacy", client.getName());
     }
 
     @Test
@@ -112,13 +120,18 @@ public class AuthorizableStoreTest {
 
     @Test
     public void refresh_returnsNewClients_afterRefresh() {
-        ClientKey client4 = createClientKey(KEY_HASHER.hashKey(SITE_14_CLIENT_KEY), "client14", 14);
-        clientKeyStore.refresh(List.of(client4));
+        String key = "UID2-C-L-14-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
+        ClientKey client = createClientKey(KEY_HASHER.hashKey(key), "client14", 14);
+        clientKeyStore.refresh(List.of(client));
 
         assertAll(
                 "refresh returns new clients after refresh",
-                () -> assertEquals("client14", clientKeyStore.getAuthorizableByKey(SITE_14_CLIENT_KEY).getName()),
-                () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_11_CLIENT_KEY))
+                () -> assertEquals("client14", clientKeyStore.getAuthorizableByKey(key).getName()),
+                () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_11_CLIENT_KEY)),
+                () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_12_CLIENT_KEY_1)),
+                () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_12_CLIENT_KEY_2)),
+                () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_13_CLIENT_KEY)),
+                () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_13_CLIENT_KEY_LEGACY))
         );
     }
 
@@ -137,7 +150,6 @@ public class AuthorizableStoreTest {
             this.contact = contact;
         }
 
-        @Override
         public String getKey() {
             return null;
         }
