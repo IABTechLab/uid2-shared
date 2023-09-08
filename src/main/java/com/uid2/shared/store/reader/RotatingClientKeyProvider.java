@@ -43,7 +43,7 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
 
     public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys");
-        this.authorizableStore = new AuthorizableStore<>();
+        this.authorizableStore = new AuthorizableStore<>(ClientKey.class);
     }
 
     @Override

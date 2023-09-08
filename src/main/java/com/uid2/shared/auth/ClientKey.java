@@ -167,6 +167,7 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         return SiteUtil.isValidSiteId(siteId);
     }
 
+    @Deprecated // uid2-admin
     public ClientKey withSiteId(int siteId) {
         this.siteId = siteId;
         return this;

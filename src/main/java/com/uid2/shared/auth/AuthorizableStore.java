@@ -3,6 +3,7 @@ package com.uid2.shared.auth;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.uid2.shared.secret.KeyHasher;
+import io.prometheus.client.cache.caffeine.CacheMetricsCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,9 +23,9 @@ public class AuthorizableStore<T extends IAuthorizable> {
     private final AtomicReference<AuthorizableStoreSnapshot> authorizables;
     private final Cache<String, String> keyToHashCache;
 
-    public AuthorizableStore() {
+    public AuthorizableStore(Class<T> cls) {
         this.authorizables = new AtomicReference<>(new AuthorizableStoreSnapshot(new ArrayList<>()));
-        this.keyToHashCache = createCache();
+        this.keyToHashCache = createCache(cls);
     }
 
     public void refresh(Collection<T> authorizablesToRefresh) {
@@ -69,11 +70,16 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return null;
     }
 
-    private static Cache<String, String> createCache() {
-        return Caffeine.newBuilder()
+    private Cache<String, String> createCache(Class<T> cls) {
+        Cache<String, String> cache = Caffeine.newBuilder()
                 .maximumSize(CACHE_MAX_SIZE)
                 .recordStats()
                 .build();
+
+        CacheMetricsCollector cacheMetricsCollector = new CacheMetricsCollector().register();
+        cacheMetricsCollector.addCache(cls.getName() + "-cache", cache);
+
+        return cache;
     }
 
     private static ByteBuffer wrapHashToByteBuffer(String hash) {

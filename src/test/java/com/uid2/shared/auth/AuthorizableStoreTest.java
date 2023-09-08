@@ -33,7 +33,7 @@ public class AuthorizableStoreTest {
                 createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY_LEGACY), "client13_legacy", 13)
         );
 
-        this.clientKeyStore = new AuthorizableStore<>();
+        this.clientKeyStore = new AuthorizableStore<>(ClientKey.class);
         this.clientKeyStore.refresh(clients);
     }
 
@@ -62,7 +62,7 @@ public class AuthorizableStoreTest {
     public void getAuthorizableByKey_returnsKey_withNoSiteId() {
         String key = "abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
         SitelessAuthorizable sitelessAuthorizable = new SitelessAuthorizable(KEY_HASHER.hashKey(key), "noSiteClient");
-        AuthorizableStore<SitelessAuthorizable> sitelessAuthorizableStore = new AuthorizableStore<>();
+        AuthorizableStore<SitelessAuthorizable> sitelessAuthorizableStore = new AuthorizableStore<>(SitelessAuthorizable.class);
         sitelessAuthorizableStore.refresh(List.of(sitelessAuthorizable));
 
         assertEquals("noSiteClient", sitelessAuthorizableStore.getAuthorizableByKey(key).getContact());
