@@ -72,7 +72,8 @@ public class AuthorizableStore<T extends IAuthorizable> {
     private static Cache<String, String> createCache() {
         return Caffeine.newBuilder()
                 .maximumSize(CACHE_MAX_SIZE)
-                .build(k -> k);
+                .recordStats()
+                .build();
     }
 
     private static ByteBuffer wrapHashToByteBuffer(String hash) {
