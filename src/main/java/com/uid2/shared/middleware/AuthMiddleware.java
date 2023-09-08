@@ -21,17 +21,11 @@ public class AuthMiddleware {
     private static final String AuthorizationHeader = "Authorization";
     private static final String PrefixString = "bearer "; // The space at the end is intentional
     private IAuthorizableProvider authKeyStore;
-    private IAuthorizable internalClient;
 
     private static final IAuthorizationProvider blankAuthorizationProvider = new BlankAuthorizationProvider();
 
     public AuthMiddleware(IAuthorizableProvider authKeyStore) {
         this.authKeyStore = authKeyStore;
-    }
-
-    public void setInternalClientKey(IAuthorizable internalClient) {
-        if (this.internalClient != null) throw new IllegalStateException("internalClient already set");
-        this.internalClient = internalClient;
     }
 
     public static String getAuthToken(RoutingContext rc) {
@@ -89,11 +83,6 @@ public class AuthMiddleware {
         return h::handle;
     }
 
-    public Handler<RoutingContext> internalOnly(Handler<RoutingContext> handler) {
-        final ServiceInternalHandler h = new ServiceInternalHandler(handler, this.internalClient);
-        return h::handle;
-    }
-
     private static class BlankAuthorizationProvider implements IAuthorizationProvider {
         @Override
         public boolean isAuthorized(IAuthorizable profile) {
@@ -117,28 +106,6 @@ public class AuthMiddleware {
                 rc.fail(401);
             } else {
                 AuthMiddleware.setAuthClient(rc, clientKey);
-                this.innerHandler.handle(rc);
-            }
-        }
-    }
-
-    private static class ServiceInternalHandler {
-        private final Handler<RoutingContext> innerHandler;
-        private final IAuthorizable internalClient;
-
-        private ServiceInternalHandler(Handler<RoutingContext> handler, IAuthorizable internalClient) {
-            this.innerHandler = handler;
-            this.internalClient = internalClient;
-        }
-
-        public void handle(RoutingContext rc) {
-            final String authHeaderValue = rc.request().getHeader(AuthMiddleware.AuthorizationHeader);
-            final String authKey = AuthHandler.extractBearerToken(authHeaderValue);
-            if (authKey == null || !authKey.equals(internalClient.getKey())) {
-                // auth key doesn't match internal key
-                rc.fail(401);
-            } else {
-                AuthMiddleware.setAuthClient(rc, internalClient);
                 this.innerHandler.handle(rc);
             }
         }

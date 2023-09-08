@@ -66,7 +66,6 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         );
     }
 
-    @Override
     public String getKey() {
         return key;
     }
