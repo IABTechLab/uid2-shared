@@ -41,6 +41,10 @@ public class AuthorizableStore<T extends IAuthorizable> {
     }
 
     public T getAuthorizableByKey(String key) {
+        if (key == null) {
+            return null;
+        }
+
         AuthorizableStoreSnapshot latest = authorizables.get();
 
         String cachedHash = keyToHashCache.getIfPresent(key);
@@ -61,6 +65,10 @@ public class AuthorizableStore<T extends IAuthorizable> {
     }
 
     public T getAuthorizableByHash(String hash) {
+        if (hash == null) {
+            return null;
+        }
+
         ByteBuffer hashBytes = wrapHashToByteBuffer(hash);
         if (hashBytes == null) {
             return null;
