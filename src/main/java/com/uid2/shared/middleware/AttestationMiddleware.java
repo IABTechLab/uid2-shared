@@ -132,11 +132,11 @@ public class AttestationMiddleware {
 
         private static Boolean validateSubject(JwtValidationResponse response, OperatorKey operatorKey) {
 
-            if (response.getSubject() == null || response.getSubject().isBlank() || operatorKey.getKey() == null || operatorKey.getKey().isBlank()) {
+            if (response.getSubject() == null || response.getSubject().isBlank() || operatorKey.getKeyHash() == null || operatorKey.getKeyHash().isBlank()) {
                 return false;
             }
 
-            byte[] keyBytes = operatorKey.getKey().getBytes();
+            byte[] keyBytes = operatorKey.getKeyHash().getBytes();
             MessageDigest md = createMessageDigestSHA512();
             byte[] hashBytes = md.digest(keyBytes);
             String keyHash = Utils.toBase64String(hashBytes);

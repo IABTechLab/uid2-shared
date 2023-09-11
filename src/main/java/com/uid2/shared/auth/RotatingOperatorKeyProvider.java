@@ -1,5 +1,8 @@
 package com.uid2.shared.auth;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
+import com.google.common.io.CharStreams;
 import com.uid2.shared.Utils;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.cloud.ICloudStorage;
@@ -7,29 +10,32 @@ import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.reader.IMetadataVersionedStore;
 import com.uid2.shared.store.IOperatorKeyProvider;
 import com.uid2.shared.store.scope.StoreScope;
+import com.uid2.shared.utils.ObjectMapperFactory;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.InputStreamReader;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetadataVersionedStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingOperatorKeyProvider.class);
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.build();
 
     private final DownloadCloudStorage metadataStreamProvider;
     private final DownloadCloudStorage contentStreamProvider;
     private final StoreScope scope;
-    private final AtomicReference<Map<String, OperatorKey>> latestSnapshot = new AtomicReference<Map<String, OperatorKey>>(null);
+    private final AuthorizableStore<OperatorKey> operatorKeyStore;
+
 
     public RotatingOperatorKeyProvider(DownloadCloudStorage metadataStreamProvider, DownloadCloudStorage contentStreamProvider, StoreScope scope) {
         this.metadataStreamProvider = metadataStreamProvider;
         this.contentStreamProvider = contentStreamProvider;
         this.scope = scope;
+        this.operatorKeyStore = new AuthorizableStore<>();
     }
 
     public CloudPath getMetadataPath() {
@@ -59,26 +65,21 @@ public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetad
     }
 
     private long loadOperators(InputStream contentStream) throws Exception {
-        JsonArray operators = Utils.toJsonArray(contentStream);
-        Map<String, OperatorKey> keyMap = new HashMap<>();
-        for (int i=0; i<operators.size(); ++i){
-            JsonObject opSpec = operators.getJsonObject(i);
-            OperatorKey opKey = OperatorKey.valueOf(opSpec);
-            keyMap.put(opKey.getKey(), opKey);
-        }
-        this.latestSnapshot.set(keyMap);
-        LOGGER.info("Loaded " + keyMap.size() + " operator profiles");
-        return keyMap.size();
+        String operatorKeysJson = CharStreams.toString(new InputStreamReader(contentStream, Charsets.UTF_8));
+        List<OperatorKey> operatorKeys = Arrays.asList(OBJECT_MAPPER.readValue(operatorKeysJson, OperatorKey[].class));
+        operatorKeyStore.refresh(operatorKeys);
+        LOGGER.info("Loaded " + operatorKeys.size() + " operator profiles");
+        return operatorKeys.size();
     }
 
     @Override
     public OperatorKey getOperatorKey(String token) {
-        return this.latestSnapshot.get().get(token);
+        return this.operatorKeyStore.getFromKey(token);
     }
 
     @Override
     public Collection<OperatorKey> getAll() {
-        return this.latestSnapshot.get().values();
+        return this.operatorKeyStore.getAuthorizables();
     }
 
     @Override

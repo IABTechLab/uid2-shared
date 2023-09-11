@@ -74,4 +74,8 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
         return latest.getAuthorizables().get(ByteBuffer.wrap(keyHashBytes));
     }
+
+    public Collection<T> getAuthorizables() {
+        return authorizables.get().authorizables.values();
+    }
 }

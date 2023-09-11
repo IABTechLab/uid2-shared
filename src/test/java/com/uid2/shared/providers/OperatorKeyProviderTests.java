@@ -3,6 +3,8 @@ package com.uid2.shared.providers;
 import com.uid2.shared.auth.OperatorKey;
 import com.uid2.shared.auth.RotatingOperatorKeyProvider;
 import com.uid2.shared.cloud.InMemoryStorageMock;
+import com.uid2.shared.secret.KeyHashResult;
+import com.uid2.shared.secret.KeyHasher;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.scope.GlobalScope;
 import io.vertx.core.json.JsonObject;
@@ -28,6 +30,8 @@ public class OperatorKeyProviderTests {
         String contentString = "[\n" +
                 "  {\n" +
                 "    \"key\": \"test-partner-key\",\n" +
+                "    \"key_hash\": \"ahKV5ymfIQ+oYm2ZcSr9tfXRr2Lo6jBOTMRf4CSx6Zg8w6atvyuLEn3H17vmE2pvyfSbFYf4QaeDZF6T2kci3w==\",\n" +
+                "    \"key_salt\": \"t1zxYvaiQq/kQyskK+laYJzLYPhoP2M3VCLbWqhPlx0=\",\n" +
                 "    \"name\": \"test-partner\",\n" +
                 "    \"contact\": \"test-partner@uid2.com\",\n" +
                 "    \"created\": 1617149276,\n" +
@@ -35,6 +39,8 @@ public class OperatorKeyProviderTests {
                 "  },\n" +
                 "  {\n" +
                 "    \"key\": \"trusted-partner-key\",\n" +
+                "    \"key_hash\": \"EUqMA4TcQsESnNnNt15QxkO4S+Pi+7tdtPvj8q0Kswlq3n+quyva6M1BB+mqMJlD4o4cchoEbi3ute8Es8VYSg==\",\n" +
+                "    \"key_salt\": \"Da/At+QDDDHKucBb1UTSCCinRKknHYtR0VqIVlRajSM=\",\n" +
                 "    \"name\": \"trusted-partner\",\n" +
                 "    \"contact\": \"trusted-partner@uid2.com\",\n" +
                 "    \"created\": 1617149276,\n" +
