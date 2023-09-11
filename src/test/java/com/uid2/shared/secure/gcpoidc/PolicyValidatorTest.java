@@ -161,6 +161,7 @@ public class PolicyValidatorTest {
 
     private TokenPayload generateBasicPayload(){
         var builder = TokenPayload.builder()
+                .gceZone("us-west1-b")
                 .swVersion("CONFIDENTIAL_SPACE")
                 .dbgStat("disabled-since-boot")
                 .swName("CONFIDENTIAL_SPACE")
