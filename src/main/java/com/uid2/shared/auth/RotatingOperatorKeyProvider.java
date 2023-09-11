@@ -74,12 +74,12 @@ public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetad
 
     @Override
     public OperatorKey getOperatorKey(String token) {
-        return this.operatorKeyStore.getFromKey(token);
+        return operatorKeyStore.getFromKey(token);
     }
 
     @Override
     public Collection<OperatorKey> getAll() {
-        return this.operatorKeyStore.getAuthorizables();
+        return operatorKeyStore.getAuthorizables();
     }
 
     @Override
