@@ -1,5 +1,6 @@
 package com.uid2.shared.auth;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.vertx.core.json.JsonObject;
 
@@ -24,7 +25,19 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     @JsonProperty("operator_type")
     private OperatorType operatorType;
 
-    public OperatorKey(String key, String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, OperatorType operatorType) {
+    @JsonCreator
+    public OperatorKey(
+            @JsonProperty("key") String key,
+            @JsonProperty("key_hash") String keyHash,
+            @JsonProperty("key_salt") String keySalt,
+            @JsonProperty("name") String name,
+            @JsonProperty("contact") String contact,
+            @JsonProperty("protocol") String protocol,
+            @JsonProperty("created") long created,
+            @JsonProperty("disabled") boolean disabled,
+            @JsonProperty("site_id") Integer siteId,
+            @JsonProperty("roles") Set<Role> roles,
+            @JsonProperty("operator_type") OperatorType operatorType) {
         this.key = key;
         this.keyHash = keyHash;
         this.keySalt = keySalt;

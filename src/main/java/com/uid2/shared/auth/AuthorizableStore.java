@@ -168,4 +168,8 @@ public class AuthorizableStore<T extends IAuthorizable> {
             return salts;
         }
     }
+
+    public Collection<T> getAuthorizables() {
+        return authorizables.get().hashToAuthorizableMap.values();
+    }
 }

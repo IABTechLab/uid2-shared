@@ -162,15 +162,15 @@ public class OperatorKeyTest {
     public void verifyRolesPropIsWrittenInAlphabeticalOrder() throws JsonProcessingException {
         final String expectJson = "{" +
                 "\"key\":\"test-admin-key\"," +
+                "\"key_hash\":\"test-keyHash\"," +
+                "\"key_salt\":\"test-keySalt\"," +
                 "\"name\":\"admin@uid2.com\"," +
                 "\"contact\":\"admin@uid2.com\"," +
                 "\"protocol\":\"protocol1\"," +
                 "\"created\":1617149276," +
                 "\"disabled\":false," +
-                "\"roles\":[\"OPERATOR\",\"OPTOUT\"]," +
-                "\"key_hash\":\"test-keyHash\"," +
-                "\"key_salt\":\"test-keySalt\"," +
                 "\"site_id\":1," +
+                "\"roles\":[\"OPERATOR\",\"OPTOUT\"]," +
                 "\"operator_type\":\"PRIVATE\"" +
                 "}";
         OperatorKey k = new OperatorKey("test-admin-key", "test-keyHash", "test-keySalt", "admin@uid2.com", "admin@uid2.com", "protocol1", 1617149276, false, 1, new HashSet<>(Arrays.asList(Role.OPTOUT, Role.OPERATOR)));
