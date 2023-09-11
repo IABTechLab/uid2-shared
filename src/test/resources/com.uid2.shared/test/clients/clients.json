@@ -1,6 +1,8 @@
 [
   {
     "key": "test-admin-key",
+    "key_hash": "3GOm/j6AtgsQzZoHxDaPAvqI9m247tntcB6t9+eB1vFve8renQPDwccGUupLPmgtBI68wPNIBhvOeDjUKBuZmA==",
+    "key_salt": "3UBs6E8iJJ/W4Byu57dZTH8/133397dmYbDlbmuwDno=",
     "secret": "DELPabG/hsJsZk4Xm9Xr10Wb8qoKarg4ochUdY9e+Ow=",
     "name": "admin@uid2.com",
     "contact": "admin@uid2.com",
@@ -10,6 +12,8 @@
   },
   {
     "key": "test-mapper-key",
+    "key_hash": "+u37J/+9Oq8l3vhi1r+EvSQ5htvB3Myabsm01yj4fpu/GrcB25a3fFSq3J3xhokuUXgDCz3B+nBVuBrojo4GVA==",
+    "key_salt": "MfieEGjGX5Z43zr3eXpslldV7K3MiwmyIqTbAOtAe2c=",
     "secret": "/aqPU4KHIaYx3m4ReYKb89i8XgjYJL59WFJmLR1Awio=",
     "name": "mapper@uid2.com",
     "contact": "mapper@uid2.com",
@@ -19,6 +23,8 @@
   },
   {
     "key": "test-optout-key",
+    "key_hash": "8AwQEz7bUDL8IJG11Psd3fbn23CcxGDUA/Dl430sBr6HpfwEE5zhCueu2sSy9uIDl/rQVYxtTCdS7jxhFZYSSg==",
+    "key_salt": "gcZnkA6G2iiPZ0/60rwFZEwMP28Qq1Z6fsBhRnSh068=",
     "secret": "734UijWRaviZ28bulrlO5yGsEUB5oQrTFHyVICWkCXo=",
     "name": "optout@uid2.com",
     "contact": "optout@uid2.com",
@@ -28,6 +34,8 @@
   },
   {
     "key": "trusted-partner-key",
+    "key_hash": "JgdHSbec7S5qhVQeCwy0FVEwYknBVtccxccHHUobRFYVvzTmj0i2EQMhZ6BCBzSpI7I3Vd1RxMd3P2IOLGt+tA==",
+    "key_salt": "RSn7ZU+fjFtku6zDKJ1cpmeWqqxihF1FmrPRv4+78+M=",
     "secret": "wJ0hP19QU4hmpB64Y3fV2dAed8t/mupw3sjN5jNRFzg=",
     "name": "partner@uid2.com",
     "contact": "partner@uid2.com",
