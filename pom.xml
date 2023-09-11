@@ -108,11 +108,6 @@
             <version>${micrometer.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.prometheus</groupId>
-            <artifactId>simpleclient_caffeine</artifactId>
-            <version>0.16.0</version>
-        </dependency>
-        <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
             <version>3.1.7</version>

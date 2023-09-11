@@ -3,12 +3,14 @@ package com.uid2.shared.auth;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.uid2.shared.secret.KeyHasher;
-import io.prometheus.client.cache.caffeine.CacheMetricsCollector;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Metrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,10 +24,16 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
     private final AtomicReference<AuthorizableStoreSnapshot> authorizables;
     private final Cache<String, String> keyToHashCache;
+    private final AtomicInteger keyToHashTotalCount;
+    private final AtomicInteger keyToHashMissCount;
 
     public AuthorizableStore(Class<T> cls) {
         this.authorizables = new AtomicReference<>(new AuthorizableStoreSnapshot(new ArrayList<>()));
-        this.keyToHashCache = createCache(cls);
+        this.keyToHashCache = createCache();
+        this.keyToHashTotalCount = new AtomicInteger(0);
+        this.keyToHashMissCount = new AtomicInteger(0);
+
+        initializeMetrics(cls);
     }
 
     public void refresh(Collection<T> authorizablesToRefresh) {
@@ -36,8 +44,11 @@ public class AuthorizableStore<T extends IAuthorizable> {
         AuthorizableStoreSnapshot latest = authorizables.get();
 
         String cachedHash = keyToHashCache.getIfPresent(key);
+        keyToHashTotalCount.incrementAndGet();
         if (cachedHash != null) {
             return cachedHash.isBlank() ? null : latest.getAuthorizableByHash(wrapHashToByteBuffer(cachedHash));
+        } else {
+            keyToHashMissCount.incrementAndGet();
         }
 
         Integer siteId = getSiteIdFromKey(key);
@@ -70,24 +81,32 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return null;
     }
 
-    private Cache<String, String> createCache(Class<T> cls) {
-        Cache<String, String> cache = Caffeine.newBuilder()
+    private Cache<String, String> createCache() {
+        return Caffeine.newBuilder()
                 .maximumSize(CACHE_MAX_SIZE)
-                .recordStats()
                 .build();
-
-        CacheMetricsCollector cacheMetricsCollector = new CacheMetricsCollector().register();
-        cacheMetricsCollector.addCache(cls.getName() + "-cache", cache);
-
-        return cache;
     }
 
-    private static ByteBuffer wrapHashToByteBuffer(String hash) {
+    private void initializeMetrics(Class<T> cls) {
+        String cacheName = cls.getName().toLowerCase();
+
+        Gauge.builder("uid2.cache.total_count", this.keyToHashTotalCount::get)
+                .tag("cache", cacheName)
+                .description("gauge for " + cacheName + " cache total count")
+                .register(Metrics.globalRegistry);
+
+        Gauge.builder("uid2.cache.miss_count", this.keyToHashMissCount::get)
+                .tag("cache", cacheName)
+                .description("gauge for " + cacheName + " cache miss count")
+                .register(Metrics.globalRegistry);
+    }
+
+    private ByteBuffer wrapHashToByteBuffer(String hash) {
         byte[] hashBytes = convertBase64StringToBytes(hash);
         return hashBytes == null ? null : ByteBuffer.wrap(hashBytes);
     }
 
-    private static byte[] convertBase64StringToBytes(String str) {
+    private byte[] convertBase64StringToBytes(String str) {
         try {
             return Base64.getDecoder().decode(str);
         } catch (IllegalArgumentException e) {
