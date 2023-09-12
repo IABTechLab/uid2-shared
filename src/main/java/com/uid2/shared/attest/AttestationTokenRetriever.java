@@ -122,7 +122,7 @@ public class AttestationTokenRetriever {
 
             attest();
         } catch (AttestationTokenRetrieverException | IOException e) {
-            notifyResponseStatusWatcher(401, "");
+            notifyResponseWatcher(401, "");
             LOGGER.info("Re-attest failed: ", e);
         } finally {
             this.isAttesting.set(false);
@@ -169,7 +169,7 @@ public class AttestationTokenRetriever {
 
             int statusCode = response.statusCode();
             String responseBody = response.body();
-            notifyResponseStatusWatcher(statusCode, responseBody);
+            notifyResponseWatcher(statusCode, responseBody);
 
             if (statusCode < 200 || statusCode >= 300) {
                 LOGGER.warn("attestation failed with UID2 Core returning statusCode=" + statusCode);
@@ -272,7 +272,7 @@ public class AttestationTokenRetriever {
         return gen.generateKeyPair();
     }
 
-    private void notifyResponseStatusWatcher(int statusCode, String responseBody) {
+    private void notifyResponseWatcher(int statusCode, String responseBody) {
         this.lock.lock();
         try {
             if (this.responseWatcher != null)
