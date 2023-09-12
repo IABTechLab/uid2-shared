@@ -8,4 +8,5 @@ public interface IServiceLinkStore {
 
     Collection<ServiceLink> getAllServiceLinks();
 
+    ServiceLink getServiceLink(int serviceId, String linkId);
 }
