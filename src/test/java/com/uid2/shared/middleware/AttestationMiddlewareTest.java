@@ -18,6 +18,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Optional;
@@ -27,6 +30,7 @@ import static org.mockito.Mockito.*;
 public class AttestationMiddlewareTest {
     private static final String EXPECTED_OPERATOR_KEY = "abcdef.abcdefabcdefabcdef";
     private static final String EXPECTED_OPERATOR_KEY_HASH = "abcdefabcdefabcdefabcdef";
+    private static final String EXPECTED_OPERATOR_KEY_HASH_DIGEST = "u5ftQqFB0J0OF9loRHHfdgIDBuyEA42pvCRzWQ8MkQ+liep0Xfijjpye0xkcx5BuTJ5Ayk+SZY1+ZLGaMs5yrg==";
     private static final String EXPECTED_OPERATOR_KEY_SALT = "ghijklghijklghijklghijkl";
     private static final String JWT_AUDIENCE = "testJwtAudience";
     private static final String JWT_ISSUER = "testJwtIssuer";
@@ -65,7 +69,7 @@ public class AttestationMiddlewareTest {
     void trustedValidJwtNoRolesReturnsSuccess() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
-                .withSubject(EXPECTED_OPERATOR_KEY_HASH);
+                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST);
         when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler);
@@ -79,7 +83,7 @@ public class AttestationMiddlewareTest {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
                 .withRoles(Role.OPERATOR, Role.ADMINISTRATOR, Role.OPTOUT)
-                .withSubject(EXPECTED_OPERATOR_KEY_HASH);
+                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST);
         when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR);
@@ -93,7 +97,7 @@ public class AttestationMiddlewareTest {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
                 .withRoles(Role.OPERATOR, Role.ADMINISTRATOR, Role.OPTOUT)
-                .withSubject(EXPECTED_OPERATOR_KEY_HASH);
+                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST);
         when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR, Role.ADMINISTRATOR);
@@ -107,7 +111,7 @@ public class AttestationMiddlewareTest {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
                 .withRoles(Role.OPTOUT)
-                .withSubject(EXPECTED_OPERATOR_KEY_HASH);
+                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST);
         when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR);
