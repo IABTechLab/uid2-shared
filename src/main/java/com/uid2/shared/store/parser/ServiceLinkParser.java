@@ -23,7 +23,7 @@ public class ServiceLinkParser implements Parser<Map<String, ServiceLink>> {
             String name = serviceLinkSpec.getString("name");
 
             ServiceLink serviceLink = new ServiceLink(linkId, serviceId, siteId, name);
-            String key = serviceId + linkId;
+            String key = serviceId + "_" + linkId;
             serviceLinkList.put(key, serviceLink);
         }
         return new ParsingResult<>(serviceLinkList, serviceLinkList.size());

@@ -46,7 +46,7 @@ public class RotatingServiceLinkStore implements IServiceLinkStore, StoreReader<
 
     @Override
     public ServiceLink getServiceLink(int serviceId, String linkId) {
-        return reader.getSnapshot().get(serviceId + linkId);
+        return reader.getSnapshot().get(serviceId + "_" + linkId);
     }
 
     @Override
