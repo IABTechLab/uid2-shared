@@ -3,14 +3,13 @@ package com.uid2.shared.auth;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.uid2.shared.secret.KeyHasher;
-import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Metrics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,16 +23,22 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
     private final AtomicReference<AuthorizableStoreSnapshot> authorizables;
     private final Cache<String, String> keyToHashCache;
-    private final AtomicInteger keyToHashTotalCount;
-    private final AtomicInteger keyToHashMissCount;
+    private final Counter keyToHashTotalCounter;
+    private final Counter keyToHashMissCounter;
 
     public AuthorizableStore(Class<T> cls) {
         this.authorizables = new AtomicReference<>(new AuthorizableStoreSnapshot(new ArrayList<>()));
         this.keyToHashCache = createCache();
-        this.keyToHashTotalCount = new AtomicInteger(0);
-        this.keyToHashMissCount = new AtomicInteger(0);
 
-        initializeMetrics(cls);
+        String cacheName = cls.getName().toLowerCase();
+        keyToHashTotalCounter = Counter.builder("uid2.cache.total_count")
+                .description("counter for " + cacheName + " cache total count")
+                .tag("cache", cacheName)
+                .register(Metrics.globalRegistry);
+        keyToHashMissCounter = Counter.builder("uid2.cache.miss_count")
+                .description("counter for " + cacheName + " cache miss count")
+                .tag("cache", cacheName)
+                .register(Metrics.globalRegistry);
     }
 
     public void refresh(Collection<T> authorizablesToRefresh) {
@@ -48,11 +53,11 @@ public class AuthorizableStore<T extends IAuthorizable> {
         AuthorizableStoreSnapshot latest = authorizables.get();
 
         String cachedHash = keyToHashCache.getIfPresent(key);
-        keyToHashTotalCount.incrementAndGet();
+        keyToHashTotalCounter.increment();
         if (cachedHash != null) {
             return cachedHash.isBlank() ? null : latest.getAuthorizableByHash(wrapHashToByteBuffer(cachedHash));
         } else {
-            keyToHashMissCount.incrementAndGet();
+            keyToHashMissCounter.increment();
         }
 
         Integer siteId = getSiteIdFromKey(key);
@@ -93,20 +98,6 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return Caffeine.newBuilder()
                 .maximumSize(CACHE_MAX_SIZE)
                 .build();
-    }
-
-    private void initializeMetrics(Class<T> cls) {
-        String cacheName = cls.getName().toLowerCase();
-
-        Gauge.builder("uid2.cache.total_count", this.keyToHashTotalCount::get)
-                .tag("cache", cacheName)
-                .description("gauge for " + cacheName + " cache total count")
-                .register(Metrics.globalRegistry);
-
-        Gauge.builder("uid2.cache.miss_count", this.keyToHashMissCount::get)
-                .tag("cache", cacheName)
-                .description("gauge for " + cacheName + " cache miss count")
-                .register(Metrics.globalRegistry);
     }
 
     private ByteBuffer wrapHashToByteBuffer(String hash) {
