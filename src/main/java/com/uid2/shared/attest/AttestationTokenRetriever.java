@@ -8,6 +8,7 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.utils.Pair;
 
 import java.io.IOException;
 import java.net.*;
@@ -33,7 +34,7 @@ public class AttestationTokenRetriever {
     private final AtomicReference<String> attestationToken;
     private final AtomicReference<String> optOutJwt;
     private final AtomicReference<String> coreJwt;
-    private final Handler<Integer> responseWatcher;
+    private final Handler<Pair<Integer, String>> responseWatcher;
     private final String attestationEndpoint;
     private final HttpClient httpClient;
     private final IClock clock;
@@ -51,7 +52,7 @@ public class AttestationTokenRetriever {
                                      String clientApiToken,
                                      ApplicationVersion appVersion,
                                      IAttestationProvider attestationProvider,
-                                     Handler<Integer> responseWatcher) {
+                                     Handler<Pair<Integer, String>> responseWatcher) {
         this(vertx, attestationEndpoint, clientApiToken, appVersion, attestationProvider, responseWatcher, new InstantClock(), null, null);
     }
     public AttestationTokenRetriever(Vertx vertx,
@@ -59,7 +60,7 @@ public class AttestationTokenRetriever {
                                      String clientApiToken,
                                      ApplicationVersion appVersion,
                                      IAttestationProvider attestationProvider,
-                                     Handler<Integer> responseWatcher,
+                                     Handler<Pair<Integer, String>> responseWatcher,
                                      IClock clock,
                                      HttpClient httpClient,
                                      AttestationTokenDecryptor attestationTokenDecryptor) {
@@ -121,7 +122,7 @@ public class AttestationTokenRetriever {
 
             attest();
         } catch (AttestationTokenRetrieverException | IOException e) {
-            notifyResponseStatusWatcher(401);
+            notifyResponseStatusWatcher(401, "");
             LOGGER.info("Re-attest failed: ", e);
         } finally {
             this.isAttesting.set(false);
@@ -167,14 +168,14 @@ public class AttestationTokenRetriever {
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
 
             int statusCode = response.statusCode();
-            notifyResponseStatusWatcher(statusCode);
+            String responseBody = response.body();
+            notifyResponseStatusWatcher(statusCode, responseBody);
 
             if (statusCode < 200 || statusCode >= 300) {
                 LOGGER.warn("attestation failed with UID2 Core returning statusCode=" + statusCode);
                 throw new AttestationTokenRetrieverException(statusCode, "unexpected status code from uid core service");
             }
 
-            String responseBody = response.body();
             JsonObject responseJson = (JsonObject) Json.decodeValue(responseBody);
             if (isFailed(responseJson)) {
                 throw new AttestationTokenRetrieverException(statusCode, "response did not return a successful status");
@@ -271,11 +272,11 @@ public class AttestationTokenRetriever {
         return gen.generateKeyPair();
     }
 
-    private void notifyResponseStatusWatcher(int statusCode) {
+    private void notifyResponseStatusWatcher(int statusCode, String responseBody) {
         this.lock.lock();
         try {
             if (this.responseWatcher != null)
-                this.responseWatcher.handle(statusCode);
+                this.responseWatcher.handle(Pair.of(statusCode, responseBody));
         } finally {
             lock.unlock();
         }
