@@ -41,6 +41,10 @@ public class TokenPayload {
 
     //endregion
 
+    //region GCE
+    private String gceZone;
+    //endregion
+
     public boolean isDebugMode(){
         return !DEBUG_DISABLED.equalsIgnoreCase(dbgStat);
     }

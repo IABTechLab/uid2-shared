@@ -37,6 +37,8 @@ public class TokenSignatureValidatorTest {
 
         assertEquals(true, tokenPayload.isStableVersion());
         assertEquals(false, tokenPayload.isDebugMode());
+
+        assertEquals("us-west1-b", tokenPayload.getGceZone());
     }
 
     @Test
