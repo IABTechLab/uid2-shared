@@ -89,6 +89,15 @@ public class PolicyValidatorTest {
     }
 
     @Test
+    public void testValidationFailure_EURegion(){
+        var validator = new PolicyValidator();
+        var payload = generateBasicPayload().toBuilder()
+                .gceZone("europe-north1-a")
+                .build();
+        assertThrows(AttestationException.class, ()-> validator.validate(payload));
+    }
+
+    @Test
     public void testValidationFailure_NotStableConfidentialSpace(){
         var validator = new PolicyValidator();
         var payload = generateBasicPayload().toBuilder()
@@ -152,6 +161,7 @@ public class PolicyValidatorTest {
 
     private TokenPayload generateBasicPayload(){
         var builder = TokenPayload.builder()
+                .gceZone("us-west1-b")
                 .swVersion("CONFIDENTIAL_SPACE")
                 .dbgStat("disabled-since-boot")
                 .swName("CONFIDENTIAL_SPACE")
