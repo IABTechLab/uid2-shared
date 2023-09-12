@@ -93,8 +93,7 @@ public class AttestationMiddleware {
                                 }
 
                                 if (!validateSubject(response, operatorKey)) {
-                                    // Don't fail validation initially as the existing tokens will not have a subject yet.
-                                    // success = false;
+                                    success = false;
                                     LOGGER.info("JWT failed validation of Subject, but not enforced yet. JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}", response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
                                 }
                             }
