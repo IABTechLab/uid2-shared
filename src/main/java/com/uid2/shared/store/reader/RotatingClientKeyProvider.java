@@ -11,6 +11,7 @@ import com.uid2.shared.store.parser.ClientParser;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
+import java.util.Collection;
 import java.util.List;
 
 /*
@@ -37,8 +38,8 @@ import java.util.List;
         ...
       ]
 */
-public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReader<List<ClientKey>> {
-    private final ScopedStoreReader<List<ClientKey>> reader;
+public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReader<Collection<ClientKey>> {
+    private final ScopedStoreReader<Collection<ClientKey>> reader;
     private final AuthorizableStore<ClientKey> authorizableStore;
 
     public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
@@ -74,7 +75,7 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
     }
 
     @Override
-    public List<ClientKey> getAll() {
+    public Collection<ClientKey> getAll() {
         return reader.getSnapshot();
     }
 
