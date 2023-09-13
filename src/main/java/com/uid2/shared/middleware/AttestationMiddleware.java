@@ -95,7 +95,7 @@ public class AttestationMiddleware {
                                 String subject = calculateSubject(operatorKey);
                                 if (!validateSubject(response, subject)) {
                                     success = false;
-                                    LOGGER.info("JWT failed validation of Subject. JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}, Expected Subject: {}, Actual Subject: {}", response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), response.getSubject(), subject);
+                                    LOGGER.info("JWT failed validation of Subject. JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}, JWT Subject: {}, Operator Subject: {}", response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), response.getSubject(), subject);
                                 }
                             }
                         } catch (JwtService.ValidationException e) {
