@@ -29,6 +29,15 @@ public class ObjectMapperFactoryTest {
         assertEquals(expected, omfObject);
     }
 
+    @Test
+    public void readValue_whenMissingProperties() throws Exception {
+        String json = "{}";
+        OMFObject omfObject = OBJECT_MAPPER.readValue(json, OMFObject.class);
+        OMFObject expected = new OMFObject(null);
+
+        assertEquals(expected, omfObject);
+    }
+
     private enum OMFType {
         TYPE_ONE,
         TYPE_TWO
