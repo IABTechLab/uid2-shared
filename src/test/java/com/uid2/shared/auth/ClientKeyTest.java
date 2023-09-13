@@ -1,30 +1,33 @@
 package com.uid2.shared.auth;
 
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
-import org.junit.Assert;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uid2.shared.utils.ObjectMapperFactory;
 import org.junit.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class ClientKeyTest {
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.build();
+
     @Test
-    public void verifyDisabledPropIsOptional() {
+    public void verifyDisabledPropIsOptional() throws Exception {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"secret\": \"\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
-                "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
+                "        \"roles\": [ \"MAPPER\", \"GENERATOR\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
+        ClientKey c = OBJECT_MAPPER.readValue(testJson, ClientKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        ClientKey c = ClientKey.valueOf(jo);
-        Assert.assertFalse(c.isDisabled());
+        assertFalse(c.isDisabled());
     }
 
     @Test
-    public void verifyDisabledPropSetTrue() {
+    public void verifyDisabledPropSetTrue() throws Exception {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"secret\": \"\",\n" +
@@ -32,17 +35,16 @@ public class ClientKeyTest {
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": true,\n" +
-                "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
+                "        \"roles\": [ \"MAPPER\", \"GENERATOR\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
+        ClientKey c = OBJECT_MAPPER.readValue(testJson, ClientKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        ClientKey c = ClientKey.valueOf(jo);
-        Assert.assertTrue(c.isDisabled());
+        assertTrue(c.isDisabled());
     }
 
     @Test
-    public void verifyDisabledPropSetFalse() {
+    public void verifyDisabledPropSetFalse() throws Exception {
         final String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"secret\": \"\",\n" +
@@ -50,12 +52,11 @@ public class ClientKeyTest {
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
-                "        \"roles\": [ \"mapper\", \"generator\" ],\n" +
+                "        \"roles\": [ \"MAPPER\", \"GENERATOR\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
+        ClientKey c = OBJECT_MAPPER.readValue(testJson, ClientKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        ClientKey c = ClientKey.valueOf(jo);
-        Assert.assertFalse(c.isDisabled());
+        assertFalse(c.isDisabled());
     }
 }

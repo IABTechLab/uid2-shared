@@ -1,11 +1,10 @@
 package com.uid2.shared;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uid2.shared.utils.ObjectMapperFactory;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.http.HttpResponse;
@@ -22,10 +21,10 @@ import java.util.List;
 import java.util.function.BiPredicate;
 
 public class Utils {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Utils.class);
-    private static final ObjectMapper mapper = new ObjectMapper();
     public static final String OS = System.getProperty("os.name").toLowerCase();
     public static final boolean IsWindows = OS.contains("win");
+
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.build();
 
     public static boolean isProductionEnvironment() {
         // detect if it is running in KUBERNETES_SERVICE_HOST
@@ -126,7 +125,7 @@ public class Utils {
 
     public static String toJson(Collection<String> strs) {
         try {
-            return mapper.writeValueAsString(strs);
+            return OBJECT_MAPPER.writeValueAsString(strs);
         } catch (Exception ex) {
             // this is internal message and not expected to be invalid, returning null
             return null;

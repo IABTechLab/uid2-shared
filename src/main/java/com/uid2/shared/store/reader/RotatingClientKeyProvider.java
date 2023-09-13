@@ -11,8 +11,7 @@ import com.uid2.shared.store.parser.ClientParser;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 
 /*
   1. metadata.json format
@@ -38,13 +37,13 @@ import java.util.Map;
         ...
       ]
 */
-public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReader<Collection<ClientKey>> {
-    private final ScopedStoreReader<Map<String, ClientKey>> reader;
+public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReader<List<ClientKey>> {
+    private final ScopedStoreReader<List<ClientKey>> reader;
     private final AuthorizableStore<ClientKey> authorizableStore;
 
     public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys");
-        this.authorizableStore = new AuthorizableStore<>();
+        this.authorizableStore = new AuthorizableStore<>(ClientKey.class);
     }
 
     @Override
@@ -60,26 +59,28 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
         long version = reader.loadContent(metadata, "client_keys");
-        this.authorizableStore.refresh(this.getAll());
+        authorizableStore.refresh(getAll());
         return version;
     }
 
     @Override
-    public ClientKey getClientKey(String token) {
-        return reader.getSnapshot().get(token);
-    }
-
-    public ClientKey getClientKeyFromHash(String hash) {
-        return this.authorizableStore.getFromKeyHash(hash);
+    public ClientKey getClientKey(String key) {
+        return authorizableStore.getAuthorizableByKey(key);
     }
 
     @Override
-    public Collection<ClientKey> getAll() {
-        return reader.getSnapshot().values();
+    public ClientKey getClientKeyFromHash(String hash) {
+        return authorizableStore.getAuthorizableByHash(hash);
     }
 
+    @Override
+    public List<ClientKey> getAll() {
+        return reader.getSnapshot();
+    }
+
+    @Override
     public void loadContent() throws Exception {
-        this.loadContent(this.getMetadata());
+        loadContent(getMetadata());
     }
 
     @Override
