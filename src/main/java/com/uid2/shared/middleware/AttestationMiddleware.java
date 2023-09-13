@@ -92,9 +92,10 @@ public class AttestationMiddleware {
                                     LOGGER.info("JWT missing required role. Required roles: {}, JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}", this.roleBasedJwtClaimValidator.getRequiredRoles(), response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
                                 }
 
-                                if (!validateSubject(response, operatorKey)) {
+                                String subject = calculateSubject(operatorKey);
+                                if (!validateSubject(response, subject)) {
                                     success = false;
-                                    LOGGER.info("JWT failed validation of Subject, but not enforced yet. JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}", response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
+                                    LOGGER.info("JWT failed validation of Subject. JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}, Expected Subject: {}, Actual Subject: {}", response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), response.getSubject(), subject);
                                 }
                             }
                         } catch (JwtService.ValidationException e) {
@@ -129,17 +130,23 @@ public class AttestationMiddleware {
             return rc.request().getHeader(Const.Attestation.AttestationJWTHeader);
         }
 
-        private static Boolean validateSubject(JwtValidationResponse response, OperatorKey operatorKey) {
-
-            if (response.getSubject() == null || response.getSubject().isBlank() || operatorKey.getKeyHash() == null || operatorKey.getKeyHash().isBlank()) {
-                return false;
+        private static String calculateSubject(OperatorKey operatorKey) {
+            if (operatorKey.getKeyHash() == null || operatorKey.getKeyHash().isBlank()) {
+                return "";
             }
 
             byte[] keyBytes = operatorKey.getKeyHash().getBytes();
             MessageDigest md = createMessageDigestSHA512();
             byte[] hashBytes = md.digest(keyBytes);
-            String keyHash = Utils.toBase64String(hashBytes);
-            return keyHash.equals(response.getSubject());
+            return Utils.toBase64String(hashBytes);
+        }
+
+        private static Boolean validateSubject(JwtValidationResponse response, String subject) {
+            if (response.getSubject() == null || response.getSubject().isBlank()) {
+                return false;
+            }
+
+            return subject.equals(response.getSubject());
         }
     }
 
