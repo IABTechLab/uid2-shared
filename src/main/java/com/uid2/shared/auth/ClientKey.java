@@ -181,6 +181,11 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         return this;
     }
 
+    public ClientKey withServiceId(Integer serviceId) {
+        this.serviceId = serviceId;
+        return this;
+    }
+
     public boolean isDisabled() {
         return disabled;
     }
