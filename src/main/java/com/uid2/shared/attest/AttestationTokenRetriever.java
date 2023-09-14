@@ -39,7 +39,6 @@ public class AttestationTokenRetriever {
     private final HttpClient httpClient;
     private final IClock clock;
     private final Vertx vertx;
-    private boolean isCheckScheduled;
     private AtomicBoolean isAttesting;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
@@ -76,7 +75,6 @@ public class AttestationTokenRetriever {
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.lock = new ReentrantLock();
-        this.isCheckScheduled = false;
         this.isAttesting = new AtomicBoolean(false);
         if (httpClient == null) {
             this.httpClient = HttpClient.newHttpClient();
@@ -102,13 +100,11 @@ public class AttestationTokenRetriever {
     }
 
     public void attestationCheck(long timerId) {
-        System.out.println("attestation check called");
         // This check is to avoid the attest() function takes longer than 60sec and get called again from this method while attesting.
         if (!this.isAttesting.compareAndSet(false, true)) {
             LOGGER.warn("In the process of attesting. Skip re-attest.");
             return;
         }
-        System.out.println("not in progress");
 
         try {
 
@@ -117,14 +113,10 @@ public class AttestationTokenRetriever {
             }
 
             if(this.attestationToken.get() == null) {
-                System.out.println("not attested. attesting");
                 LOGGER.info("Not attested. attesting...");
                 attest();
                 return;
             }
-
-            System.out.println("attested. Checking expiration");
-
 
             Instant currentTime = clock.now();
             Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
@@ -133,7 +125,6 @@ public class AttestationTokenRetriever {
             }
 
             LOGGER.info("Attestation token is 10 mins from the expiry timestamp {}. Re-attest...", attestationTokenExpiresAt);
-            System.out.println("doing re-attest");
 
             attest();
         } catch (AttestationTokenRetrieverException | IOException e) {
