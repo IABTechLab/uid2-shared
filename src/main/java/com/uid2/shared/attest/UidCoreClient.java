@@ -3,8 +3,6 @@ package com.uid2.shared.attest;
 import com.uid2.shared.Const;
 import com.uid2.shared.Utils;
 import com.uid2.shared.cloud.*;
-import io.vertx.circuitbreaker.CircuitBreaker;
-import io.vertx.core.Future;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +22,6 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private final boolean enforceHttps;
     private boolean allowContentFromLocalFileSystem = false;
     private final HttpClient httpClient;
-    private final CircuitBreaker attestCircuitBreaker;
 
     protected AttestationTokenRetriever getAttestationTokenRetriever() {
         return attestationTokenRetriever;
@@ -48,15 +45,6 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
                          boolean enforceHttps,
                          AttestationTokenRetriever attestationTokenRetriever,
                          HttpClient httpClient) {
-        this(userToken, proxy, enforceHttps, attestationTokenRetriever, httpClient, null);
-    }
-
-    public UidCoreClient(String userToken,
-                         Proxy proxy,
-                         boolean enforceHttps,
-                         AttestationTokenRetriever attestationTokenRetriever,
-                         HttpClient httpClient,
-                         CircuitBreaker attestCircuitBreaker) {
         this.proxy = proxy;
         this.userToken = userToken;
         this.contentStorage = new PreSignedURLStorage(proxy);
@@ -73,7 +61,6 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         }
 
         this.appVersionHeader = attestationTokenRetriever.getAppVersionHeader();
-        this.attestCircuitBreaker = attestCircuitBreaker;
     }
 
     @Override
@@ -104,7 +91,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
                 // returns `file:/tmp/uid2` urlConnection directly
                 inputStream = readContentFromLocalFileSystem(path, this.proxy);
             } else {
-                inputStream = getWithAttest(path, jwtToken);
+                inputStream = get(path, jwtToken);
             }
             return inputStream;
         } catch (Exception e) {
@@ -117,9 +104,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return (proxy == null ? new URL(path).openConnection() : new URL(path).openConnection(proxy)).getInputStream();
     }
 
-    private InputStream getWithAttest(String path, String jwtToken) throws IOException, InterruptedException, AttestationTokenRetrieverException {
-        attestWithBackgroundRetry();
-
+    private InputStream get(String path, String jwtToken) throws IOException, InterruptedException {
         String attestationToken = attestationTokenRetriever.getAttestationToken();
 
         HttpResponse<String> httpResponse;
@@ -129,7 +114,6 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         if (httpResponse.statusCode() == 401) {
             LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
             // and here.
-            attestWithBackgroundRetry();
             attestationToken = attestationTokenRetriever.getAttestationToken();
             httpResponse = sendHttpRequest(path, attestationToken, jwtToken);
         }
@@ -166,29 +150,6 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
             throw e;
         }
         return httpResponse;
-    }
-
-    private void attestWithBackgroundRetry() throws IOException, AttestationTokenRetrieverException {
-        if (this.attestCircuitBreaker == null) {
-            throw new AttestationTokenRetrieverException("no attestation circuit breaker set");
-        }
-        // try a blocking /attest call first. If it fails use circuit breaker
-        if (!attestationTokenRetriever.attested()) {
-            try {
-                attestationTokenRetriever.attest();
-            } catch (IOException | AttestationTokenRetrieverException e) {
-                attestCircuitBreaker.execute(promise -> {
-                    try {
-                        attestationTokenRetriever.attest();
-                        promise.complete();
-                    } catch (IOException | AttestationTokenRetrieverException ex) {
-                        LOGGER.error("failed the retry thing");
-                        promise.fail(ex.getMessage());
-                    }
-                });
-                throw e;
-            }
-        }
     }
 
     public void setUserToken(String userToken) {

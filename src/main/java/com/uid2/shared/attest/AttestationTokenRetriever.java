@@ -39,7 +39,7 @@ public class AttestationTokenRetriever {
     private final HttpClient httpClient;
     private final IClock clock;
     private final Vertx vertx;
-    private boolean isExpiryCheckScheduled;
+    private boolean isCheckScheduled;
     private AtomicBoolean isAttesting;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
     private Instant attestationTokenExpiresAt = Instant.MAX;
@@ -53,7 +53,7 @@ public class AttestationTokenRetriever {
                                      ApplicationVersion appVersion,
                                      IAttestationProvider attestationProvider,
                                      Handler<Pair<Integer, String>> responseWatcher) {
-        this(vertx, attestationEndpoint, clientApiToken, appVersion, attestationProvider, responseWatcher, new InstantClock(), null, null);
+        this(vertx, attestationEndpoint, clientApiToken, appVersion, attestationProvider, responseWatcher, new InstantClock(), null, null, 60000);
     }
     public AttestationTokenRetriever(Vertx vertx,
                                      String attestationEndpoint,
@@ -63,7 +63,8 @@ public class AttestationTokenRetriever {
                                      Handler<Pair<Integer, String>> responseWatcher,
                                      IClock clock,
                                      HttpClient httpClient,
-                                     AttestationTokenDecryptor attestationTokenDecryptor) {
+                                     AttestationTokenDecryptor attestationTokenDecryptor,
+                                     int attestCheckMilliseconds) {
         this.vertx = vertx;
         this.attestationEndpoint = attestationEndpoint;
         this.clientApiToken = clientApiToken;
@@ -75,7 +76,7 @@ public class AttestationTokenRetriever {
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.lock = new ReentrantLock();
-        this.isExpiryCheckScheduled = false;
+        this.isCheckScheduled = false;
         this.isAttesting = new AtomicBoolean(false);
         if (httpClient == null) {
             this.httpClient = HttpClient.newHttpClient();
@@ -97,16 +98,34 @@ public class AttestationTokenRetriever {
         }
         this.appVersionHeader = builder.toString();
 
+        this.vertx.setPeriodic(0, attestCheckMilliseconds, this::attestationCheck);
     }
 
-    private void attestationExpirationCheck(long timerId) {
+    public void attestationCheck(long timerId) {
+        System.out.println("attestation check called");
         // This check is to avoid the attest() function takes longer than 60sec and get called again from this method while attesting.
         if (!this.isAttesting.compareAndSet(false, true)) {
             LOGGER.warn("In the process of attesting. Skip re-attest.");
             return;
         }
+        System.out.println("not in progress");
 
         try {
+
+            if (!attestationProvider.isReady()) {
+                throw new AttestationTokenRetrieverException("attestation provider is not ready");
+            }
+
+            if(this.attestationToken.get() == null) {
+                System.out.println("not attested. attesting");
+                LOGGER.info("Not attested. attesting...");
+                attest();
+                return;
+            }
+
+            System.out.println("attested. Checking expiration");
+
+
             Instant currentTime = clock.now();
             Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
             if (!currentTime.isAfter(tenMinutesBeforeExpire)) {
@@ -114,34 +133,18 @@ public class AttestationTokenRetriever {
             }
 
             LOGGER.info("Attestation token is 10 mins from the expiry timestamp {}. Re-attest...", attestationTokenExpiresAt);
-
-            if (!attestationProvider.isReady()) {
-                LOGGER.warn("Attestation provider is not ready. Skip re-attest.");
-                return;
-            }
+            System.out.println("doing re-attest");
 
             attest();
         } catch (AttestationTokenRetrieverException | IOException e) {
-            notifyResponseWatcher(401, "");
+            notifyResponseWatcher(401, e.getMessage());
             LOGGER.info("Re-attest failed: ", e);
         } finally {
             this.isAttesting.set(false);
         }
     }
 
-    private void scheduleAttestationExpirationCheck() {
-        if (!this.isExpiryCheckScheduled) {
-            // Schedule the task to run every minute
-            this.vertx.setPeriodic(0, 60000, this::attestationExpirationCheck);
-            this.isExpiryCheckScheduled = true;
-        }
-    }
-
-    public void attest() throws IOException, AttestationTokenRetrieverException {
-        if (!attestationProvider.isReady()) {
-            throw new AttestationTokenRetrieverException("attestation provider is not ready");
-        }
-
+    private void attest() throws IOException, AttestationTokenRetrieverException {
         try {
             KeyPair keyPair = generateKeyPair();
             byte[] publicKey = keyPair.getPublic().getEncoded();
@@ -202,7 +205,6 @@ public class AttestationTokenRetriever {
             setOptoutJWTFromResponse(innerBody);
             setCoreJWTFromResponse(innerBody);
 
-            scheduleAttestationExpirationCheck();
         } catch (IOException ioe) {
             throw ioe;
         } catch (Exception e) {

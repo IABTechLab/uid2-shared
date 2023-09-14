@@ -15,7 +15,7 @@ public class AttestationTokenService implements IAttestationTokenService {
 
     @Deprecated
     public AttestationTokenService(String encryptionKey, String encryptionSalt) {
-        this(encryptionKey, encryptionSalt, 2*3600); // 2 hours by default
+        this(encryptionKey, encryptionSalt, 2 * 3600); // 2 hours by default
     }
 
     public AttestationTokenService(String encryptionKey, String encryptionSalt, long expiresAfterSeconds) {
