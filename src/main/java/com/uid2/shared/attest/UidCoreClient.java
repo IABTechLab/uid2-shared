@@ -110,10 +110,8 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         HttpResponse<String> httpResponse;
         httpResponse = sendHttpRequest(path, attestationToken, jwtToken);
 
-        // This should never happen, but keeping this part of the code just to be extra safe.
         if (httpResponse.statusCode() == 401) {
             LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
-            // and here.
             attestationToken = attestationTokenRetriever.getAttestationToken();
             httpResponse = sendHttpRequest(path, attestationToken, jwtToken);
         }
