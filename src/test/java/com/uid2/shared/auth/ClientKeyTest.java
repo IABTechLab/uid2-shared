@@ -1,5 +1,6 @@
 package com.uid2.shared.auth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uid2.shared.utils.ObjectMapperFactory;
 import org.junit.Test;
@@ -11,8 +12,8 @@ public class ClientKeyTest {
     private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.build();
 
     @Test
-    public void verifyDisabledPropIsOptional() throws Exception {
-        final String testJson = "{\n" +
+    public void verifyDisabledPropIsOptional() throws JsonProcessingException {
+        String testJson = "{\n" +
                 "    \"key\": \"test-admin-key\",\n" +
                 "    \"secret\": \"\",\n" +
                 "    \"name\": \"admin@uid2.com\",\n" +
@@ -31,8 +32,8 @@ public class ClientKeyTest {
     }
 
     @Test
-    public void verifyDisabledPropSetTrue() throws Exception {
-        final String testJson = "    {\n" +
+    public void verifyDisabledPropSetTrue() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"secret\": \"\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
@@ -49,8 +50,8 @@ public class ClientKeyTest {
     }
 
     @Test
-    public void verifyDisabledPropSetFalse() throws Exception {
-        final String testJson = "    {\n" +
+    public void verifyDisabledPropSetFalse() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"key\": \"test-admin-key\",\n" +
                 "        \"secret\": \"\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
