@@ -20,7 +20,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyDisabledPropIsOptional() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -35,7 +34,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyDisabledPropSetTrue() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -51,7 +49,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyDisabledPropSetFalse() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -67,7 +64,6 @@ public class OperatorKeyTest {
     @Test
     public void verifySiteIdPropIsOptionalForBackwardsCompatibility() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -82,7 +78,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyRolesPropIsOptionalForBackwardsCompatibility() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -96,7 +91,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyRolesPropSetOptoutRole() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -112,7 +106,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyRolesPropSetOperatorRole() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -127,7 +120,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyRolesPropSetOperatorRoleAndOptoutRole() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -142,7 +134,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyRolesPropSetOptoutServiceRole() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -157,7 +148,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyRolesPropIsWrittenInAlphabeticalOrder() throws JsonProcessingException {
         String expectJson = "{" +
-                "\"key\":\"test-admin-key\"," +
                 "\"key_hash\":\"test-keyHash\"," +
                 "\"key_salt\":\"test-keySalt\"," +
                 "\"name\":\"admin@uid2.com\"," +
@@ -169,7 +159,7 @@ public class OperatorKeyTest {
                 "\"roles\":[\"OPERATOR\",\"OPTOUT\"]," +
                 "\"operator_type\":\"PRIVATE\"" +
                 "}";
-        OperatorKey o = new OperatorKey("test-admin-key", "test-keyHash", "test-keySalt", "admin@uid2.com", "admin@uid2.com", "protocol1", 1617149276, false, 1, new HashSet<>(Arrays.asList(Role.OPTOUT, Role.OPERATOR)));
+        OperatorKey o = new OperatorKey("test-keyHash", "test-keySalt", "admin@uid2.com", "admin@uid2.com", "protocol1", 1617149276, false, 1, new HashSet<>(Arrays.asList(Role.OPTOUT, Role.OPERATOR)));
 
         assertEquals(expectJson, OBJECT_MAPPER.writeValueAsString(o));
     }
@@ -177,7 +167,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyOperatorTypePropIsOptionalForBackwardsCompatibility() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -191,7 +180,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyOperatorTypePropIsPublic() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -206,7 +194,6 @@ public class OperatorKeyTest {
     @Test
     public void verifyOperatorTypePropIsPrivate() throws JsonProcessingException {
         String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -226,11 +213,11 @@ public class OperatorKeyTest {
 
     private static Set<Arguments> operatorConstructorArgs() {
         return Set.of(
-                Arguments.of(OperatorType.PRIVATE, new OperatorKey("key1", "test-keyHash1", "test-keySalt1", "name1", "contact1", "protocol1", 1, true)),
-                Arguments.of(OperatorType.PRIVATE, new OperatorKey("key2", "test-keyHash2", "test-keySalt2", "name2", "contact2", "protocol2", 2, true, 2)),
-                Arguments.of(OperatorType.PRIVATE, new OperatorKey("key3", "test-keyHash3", "test-keySalt3", "name3", "contact3", "protocol3", 3, true, 3,  null)),
-                Arguments.of(OperatorType.PUBLIC, new OperatorKey("key4", "test-keyHash4", "test-keySalt4", "name4", "contact4", "protocol4", 4, true, 4,  null, OperatorType.PUBLIC)),
-                Arguments.of(OperatorType.PRIVATE, new OperatorKey("key5", "test-keyHash5", "test-keySalt5", "name5", "contact5", "protocol5", 5, true, 5,  null, OperatorType.PRIVATE))
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash1", "test-keySalt1", "name1", "contact1", "protocol1", 1, true)),
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash2", "test-keySalt2", "name2", "contact2", "protocol2", 2, true, 2)),
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash3", "test-keySalt3", "name3", "contact3", "protocol3", 3, true, 3,  null)),
+                Arguments.of(OperatorType.PUBLIC, new OperatorKey("test-keyHash4", "test-keySalt4", "name4", "contact4", "protocol4", 4, true, 4,  null, OperatorType.PUBLIC)),
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash5", "test-keySalt5", "name5", "contact5", "protocol5", 5, true, 5,  null, OperatorType.PRIVATE))
         );
     }
 }

@@ -8,7 +8,6 @@ import java.util.*;
 public class OperatorKey implements IRoleAuthorizable<Role> {
     private static final OperatorType DEFAULT_OPERATOR_TYPE = OperatorType.PRIVATE;
 
-    private final String key;
     @JsonProperty("key_hash")
     private final String keyHash;
     @JsonProperty("key_salt")
@@ -26,7 +25,6 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
 
     @JsonCreator
     public OperatorKey(
-            @JsonProperty("key") String key,
             @JsonProperty("key_hash") String keyHash,
             @JsonProperty("key_salt") String keySalt,
             @JsonProperty("name") String name,
@@ -37,7 +35,6 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
             @JsonProperty("site_id") Integer siteId,
             @JsonProperty("roles") Set<Role> roles,
             @JsonProperty("operator_type") OperatorType operatorType) {
-        this.key = key;
         this.keyHash = keyHash;
         this.keySalt = keySalt;
         this.name = name;
@@ -50,20 +47,16 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.operatorType = operatorType == null ? DEFAULT_OPERATOR_TYPE : operatorType;
     }
 
-    public OperatorKey(String key, String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
-        this(key, keyHash, keySalt, name, contact, protocol, created, disabled, siteId, roles, DEFAULT_OPERATOR_TYPE);
+    public OperatorKey(String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
+        this(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, roles, DEFAULT_OPERATOR_TYPE);
     }
 
-    public OperatorKey(String key, String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
-        this(key, keyHash, keySalt, name, contact, protocol, created, disabled, siteId, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
+    public OperatorKey(String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
+        this(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
     }
 
-    public OperatorKey(String key, String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled) {
-        this(key, keyHash, keySalt, name, contact, protocol, created, disabled, null, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
-    }
-
-    public String getKey() {
-        return key;
+    public OperatorKey(String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled) {
+        this(keyHash, keySalt, name, contact, protocol, created, disabled, null, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
     }
 
     @Override
@@ -163,21 +156,20 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         OperatorKey b = (OperatorKey) o;
 
         // Compare the data members and return accordingly
-        return this.key.equals(b.key)
-                && this.keyHash.equals(b.keyHash)
+        return this.keyHash.equals(b.keyHash)
                 && this.keySalt.equals(b.keySalt)
                 && this.name.equals(b.name)
                 && this.contact.equals(b.contact)
                 && this.protocol.equals(b.protocol)
-                && this.disabled == b.disabled
-                && this.siteId.equals(b.siteId)
-                && this.roles.equals(b.roles)
                 && this.created == b.created
+                && this.disabled == b.disabled
+                && Objects.equals(this.siteId, b.siteId)
+                && this.roles.equals(b.roles)
                 && this.operatorType == b.operatorType;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, keyHash, keySalt, name, contact, protocol, created, disabled, siteId, roles, operatorType);
+        return Objects.hash(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, roles, operatorType);
     }
 }
