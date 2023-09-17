@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 
@@ -45,9 +46,9 @@ public class RotatingSiteStoreTest {
         return metadata;
     }
 
-    private Site addSite(JsonArray content, int siteId, String name, boolean enabled, String... domains) {
+    private Site addSite(JsonArray content, int siteId, String name, boolean enabled, long created, String... domains) {
 
-        Site s = new Site(siteId, name, enabled, new HashSet<>(List.of(domains)));
+        Site s = new Site(siteId, name, enabled, new HashSet<>(), new HashSet<>(List.of(domains)), created);
 
         JsonArray ja = new JsonArray();
         for (String domain : domains) {
@@ -59,6 +60,7 @@ public class RotatingSiteStoreTest {
         site.put("name", name);
         site.put("enabled", enabled);
         site.put("domain_names", ja);
+        site.put("created", created);
 
         content.add(site);
         return s;
@@ -76,10 +78,10 @@ public class RotatingSiteStoreTest {
     @Test
     public void loadContentMultipleSites() throws Exception {
         JsonArray content = new JsonArray();
-        Site s1 = addSite(content, 123, "test-1", true);
-        Site s2 = addSite(content, 124, "test-2", false);
-        Site s3 = addSite(content, 125, "test-3", true, "asdf.com");
-        Site s4 = addSite(content, 126, "test-4", false, "testdomain1.com", "testdomain2.net");
+        Site s1 = addSite(content, 123, "test-1", true, Instant.now().getEpochSecond());
+        Site s2 = addSite(content, 124, "test-2", false, Instant.now().minusSeconds(100).getEpochSecond());
+        Site s3 = addSite(content, 125, "test-3", true, Instant.now().plusSeconds(100).getEpochSecond());
+        Site s4 = addSite(content, 126, "test-4", false, Instant.now().getEpochSecond(), "testdomain1.com", "testdomain2.net");
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = siteStore.loadContent(makeMetadata("locationPath"));
