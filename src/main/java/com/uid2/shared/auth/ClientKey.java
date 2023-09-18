@@ -72,11 +72,6 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         this(key, keyHash, keySalt, secret, name, name, created.getEpochSecond(), roles, siteId, false, 0);
     }
 
-    @Deprecated // uid2-admin
-    public ClientKey(String key, String keyHash, String keySalt, String secret, String name, Role... roles) {
-        this(key, keyHash, keySalt, secret, name, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false);
-    }
-
     public String getKey() {
         return key;
     }
