@@ -45,8 +45,8 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
                          boolean enforceHttps,
                          AttestationTokenRetriever attestationTokenRetriever,
                          HttpClient httpClient) {
-        this.proxy = proxy;
         this.userToken = userToken;
+        this.proxy = proxy;
         this.contentStorage = new PreSignedURLStorage(proxy);
         this.enforceHttps = enforceHttps;
         if (httpClient == null) {

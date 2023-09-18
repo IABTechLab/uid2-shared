@@ -69,28 +69,12 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     }
 
     public ClientKey(String key, String keyHash, String keySalt, String secret, String name, Instant created, Set<Role> roles, int siteId) {
-        this(key, keyHash, keySalt, secret, name, created, roles, siteId, false);
-    }
-
-    @Deprecated // N/A
-    public ClientKey(String key, String keyHash, String keySalt, String secret, String name, Role... roles) {
-        this(key, keyHash, keySalt, secret, name, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false);
+        this(key, keyHash, keySalt, secret, name, name, created.getEpochSecond(), roles, siteId, false, 0);
     }
 
     @Deprecated // uid2-admin
-    public ClientKey(String key, String keyHash, String keySalt, String secret, Instant created) {
-        this.key = key;
-        this.keyHash = keyHash;
-        this.keySalt = keySalt;
-        this.secret = secret;
-        this.secretBytes = Utils.decodeBase64String(secret);
-        this.created = created.getEpochSecond();
-        this.siteId = -1;
-    }
-
-    @Deprecated // uid2-admin, uid2-validator
-    public ClientKey(String key, String keyHash, String keySalt, String secret) {
-        this(key, keyHash, keySalt, secret, Instant.parse("2021-01-01T00:00:00.000Z"));
+    public ClientKey(String key, String keyHash, String keySalt, String secret, String name, Role... roles) {
+        this(key, keyHash, keySalt, secret, name, Instant.parse("2021-01-01T00:00:00.000Z"), new HashSet<>(Arrays.asList(roles)), 0, false);
     }
 
     public String getKey() {
@@ -120,24 +104,11 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         return name;
     }
 
-    @Deprecated // N/A
-    public ClientKey withName(String name) {
-        this.name = name;
-        return this;
-    }
-
     @Override
     public String getContact() {
         return contact;
     }
 
-    @Deprecated //uid2-operator
-    public ClientKey withContact(String contact) {
-        this.contact = contact;
-        return this;
-    }
-
-    @Deprecated // uid2-admin
     public ClientKey withNameAndContact(String name) {
         this.name = this.contact = name;
         return this;
@@ -175,7 +146,6 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         return SiteUtil.isValidSiteId(siteId);
     }
 
-    @Deprecated // uid2-admin
     public ClientKey withSiteId(int siteId) {
         this.siteId = siteId;
         return this;
