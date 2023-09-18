@@ -21,7 +21,7 @@ public class PolicyValidator implements IPolicyValidator {
     private static final Logger LOGGER = LoggerFactory.getLogger(PolicyValidator.class);
 
     public static final String ENV_ENVIRONMENT = "DEPLOYMENT_ENVIRONMENT";
-    public static final String ENV_OPERATOR_API_KEY = "API_TOKEN";
+    public static final String ENV_OPERATOR_API_KEY_SECRET_NAME = "API_TOKEN_SECRET_NAME";
     public static final String ENV_CORE_ENDPOINT = "CORE_BASE_URL";
     public static final String ENV_OPT_OUT_ENDPOINT = "OPTOUT_BASE_URL";
 
@@ -29,7 +29,7 @@ public class PolicyValidator implements IPolicyValidator {
 
     private static final List<String> REQUIRED_ENV_OVERRIDES = ImmutableList.of(
             ENV_ENVIRONMENT,
-            ENV_OPERATOR_API_KEY
+            ENV_OPERATOR_API_KEY_SECRET_NAME
     );
 
     private static final Map<Environment, List<String>> OPTIONAL_ENV_OVERRIDES_MAP = ImmutableMap.of(
