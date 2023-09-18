@@ -41,7 +41,7 @@ public class ScopedStoreReader<T> {
 
         Gauge.builder("uid2_config_store_entry_count", latestEntryCount::get)
                 .tag("store", dataTypeName)
-                .description("gauge for " + dataTypeName + "store total entry count")
+                .description("gauge for " + dataTypeName + " store total entry count")
                 .register(Metrics.globalRegistry);
     }
 
