@@ -122,7 +122,7 @@ public class PolicyValidatorTest {
         var enclaveId1 = validator.validate(payload1);
 
         var envOverrides2 = new HashMap<>(payload1.getEnvOverrides());
-        envOverrides2.put(PolicyValidator.ENV_OPERATOR_API_KEY, "different_api_key");
+        envOverrides2.put(PolicyValidator.ENV_OPERATOR_API_KEY_SECRET_NAME, "different_api_key");
         var payload2 = payload1.toBuilder()
                 .envOverrides(envOverrides2)
                 .build();
@@ -171,7 +171,7 @@ public class PolicyValidatorTest {
                 .restartPolicy("NEVER")
                 .envOverrides(Map.of(
                         PolicyValidator.ENV_ENVIRONMENT, "prod",
-                        PolicyValidator.ENV_OPERATOR_API_KEY, "dummy_api_key"
+                        PolicyValidator.ENV_OPERATOR_API_KEY_SECRET_NAME, "dummy_api_key"
                 ));
         return builder.build();
     }
