@@ -21,6 +21,10 @@ public class RotatingSiteStore implements ISiteStore, StoreReader<Collection<Sit
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new SiteParser(), "sites");
     }
 
+    public Map<Integer, Site> getSnapshot() {
+        return reader.getSnapshot();
+    }
+
     @Override
     public CloudPath getMetadataPath() { return reader.getMetadataPath(); }
 
@@ -31,12 +35,12 @@ public class RotatingSiteStore implements ISiteStore, StoreReader<Collection<Sit
 
     @Override
     public Collection<Site> getAll() {
-        return reader.getSnapshot().values();
+        return getSnapshot().values();
     }
 
     @Override
     public Site getSite(int siteId) {
-        return reader.getSnapshot().get(siteId);
+        return getSnapshot().get(siteId);
     }
 
     public JsonObject getMetadata() throws Exception {
