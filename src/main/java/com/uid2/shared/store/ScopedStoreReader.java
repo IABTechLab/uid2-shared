@@ -39,7 +39,7 @@ public class ScopedStoreReader<T> {
         }
         latestSnapshot = new AtomicReference<>();
 
-        Gauge.builder("uid2_config_store_entry_count", latestEntryCount::get)
+        Gauge.builder("uid2_scoped_store_entry_count", latestEntryCount::get)
                 .tag("store", dataTypeName)
                 .description("gauge for " + dataTypeName + " store total entry count")
                 .register(Metrics.globalRegistry);
