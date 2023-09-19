@@ -5,14 +5,14 @@ import com.uid2.shared.auth.ClientKey;
 import com.uid2.shared.auth.IAuthorizable;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.store.CloudPath;
-import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.IClientKeyProvider;
+import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.ClientParser;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Comparator;
 
 /*
   1. metadata.json format
@@ -92,5 +92,13 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
     @Override
     public IAuthorizable get(String key) {
         return getClientKey(key);
+    }
+
+    public ClientKey getOldestClientKey(int siteId) {
+        return this.reader.getSnapshot().stream()
+                .filter(k -> k.getSiteId() == siteId) // filter by site id
+                .sorted(Comparator.comparing(ClientKey::getCreated)) // sort by key creation timestamp ascending
+                .findFirst() // return the oldest key
+                .orElse(null);
     }
 }
