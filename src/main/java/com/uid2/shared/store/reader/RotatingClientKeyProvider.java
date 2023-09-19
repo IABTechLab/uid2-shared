@@ -94,6 +94,7 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
         return getClientKey(key);
     }
 
+    @Override
     public ClientKey getOldestClientKey(int siteId) {
         return this.reader.getSnapshot().stream()
                 .filter(k -> k.getSiteId() == siteId) // filter by site id
