@@ -64,9 +64,9 @@ public class RotatingServiceLinkStoreTest {
     @Test
     public void loadContentMultipleServices() throws Exception {
         JsonArray content = new JsonArray();
-        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "AWS Venice");
+        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1");
         ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1");
-        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "AWS Venice");
+        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1");
         ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2");
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
@@ -77,9 +77,9 @@ public class RotatingServiceLinkStoreTest {
     @Test
     public void findServiceLinksMultipleServices() throws Exception {
         JsonArray content = new JsonArray();
-        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "AWS Venice");
+        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1");
         ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1");
-        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "AWS Venice");
+        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1");
         ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2");
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
@@ -87,7 +87,7 @@ public class RotatingServiceLinkStoreTest {
 
         ServiceLink sl = serviceLinkStore.getServiceLink(1, "abc123");
         assertNotNull(sl);
-        assertEquals("AWS Venice", sl.getName());
+        assertEquals("Test Service 1", sl.getName());
         assertEquals(1, sl.getServiceId());
         assertEquals(123, sl.getSiteId());
         assertEquals("abc123", sl.getLinkId());
