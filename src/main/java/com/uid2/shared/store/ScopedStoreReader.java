@@ -69,6 +69,10 @@ public class ScopedStoreReader<T> {
             latestEntryCount.set(count);
             LOGGER.info(String.format("Loaded %d %s", count, dataTypeName));
             return count;
+        } catch (Exception e) {
+            latestEntryCount.set(-1);
+            LOGGER.error(String.format("Unable to load %s", dataTypeName));
+            throw e;
         }
     }
 
