@@ -1,7 +1,7 @@
 package com.uid2.shared;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.uid2.shared.utils.ObjectMapperFactory;
+import com.uid2.shared.utils.Mapper;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -24,7 +24,7 @@ public class Utils {
     public static final String OS = System.getProperty("os.name").toLowerCase();
     public static final boolean IsWindows = OS.contains("win");
 
-    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.build();
+    private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
 
     public static boolean isProductionEnvironment() {
         // detect if it is running in KUBERNETES_SERVICE_HOST

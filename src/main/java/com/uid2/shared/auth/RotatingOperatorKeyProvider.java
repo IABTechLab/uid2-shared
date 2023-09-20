@@ -9,7 +9,7 @@ import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.reader.IMetadataVersionedStore;
 import com.uid2.shared.store.IOperatorKeyProvider;
 import com.uid2.shared.store.scope.StoreScope;
-import com.uid2.shared.utils.ObjectMapperFactory;
+import com.uid2.shared.utils.Mapper;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +20,7 @@ import java.util.*;
 
 public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetadataVersionedStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingOperatorKeyProvider.class);
-    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.build();
+    private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
 
     private final DownloadCloudStorage metadataStreamProvider;
     private final DownloadCloudStorage contentStreamProvider;
