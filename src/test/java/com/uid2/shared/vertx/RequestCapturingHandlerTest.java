@@ -14,7 +14,6 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +24,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.time.Instant;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(VertxExtension.class)
 public class RequestCapturingHandlerTest {
@@ -47,14 +49,14 @@ public class RequestCapturingHandlerTest {
         vertx.createHttpServer().requestHandler(router).listen(PORT, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
             client.get(PORT, "localhost", "/v1/token/generate?email=someemail").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
-                Assertions.assertDoesNotThrow(() ->
+                assertDoesNotThrow(() ->
                         Metrics.globalRegistry
                                 .get("uid2.http_requests")
                                 .tag("status", "200")
                                 .tag("method", "GET")
                                 .tag("path", "/v1/token/generate")
-                                .counter());
-
+                                .counter()
+                );
                 testContext.completeNow();
             })));
         }));
@@ -72,14 +74,14 @@ public class RequestCapturingHandlerTest {
         vertx.createHttpServer().requestHandler(router).listen(PORT, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
             client.post(PORT, "localhost", "/v2/token/generate").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
-                Assertions.assertEquals(1,
+                assertEquals(1,
                         Metrics.globalRegistry
                                 .get("uid2.http_requests")
                                 .tag("status", "200")
                                 .tag("method", "POST")
                                 .tag("path", "/v2/token/generate")
-                                .counters().size());
-
+                                .counters().size()
+                );
                 testContext.completeNow();
             })));
         }));
@@ -94,14 +96,14 @@ public class RequestCapturingHandlerTest {
         vertx.createHttpServer().requestHandler(router).listen(PORT, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
             client.get(PORT, "localhost", "/static/content").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
-                Assertions.assertDoesNotThrow(() ->
+                assertDoesNotThrow(() ->
                         Metrics.globalRegistry
                                 .get("uid2.http_requests")
                                 .tag("status", "200")
                                 .tag("method", "GET")
                                 .tag("path", "/static/content")
-                                .counter());
-
+                                .counter()
+                );
                 testContext.completeNow();
             })));
         }));
@@ -115,14 +117,14 @@ public class RequestCapturingHandlerTest {
         vertx.createHttpServer().requestHandler(router).listen(PORT, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
             client.get(PORT, "localhost", "/randomPath").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
-                Assertions.assertDoesNotThrow(() ->
+                assertDoesNotThrow(() ->
                         Metrics.globalRegistry
                                 .get("uid2.http_requests")
                                 .tag("status", "404")
                                 .tag("method", "GET")
                                 .tag("path", "unknown")
-                                .counter());
-
+                                .counter()
+                );
                 testContext.completeNow();
             })));
         }));
@@ -144,12 +146,12 @@ public class RequestCapturingHandlerTest {
             WebClient client = WebClient.create(vertx);
             client.get(PORT, "localhost", "/test")
                     .send(testContext.succeeding(response -> testContext.verify(() -> {
-                        final double actual = Metrics.globalRegistry
+                        double actual = Metrics.globalRegistry
                                 .get("uid2.http_requests")
                                 .tag("site_id", siteId)
                                 .counter()
                                 .count();
-                        Assertions.assertEquals(1, actual);
+                        assertEquals(1, actual);
                         testContext.completeNow();
                     })));
         }));
@@ -160,8 +162,8 @@ public class RequestCapturingHandlerTest {
         return Stream.of(
                 Arguments.of(Const.RoutingContextData.SiteId, 100, "100"),
                 Arguments.of(AuthMiddleware.API_CLIENT_PROP, new ClientKey("key", "keyHash", "keySalt", "secret", "", NOW, Set.of(), 200), "200"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("test-keyHash", "test-keySalt", "name", "contact", "protocol", 0, false), "null"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("test-keyHash", "test-keySalt", "name", "contact", "protocol", 0, false, 300), "300"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("test-keyHash", "test-keySalt", "name", "contact", "protocol", NOW.getEpochSecond(), false), "null"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("test-keyHash", "test-keySalt", "name", "contact", "protocol", NOW.getEpochSecond(), false, 300), "300"),
                 Arguments.of(null, null, "null")
         );
     }
