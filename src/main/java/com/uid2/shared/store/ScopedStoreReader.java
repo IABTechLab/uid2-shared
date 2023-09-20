@@ -6,11 +6,14 @@ import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.store.parser.Parser;
 import com.uid2.shared.store.parser.ParsingResult;
 import com.uid2.shared.store.scope.StoreScope;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Metrics;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ScopedStoreReader<T> {
@@ -22,6 +25,7 @@ public class ScopedStoreReader<T> {
     private final String dataTypeName;
     private final DownloadCloudStorage contentStreamProvider;
     private final AtomicReference<T> latestSnapshot;
+    private final AtomicLong latestEntryCount = new AtomicLong(-1L);
 
     public ScopedStoreReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, Parser<T> parser, String dataTypeName) {
         this.metadataStreamProvider = fileStreamProvider;
@@ -34,6 +38,11 @@ public class ScopedStoreReader<T> {
             this.contentStreamProvider = fileStreamProvider;
         }
         latestSnapshot = new AtomicReference<>();
+
+        Gauge.builder("uid2_scoped_store_entry_count", latestEntryCount::get)
+                .tag("store", dataTypeName)
+                .description("gauge for " + dataTypeName + " store total entry count")
+                .register(Metrics.globalRegistry);
     }
 
     public CloudPath getMetadataPath() {
@@ -55,8 +64,15 @@ public class ScopedStoreReader<T> {
         try (InputStream inputStream = this.contentStreamProvider.download(path)) {
             ParsingResult<T> parsed = parser.deserialize(inputStream);
             latestSnapshot.set(parsed.getData());
-            LOGGER.info(String.format("Loaded %d %s", parsed.getCount(), dataTypeName));
-            return parsed.getCount();
+
+            final int count = parsed.getCount();
+            latestEntryCount.set(count);
+            LOGGER.info(String.format("Loaded %d %s from %s", count, dataTypeName, path));
+            return count;
+        }
+        catch (Exception e) {
+            LOGGER.error(String.format("Unable to load %s from %s", dataTypeName, path));
+            throw e;
         }
     }
 
