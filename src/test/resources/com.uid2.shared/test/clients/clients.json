@@ -42,5 +42,27 @@
     "created": 1617149276,
     "roles": [ "ID_READER", "MAPPER", "GENERATOR" ],
     "site_id": 6
+  },
+  {
+    "key": "trusted-partner-key-latest1",
+    "key_hash": "JgdHSbec8S5qhVQeCwy0FVEwYknBVtccxccHHUobRFYVvzTmj0i2EQMhZ6BCBzSpI7I3Vd1RxMd3P2IOLGt+tA==",
+    "key_salt": "RSn7ZU+fjFtku6zDKJ1cpmeWqqxihF1FmrPRv4+78+M=",
+    "secret": "wJ0hP19QU4hmpB64Y3fV2dAed8t/mupw3sjN5jNRFzg=",
+    "name": "partner@uid2.com",
+    "contact": "partner@uid2.com",
+    "created": 1654596485,
+    "roles": [ "ID_READER", "MAPPER", "GENERATOR" ],
+    "site_id": 6
+  },
+  {
+    "key": "trusted-partner-key-latest2",
+    "key_hash": "JgdHSbec8S6qhVQeCwy0FVEwYknBVtccxccHHUobRFYVvzTmj0i2EQMhZ6BCBzSpI7I3Vd1RxMd3P2IOLGt+tA==",
+    "key_salt": "RSn7ZU+fjFtku6zDKJ1cpmeWqqxihF1FmrPRv4+78+M=",
+    "secret": "wJ0hP19QU4hmpB64Y3fV2dAed8t/mupw3sjN5jNRFzg=",
+    "name": "partner@uid2.com",
+    "contact": "partner@uid2.com",
+    "created": 1694596485,
+    "roles": [ "ID_READER", "MAPPER", "GENERATOR" ],
+    "site_id": 6
   }
 ]
