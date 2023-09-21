@@ -27,7 +27,6 @@ public class OperatorKeyProviderTests {
 
         String contentString = "[\n" +
                 "  {\n" +
-                "    \"key\": \"test-partner-key\",\n" +
                 "    \"key_hash\": \"ahKV5ymfIQ+oYm2ZcSr9tfXRr2Lo6jBOTMRf4CSx6Zg8w6atvyuLEn3H17vmE2pvyfSbFYf4QaeDZF6T2kci3w==\",\n" +
                 "    \"key_salt\": \"t1zxYvaiQq/kQyskK+laYJzLYPhoP2M3VCLbWqhPlx0=\",\n" +
                 "    \"name\": \"test-partner\",\n" +
@@ -36,7 +35,6 @@ public class OperatorKeyProviderTests {
                 "    \"protocol\": \"aws-nitro\"\n" +
                 "  },\n" +
                 "  {\n" +
-                "    \"key\": \"trusted-partner-key\",\n" +
                 "    \"key_hash\": \"EUqMA4TcQsESnNnNt15QxkO4S+Pi+7tdtPvj8q0Kswlq3n+quyva6M1BB+mqMJlD4o4cchoEbi3ute8Es8VYSg==\",\n" +
                 "    \"key_salt\": \"Da/At+QDDDHKucBb1UTSCCinRKknHYtR0VqIVlRajSM=\",\n" +
                 "    \"name\": \"trusted-partner\",\n" +
@@ -62,7 +60,6 @@ public class OperatorKeyProviderTests {
 
         OperatorKey trusted = provider.getOperatorKey("trusted-partner-key");
         assertNotNull(trusted);
-        assertEquals("trusted-partner-key", trusted.getKey());
         assertEquals("trusted-partner", trusted.getName());
         assertEquals("trusted-partner@uid2.com", trusted.getContact());
         assertEquals("trusted", trusted.getProtocol());
@@ -70,7 +67,6 @@ public class OperatorKeyProviderTests {
 
         OperatorKey test = provider.getOperatorKey("test-partner-key");
         assertNotNull(test);
-        assertEquals("test-partner-key", test.getKey());
         assertEquals("test-partner", test.getName());
         assertEquals("test-partner@uid2.com", test.getContact());
         assertEquals("aws-nitro", test.getProtocol());
