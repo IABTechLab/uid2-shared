@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class OperatorKeyProviderTests {
+public class OperatorKeyProviderTest {
     @Test
     public void testLoadOperatorKeys() throws Exception {
         InMemoryStorageMock storage = new InMemoryStorageMock();
