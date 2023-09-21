@@ -2,7 +2,6 @@ package com.uid2.shared.auth;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.vertx.core.json.JsonObject;
 
 import java.util.*;
 
@@ -53,26 +52,11 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     }
 
     public OperatorKey(String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
-        this(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
+        this(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, Set.of(Role.OPERATOR), DEFAULT_OPERATOR_TYPE);
     }
 
     public OperatorKey(String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled) {
-        this(keyHash, keySalt, name, contact, protocol, created, disabled, null, new HashSet<>(List.of(Role.OPERATOR)), DEFAULT_OPERATOR_TYPE);
-    }
-
-    public static OperatorKey valueOf(JsonObject json) {
-        return new OperatorKey(
-                json.getString("key_hash"),
-                json.getString("key_salt"),
-                json.getString("name"),
-                json.getString("contact"),
-                json.getString("protocol"),
-                json.getLong("created"),
-                json.getBoolean("disabled", false),
-                json.getInteger("site_id"),
-                Roles.getRoles(Role.class, json),
-                OperatorType.valueOf(json.getString("operator_type", DEFAULT_OPERATOR_TYPE.toString()))
-        );
+        this(keyHash, keySalt, name, contact, protocol, created, disabled, null, Set.of(Role.OPERATOR), DEFAULT_OPERATOR_TYPE);
     }
 
     @Override
