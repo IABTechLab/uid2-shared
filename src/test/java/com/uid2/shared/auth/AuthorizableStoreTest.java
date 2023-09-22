@@ -24,7 +24,7 @@ public class AuthorizableStoreTest {
     private AuthorizableStore<ClientKey> clientKeyStore;
 
     @BeforeEach
-    public void setUp() {
+    public void setup() {
         List<ClientKey> clients = List.of(
                 createClientKey(KEY_HASHER.hashKey(SITE_11_CLIENT_KEY), "client11", 11),
                 createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_1), "client12_1", 12),
@@ -136,7 +136,7 @@ public class AuthorizableStoreTest {
     }
 
     private ClientKey createClientKey(KeyHashResult khr, String name, int siteId) {
-        return new ClientKey("", khr.getHash(), khr.getSalt(), "", name, NOW, Set.of(), siteId);
+        return new ClientKey(khr.getHash(), khr.getSalt(), "", name, NOW, Set.of(), siteId);
     }
 
     private static class SitelessAuthorizable implements IAuthorizable {
