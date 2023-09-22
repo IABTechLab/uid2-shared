@@ -6,6 +6,7 @@ import com.google.api.client.util.Clock;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Strings;
 import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.JwtUtils;
 
 import java.io.IOException;
 import java.security.PublicKey;
@@ -72,34 +73,34 @@ public class TokenSignatureValidator implements ITokenSignatureValidator {
 
         var tokenPayloadBuilder = TokenPayload.builder();
 
-        tokenPayloadBuilder.dbgStat(TryGetField(rawPayload, "dbgstat", String.class));
-        tokenPayloadBuilder.swName(TryGetField(rawPayload, "swname", String.class));
-        var swVersion = TryGetField(rawPayload, "swversion", List.class);
+        tokenPayloadBuilder.dbgStat(JwtUtils.tryGetField(rawPayload, "dbgstat", String.class));
+        tokenPayloadBuilder.swName(JwtUtils.tryGetField(rawPayload, "swname", String.class));
+        var swVersion = JwtUtils.tryGetField(rawPayload, "swversion", List.class);
         if(swVersion != null && !swVersion.isEmpty()){
-            tokenPayloadBuilder.swVersion(TryConvert(swVersion.get(0), String.class));
+            tokenPayloadBuilder.swVersion(JwtUtils.tryConvert(swVersion.get(0), String.class));
         }
 
-        var subModsDetails = TryGetField(rawPayload,"submods",  Map.class);
+        var subModsDetails = JwtUtils.tryGetField(rawPayload,"submods",  Map.class);
 
         if(subModsDetails != null){
-            var confidential_space = TryGetField(subModsDetails, "confidential_space", Map.class);
+            var confidential_space = JwtUtils.tryGetField(subModsDetails, "confidential_space", Map.class);
             if(confidential_space != null){
-                tokenPayloadBuilder.csSupportedAttributes(TryGetField(confidential_space, "support_attributes", List.class));
+                tokenPayloadBuilder.csSupportedAttributes(JwtUtils.tryGetField(confidential_space, "support_attributes", List.class));
             }
 
-            var container = TryGetField(subModsDetails, "container", Map.class);
+            var container = JwtUtils.tryGetField(subModsDetails, "container", Map.class);
             if(container != null){
-                tokenPayloadBuilder.workloadImageReference(TryGetField(container, "image_reference", String.class));
-                tokenPayloadBuilder.workloadImageDigest(TryGetField(container, "image_digest", String.class));
-                tokenPayloadBuilder.restartPolicy(TryGetField(container, "restart_policy", String.class));
+                tokenPayloadBuilder.workloadImageReference(JwtUtils.tryGetField(container, "image_reference", String.class));
+                tokenPayloadBuilder.workloadImageDigest(JwtUtils.tryGetField(container, "image_digest", String.class));
+                tokenPayloadBuilder.restartPolicy(JwtUtils.tryGetField(container, "restart_policy", String.class));
 
-                tokenPayloadBuilder.cmdOverrides(TryGetField(container, "cmd_override", ArrayList.class));
-                tokenPayloadBuilder.envOverrides(TryGetField(container, "env_override", Map.class));
+                tokenPayloadBuilder.cmdOverrides(JwtUtils.tryGetField(container, "cmd_override", ArrayList.class));
+                tokenPayloadBuilder.envOverrides(JwtUtils.tryGetField(container, "env_override", Map.class));
             }
 
-            var gce = TryGetField(subModsDetails, "gce", Map.class);
+            var gce = JwtUtils.tryGetField(subModsDetails, "gce", Map.class);
             if(gce != null){
-                var gceZone = TryGetField(gce, "zone", String.class);
+                var gceZone = JwtUtils.tryGetField(gce, "zone", String.class);
                 tokenPayloadBuilder.gceZone(gceZone);
             }
         }
@@ -107,23 +108,5 @@ public class TokenSignatureValidator implements ITokenSignatureValidator {
         return tokenPayloadBuilder.build();
     }
 
-    private static<T> T TryGetField(Map payload, String key, Class<T> clazz){
-        if(payload == null){
-            return null;
-        }
-        var rawValue = payload.get(key);
-        return TryConvert(rawValue, clazz);
-    }
 
-    private static<T> T TryConvert(Object obj, Class<T> clazz){
-        if(obj == null){
-            return null;
-        }
-        try{
-            return clazz.cast(obj);
-        }
-        catch (ClassCastException e){
-            return null;
-        }
-    }
 }
