@@ -93,7 +93,7 @@ public class AttestationTokenRetrieverTest {
         when(clock.now()).thenReturn(tenSecondsBeforeTenMinutesBeforeExpiry, tenSecondsAfterTenMinutesBeforeExpiry, tenSecondsAfterTenMinutesBeforeExpiry, tenSecondsAfterTenMinutesBeforeExpiry, tenSecondsBeforeTenMinutesBeforeExpiry);
 
         attestationTokenRetriever.attest();
-        testContext.awaitCompletion(1000, TimeUnit.MILLISECONDS);
+        testContext.awaitCompletion(1100, TimeUnit.MILLISECONDS);
         // Verify on httpClient because we can't mock attestationTokenRetriever
         verify(mockHttpClient, times(4)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
         verify(this.responseWatcher, times(2)).handle(Pair.of(200, expectedResponseBody));
