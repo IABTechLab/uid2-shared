@@ -19,14 +19,15 @@ import java.net.http.HttpResponse;
 import static org.mockito.Mockito.*;
 
 public class UidCoreClientTest {
-    private final Proxy proxy = CloudUtils.defaultProxy;
-    private final AttestationTokenRetriever mockAttestationTokenRetriever = mock(AttestationTokenRetriever.class);
+    private Proxy proxy = CloudUtils.defaultProxy;
+    private AttestationTokenRetriever mockAttestationTokenRetriever = mock(AttestationTokenRetriever.class);
 
-    private final HttpClient mockHttpClient = mock(HttpClient.class);
+    private HttpClient mockHttpClient = mock(HttpClient.class);
 
     private UidCoreClient uidCoreClient;
 
-    public UidCoreClientTest() {}
+    public UidCoreClientTest() throws Exception {
+    }
 
     @BeforeEach
     void setUp() {
@@ -67,25 +68,44 @@ public class UidCoreClientTest {
         Assertions.assertEquals(expectedHttpRequest.method(), capturedRequest.getValue().method());
         Assertions.assertEquals(expectedHttpRequest.uri(), capturedRequest.getValue().uri());
         Assertions.assertEquals(expectedHttpRequest.headers(), capturedRequest.getValue().headers());
+
     }
 
     @Test
     public void Download_EnforceHttpWhenPathNoHttps_ExceptionThrown() {
         when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
 
-        CloudStorageException result = Assert.assertThrows(CloudStorageException.class, () -> uidCoreClient.download("http://download"));
+        CloudStorageException result = Assert.assertThrows(CloudStorageException.class, () -> {
+            uidCoreClient.download("http://download");
+        });
         String expectedExceptionMessage = "download http://download error: UidCoreClient requires HTTPS connection";
-        Assertions.assertEquals(expectedExceptionMessage, result.getMessage());
+        Assert.assertEquals(expectedExceptionMessage, result.getMessage());
     }
 
     @Test
-    public void Download_AttestInternalFail_ExceptionThrown() {
-        when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn(null);
+    public void Download_AttestInternalFail_ExceptionThrown() throws IOException, AttestationTokenRetrieverException {
+        AttestationTokenRetrieverException exception = new AttestationTokenRetrieverException(401, "test failure");
+        doThrow(exception).when(mockAttestationTokenRetriever).attest();
 
-        CloudStorageException result = Assert.assertThrows(CloudStorageException.class, () -> uidCoreClient.download("https://download"));
+        CloudStorageException result = Assert.assertThrows(CloudStorageException.class, () -> {
+            uidCoreClient.download("https://download");
+        });
+        String expectedExceptionMessage = "download https://download error: http status: 401, test failure";
+        Assert.assertEquals(expectedExceptionMessage, result.getMessage());
+    }
 
-        String expectedExceptionMessage = "download https://download error: null";
-        Assertions.assertEquals(expectedExceptionMessage, result.getMessage());
+    @Test
+    public void Download_Attest401_AttestCalledTwice() throws CloudStorageException, IOException, InterruptedException, AttestationTokenRetrieverException {
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        when(mockHttpResponse.statusCode()).thenReturn(401);
+
+        String expectedResponseBody = "Hello, world!";
+        when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
+
+        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+
+        uidCoreClient.download("https://download");
+        verify(mockAttestationTokenRetriever, times(2)).attest();
     }
 
     @Test
