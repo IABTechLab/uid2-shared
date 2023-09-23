@@ -5,14 +5,14 @@ import com.uid2.shared.auth.ClientKey;
 import com.uid2.shared.auth.IAuthorizable;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.store.CloudPath;
-import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.IClientKeyProvider;
+import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.ClientParser;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.Comparator;
 
 /*
   1. metadata.json format
@@ -39,12 +39,12 @@ import java.util.Map;
       ]
 */
 public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReader<Collection<ClientKey>> {
-    private final ScopedStoreReader<Map<String, ClientKey>> reader;
+    private final ScopedStoreReader<Collection<ClientKey>> reader;
     private final AuthorizableStore<ClientKey> authorizableStore;
 
     public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys");
-        this.authorizableStore = new AuthorizableStore<>();
+        this.authorizableStore = new AuthorizableStore<>(ClientKey.class);
     }
 
     @Override
@@ -60,26 +60,28 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
         long version = reader.loadContent(metadata, "client_keys");
-        this.authorizableStore.refresh(this.getAll());
+        authorizableStore.refresh(getAll());
         return version;
     }
 
     @Override
-    public ClientKey getClientKey(String token) {
-        return reader.getSnapshot().get(token);
+    public ClientKey getClientKey(String key) {
+        return authorizableStore.getAuthorizableByKey(key);
     }
 
+    @Override
     public ClientKey getClientKeyFromHash(String hash) {
-        return this.authorizableStore.getFromKeyHash(hash);
+        return authorizableStore.getAuthorizableByHash(hash);
     }
 
     @Override
     public Collection<ClientKey> getAll() {
-        return reader.getSnapshot().values();
+        return reader.getSnapshot();
     }
 
+    @Override
     public void loadContent() throws Exception {
-        this.loadContent(this.getMetadata());
+        loadContent(getMetadata());
     }
 
     @Override
@@ -90,5 +92,14 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
     @Override
     public IAuthorizable get(String key) {
         return getClientKey(key);
+    }
+
+    @Override
+    public ClientKey getOldestClientKey(int siteId) {
+        return this.reader.getSnapshot().stream()
+                .filter(k -> k.getSiteId() == siteId) // filter by site id
+                .sorted(Comparator.comparing(ClientKey::getCreated)) // sort by key creation timestamp ascending
+                .findFirst() // return the oldest key
+                .orElse(null);
     }
 }

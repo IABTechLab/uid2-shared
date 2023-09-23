@@ -96,7 +96,14 @@ public class TokenSignatureValidator implements ITokenSignatureValidator {
                 tokenPayloadBuilder.cmdOverrides(TryGetField(container, "cmd_override", ArrayList.class));
                 tokenPayloadBuilder.envOverrides(TryGetField(container, "env_override", Map.class));
             }
+
+            var gce = TryGetField(subModsDetails, "gce", Map.class);
+            if(gce != null){
+                var gceZone = TryGetField(gce, "zone", String.class);
+                tokenPayloadBuilder.gceZone(gceZone);
+            }
         }
+
         return tokenPayloadBuilder.build();
     }
 

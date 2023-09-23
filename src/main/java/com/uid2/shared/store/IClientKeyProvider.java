@@ -6,7 +6,8 @@ import com.uid2.shared.auth.IAuthorizableProvider;
 import java.util.Collection;
 
 public interface IClientKeyProvider extends IAuthorizableProvider {
-    ClientKey getClientKey(String token);
+    ClientKey getClientKey(String key);
     ClientKey getClientKeyFromHash(String hash);
     Collection<ClientKey> getAll();
+    ClientKey getOldestClientKey(int siteId);
 }

@@ -5,13 +5,11 @@ import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import com.uid2.shared.Utils;
 import com.uid2.shared.cloud.DownloadCloudStorage;
-import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.reader.IMetadataVersionedStore;
 import com.uid2.shared.store.IOperatorKeyProvider;
 import com.uid2.shared.store.scope.StoreScope;
 import com.uid2.shared.utils.ObjectMapperFactory;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetadataVersionedStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingOperatorKeyProvider.class);
@@ -35,7 +32,7 @@ public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetad
         this.metadataStreamProvider = metadataStreamProvider;
         this.contentStreamProvider = contentStreamProvider;
         this.scope = scope;
-        this.operatorKeyStore = new AuthorizableStore<>();
+        this.operatorKeyStore = new AuthorizableStore<>(OperatorKey.class);
     }
 
     public CloudPath getMetadataPath() {
@@ -74,7 +71,12 @@ public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetad
 
     @Override
     public OperatorKey getOperatorKey(String token) {
-        return operatorKeyStore.getFromKey(token);
+        return operatorKeyStore.getAuthorizableByKey(token);
+    }
+
+    @Override
+    public OperatorKey getOperatorKeyFromHash(String hash) {
+        return (OperatorKey) this.operatorKeyStore.getAuthorizableByHash(hash);
     }
 
     @Override

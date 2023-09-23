@@ -1,25 +1,21 @@
 package com.uid2.shared.store.parser;
 
-import com.uid2.shared.Utils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uid2.shared.auth.ClientKey;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import com.uid2.shared.utils.ObjectMapperFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 
-public class ClientParser implements Parser<Map<String, ClientKey>> {
+public class ClientParser implements Parser<Collection<ClientKey>> {
+    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.build();
+
     @Override
-    public ParsingResult<Map<String, ClientKey>> deserialize(InputStream inputStream) throws IOException {
-        JsonArray keysSpec = Utils.toJsonArray(inputStream);
-        Map<String, ClientKey> keyMap = new HashMap<>();
-        for (int i = 0; i < keysSpec.size(); ++i) {
-            JsonObject keySpec = keysSpec.getJsonObject(i);
-            ClientKey clientKey = ClientKey.valueOf(keySpec);
-            keyMap.put(clientKey.getKey(), clientKey);
-        }
-        return new ParsingResult<>(keyMap, keysSpec.size());
+    public ParsingResult<Collection<ClientKey>> deserialize(InputStream inputStream) throws IOException {
+        ClientKey[] clientKeys = OBJECT_MAPPER.readValue(inputStream, ClientKey[].class);
+        return new ParsingResult<>(Arrays.asList(clientKeys), clientKeys.length);
     }
 }

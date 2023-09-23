@@ -26,10 +26,9 @@ public class KeyHasher {
     }
 
     private static byte[] generateSaltBytes() {
-        final SecureRandom random = new SecureRandom();
-        final byte[] bytes = new byte[SALT_BYTES];
+        SecureRandom random = new SecureRandom();
+        byte[] bytes = new byte[SALT_BYTES];
         random.nextBytes(bytes);
-
         return bytes;
     }
 }

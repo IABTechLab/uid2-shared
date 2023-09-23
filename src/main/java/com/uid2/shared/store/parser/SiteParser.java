@@ -25,6 +25,7 @@ public class SiteParser implements Parser<Map<Integer, Site>> {
             final String name = siteSpec.getString("name");
             final Boolean enabled = siteSpec.getBoolean("enabled", false);
             final JsonArray domainNamesJson = siteSpec.getJsonArray("domain_names");
+            final Long created = siteSpec.getLong("created", 0L);
             Set<String> domainNames = new HashSet<>();
             if(domainNamesJson != null) {
                 domainNames = domainNamesJson.stream().map(String::valueOf).collect(Collectors.toSet());
@@ -36,7 +37,7 @@ public class SiteParser implements Parser<Map<Integer, Site>> {
                     clientTypes.add(Enum.valueOf(ClientType.class, clientTypeSpec.getString(j)));
                 }
             }
-            final Site site = new Site(siteId, name, enabled, clientTypes, domainNames);
+            final Site site = new Site(siteId, name, enabled, clientTypes, domainNames, created);
             sites.put(site.getId(), site);
         }
         return new ParsingResult<>(sites, sites.size());

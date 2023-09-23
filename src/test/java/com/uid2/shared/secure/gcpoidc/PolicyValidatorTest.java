@@ -89,6 +89,15 @@ public class PolicyValidatorTest {
     }
 
     @Test
+    public void testValidationFailure_EURegion(){
+        var validator = new PolicyValidator();
+        var payload = generateBasicPayload().toBuilder()
+                .gceZone("europe-north1-a")
+                .build();
+        assertThrows(AttestationException.class, ()-> validator.validate(payload));
+    }
+
+    @Test
     public void testValidationFailure_NotStableConfidentialSpace(){
         var validator = new PolicyValidator();
         var payload = generateBasicPayload().toBuilder()
@@ -113,7 +122,7 @@ public class PolicyValidatorTest {
         var enclaveId1 = validator.validate(payload1);
 
         var envOverrides2 = new HashMap<>(payload1.getEnvOverrides());
-        envOverrides2.put(PolicyValidator.ENV_OPERATOR_API_KEY, "different_api_key");
+        envOverrides2.put(PolicyValidator.ENV_OPERATOR_API_KEY_SECRET_NAME, "different_api_key");
         var payload2 = payload1.toBuilder()
                 .envOverrides(envOverrides2)
                 .build();
@@ -152,6 +161,7 @@ public class PolicyValidatorTest {
 
     private TokenPayload generateBasicPayload(){
         var builder = TokenPayload.builder()
+                .gceZone("us-west1-b")
                 .swVersion("CONFIDENTIAL_SPACE")
                 .dbgStat("disabled-since-boot")
                 .swName("CONFIDENTIAL_SPACE")
@@ -161,7 +171,7 @@ public class PolicyValidatorTest {
                 .restartPolicy("NEVER")
                 .envOverrides(Map.of(
                         PolicyValidator.ENV_ENVIRONMENT, "prod",
-                        PolicyValidator.ENV_OPERATOR_API_KEY, "dummy_api_key"
+                        PolicyValidator.ENV_OPERATOR_API_KEY_SECRET_NAME, "dummy_api_key"
                 ));
         return builder.build();
     }

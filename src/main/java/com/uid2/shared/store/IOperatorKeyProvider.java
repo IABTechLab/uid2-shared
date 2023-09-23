@@ -7,5 +7,6 @@ import java.util.Collection;
 
 public interface IOperatorKeyProvider extends IAuthorizableProvider {
     OperatorKey getOperatorKey(String token);
+    OperatorKey getOperatorKeyFromHash(String hash);
     Collection<OperatorKey> getAll();
 }

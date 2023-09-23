@@ -21,13 +21,15 @@ public class PolicyValidator implements IPolicyValidator {
     private static final Logger LOGGER = LoggerFactory.getLogger(PolicyValidator.class);
 
     public static final String ENV_ENVIRONMENT = "DEPLOYMENT_ENVIRONMENT";
-    public static final String ENV_OPERATOR_API_KEY = "API_TOKEN";
+    public static final String ENV_OPERATOR_API_KEY_SECRET_NAME = "API_TOKEN_SECRET_NAME";
     public static final String ENV_CORE_ENDPOINT = "CORE_BASE_URL";
     public static final String ENV_OPT_OUT_ENDPOINT = "OPTOUT_BASE_URL";
 
+    public static final String EU_REGION_PREFIX = "europe";
+
     private static final List<String> REQUIRED_ENV_OVERRIDES = ImmutableList.of(
             ENV_ENVIRONMENT,
-            ENV_OPERATOR_API_KEY
+            ENV_OPERATOR_API_KEY_SECRET_NAME
     );
 
     private static final Map<Environment, List<String>> OPTIONAL_ENV_OVERRIDES_MAP = ImmutableMap.of(
@@ -41,6 +43,7 @@ public class PolicyValidator implements IPolicyValidator {
 
     @Override
     public String validate(TokenPayload payload) throws AttestationException {
+        checkRegion(payload);
         var isDebugMode = checkConfidentialSpace(payload);
         var digest = checkWorkload(payload);
         checkCmdOverrides(payload);
@@ -64,6 +67,17 @@ public class PolicyValidator implements IPolicyValidator {
             throw new AttestationException("Restart policy is not set to Never. Value: " + payload.getRestartPolicy());
         }
         return payload.getWorkloadImageDigest();
+    }
+
+    // We don't support to launch UID2 instance in EU.
+    // Currently, there's no GCP serving options in China mainland, so we will skip the check for CN.
+    // More details about zone in https://cloud.google.com/compute/docs/regions-zones.
+    private static String checkRegion(TokenPayload payload) throws AttestationException{
+        var region = payload.getGceZone();
+        if(Strings.isNullOrEmpty(region) || region.startsWith(EU_REGION_PREFIX)){
+            throw new AttestationException("Region is not supported. Value: " + region);
+        }
+        return region;
     }
 
     private static void checkCmdOverrides(TokenPayload payload) throws AttestationException{
