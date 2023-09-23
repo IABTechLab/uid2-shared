@@ -91,7 +91,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
                 // returns `file:/tmp/uid2` urlConnection directly
                 inputStream = readContentFromLocalFileSystem(path, this.proxy);
             } else {
-                inputStream = get(path, jwtToken);
+                inputStream = getWithAttest(path, jwtToken);
             }
             return inputStream;
         } catch (Exception e) {
@@ -104,14 +104,20 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return (proxy == null ? new URL(path).openConnection() : new URL(path).openConnection(proxy)).getInputStream();
     }
 
-    private InputStream get(String path, String jwtToken) throws IOException, InterruptedException {
+    private InputStream getWithAttest(String path, String jwtToken) throws IOException, InterruptedException, AttestationTokenRetrieverException {
+        if (!attestationTokenRetriever.attested()) {
+            attestationTokenRetriever.attest();
+        }
+
         String attestationToken = attestationTokenRetriever.getAttestationToken();
 
         HttpResponse<String> httpResponse;
         httpResponse = sendHttpRequest(path, attestationToken, jwtToken);
 
+        // This should never happen, but keeping this part of the code just to be extra safe.
         if (httpResponse.statusCode() == 401) {
             LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
+            attestationTokenRetriever.attest();
             attestationToken = attestationTokenRetriever.getAttestationToken();
             httpResponse = sendHttpRequest(path, attestationToken, jwtToken);
         }
