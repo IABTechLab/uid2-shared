@@ -135,12 +135,16 @@ public class AttestationTokenRetriever {
     private void scheduleAttestationExpirationCheck() {
         if (!this.isExpiryCheckScheduled) {
             // Schedule the task to run every minute
-            this.vertx.setPeriodic(0, 60000, this::attestationExpirationCheck);
+            this.vertx.setPeriodic(0, attestCheckMilliseconds, this::attestationExpirationCheck);
             this.isExpiryCheckScheduled = true;
         }
     }
 
     public void attest() throws IOException, AttestationTokenRetrieverException {
+        if (!attestationProvider.isReady()) {
+            throw new AttestationTokenRetrieverException("attestation provider is not ready");
+        }
+
         try {
             KeyPair keyPair = generateKeyPair();
             byte[] publicKey = keyPair.getPublic().getEncoded();
