@@ -10,8 +10,8 @@ public class ServiceLink {
     @JsonProperty("service_id")
     private final int serviceId;
     @JsonProperty("link_id")
-    private final String linkId;
-    private final String name;
+    private String linkId;
+    private String name;
 
     public ServiceLink(String linkId, int serviceId, int siteId, String name) {
         this.linkId = linkId;
@@ -24,6 +24,10 @@ public class ServiceLink {
         return linkId;
     }
 
+    public void setLinkId(String linkId) {
+        this.linkId = linkId;
+    }
+
     public int getServiceId() {
         return serviceId;
     }
@@ -34,6 +38,9 @@ public class ServiceLink {
 
     public String getName() {
         return name;
+    }
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override
