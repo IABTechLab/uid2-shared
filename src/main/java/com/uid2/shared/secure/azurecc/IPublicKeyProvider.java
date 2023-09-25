@@ -4,6 +4,6 @@ import com.uid2.shared.secure.AttestationException;
 
 import java.security.PublicKey;
 
-public interface PublicKeyProvider {
+public interface IPublicKeyProvider {
     PublicKey GetPublicKey(String maaServerBaseUrl, String kid) throws AttestationException;
 }

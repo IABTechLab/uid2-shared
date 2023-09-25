@@ -1,4 +1,4 @@
-package com.uid2.shared.secure.gcpoidc;
+package com.uid2.shared.secure;
 
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.json.webtoken.JsonWebSignature;
@@ -9,6 +9,8 @@ import com.google.api.client.util.StringUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.uid2.shared.Const;
+import com.uid2.shared.secure.gcpoidc.TokenPayload;
+import com.uid2.shared.secure.gcpoidc.TokenSignatureValidator;
 
 import java.io.IOException;
 import java.security.KeyPairGenerator;
@@ -16,23 +18,6 @@ import java.security.PrivateKey;
 import java.security.SecureRandom;
 
 public class TestUtils {
-    public static TokenPayload validateAndParseToken(JsonObject payload, Clock clock) throws Exception{
-        var gen = KeyPairGenerator.getInstance(Const.Name.AsymetricEncryptionKeyClass);
-        gen.initialize(2048, new SecureRandom());
-        var keyPair = gen.generateKeyPair();
-        var privateKey = keyPair.getPrivate();
-        var publicKey = keyPair.getPublic();
-
-        // generate token
-        var token = generateJwt(payload, privateKey);
-
-        // init TokenSignatureValidator
-        var tokenVerifier = new TokenSignatureValidator(publicKey, clock);
-
-        // validate token
-        return tokenVerifier.validate(token);
-    }
-
     public static String generateJwt(JsonObject payload, PrivateKey privateKey) throws Exception {
         var jsonFactory = new GsonFactory();
         var header = new JsonWebSignature.Header();

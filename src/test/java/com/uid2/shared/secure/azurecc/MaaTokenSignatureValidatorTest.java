@@ -1,15 +1,32 @@
 package com.uid2.shared.secure.azurecc;
 
 import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.TestClock;
 import org.junit.jupiter.api.Test;
+
+import static com.uid2.shared.secure.TestUtils.loadFromJson;
+import static com.uid2.shared.secure.azurecc.MaaTokenUtils.validateAndParseToken;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MaaTokenSignatureValidatorTest {
     @Test
-    public void test() throws AttestationException {
-        var validator = new MaaTokenSignatureValidator("https://sharedeus.eus.attest.azure.net");
+    public void testPayload() throws Exception {
+        // expire at 1695313895
+        var payloadPath = "/com.uid2.shared/test/secure/azurecc/jwt_payload.json";
+        var payload = loadFromJson(payloadPath);
+        var clock = new TestClock();
+        clock.setCurrentTimeMs(1695313893000L);
 
-        var tokenStr = "eyJhbGciOiJSUzI1NiIsImprdSI6Imh0dHBzOi8vc2hhcmVkZXVzLmV1cy5hdHRlc3QuYXp1cmUubmV0L2NlcnRzIiwia2lkIjoickZsOXhNK2c3VHZYNjN5MGlzZVp0SW4yME1ENVNZQW5HYmxLRmFzYXU4ST0iLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2OTUzMTM4OTUsImlhdCI6MTY5NTI4NTA5NSwiaXNzIjoiaHR0cHM6Ly9zaGFyZWRldXMuZXVzLmF0dGVzdC5henVyZS5uZXQiLCJqdGkiOiIzYjE2ZjJhYjQ0OTI0MTdhYWU0Y2M5YTVlNjUwNmNhMjUxOTY1OWMwZDhmZGMyYmY0NDJmZTAxYWE5YjhlNDZjIiwibmJmIjoxNjk1Mjg1MDk1LCJub25jZSI6IjczOTQ5MDQ1MDUxOTQ3ODQ2NTgiLCJ4LW1zLWF0dGVzdGF0aW9uLXR5cGUiOiJzZXZzbnB2bSIsIngtbXMtY29tcGxpYW5jZS1zdGF0dXMiOiJhenVyZS1jb21wbGlhbnQtdXZtIiwieC1tcy1wb2xpY3ktaGFzaCI6IjlOWTBWblRRLUlpQnJpQnBsVlVwRmJjemNEYUVCVXdzaUZZQXpIdV9nY28iLCJ4LW1zLXJ1bnRpbWUiOnsibG9jYXRpb24iOiJFYXN0IFVTIiwicHVibGljS2V5IjoiYWJjIn0sIngtbXMtc2V2c25wdm0tYXV0aG9ya2V5ZGlnZXN0IjoiMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwieC1tcy1zZXZzbnB2bS1ib290bG9hZGVyLXN2biI6MywieC1tcy1zZXZzbnB2bS1mYW1pbHlJZCI6IjAxMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwieC1tcy1zZXZzbnB2bS1ndWVzdHN2biI6MiwieC1tcy1zZXZzbnB2bS1ob3N0ZGF0YSI6ImZlZjkzMmUwMTAzZjYxMzI0MzdlOGExMjIzZjMyZWZjNGJlYTYzMzQyZjg5M2I1MTI0NjQ1MjI0ZWYyOWJhNzMiLCJ4LW1zLXNldnNucHZtLWlka2V5ZGlnZXN0IjoiZWJlZWVhYmNlMDc1ZWVhYmEzZDllYTI0ZDg0OTUxMzdhMjg3N2MwZDIwYWM2ZWE3M2ZjNmQyZjhhZWI1MGRlMTMyMTUwZTBhMDc1MjY2NDkxOWJjZWJiZjJlOGM1ODA3IiwieC1tcy1zZXZzbnB2bS1pbWFnZUlkIjoiMDIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAiLCJ4LW1zLXNldnNucHZtLWlzLWRlYnVnZ2FibGUiOmZhbHNlLCJ4LW1zLXNldnNucHZtLWxhdW5jaG1lYXN1cmVtZW50IjoiMDNmZWEwMjgyMzE4OWIyNWQwNjIzYTVjODFmOTdjOGJhNGQyZmJjNDhjOTE0YTU1Y2U1MjVmOTA0NTRkZGNlYzMwMzc0M2RhYzJmYzAxM2YwODQ2OTEyZDE0MTJmNmRmIiwieC1tcy1zZXZzbnB2bS1taWNyb2NvZGUtc3ZuIjoxMTUsIngtbXMtc2V2c25wdm0tbWlncmF0aW9uLWFsbG93ZWQiOmZhbHNlLCJ4LW1zLXNldnNucHZtLXJlcG9ydGRhdGEiOiI0ZTdkNGE0MTM3NDVkZGVhNzlmMDVkMjBkOWFjN2FkZDM2NTlhYzc4M2VmMjQ2ODQxMjdiYmJiM2U1MGZjNjNjMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMCIsIngtbXMtc2V2c25wdm0tcmVwb3J0aWQiOiJkMTM3YTgzYzJkNDJkODFkZDQyZDM5YWQ5NWVmOTAyM2RlNjMyMTZkZGFhZjJjMzY4YThjNDFhNjM2ZGRiMmE5IiwieC1tcy1zZXZzbnB2bS1zbXQtYWxsb3dlZCI6dHJ1ZSwieC1tcy1zZXZzbnB2bS1zbnBmdy1zdm4iOjgsIngtbXMtc2V2c25wdm0tdGVlLXN2biI6MCwieC1tcy1zZXZzbnB2bS11dm0tZW5kb3JzZW1lbnQiOnsieC1tcy1zZXZzbnB2bS1ndWVzdHN2biI6IjEwMCIsIngtbXMtc2V2c25wdm0tbGF1bmNobWVhc3VyZW1lbnQiOiIwM2ZlYTAyODIzMTg5YjI1ZDA2MjNhNWM4MWY5N2M4YmE0ZDJmYmM0OGM5MTRhNTVjZTUyNWY5MDQ1NGRkY2VjMzAzNzQzZGFjMmZjMDEzZjA4NDY5MTJkMTQxMmY2ZGYifSwieC1tcy1zZXZzbnB2bS11dm0tZW5kb3JzZW1lbnQtaGVhZGVycyI6eyJmZWVkIjoiQ29udGFpbmVyUGxhdC1BTUQtVVZNIiwiaXNzIjoiZGlkOng1MDk6MDpzaGEyNTY6SV9faXVMMjVvWEVWRmRUUF9hQkx4X2VUMVJQSGJDUV9FQ0JRZllacHQ5czo6ZWt1OjEuMy42LjEuNC4xLjMxMS43Ni41OS4xLjIifSwieC1tcy1zZXZzbnB2bS12bXBsIjowLCJ4LW1zLXZlciI6IjEuMCJ9.ccIt9pGsyn8GRt9UuSdlPUu__Anwo6h8U3JBjA4tPvZgQCf7-xHfcJl30x6ZyUfQPewlzKStK7FX64arC2SCOICu8KS-jjeXhQnDqwMH-pAoqKQUaZTRXe9HsW1rOYmx3gOIg1NP9K1F9MtJI2XbKemi3Q1ahtBbJvsd_q3YtwRG3ESirLEi5AuiKfyYMkZuhx88aLlrQPYkMB9dWncfXvLk8bReEbeqfXeVtzp7EvRQaltIxh7bVohVEmUuCDXqybNzkeM1SECNYwclvXeruq8H49cPR7PYZ6nsdaWwp-tI2QWGlKrc9JAzwsrIZvq1lF66LTgTJd7YcU8Tqcjl0g";
-        var payload =  validator.validate(tokenStr);
-        System.out.println(payload);
+        var expectedCcePolicy = "fef932e0103f6132437e8a1223f32efc4bea63342f893b5124645224ef29ba73";
+        var expectedLocation = "East US";
+        var expectedPublicKey = "abc";
+
+        var tokenPayload = validateAndParseToken(payload, clock);
+        assertEquals(true, tokenPayload.isSevSnpVM());
+        assertEquals(true, tokenPayload.isUtilityVMCompliant());
+        assertEquals(false, tokenPayload.isVmDebuggable());
+        assertEquals(expectedCcePolicy, tokenPayload.getCcePolicy());
+        assertEquals(expectedLocation, tokenPayload.getRuntimeData().getLocation());
+        assertEquals(expectedPublicKey, tokenPayload.getRuntimeData().getPublicKey());
     }
 }

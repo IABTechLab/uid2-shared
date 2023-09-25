@@ -6,13 +6,15 @@ import com.google.api.client.util.Clock;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Strings;
 import com.uid2.shared.secure.AttestationException;
-import com.uid2.shared.secure.JwtUtils;
 
 import java.io.IOException;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static com.uid2.shared.secure.JwtUtils.tryConvert;
+import static com.uid2.shared.secure.JwtUtils.tryGetField;
 
 public class TokenSignatureValidator implements ITokenSignatureValidator {
     private static final String PUBLIC_CERT_LOCATION =
@@ -73,34 +75,34 @@ public class TokenSignatureValidator implements ITokenSignatureValidator {
 
         var tokenPayloadBuilder = TokenPayload.builder();
 
-        tokenPayloadBuilder.dbgStat(JwtUtils.tryGetField(rawPayload, "dbgstat", String.class));
-        tokenPayloadBuilder.swName(JwtUtils.tryGetField(rawPayload, "swname", String.class));
-        var swVersion = JwtUtils.tryGetField(rawPayload, "swversion", List.class);
+        tokenPayloadBuilder.dbgStat(tryGetField(rawPayload, "dbgstat", String.class));
+        tokenPayloadBuilder.swName(tryGetField(rawPayload, "swname", String.class));
+        var swVersion = tryGetField(rawPayload, "swversion", List.class);
         if(swVersion != null && !swVersion.isEmpty()){
-            tokenPayloadBuilder.swVersion(JwtUtils.tryConvert(swVersion.get(0), String.class));
+            tokenPayloadBuilder.swVersion(tryConvert(swVersion.get(0), String.class));
         }
 
-        var subModsDetails = JwtUtils.tryGetField(rawPayload,"submods",  Map.class);
+        var subModsDetails = tryGetField(rawPayload,"submods",  Map.class);
 
         if(subModsDetails != null){
-            var confidential_space = JwtUtils.tryGetField(subModsDetails, "confidential_space", Map.class);
+            var confidential_space = tryGetField(subModsDetails, "confidential_space", Map.class);
             if(confidential_space != null){
-                tokenPayloadBuilder.csSupportedAttributes(JwtUtils.tryGetField(confidential_space, "support_attributes", List.class));
+                tokenPayloadBuilder.csSupportedAttributes(tryGetField(confidential_space, "support_attributes", List.class));
             }
 
-            var container = JwtUtils.tryGetField(subModsDetails, "container", Map.class);
+            var container = tryGetField(subModsDetails, "container", Map.class);
             if(container != null){
-                tokenPayloadBuilder.workloadImageReference(JwtUtils.tryGetField(container, "image_reference", String.class));
-                tokenPayloadBuilder.workloadImageDigest(JwtUtils.tryGetField(container, "image_digest", String.class));
-                tokenPayloadBuilder.restartPolicy(JwtUtils.tryGetField(container, "restart_policy", String.class));
+                tokenPayloadBuilder.workloadImageReference(tryGetField(container, "image_reference", String.class));
+                tokenPayloadBuilder.workloadImageDigest(tryGetField(container, "image_digest", String.class));
+                tokenPayloadBuilder.restartPolicy(tryGetField(container, "restart_policy", String.class));
 
-                tokenPayloadBuilder.cmdOverrides(JwtUtils.tryGetField(container, "cmd_override", ArrayList.class));
-                tokenPayloadBuilder.envOverrides(JwtUtils.tryGetField(container, "env_override", Map.class));
+                tokenPayloadBuilder.cmdOverrides(tryGetField(container, "cmd_override", ArrayList.class));
+                tokenPayloadBuilder.envOverrides(tryGetField(container, "env_override", Map.class));
             }
 
-            var gce = JwtUtils.tryGetField(subModsDetails, "gce", Map.class);
+            var gce = tryGetField(subModsDetails, "gce", Map.class);
             if(gce != null){
-                var gceZone = JwtUtils.tryGetField(gce, "zone", String.class);
+                var gceZone = tryGetField(gce, "zone", String.class);
                 tokenPayloadBuilder.gceZone(gceZone);
             }
         }

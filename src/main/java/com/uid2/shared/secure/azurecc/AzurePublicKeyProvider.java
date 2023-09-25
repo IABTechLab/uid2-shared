@@ -1,7 +1,6 @@
 package com.uid2.shared.secure.azurecc;
 
 import com.azure.security.attestation.AttestationClientBuilder;
-import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -15,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 
 // MAA certs are stored as x5c(X.509 certificate chain), not supported by Google auth lib.
 // So we have to build a thin layer to fetch Azure public key.
-public class AzurePublicKeyProvider {
+public class AzurePublicKeyProvider implements IPublicKeyProvider {
 
     private final LoadingCache<String, Map<String, PublicKey>> publicKeyCache;
 
@@ -30,6 +29,7 @@ public class AzurePublicKeyProvider {
                 });
     }
 
+    @Override
     public PublicKey GetPublicKey(String maaServerBaseUrl, String kid) throws AttestationException {
         PublicKey key;
         try {
