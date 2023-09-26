@@ -3,10 +3,11 @@ package com.uid2.shared.secure.azurecc;
 import com.uid2.shared.secure.AttestationException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PolicyValidatorTest {
-    private static final String PUBLIC_KEY = "abc";
+    private static final String PUBLIC_KEY = "public_key";
     private static final String CCE_POLICY = "policy";
 
     @Test
