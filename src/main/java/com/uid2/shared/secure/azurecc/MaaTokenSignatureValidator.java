@@ -20,9 +20,10 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
     // e.g. https://sharedeus.eus.attest.azure.net
     private final String maaServerBaseUrl;
 
+    private final IPublicKeyProvider publicKeyProvider;
+
     // used in UT
     private final Clock clockOverride;
-    private final IPublicKeyProvider publicKeyProvider;
 
     public MaaTokenSignatureValidator(String maaServerBaseUrl) {
         this(maaServerBaseUrl, new AzurePublicKeyProvider(), null);
@@ -30,8 +31,8 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
 
     protected MaaTokenSignatureValidator(String maaServerBaseUrl, IPublicKeyProvider publicKeyProvider, Clock clockOverride) {
         this.maaServerBaseUrl = maaServerBaseUrl;
-        this.clockOverride = clockOverride;
         this.publicKeyProvider = publicKeyProvider;
+        this.clockOverride = clockOverride;
     }
 
     private TokenVerifier buildTokenVerifier(String kid) throws AttestationException {
