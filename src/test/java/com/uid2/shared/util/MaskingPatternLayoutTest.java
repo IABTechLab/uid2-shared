@@ -2,7 +2,6 @@ package com.uid2.shared.util;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.pattern.FormattingConverter;
@@ -18,19 +17,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 public class MaskingPatternLayoutTest {
     private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(MaskingPatternLayoutTest.class);
     private static final MaskingPatternLayout MASKING_PATTERN_LAYOUT = new MaskingPatternLayout();
+    private static final String URL_WITHOUT_PROTOCOL = "myservice.s3.amazonaws.com/some/path?param1=value1&X-Amz-Security-Token=mysecurityToken&param3=value3";
+    private static final Map<String, String> MASKED_MESSAGES = Map.of(
+            "Error: " + URL_WITHOUT_PROTOCOL + " and something else", "Error: REDACTED - S3 and something else",
+            "https://" + URL_WITHOUT_PROTOCOL, "REDACTED - S3",
+            "http://" + URL_WITHOUT_PROTOCOL, "REDACTED - S3",
+            URL_WITHOUT_PROTOCOL, "REDACTED - S3",
+            "Should not be redacted", "Should not be redacted"
+    );
 
     @BeforeAll
     public static void setupAll() {
-        LoggerContext loggerContext = LOGGER.getLoggerContext();
         MASKING_PATTERN_LAYOUT.setPattern("%msg %ex");
-        MASKING_PATTERN_LAYOUT.setContext(loggerContext);
+        MASKING_PATTERN_LAYOUT.setContext(LOGGER.getLoggerContext());
         MASKING_PATTERN_LAYOUT.start();
     }
 
@@ -39,31 +44,45 @@ public class MaskingPatternLayoutTest {
     public void testMaskedMessagesWithS3(String message, String maskedMessage) {
         String log = MASKING_PATTERN_LAYOUT.doLayout(getLoggingEvent(message));
 
-        assertAll(
-                "testMaskingMessageWithS3",
-                () -> assertEquals(maskedMessage, log.trim())
-        );
+        assertEquals(maskedMessage, log.trim());
     }
 
     private static Set<Arguments> maskedMessagesWithS3() {
-        String urlWithoutProtocol = "myservice.s3.amazonaws.com/some/path?param1=value1&X-Amz-Security-Token=mysecurityToken&param3=value3";
-        Map<String, String> maskedMessages = Map.of(
-                "Error: " + urlWithoutProtocol + " and something else", "Error: REDACTED - S3 and something else",
-                "https://" + urlWithoutProtocol, "REDACTED - S3",
-                "http://" + urlWithoutProtocol, "REDACTED - S3",
-                urlWithoutProtocol, "REDACTED - S3"
-        );
-
-        return maskedMessages.entrySet().stream()
-                .map(entry -> Arguments.of(entry.getKey(), entry.getValue()))
+        return MASKED_MESSAGES.entrySet().stream()
+                .map(entry -> Arguments.of(
+                        entry.getKey(),
+                        entry.getValue()
+                ))
                 .collect(Collectors.toSet());
     }
 
-    private static ILoggingEvent getLoggingEvent(String msg, Exception ex) {
-        return new LoggingEvent(FormattingConverter.class.getName(), LOGGER, Level.ERROR, msg, ex, null);
+    @ParameterizedTest
+    @MethodSource("maskedExceptionsWithS3")
+    public void testMaskedExceptionsWithS3(Exception ex, String maskedMessage, String stackTrace) {
+        String log = MASKING_PATTERN_LAYOUT.doLayout(getLoggingEvent(ex.getMessage(), ex));
+
+        assertAll(
+                "testMaskedExceptionsWithS3",
+                () -> assertEquals(log.split("\n")[0].trim(), maskedMessage),
+                () -> assertTrue(log.split("\n")[1].trim().startsWith(stackTrace))
+        );
     }
 
-    private static ILoggingEvent getLoggingEvent(String msg) {
-        return getLoggingEvent(msg, null);
+    private static Set<Arguments> maskedExceptionsWithS3() {
+        return MASKED_MESSAGES.entrySet().stream()
+                .map(entry -> Arguments.of(
+                        new Exception(entry.getKey()),
+                        entry.getValue() + " java.lang.Exception: " + entry.getValue(),
+                        "at com.uid2.shared.util.MaskingPatternLayoutTest.lambda$maskedExceptionsWithS3"
+                ))
+                .collect(Collectors.toSet());
+    }
+
+    private static ILoggingEvent getLoggingEvent(String message, Exception ex) {
+        return new LoggingEvent(FormattingConverter.class.getName(), LOGGER, Level.ERROR, message, ex, null);
+    }
+
+    private static ILoggingEvent getLoggingEvent(String message) {
+        return getLoggingEvent(message, null);
     }
 }

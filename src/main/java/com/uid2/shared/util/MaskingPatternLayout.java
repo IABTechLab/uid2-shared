@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class MaskingPatternLayout extends PatternLayout {
     private static final Map<String, String> MASKING_PATTERNS = Map.of(
-            "[^\\s]+s3\\.amazonaws\\.com\\/.*X-Amz-Security-Token=[^\\s]+", "REDACTED - S3"
+            "[^\\s]+s3\\.amazonaws\\.com\\/[^\\s]*X-Amz-Security-Token=[^\\s]+", "REDACTED - S3"
     );
 
     @Override
