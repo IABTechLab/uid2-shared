@@ -22,21 +22,22 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.time.Instant;
+import java.util.Set;
 import java.util.stream.Stream;
 
 @ExtendWith(VertxExtension.class)
 public class RequestCapturingHandlerTest {
     private static final int Port = 8080;
+    private static final Handler<RoutingContext> dummyResponseHandler = routingContext -> {
+        routingContext.response().setStatusCode(200).end();
+    };
 
     @BeforeEach
     public void before() {
         Metrics.globalRegistry.forEachMeter(Metrics.globalRegistry::remove);
         Metrics.globalRegistry.add(new SimpleMeterRegistry());
     }
-
-    private static final Handler<RoutingContext> dummyResponseHandler = routingContext -> {
-        routingContext.response().setStatusCode(200).end();
-    };
 
     @Test
     public void captureSimplePath(Vertx vertx, VertxTestContext testContext) {
@@ -53,8 +54,8 @@ public class RequestCapturingHandlerTest {
                                 .tag("status", "200")
                                 .tag("method", "GET")
                                 .tag("path", "/v1/token/generate")
-                                .counter());
-
+                                .counter()
+                );
                 testContext.completeNow();
             })));
         }));
@@ -78,8 +79,9 @@ public class RequestCapturingHandlerTest {
                                 .tag("status", "200")
                                 .tag("method", "POST")
                                 .tag("path", "/v2/token/generate")
-                                .counters().size());
-
+                                .counters()
+                                .size()
+                );
                 testContext.completeNow();
             })));
         }));
@@ -100,8 +102,8 @@ public class RequestCapturingHandlerTest {
                                 .tag("status", "200")
                                 .tag("method", "GET")
                                 .tag("path", "/static/content")
-                                .counter());
-
+                                .counter()
+                );
                 testContext.completeNow();
             })));
         }));
@@ -121,8 +123,8 @@ public class RequestCapturingHandlerTest {
                                 .tag("status", "404")
                                 .tag("method", "GET")
                                 .tag("path", "unknown")
-                                .counter());
-
+                                .counter()
+                );
                 testContext.completeNow();
             })));
         }));
@@ -144,7 +146,7 @@ public class RequestCapturingHandlerTest {
             WebClient client = WebClient.create(vertx);
             client.get(Port, "localhost", "/test")
                     .send(testContext.succeeding(response -> testContext.verify(() -> {
-                        final double actual = Metrics.globalRegistry
+                        double actual = Metrics.globalRegistry
                                 .get("uid2.http_requests")
                                 .tag("site_id", siteId)
                                 .counter()
@@ -159,9 +161,9 @@ public class RequestCapturingHandlerTest {
         // Arguments are: routing context data key, routing context data value, site ID tag.
         return Stream.of(
                 Arguments.of(Const.RoutingContextData.SiteId, 100, "100"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new ClientKey("key", "keyHash", "keySalt", "secret").withSiteId(200), "200"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("key", "test-keyHash", "test-keySalt", "name", "contact", "protocol", 0, false), "null"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("key", "test-keyHash", "test-keySalt", "name", "contact", "protocol", 0, false, 300), "300"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new ClientKey("keyHash", "keySalt", "secret", "", Instant.MIN, Set.of(), 200), "200"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("test-keyHash", "test-keySalt", "name", "contact", "protocol", 0, false), "null"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("test-keyHash", "test-keySalt", "name", "contact", "protocol", 0, false, 300), "300"),
                 Arguments.of(null, null, "null")
         );
     }
