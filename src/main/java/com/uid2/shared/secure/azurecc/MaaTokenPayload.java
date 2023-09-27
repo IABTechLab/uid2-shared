@@ -12,7 +12,7 @@ public class MaaTokenPayload {
     private String attestationType;
     private String complianceStatus;
     private boolean vmDebuggable;
-    private String ccePolicy;
+    private String ccePolicyDigest;
 
     private RuntimeData runtimeData;
 

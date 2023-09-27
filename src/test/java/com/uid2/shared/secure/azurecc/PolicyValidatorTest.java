@@ -8,14 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PolicyValidatorTest {
     private static final String PUBLIC_KEY = "public_key";
-    private static final String CCE_POLICY = "policy";
+    private static final String CCE_POLICY_DIGEST = "digest";
 
     @Test
     public void testValidationSuccess() throws AttestationException {
         var validator = new PolicyValidator();
         var payload = generateBasicPayload();
         var enclaveId = validator.validate(payload, PUBLIC_KEY);
-        assertEquals(CCE_POLICY, enclaveId);
+        assertEquals(CCE_POLICY_DIGEST, enclaveId);
     }
 
     @Test
@@ -82,7 +82,7 @@ class PolicyValidatorTest {
                 .complianceStatus("azure-compliant-uvm")
                 .vmDebuggable(false)
                 .runtimeData(generateBasicRuntimeData())
-                .ccePolicy(CCE_POLICY)
+                .ccePolicyDigest(CCE_POLICY_DIGEST)
                 .build();
     }
 

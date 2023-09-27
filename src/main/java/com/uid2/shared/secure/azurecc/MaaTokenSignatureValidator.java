@@ -78,7 +78,7 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
         tokenPayloadBuilder.attestationType(tryGetField(rawPayload, "x-ms-attestation-type", String.class));
         tokenPayloadBuilder.complianceStatus(tryGetField(rawPayload, "x-ms-compliance-status", String.class));
         tokenPayloadBuilder.vmDebuggable(tryGetField(rawPayload, "x-ms-sevsnpvm-is-debuggable", Boolean.class));
-        tokenPayloadBuilder.ccePolicy(tryGetField(rawPayload, "x-ms-sevsnpvm-hostdata", String.class));
+        tokenPayloadBuilder.ccePolicyDigest(tryGetField(rawPayload, "x-ms-sevsnpvm-hostdata", String.class));
 
         var  runtime = tryGetField(rawPayload, ("x-ms-runtime"), Map.class);
 

@@ -61,6 +61,8 @@ public class AzurePublicKeyProvider implements IPublicKeyProvider {
         for (var signer : signers){
             var keyId = signer.getKeyId();
             var certs = signer.getCertificates();
+
+            // It's possible that there's a certificate chain. We will use the public key of Leaf Certificate here.
             if(!certs.isEmpty()){
                 var publicKey = certs.get(0).getPublicKey();
                 keyCacheBuilder.put(keyId, publicKey);

@@ -2,6 +2,7 @@ package com.uid2.shared.secure.azurecc;
 
 import com.uid2.shared.secure.AttestationException;
 import com.uid2.shared.secure.TestClock;
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 
 import static com.uid2.shared.secure.TestUtils.loadFromJson;
@@ -25,8 +26,17 @@ public class MaaTokenSignatureValidatorTest {
         assertEquals(true, tokenPayload.isSevSnpVM());
         assertEquals(true, tokenPayload.isUtilityVMCompliant());
         assertEquals(false, tokenPayload.isVmDebuggable());
-        assertEquals(expectedCcePolicy, tokenPayload.getCcePolicy());
+        assertEquals(expectedCcePolicy, tokenPayload.getCcePolicyDigest());
         assertEquals(expectedLocation, tokenPayload.getRuntimeData().getLocation());
         assertEquals(expectedPublicKey, tokenPayload.getRuntimeData().getPublicKey());
+    }
+
+    @Ignore
+    // replace below Placeholder with real MAA token to run E2E verification.
+    public void testE2E() throws AttestationException {
+        var maaToken = "<Placeholder>";
+        var maaServerUrl = "https://sharedeus.eus.attest.azure.net";
+        var validator = new MaaTokenSignatureValidator(maaServerUrl);
+        var token = validator.validate(maaToken);
     }
 }

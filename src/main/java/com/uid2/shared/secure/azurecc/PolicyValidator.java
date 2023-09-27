@@ -11,7 +11,7 @@ public class PolicyValidator implements IPolicyValidator{
         verifyVM(maaTokenPayload);
         verifyLocation(maaTokenPayload);
         verifyPublicKey(maaTokenPayload, publicKey);
-        return maaTokenPayload.getCcePolicy();
+        return maaTokenPayload.getCcePolicyDigest();
     }
 
     private void verifyPublicKey(MaaTokenPayload maaTokenPayload, String publicKey) throws AttestationException {
