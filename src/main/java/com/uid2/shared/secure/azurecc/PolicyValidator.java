@@ -4,8 +4,8 @@ import com.google.common.base.Strings;
 import com.uid2.shared.secure.AttestationException;
 
 public class PolicyValidator implements IPolicyValidator{
-    private final String LOCATION_CHINA = "china";
-    private final String LOCATION_EU = "europe";
+    private static final String LOCATION_CHINA = "china";
+    private static final String LOCATION_EU = "europe";
     @Override
     public String validate(MaaTokenPayload maaTokenPayload, String publicKey) throws AttestationException {
         verifyVM(maaTokenPayload);
