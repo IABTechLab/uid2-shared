@@ -1,4 +1,4 @@
-package com.uid2.shared.util;
+package com.uid2.shared.logback;
 
 import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
