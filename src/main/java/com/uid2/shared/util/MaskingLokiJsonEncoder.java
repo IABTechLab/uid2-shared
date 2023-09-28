@@ -12,7 +12,7 @@ public class MaskingLokiJsonEncoder extends JsonEncoder {
         super.start();
 
         maskingPatternLayout = new MaskingPatternLayout();
-        maskingPatternLayout.setContext(this.context);
+        maskingPatternLayout.setContext(context);
         maskingPatternLayout.setPattern(message.pattern);
         maskingPatternLayout.start();
     }
@@ -34,10 +34,7 @@ public class MaskingLokiJsonEncoder extends JsonEncoder {
     }
 
     public static final class MessageCfg {
-        String pattern = "l=%level c=%logger{20} t=%thread | %msg %ex";
-
-        public MessageCfg() {
-        }
+        private String pattern = "l=%level c=%logger{20} t=%thread | %msg %ex";
 
         public void setPattern(String pattern) {
             this.pattern = pattern;

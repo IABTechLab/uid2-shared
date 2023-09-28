@@ -21,9 +21,9 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-public class MaskingPatternLayoutTest {
-    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(MaskingPatternLayoutTest.class);
-    private static final MaskingPatternLayout MASKING_PATTERN_LAYOUT = new MaskingPatternLayout();
+public class MaskingLokiJsonEncoderTest {
+    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(MaskingLokiJsonEncoderTest.class);
+    private static final MaskingLokiJsonEncoder MASKING_LOKI_JSON_ENCODER = new MaskingLokiJsonEncoder();
     private static final String URL_WITHOUT_PROTOCOL = "myservice.s3.amazonaws.com/some/path?param1=value1&X-Amz-Security-Token=mysecurityToken&param3=value3";
     private static final Map<String, String> MASKED_MESSAGES = Map.of(
             "Error: " + URL_WITHOUT_PROTOCOL + " and something else", "Error: REDACTED - S3 and something else",
@@ -35,20 +35,22 @@ public class MaskingPatternLayoutTest {
 
     @BeforeAll
     public static void setupAll() {
-        MASKING_PATTERN_LAYOUT.setPattern("%msg %ex");
-        MASKING_PATTERN_LAYOUT.setContext(LOGGER.getLoggerContext());
-        MASKING_PATTERN_LAYOUT.start();
+        MaskingLokiJsonEncoder.MessageCfg message = new MaskingLokiJsonEncoder.MessageCfg();
+        message.setPattern("%msg %ex");
+        MASKING_LOKI_JSON_ENCODER.setMessage(message);
+        MASKING_LOKI_JSON_ENCODER.setContext(LOGGER.getLoggerContext());
+        MASKING_LOKI_JSON_ENCODER.start();
     }
 
     @AfterAll
     public static void teardownAll() {
-        MASKING_PATTERN_LAYOUT.stop();
+        MASKING_LOKI_JSON_ENCODER.stop();
     }
 
     @ParameterizedTest
     @MethodSource("maskedMessagesWithS3")
     public void testMaskedMessagesWithS3(String message, String maskedMessage) {
-        String log = MASKING_PATTERN_LAYOUT.doLayout(getLoggingEvent(message));
+        String log = MASKING_LOKI_JSON_ENCODER.eventToMessage(getLoggingEvent(message));
 
         assertEquals(maskedMessage, log.trim());
     }
@@ -65,7 +67,7 @@ public class MaskingPatternLayoutTest {
     @ParameterizedTest
     @MethodSource("maskedExceptionsWithS3")
     public void testMaskedExceptionsWithS3(Exception ex, String maskedMessage, String stackTrace) {
-        String log = MASKING_PATTERN_LAYOUT.doLayout(getLoggingEvent(ex.getMessage(), ex));
+        String log = MASKING_LOKI_JSON_ENCODER.eventToMessage(getLoggingEvent(ex.getMessage(), ex));
 
         assertAll(
                 "testMaskedExceptionsWithS3",
