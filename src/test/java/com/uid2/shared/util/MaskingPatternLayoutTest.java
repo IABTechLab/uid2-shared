@@ -79,7 +79,7 @@ public class MaskingPatternLayoutTest {
                 .map(entry -> Arguments.of(
                         new Exception(entry.getKey()),
                         entry.getValue() + " java.lang.Exception: " + entry.getValue(),
-                        "at com.uid2.shared.util.MaskingPatternLayoutTest.lambda$maskedExceptionsWithS3"
+                        "at " + MaskingPatternLayoutTest.class.getCanonicalName() + ".lambda$maskedExceptionsWithS3"
                 ))
                 .collect(Collectors.toSet());
     }

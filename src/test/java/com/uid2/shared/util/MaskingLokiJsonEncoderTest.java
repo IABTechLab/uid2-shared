@@ -81,7 +81,7 @@ public class MaskingLokiJsonEncoderTest {
                 .map(entry -> Arguments.of(
                         new Exception(entry.getKey()),
                         entry.getValue() + " java.lang.Exception: " + entry.getValue(),
-                        "at com.uid2.shared.util.MaskingLokiJsonEncoderTest.lambda$maskedExceptionsWithS3"
+                        "at " + MaskingLokiJsonEncoderTest.class.getCanonicalName() + ".lambda$maskedExceptionsWithS3"
                 ))
                 .collect(Collectors.toSet());
     }
