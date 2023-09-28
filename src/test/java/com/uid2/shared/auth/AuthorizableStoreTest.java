@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -22,16 +23,16 @@ public class AuthorizableStoreTest {
     private static final String SITE_13_CLIENT_KEY_LEGACY = "abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
 
     private AuthorizableStore<ClientKey> clientKeyStore;
+    private List<ClientKey> clients;
 
     @BeforeEach
     public void setup() {
-        List<ClientKey> clients = List.of(
-                createClientKey(KEY_HASHER.hashKey(SITE_11_CLIENT_KEY), "client11", 11),
-                createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_1), "client12_1", 12),
-                createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_2), "client12_2", 12),
-                createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY), "client13", 13),
-                createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY_LEGACY), "client13_legacy", 13)
-        );
+        clients = new ArrayList<>();
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_11_CLIENT_KEY), "client11", 11));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_1), "client12_1", 12));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_2), "client12_2", 12));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY), "client13", 13));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY_LEGACY), "client13_legacy", 13));
 
         this.clientKeyStore = new AuthorizableStore<>(ClientKey.class);
         this.clientKeyStore.refresh(clients);
@@ -132,6 +133,28 @@ public class AuthorizableStoreTest {
                 () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_12_CLIENT_KEY_2)),
                 () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_13_CLIENT_KEY)),
                 () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_13_CLIENT_KEY_LEGACY))
+        );
+    }
+
+    @Test
+    public void refresh_returnsPreviouslyInvalidClients_afterRefresh() {
+        String key = "UID2-C-L-14-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
+        ClientKey invalidClientKey = clientKeyStore.getAuthorizableByKey(key);
+
+        ClientKey client = createClientKey(KEY_HASHER.hashKey(key), "client14", 14);
+        clients.add(client);
+        clientKeyStore.refresh(clients);
+        ClientKey validClientKey = clientKeyStore.getAuthorizableByKey(key);
+
+        assertAll(
+                "refresh returns previously invalid clients after refresh",
+                () -> assertNull(invalidClientKey),
+                () -> assertEquals("client14", validClientKey.getName()),
+                () -> assertEquals("client11", clientKeyStore.getAuthorizableByKey(SITE_11_CLIENT_KEY).getName()),
+                () -> assertEquals("client12_1", clientKeyStore.getAuthorizableByKey(SITE_12_CLIENT_KEY_1).getName()),
+                () -> assertEquals("client12_2", clientKeyStore.getAuthorizableByKey(SITE_12_CLIENT_KEY_2).getName()),
+                () -> assertEquals("client13", clientKeyStore.getAuthorizableByKey(SITE_13_CLIENT_KEY).getName()),
+                () -> assertEquals("client13_legacy", clientKeyStore.getAuthorizableByKey(SITE_13_CLIENT_KEY_LEGACY).getName())
         );
     }
 
