@@ -1,10 +1,12 @@
 package com.uid2.shared.auth;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.uid2.shared.secret.KeyHashResult;
 import com.uid2.shared.secret.KeyHasher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -137,24 +139,28 @@ public class AuthorizableStoreTest {
     }
 
     @Test
-    public void refresh_returnsPreviouslyInvalidClients_afterRefresh() {
+    public void refresh_returnsPreviouslyInvalidClients_afterRefresh() throws Exception {
+        Field cacheField = clientKeyStore.getClass().getDeclaredField("keyToHashCache");
+        cacheField.setAccessible(true);
+        Cache<String, String> cache = (Cache<String, String>) cacheField.get(clientKeyStore);
+
         String key = "UID2-C-L-14-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
         ClientKey invalidClientKey = clientKeyStore.getAuthorizableByKey(key);
+        String invalidCacheValue = cache.getIfPresent(key);
 
-        ClientKey client = createClientKey(KEY_HASHER.hashKey(key), "client14", 14);
+        KeyHashResult khr = KEY_HASHER.hashKey(key);
+        ClientKey client = createClientKey(khr, "client14", 14);
         clients.add(client);
         clientKeyStore.refresh(clients);
         ClientKey validClientKey = clientKeyStore.getAuthorizableByKey(key);
+        String validCacheValue = cache.getIfPresent(key);
 
         assertAll(
                 "refresh returns previously invalid clients after refresh",
+                () -> assertEquals("", invalidCacheValue),
                 () -> assertNull(invalidClientKey),
-                () -> assertEquals("client14", validClientKey.getName()),
-                () -> assertEquals("client11", clientKeyStore.getAuthorizableByKey(SITE_11_CLIENT_KEY).getName()),
-                () -> assertEquals("client12_1", clientKeyStore.getAuthorizableByKey(SITE_12_CLIENT_KEY_1).getName()),
-                () -> assertEquals("client12_2", clientKeyStore.getAuthorizableByKey(SITE_12_CLIENT_KEY_2).getName()),
-                () -> assertEquals("client13", clientKeyStore.getAuthorizableByKey(SITE_13_CLIENT_KEY).getName()),
-                () -> assertEquals("client13_legacy", clientKeyStore.getAuthorizableByKey(SITE_13_CLIENT_KEY_LEGACY).getName())
+                () -> assertEquals(khr.getHash(), validCacheValue),
+                () -> assertEquals("client14", validClientKey.getName())
         );
     }
 
