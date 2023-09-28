@@ -1,11 +1,14 @@
 package com.uid2.shared.auth;
 
+import com.github.benmanes.caffeine.cache.Cache;
 import com.uid2.shared.secret.KeyHashResult;
 import com.uid2.shared.secret.KeyHasher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -22,16 +25,16 @@ public class AuthorizableStoreTest {
     private static final String SITE_13_CLIENT_KEY_LEGACY = "abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
 
     private AuthorizableStore<ClientKey> clientKeyStore;
+    private List<ClientKey> clients;
 
     @BeforeEach
     public void setup() {
-        List<ClientKey> clients = List.of(
-                createClientKey(KEY_HASHER.hashKey(SITE_11_CLIENT_KEY), "client11", 11),
-                createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_1), "client12_1", 12),
-                createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_2), "client12_2", 12),
-                createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY), "client13", 13),
-                createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY_LEGACY), "client13_legacy", 13)
-        );
+        clients = new ArrayList<>();
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_11_CLIENT_KEY), "client11", 11));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_1), "client12_1", 12));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_2), "client12_2", 12));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY), "client13", 13));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY_LEGACY), "client13_legacy", 13));
 
         this.clientKeyStore = new AuthorizableStore<>(ClientKey.class);
         this.clientKeyStore.refresh(clients);
@@ -132,6 +135,47 @@ public class AuthorizableStoreTest {
                 () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_12_CLIENT_KEY_2)),
                 () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_13_CLIENT_KEY)),
                 () -> assertNull(clientKeyStore.getAuthorizableByKey(SITE_13_CLIENT_KEY_LEGACY))
+        );
+    }
+
+    @Test
+    public void refresh_returnsPreviouslyInvalidClients_afterRefresh() throws Exception {
+        Field cacheField = clientKeyStore.getClass().getDeclaredField("keyToHashCache");
+        cacheField.setAccessible(true);
+        Cache<String, String> cache = (Cache<String, String>) cacheField.get(clientKeyStore);
+
+        clientKeyStore.getAuthorizableByKey(SITE_11_CLIENT_KEY);
+
+        String key = "UID2-C-L-14-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
+        ClientKey invalidClientKey = clientKeyStore.getAuthorizableByKey(key);
+        String invalidCacheValue = cache.getIfPresent(key);
+
+        KeyHashResult khr = KEY_HASHER.hashKey(key);
+        ClientKey client = createClientKey(khr, "client14", 14);
+        clients.add(client);
+        clientKeyStore.refresh(clients);
+
+        String existingCacheValue = cache.getIfPresent(SITE_11_CLIENT_KEY);
+
+        ClientKey validClientKey = clientKeyStore.getAuthorizableByKey(key);
+        String validCacheValue = cache.getIfPresent(key);
+
+        assertAll(
+                "refresh returns previously invalid clients after refresh",
+                () -> assertAll(
+                        "refresh returns previously invalid clients after refresh - invalid values were previously invalid",
+                        () -> assertNull(invalidClientKey),
+                        () -> assertEquals("", invalidCacheValue)
+                ),
+                () -> assertAll(
+                        "refresh returns previously invalid clients after refresh - invalid values are now valid",
+                        () -> assertEquals("client14", validClientKey.getName()),
+                        () -> assertEquals(khr.getHash(), validCacheValue)
+                ),
+                () -> assertAll(
+                        "refresh returns previously invalid clients after refresh - valid values are still valid",
+                        () -> assertEquals(clients.get(0).getKeyHash(), existingCacheValue)
+                )
         );
     }
 
