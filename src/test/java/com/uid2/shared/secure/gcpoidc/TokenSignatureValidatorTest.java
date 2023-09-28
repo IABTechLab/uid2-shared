@@ -1,12 +1,13 @@
 package com.uid2.shared.secure.gcpoidc;
 
 import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.TestClock;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.junit.jupiter.api.Test;
 
-import static com.uid2.shared.secure.gcpoidc.TestUtils.loadFromJson;
-import static com.uid2.shared.secure.gcpoidc.TestUtils.validateAndParseToken;
+import static com.uid2.shared.secure.TestUtils.loadFromJson;
+import static com.uid2.shared.secure.gcpoidc.OidcTokenUtils.validateAndParseToken;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TokenSignatureValidatorTest {

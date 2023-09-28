@@ -1,4 +1,4 @@
-package com.uid2.shared.secure.gcpoidc;
+package com.uid2.shared.secure;
 
 import com.google.api.client.util.Clock;
 

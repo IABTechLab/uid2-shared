@@ -1,0 +1,41 @@
+{
+  "exp": 1695313895,
+  "iat": 1695285095,
+  "iss": "https://sharedeus.eus.attest.azure.net",
+  "jti": "3b16f2ab4492417aae4cc9a5e6506ca2519659c0d8fdc2bf442fe01aa9b8e46c",
+  "nbf": 1695285095,
+  "nonce": "7394904505194784658",
+  "x-ms-attestation-type": "sevsnpvm",
+  "x-ms-compliance-status": "azure-compliant-uvm",
+  "x-ms-policy-hash": "9NY0VnTQ-IiBriBplVUpFbczcDaEBUwsiFYAzHu_gco",
+  "x-ms-runtime": {
+    "location": "East US",
+    "publicKey": "abc"
+  },
+  "x-ms-sevsnpvm-authorkeydigest": "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+  "x-ms-sevsnpvm-bootloader-svn": 3,
+  "x-ms-sevsnpvm-familyId": "01000000000000000000000000000000",
+  "x-ms-sevsnpvm-guestsvn": 2,
+  "x-ms-sevsnpvm-hostdata": "fef932e0103f6132437e8a1223f32efc4bea63342f893b5124645224ef29ba73",
+  "x-ms-sevsnpvm-idkeydigest": "ebeeeabce075eeaba3d9ea24d8495137a2877c0d20ac6ea73fc6d2f8aeb50de132150e0a0752664919bcebbf2e8c5807",
+  "x-ms-sevsnpvm-imageId": "02000000000000000000000000000000",
+  "x-ms-sevsnpvm-is-debuggable": false,
+  "x-ms-sevsnpvm-launchmeasurement": "03fea02823189b25d0623a5c81f97c8ba4d2fbc48c914a55ce525f90454ddcec303743dac2fc013f0846912d1412f6df",
+  "x-ms-sevsnpvm-microcode-svn": 115,
+  "x-ms-sevsnpvm-migration-allowed": false,
+  "x-ms-sevsnpvm-reportdata": "4e7d4a413745ddea79f05d20d9ac7add3659ac783ef24684127bbbb3e50fc63c0000000000000000000000000000000000000000000000000000000000000000",
+  "x-ms-sevsnpvm-reportid": "d137a83c2d42d81dd42d39ad95ef9023de63216ddaaf2c368a8c41a636ddb2a9",
+  "x-ms-sevsnpvm-smt-allowed": true,
+  "x-ms-sevsnpvm-snpfw-svn": 8,
+  "x-ms-sevsnpvm-tee-svn": 0,
+  "x-ms-sevsnpvm-uvm-endorsement": {
+    "x-ms-sevsnpvm-guestsvn": "100",
+    "x-ms-sevsnpvm-launchmeasurement": "03fea02823189b25d0623a5c81f97c8ba4d2fbc48c914a55ce525f90454ddcec303743dac2fc013f0846912d1412f6df"
+  },
+  "x-ms-sevsnpvm-uvm-endorsement-headers": {
+    "feed": "ContainerPlat-AMD-UVM",
+    "iss": "did:x509:0:sha256:I__iuL25oXEVFdTP_aBLx_eT1RPHbCQ_ECBQfYZpt9s::eku:1.3.6.1.4.1.311.76.59.1.2"
+  },
+  "x-ms-sevsnpvm-vmpl": 0,
+  "x-ms-ver": "1.0"
+}
