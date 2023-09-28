@@ -1,4 +1,4 @@
-package com.uid2.shared.util;
+package com.uid2.shared.logback;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import com.github.loki4j.logback.JsonEncoder;
