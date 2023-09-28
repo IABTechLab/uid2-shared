@@ -144,6 +144,8 @@ public class AuthorizableStoreTest {
         cacheField.setAccessible(true);
         Cache<String, String> cache = (Cache<String, String>) cacheField.get(clientKeyStore);
 
+        clientKeyStore.getAuthorizableByKey(SITE_11_CLIENT_KEY);
+
         String key = "UID2-C-L-14-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
         ClientKey invalidClientKey = clientKeyStore.getAuthorizableByKey(key);
         String invalidCacheValue = cache.getIfPresent(key);
@@ -152,15 +154,28 @@ public class AuthorizableStoreTest {
         ClientKey client = createClientKey(khr, "client14", 14);
         clients.add(client);
         clientKeyStore.refresh(clients);
+
+        String existingCacheValue = cache.getIfPresent(SITE_11_CLIENT_KEY);
+
         ClientKey validClientKey = clientKeyStore.getAuthorizableByKey(key);
         String validCacheValue = cache.getIfPresent(key);
 
         assertAll(
                 "refresh returns previously invalid clients after refresh",
-                () -> assertEquals("", invalidCacheValue),
-                () -> assertNull(invalidClientKey),
-                () -> assertEquals(khr.getHash(), validCacheValue),
-                () -> assertEquals("client14", validClientKey.getName())
+                () -> assertAll(
+                        "refresh returns previously invalid clients after refresh - invalid values were previously invalid",
+                        () -> assertNull(invalidClientKey),
+                        () -> assertEquals("", invalidCacheValue)
+                ),
+                () -> assertAll(
+                        "refresh returns previously invalid clients after refresh - invalid values are now valid",
+                        () -> assertEquals("client14", validClientKey.getName()),
+                        () -> assertEquals(khr.getHash(), validCacheValue)
+                ),
+                () -> assertAll(
+                        "refresh returns previously invalid clients after refresh - valid values are still valid",
+                        () -> assertEquals(clients.get(0).getKeyHash(), existingCacheValue)
+                )
         );
     }
 
