@@ -4,10 +4,11 @@ import ch.qos.logback.classic.PatternLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class MaskingPatternLayout extends PatternLayout {
-    private static final Map<String, String> MASKING_PATTERNS = Map.of(
-            "[^\\s]+s3\\.amazonaws\\.com\\/[^\\s]*X-Amz-Security-Token=[^\\s]+", "REDACTED - S3"
+    private static final Map<Pattern, String> MASKING_PATTERNS = Map.of(
+            Pattern.compile("\\S+s3\\.amazonaws\\.com/\\S*X-Amz-Security-Token=\\S+"), "REDACTED - S3"
     );
 
     @Override
@@ -21,10 +22,10 @@ public class MaskingPatternLayout extends PatternLayout {
         }
 
         String maskedMessage = message;
-        for (Map.Entry<String, String> entry : MASKING_PATTERNS.entrySet()) {
-            String regex = entry.getKey();
+        for (Map.Entry<Pattern, String> entry : MASKING_PATTERNS.entrySet()) {
+            Pattern pattern = entry.getKey();
             String mask = entry.getValue();
-            maskedMessage = maskedMessage.replaceAll(regex, mask);
+            maskedMessage = pattern.matcher(maskedMessage).replaceAll(mask);
         }
         return maskedMessage;
     }
