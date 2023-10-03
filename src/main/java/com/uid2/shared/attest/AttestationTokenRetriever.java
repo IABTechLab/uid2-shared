@@ -2,6 +2,7 @@ package com.uid2.shared.attest;
 
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.*;
+import com.uid2.shared.cloud.CloudUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -78,7 +79,7 @@ public class AttestationTokenRetriever {
         this.isExpiryCheckScheduled = false;
         this.isAttesting = new AtomicBoolean(false);
         if (httpClient == null) {
-            this.httpClient = HttpClient.newHttpClient();
+            this.httpClient = HttpClient.newBuilder().proxy(CloudUtils.defaultProxySelector).build();
         } else {
             this.httpClient = httpClient;
         }

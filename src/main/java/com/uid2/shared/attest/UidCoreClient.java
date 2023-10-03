@@ -50,7 +50,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         this.contentStorage = new PreSignedURLStorage(proxy);
         this.enforceHttps = enforceHttps;
         if (httpClient == null) {
-            this.httpClient = HttpClient.newHttpClient();
+            this.httpClient = HttpClient.newBuilder().proxy(CloudUtils.defaultProxySelector).build();
         } else {
             this.httpClient = httpClient;
         }
