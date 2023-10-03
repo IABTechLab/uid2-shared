@@ -2,36 +2,38 @@ package com.uid2.shared.auth;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.vertx.core.json.Json;
-import io.vertx.core.json.JsonObject;
-import org.junit.Assert;
+import com.uid2.shared.util.Mapper;
 import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 public class OperatorKeyTest {
+    private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
+
     @Test
-    public void verifyDisabledPropIsOptional() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifyDisabledPropIsOptional() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"roles\": [ \"OPERATOR\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertFalse(c.isDisabled());
+        assertFalse(o.isDisabled());
     }
 
     @Test
-    public void verifyDisabledPropSetTrue() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifyDisabledPropSetTrue() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -39,16 +41,14 @@ public class OperatorKeyTest {
                 "        \"roles\": [ \"OPERATOR\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertTrue(c.isDisabled());
+        assertTrue(o.isDisabled());
     }
 
     @Test
-    public void verifyDisabledPropSetFalse() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifyDisabledPropSetFalse() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
@@ -56,112 +56,98 @@ public class OperatorKeyTest {
                 "        \"roles\": [ \"OPERATOR\" ],\n" +
                 "        \"site_id\": 3\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertFalse(c.isDisabled());
+        assertFalse(o.isDisabled());
     }
 
     @Test
-    public void verifySiteIdPropIsOptionalForBackwardsCompatibility() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifySiteIdPropIsOptionalForBackwardsCompatibility() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
                 "        \"roles\": [ \"OPERATOR\" ]\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertNull(c.getSiteId());
+        assertNull(o.getSiteId());
     }
 
     @Test
-    public void verifyRolesPropIsOptionalForBackwardsCompatibility() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifyRolesPropIsOptionalForBackwardsCompatibility() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertEquals(Set.of(Role.OPERATOR), c.getRoles());
+        assertEquals(Set.of(Role.OPERATOR), o.getRoles());
     }
 
     @Test
-    public void verifyRolesPropSetOptoutRole() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifyRolesPropSetOptoutRole() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
                 "        \"roles\": [ \"OPTOUT\" ]\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
         // Operator role should be set by default
-        Assert.assertEquals(Set.of(Role.OPERATOR, Role.OPTOUT), c.getRoles());
+        assertEquals(Set.of(Role.OPERATOR, Role.OPTOUT), o.getRoles());
     }
 
     @Test
-    public void verifyRolesPropSetOperatorRole() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifyRolesPropSetOperatorRole() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
                 "        \"roles\": [ \"OPERATOR\" ]\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertEquals(Set.of(Role.OPERATOR), c.getRoles());
+        assertEquals(Set.of(Role.OPERATOR), o.getRoles());
     }
 
     @Test
-    public void verifyRolesPropSetOperatorRoleAndOptoutRole() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifyRolesPropSetOperatorRoleAndOptoutRole() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
                 "        \"roles\": [ \"OPERATOR\", \"OPTOUT\" ]\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertEquals(Set.of(Role.OPERATOR, Role.OPTOUT), c.getRoles());
+        assertEquals(Set.of(Role.OPERATOR, Role.OPTOUT), o.getRoles());
     }
 
     @Test
-    public void verifyRolesPropSetOptoutServiceRole() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifyRolesPropSetOptoutServiceRole() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
                 "        \"roles\": [ \"OPTOUT_SERVICE\" ]\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertEquals(Set.of(Role.OPTOUT_SERVICE), c.getRoles());
+        assertEquals(Set.of(Role.OPTOUT_SERVICE), o.getRoles());
     }
 
     @Test
     public void verifyRolesPropIsWrittenInAlphabeticalOrder() throws JsonProcessingException {
-        final String expectJson = "{" +
-                "\"key\":\"test-admin-key\"," +
+        String expectJson = "{" +
                 "\"key_hash\":\"test-keyHash\"," +
                 "\"key_salt\":\"test-keySalt\"," +
                 "\"name\":\"admin@uid2.com\"," +
@@ -173,69 +159,65 @@ public class OperatorKeyTest {
                 "\"roles\":[\"OPERATOR\",\"OPTOUT\"]," +
                 "\"operator_type\":\"PRIVATE\"" +
                 "}";
-        OperatorKey k = new OperatorKey("test-admin-key", "test-keyHash", "test-keySalt", "admin@uid2.com", "admin@uid2.com", "protocol1", 1617149276, false, 1, new HashSet<>(Arrays.asList(Role.OPTOUT, Role.OPERATOR)));
-        ObjectMapper objectMapper = new ObjectMapper();
-        Assert.assertEquals(expectJson, objectMapper.writeValueAsString(k));
+        OperatorKey o = new OperatorKey("test-keyHash", "test-keySalt", "admin@uid2.com", "admin@uid2.com", "protocol1", 1617149276, false, 1, new HashSet<>(Arrays.asList(Role.OPTOUT, Role.OPERATOR)));
+
+        assertEquals(expectJson, OBJECT_MAPPER.writeValueAsString(o));
     }
 
     @Test
-    public void verifyOperatorTypePropIsOptionalForBackwardsCompatibility() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifyOperatorTypePropIsOptionalForBackwardsCompatibility() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertEquals(OperatorType.PRIVATE, c.getOperatorType());
+        assertEquals(OperatorType.PRIVATE, o.getOperatorType());
     }
 
     @Test
-    public void verifyOperatorTypePropIsPublic() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifyOperatorTypePropIsPublic() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
                 "        \"operator_type\": \"PUBLIC\"\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertEquals(OperatorType.PUBLIC, c.getOperatorType());
+        assertEquals(OperatorType.PUBLIC, o.getOperatorType());
     }
 
     @Test
-    public void verifyOperatorTypePropIsPrivate() {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
+    public void verifyOperatorTypePropIsPrivate() throws JsonProcessingException {
+        String testJson = "    {\n" +
                 "        \"name\": \"admin@uid2.com\",\n" +
                 "        \"contact\": \"admin@uid2.com\",\n" +
                 "        \"created\": 1617149276,\n" +
                 "        \"disabled\": false,\n" +
                 "        \"operator_type\": \"PRIVATE\"\n" +
                 "    }";
+        OperatorKey o = OBJECT_MAPPER.readValue(testJson, OperatorKey.class);
 
-        JsonObject jo = (JsonObject) Json.decodeValue(testJson);
-        OperatorKey c = OperatorKey.valueOf(jo);
-        Assert.assertEquals(OperatorType.PRIVATE, c.getOperatorType());
+        assertEquals(OperatorType.PRIVATE, o.getOperatorType());
     }
 
-    @Test
-    public void verifyConstructorStartsWithPrivateOperator() {
-        OperatorKey k1 = new OperatorKey("key1", "test-keyHash1", "test-keySalt1", "name1", "contact1", "protocol1", 1, true);
-        Assert.assertEquals(OperatorType.PRIVATE, k1.getOperatorType());
-        OperatorKey k2 = new OperatorKey("key2", "test-keyHash2", "test-keySalt2", "name2", "contact2", "protocol2", 2, true, 2);
-        Assert.assertEquals(OperatorType.PRIVATE, k2.getOperatorType());
-        OperatorKey k3 = new OperatorKey("key3", "test-keyHash3", "test-keySalt3", "name3", "contact3", "protocol3", 3, true, 3,  null);
-        Assert.assertEquals(OperatorType.PRIVATE, k3.getOperatorType());
-        OperatorKey k4 = new OperatorKey("key4", "test-keyHash4", "test-keySalt4", "name4", "contact4", "protocol4", 4, true, 4,  null, OperatorType.PUBLIC);
-        Assert.assertEquals(OperatorType.PUBLIC, k4.getOperatorType());
-        OperatorKey k5 = new OperatorKey("key5", "test-keyHash5", "test-keySalt5", "name5", "contact5", "protocol5", 5, true, 5,  null, OperatorType.PRIVATE);
-        Assert.assertEquals(OperatorType.PRIVATE, k5.getOperatorType());
+    @ParameterizedTest
+    @MethodSource("operatorConstructorArgs")
+    public void verifyConstructorSetsPrivateOperatorTypeByDefault(OperatorType type, OperatorKey o) {
+        assertEquals(type, o.getOperatorType());
+    }
+
+    private static Set<Arguments> operatorConstructorArgs() {
+        return Set.of(
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash1", "test-keySalt1", "name1", "contact1", "protocol1", 1, true)),
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash2", "test-keySalt2", "name2", "contact2", "protocol2", 2, true, 2)),
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash3", "test-keySalt3", "name3", "contact3", "protocol3", 3, true, 3,  null)),
+                Arguments.of(OperatorType.PUBLIC, new OperatorKey("test-keyHash4", "test-keySalt4", "name4", "contact4", "protocol4", 4, true, 4,  null, OperatorType.PUBLIC)),
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash5", "test-keySalt5", "name5", "contact5", "protocol5", 5, true, 5,  null, OperatorType.PRIVATE))
+        );
     }
 }

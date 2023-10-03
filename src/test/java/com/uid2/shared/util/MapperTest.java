@@ -1,4 +1,4 @@
-package com.uid2.shared.utils;
+package com.uid2.shared.util;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -9,8 +9,8 @@ import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ObjectMapperFactoryTest {
-    private static final ObjectMapper OBJECT_MAPPER = ObjectMapperFactory.build();
+public class MapperTest {
+    private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
 
     @Test
     public void readValue_whenEnumIsCaseInsensitive() throws Exception {
