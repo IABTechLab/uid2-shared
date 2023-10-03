@@ -71,6 +71,7 @@ public class ScopedStoreReader<T> {
             return count;
         }
         catch (Exception e) {
+            // do not log the message or the original exception as that may contain the pre-signed url
             LOGGER.error(String.format("Unable to load %s", dataTypeName));
             throw e;
         }
