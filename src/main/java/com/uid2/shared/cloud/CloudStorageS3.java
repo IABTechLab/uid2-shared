@@ -131,7 +131,7 @@ public class CloudStorageS3 implements TaggableCloudStorage {
             S3Object obj = this.s3.getObject(bucket, cloudPath);
             return obj.getObjectContent();
         } catch (Throwable t) {
-            // do not log the message or the original exception as that may contain the pre-signed url
+            // Do not log the message or the original exception as that may contain the pre-signed url
             throw new CloudStorageException("s3 get error: " + t.getClass().getSimpleName() + ": " + bucket);
         }
     }
