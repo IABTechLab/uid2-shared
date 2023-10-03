@@ -36,8 +36,8 @@ public class ClientSideKeypairStoreSnapshot implements IClientSideKeypairStore.I
     }
 
     @Override
-    public List<ClientSideKeypair> getSiteKeypairs(int sideId) {
-        return siteKeypairMap.get(sideId);
+    public List<ClientSideKeypair> getSiteKeypairs(int siteId) {
+        return siteKeypairMap.get(siteId);
     }
 
     @Override
