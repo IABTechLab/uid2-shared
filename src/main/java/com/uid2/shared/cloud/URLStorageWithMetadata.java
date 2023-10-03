@@ -42,7 +42,8 @@ public abstract class URLStorageWithMetadata implements ICloudStorage {
                 return url.openStream();
             }
         } catch (Throwable t) {
-            throw new CloudStorageException("url download error: " + t.getMessage(), t);
+            // Do not log the message or the original exception as that may contain the pre-signed url
+            throw new CloudStorageException("url download error: " + t.getClass().getSimpleName());
         }
     }
 

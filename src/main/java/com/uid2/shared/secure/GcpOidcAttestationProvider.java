@@ -37,10 +37,10 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
             LOGGER.debug("Validating signature...");
             var tokenPayload = tokenSignatureValidator.validate(tokenString);
 
-            //TODO: set the enclaveId once the registration of oidc enclaves is done
-            if(this.Validate(tokenPayload)){
-                handler.handle(Future.succeededFuture(new AttestationResult(publicKey, "TODO")));
-            }else {
+            var enclaveId = this.validate(tokenPayload);
+            if (enclaveId != null) {
+                handler.handle(Future.succeededFuture(new AttestationResult(publicKey, enclaveId)));
+            } else {
                 throw new AttestationException("unauthorized token");
             }
         }
@@ -76,7 +76,10 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
     }
 
     // Pass as long as one of supported policy validator check pass.
-    private boolean Validate(TokenPayload tokenPayload) {
+    // Returns
+    //     null if validation failed
+    //     enclaveId if validation succeed
+    private String validate(TokenPayload tokenPayload) {
         for (var policyValidator : supportedPolicyValidators) {
             LOGGER.info("Validating policy... Validator version: " + policyValidator.getVersion());
             try {
@@ -85,12 +88,12 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
 
                 if (allowedEnclaveIds.contains(enclaveId)) {
                     LOGGER.info("Successfully attested OIDC against registered enclaves");
-                    return true;
+                    return enclaveId;
                 }
             } catch (Exception ex) {
                 LOGGER.warn("Fail to validator version: " + policyValidator.getVersion() + ", error :" + ex.getMessage());
             }
         }
-        return false;
+        return null;
     }
 }
