@@ -378,7 +378,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
             }
             promise.complete();
         } catch (Exception ex) {
-            // be careful as the s3Path may contain the pre-signed S3 token, so do not log the whole path
+            // Be careful as the s3Path may contain the pre-signed S3 token, so do not log the whole path
             LOGGER.error("download error: " + ex.getClass().getSimpleName());
             promise.fail(new Throwable(ex));
         }
