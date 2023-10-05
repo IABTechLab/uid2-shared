@@ -25,25 +25,6 @@ import java.util.List;
 public class CloudUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudUtils.class);
     public static Proxy defaultProxy = getDefaultProxy();
-    public static ProxySelector defaultProxySelector = getDefaultProxySelector();
-
-    private static ProxySelector getDefaultProxySelector() {
-        return new ProxySelector() {
-            @Override
-            public List<Proxy> select(URI uri) {
-                if (defaultProxy != null) {
-                    return List.of(defaultProxy);
-                }
-
-                return List.of();
-            }
-
-            @Override
-            public void connectFailed(URI uri, SocketAddress sa, IOException ioe) {
-                LOGGER.error("Failed to connect to proxy", ioe);
-            }
-        };
-    }
 
     public static TaggableCloudStorage createStorage(String cloudBucket, JsonObject jsonConfig) {
         var accessKeyId = jsonConfig.getString(Const.Config.AccessKeyIdProp);

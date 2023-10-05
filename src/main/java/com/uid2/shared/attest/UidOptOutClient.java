@@ -1,6 +1,7 @@
 package com.uid2.shared.attest;
 
 import com.uid2.shared.cloud.CloudUtils;
+import com.uid2.shared.util.URLConnectionHttpClient;
 
 import java.net.Proxy;
 import java.net.http.HttpClient;
@@ -17,10 +18,10 @@ public class UidOptOutClient extends UidCoreClient {
         super(userToken, proxy, enforceHttps, attestationTokenRetriever, null);
     }
     public UidOptOutClient(String userToken,
-                         Proxy proxy,
-                         boolean enforceHttps,
-                         AttestationTokenRetriever attestationTokenRetriever,
-                         HttpClient httpClient) {
+                           Proxy proxy,
+                           boolean enforceHttps,
+                           AttestationTokenRetriever attestationTokenRetriever,
+                           URLConnectionHttpClient httpClient) {
         super(userToken, proxy, enforceHttps, attestationTokenRetriever, httpClient);
     }
 
