@@ -6,7 +6,7 @@
 
     <groupId>com.uid2</groupId>
     <artifactId>uid2-shared</artifactId>
-    <version>5.10.0-6a117f36ee</version>
+    <version>5.11.0-d71d3c960e</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Library for all the shared uid2 operations</description>
     <url>https://github.com/IABTechLab/uid2docs</url>
