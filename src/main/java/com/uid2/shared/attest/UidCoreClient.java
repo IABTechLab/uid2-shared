@@ -3,6 +3,7 @@ package com.uid2.shared.attest;
 import com.uid2.shared.Const;
 import com.uid2.shared.Utils;
 import com.uid2.shared.cloud.*;
+import com.uid2.shared.util.URLConnectionHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,22 +13,19 @@ import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.HashMap;
 
 public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private static final Logger LOGGER = LoggerFactory.getLogger(UidCoreClient.class);
     private final ICloudStorage contentStorage;
     private final Proxy proxy;
+    private final URLConnectionHttpClient httpClient;
     private String userToken;
     private final String appVersionHeader;
     private final boolean enforceHttps;
     private boolean allowContentFromLocalFileSystem = false;
-    private final HttpClient httpClient;
-
-    protected AttestationTokenRetriever getAttestationTokenRetriever() {
-        return attestationTokenRetriever;
-    }
-
     private final AttestationTokenRetriever attestationTokenRetriever;
+
 
     public static UidCoreClient createNoAttest(String userToken, boolean enforceHttps, AttestationTokenRetriever attestationTokenRetriever) {
         return new UidCoreClient(userToken, CloudUtils.defaultProxy, enforceHttps, attestationTokenRetriever, null);
@@ -44,13 +42,13 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
                          Proxy proxy,
                          boolean enforceHttps,
                          AttestationTokenRetriever attestationTokenRetriever,
-                         HttpClient httpClient) {
+                         URLConnectionHttpClient httpClient) {
         this.proxy = proxy;
         this.userToken = userToken;
         this.contentStorage = new PreSignedURLStorage(proxy);
         this.enforceHttps = enforceHttps;
         if (httpClient == null) {
-            this.httpClient = HttpClient.newBuilder().proxy(CloudUtils.defaultProxySelector).build();
+            this.httpClient = new URLConnectionHttpClient(proxy);
         } else {
             this.httpClient = httpClient;
         }
@@ -131,29 +129,30 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
             throw new IOException("UidCoreClient requires HTTPS connection");
         }
 
-        HttpRequest.Builder httpRequestBuilder = HttpRequest.newBuilder()
-                .uri(uri)
-                .GET()
-                .setHeader(Const.Http.AppVersionHeader, appVersionHeader);
-
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put(Const.Http.AppVersionHeader, this.appVersionHeader);
         if (this.userToken != null && !this.userToken.isBlank()) {
-            httpRequestBuilder.setHeader("Authorization", "Bearer " + this.userToken);
+            headers.put("Authorization", "Bearer " + this.userToken);
         }
         if (attestationToken != null && !attestationToken.isBlank()) {
-            httpRequestBuilder.setHeader(Const.Attestation.AttestationTokenHeader, attestationToken);
+            headers.put(Const.Attestation.AttestationTokenHeader, attestationToken);
         }
         if (attestationJWT != null && !attestationJWT.isBlank()) {
-            httpRequestBuilder.setHeader(Const.Attestation.AttestationJWTHeader, attestationJWT);
+            headers.put(Const.Attestation.AttestationJWTHeader, attestationJWT);
         }
-        HttpRequest httpRequest = httpRequestBuilder.build();
+
         HttpResponse<String> httpResponse;
         try {
-            httpResponse = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException | InterruptedException e) {
+            httpResponse = httpClient.get(path, headers);
+        } catch (IOException e) {
             LOGGER.error("Failed to send request with error: ", e);
             throw e;
         }
         return httpResponse;
+    }
+
+    protected AttestationTokenRetriever getAttestationTokenRetriever() {
+        return attestationTokenRetriever;
     }
 
     public void setUserToken(String userToken) {
