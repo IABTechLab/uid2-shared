@@ -13,7 +13,7 @@ import java.util.Collection;
 public class ClientParser implements Parser<Collection<ClientKey>> {
     private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
 
-    public ClientParser() {
+    static {
         OBJECT_MAPPER.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);
     }
 
