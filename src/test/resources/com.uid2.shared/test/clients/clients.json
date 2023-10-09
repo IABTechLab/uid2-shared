@@ -7,8 +7,10 @@
     "name": "admin@uid2.com",
     "contact": "admin@uid2.com",
     "created": 1617149276,
+    "disabled": false,
     "roles": [ "MAPPER", "GENERATOR" ],
-    "site_id": 3
+    "site_id": 3,
+    "service_id": 0
   },
   {
     "key": "test-mapper-key",
@@ -18,8 +20,10 @@
     "name": "mapper@uid2.com",
     "contact": "mapper@uid2.com",
     "created": 1617149276,
+    "disabled": false,
     "roles": [ "MAPPER", "GENERATOR" ],
-    "site_id": 4
+    "site_id": 4,
+    "service_id": 0
   },
   {
     "key": "test-optout-key",
@@ -29,8 +33,10 @@
     "name": "optout@uid2.com",
     "contact": "optout@uid2.com",
     "created": 1617149276,
+    "disabled": false,
     "roles": [ "OPTOUT" ],
-    "site_id": 5
+    "site_id": 5,
+    "service_id": 0
   },
   {
     "key": "trusted-partner-key",
@@ -40,8 +46,10 @@
     "name": "partner@uid2.com",
     "contact": "partner@uid2.com",
     "created": 1617149276,
+    "disabled": false,
     "roles": [ "ID_READER", "MAPPER", "GENERATOR" ],
-    "site_id": 6
+    "site_id": 6,
+    "service_id": 0
   },
   {
     "key": "trusted-partner-key-latest1",
@@ -51,8 +59,10 @@
     "name": "partner@uid2.com",
     "contact": "partner@uid2.com",
     "created": 1654596485,
+    "disabled": false,
     "roles": [ "ID_READER", "MAPPER", "GENERATOR" ],
-    "site_id": 6
+    "site_id": 6,
+    "service_id": 0
   },
   {
     "key": "trusted-partner-key-latest2",
@@ -62,7 +72,9 @@
     "name": "partner@uid2.com",
     "contact": "partner@uid2.com",
     "created": 1694596485,
-    "roles": [ "ID_READER", "MAPPER", "GENERATOR" ],
-    "site_id": 6
+    "disabled": false,
+    "roles": [ "ID_READER", "MAPPER", "GENERATOR", "OPTOUT_CHECKER"],
+    "site_id": 6,
+    "service_id": 0
   }
 ]

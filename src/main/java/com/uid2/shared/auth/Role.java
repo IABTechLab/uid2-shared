@@ -1,5 +1,7 @@
 package com.uid2.shared.auth;
 
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
+
 public enum Role {
     GENERATOR,
     MAPPER,
@@ -13,5 +15,8 @@ public enum Role {
     SECRET_MANAGER,
     ADMINISTRATOR,
     SHARING_PORTAL,
-    PRIVATE_SITE_REFRESHER // UID2-575 - For cronjob to trigger private site data generated
+    PRIVATE_SITE_REFRESHER, // UID2-575 - For cronjob to trigger private site data generated
+
+    @JsonEnumDefaultValue
+    UNKNOWN
 }
