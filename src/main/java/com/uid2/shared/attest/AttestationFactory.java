@@ -29,4 +29,14 @@ public class AttestationFactory {
         Constructor<?> c = cls.getConstructor();
         return (IAttestationProvider) c.newInstance();
     }
+
+    public static IAttestationProvider getAzureCCAttestation() throws Exception {
+        return getAzureCCAttestation(null);
+    }
+
+    public static IAttestationProvider getAzureCCAttestation(String maaEndpoint) throws Exception {
+        Class<?> cls = Class.forName("com.uid2.attestation.azure.AzureCCAttestationProvider");
+        Constructor<?> c = cls.getConstructor(String.class);
+        return (IAttestationProvider) c.newInstance(maaEndpoint);
+    }
 }
