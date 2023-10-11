@@ -73,8 +73,8 @@ public class Const {
         public static final String AwsKmsJwtSigningPublicKeysProp = "aws_kms_jwt_signing_public_keys";
         public static final String EnforceJwtProp = "enforceJwt";
 
-        public static final String MaaServerBaseUrl="maa_server_base_url";
-        public static final String DefaultMaaServerBaseUrl="https://sharedeus.eus.attest.azure.net";
+        public static final String MaaServerBaseUrlProp ="maa_server_base_url";
+        public static final String MaaServerBaseUrlDefault ="https://sharedeus.eus.attest.azure.net";
     }
 
     public static class Http {
