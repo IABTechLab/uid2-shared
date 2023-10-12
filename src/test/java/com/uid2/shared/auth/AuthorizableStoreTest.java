@@ -19,10 +19,15 @@ public class AuthorizableStoreTest {
     private static final KeyHasher KEY_HASHER = new KeyHasher();
     private static final Instant NOW = Instant.now();
     private static final String SITE_11_CLIENT_KEY = "UID2-C-L-11-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
+    private static final String SITE_11_CLIENT_KEY_ID = "UID2-C-L-11-abcde";
     private static final String SITE_12_CLIENT_KEY_1 = "UID2-C-L-12-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
+    private static final String SITE_12_CLIENT_KEY_ID_1 = "UID2-C-L-12-abcde";
     private static final String SITE_12_CLIENT_KEY_2 = "UID2-C-L-12-ghijkl.ghijklghijklghijklghijklghijklghijklgh";
+    private static final String SITE_12_CLIENT_KEY_ID_2 = "UID2-C-L-12-ghijk";
     private static final String SITE_13_CLIENT_KEY = "UID2-C-L-13-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
+    private static final String SITE_13_CLIENT_KEY_ID = "UID2-C-L-13-abcde";
     private static final String SITE_13_CLIENT_KEY_LEGACY = "abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
+    private static final String SITE_13_CLIENT_KEY_ID_LEGACY = "abcde";
 
     private AuthorizableStore<ClientKey> clientKeyStore;
     private List<ClientKey> clients;
@@ -30,11 +35,11 @@ public class AuthorizableStoreTest {
     @BeforeEach
     public void setup() {
         clients = new ArrayList<>();
-        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_11_CLIENT_KEY), "client11", 11));
-        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_1), "client12_1", 12));
-        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_2), "client12_2", 12));
-        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY), "client13", 13));
-        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY_LEGACY), "client13_legacy", 13));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_11_CLIENT_KEY), "client11", 11, SITE_11_CLIENT_KEY_ID));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_1), "client12_1", 12, SITE_12_CLIENT_KEY_ID_1));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_12_CLIENT_KEY_2), "client12_2", 12, SITE_12_CLIENT_KEY_ID_2));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY), "client13", 13, SITE_13_CLIENT_KEY_ID));
+        clients.add(createClientKey(KEY_HASHER.hashKey(SITE_13_CLIENT_KEY_LEGACY), "client13_legacy", 13, SITE_13_CLIENT_KEY_ID_LEGACY));
 
         this.clientKeyStore = new AuthorizableStore<>(ClientKey.class);
         this.clientKeyStore.refresh(clients);
@@ -64,7 +69,7 @@ public class AuthorizableStoreTest {
     @Test
     public void getAuthorizableByKey_returnsKey_withNoSiteId() {
         String key = "abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
-        SitelessAuthorizable sitelessAuthorizable = new SitelessAuthorizable(KEY_HASHER.hashKey(key), "noSiteClient");
+        SitelessAuthorizable sitelessAuthorizable = new SitelessAuthorizable(KEY_HASHER.hashKey(key), "noSiteClient", "abcde");
         AuthorizableStore<SitelessAuthorizable> sitelessAuthorizableStore = new AuthorizableStore<>(SitelessAuthorizable.class);
         sitelessAuthorizableStore.refresh(List.of(sitelessAuthorizable));
 
@@ -124,7 +129,7 @@ public class AuthorizableStoreTest {
     @Test
     public void refresh_returnsNewClients_afterRefresh() {
         String key = "UID2-C-L-14-abcdef.abcdefabcdefabcdefabcdefabcdefabcdefab";
-        ClientKey client = createClientKey(KEY_HASHER.hashKey(key), "client14", 14);
+        ClientKey client = createClientKey(KEY_HASHER.hashKey(key), "client14", 14, "UID2-C-L-14-abcde");
         clientKeyStore.refresh(List.of(client));
 
         assertAll(
@@ -151,7 +156,7 @@ public class AuthorizableStoreTest {
         String invalidCacheValue = cache.getIfPresent(key);
 
         KeyHashResult khr = KEY_HASHER.hashKey(key);
-        ClientKey client = createClientKey(khr, "client14", 14);
+        ClientKey client = createClientKey(khr, "client14", 14, "UID2-C-L-14-abcde");
         clients.add(client);
         clientKeyStore.refresh(clients);
 
@@ -179,19 +184,21 @@ public class AuthorizableStoreTest {
         );
     }
 
-    private ClientKey createClientKey(KeyHashResult khr, String name, int siteId) {
-        return new ClientKey(khr.getHash(), khr.getSalt(), "", name, NOW, Set.of(), siteId);
+    private ClientKey createClientKey(KeyHashResult khr, String name, int siteId, String keyId) {
+        return new ClientKey(khr.getHash(), khr.getSalt(), "", name, NOW, Set.of(), siteId, keyId);
     }
 
     private static class SitelessAuthorizable implements IAuthorizable {
         private final String keyHash;
         private final String keySalt;
         private final String contact;
+        private final String keyId;
 
-        public SitelessAuthorizable(KeyHashResult khr, String contact) {
+        public SitelessAuthorizable(KeyHashResult khr, String contact, String keyId) {
             this.keyHash = khr.getHash();
             this.keySalt = khr.getSalt();
             this.contact = contact;
+            this.keyId = keyId;
         }
 
         public String getKey() {
@@ -224,13 +231,17 @@ public class AuthorizableStoreTest {
         }
 
         @Override
+        public String getKeyId() { return keyId; }
+
+        @Override
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             SitelessAuthorizable that = (SitelessAuthorizable) o;
             return Objects.equals(keyHash, that.keyHash)
                     && Objects.equals(keySalt, that.keySalt)
-                    && Objects.equals(contact, that.contact);
+                    && Objects.equals(contact, that.contact)
+                    && Objects.equals(keyId, that.keyId);
         }
 
         @Override

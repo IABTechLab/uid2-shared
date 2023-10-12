@@ -157,9 +157,10 @@ public class OperatorKeyTest {
                 "\"disabled\":false," +
                 "\"site_id\":1," +
                 "\"roles\":[\"OPERATOR\",\"OPTOUT\"]," +
-                "\"operator_type\":\"PRIVATE\"" +
+                "\"operator_type\":\"PRIVATE\"," +
+                "\"key_id\":\"test-keyId\"" +
                 "}";
-        OperatorKey o = new OperatorKey("test-keyHash", "test-keySalt", "admin@uid2.com", "admin@uid2.com", "protocol1", 1617149276, false, 1, new HashSet<>(Arrays.asList(Role.OPTOUT, Role.OPERATOR)));
+        OperatorKey o = new OperatorKey("test-keyHash", "test-keySalt", "admin@uid2.com", "admin@uid2.com", "protocol1", 1617149276, false, 1, new HashSet<>(Arrays.asList(Role.OPTOUT, Role.OPERATOR)), "test-keyId");
 
         assertEquals(expectJson, OBJECT_MAPPER.writeValueAsString(o));
     }
@@ -213,11 +214,11 @@ public class OperatorKeyTest {
 
     private static Set<Arguments> operatorConstructorArgs() {
         return Set.of(
-                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash1", "test-keySalt1", "name1", "contact1", "protocol1", 1, true)),
-                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash2", "test-keySalt2", "name2", "contact2", "protocol2", 2, true, 2)),
-                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash3", "test-keySalt3", "name3", "contact3", "protocol3", 3, true, 3,  null)),
-                Arguments.of(OperatorType.PUBLIC, new OperatorKey("test-keyHash4", "test-keySalt4", "name4", "contact4", "protocol4", 4, true, 4,  null, OperatorType.PUBLIC)),
-                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash5", "test-keySalt5", "name5", "contact5", "protocol5", 5, true, 5,  null, OperatorType.PRIVATE))
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash1", "test-keySalt1", "name1", "contact1", "protocol1", 1, true, "test-keyId")),
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash2", "test-keySalt2", "name2", "contact2", "protocol2", 2, true, 2, "test-keyId")),
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash3", "test-keySalt3", "name3", "contact3", "protocol3", 3, true, 3,  null, "test-keyId")),
+                Arguments.of(OperatorType.PUBLIC, new OperatorKey("test-keyHash4", "test-keySalt4", "name4", "contact4", "protocol4", 4, true, 4,  null, OperatorType.PUBLIC, "test-keyId")),
+                Arguments.of(OperatorType.PRIVATE, new OperatorKey("test-keyHash5", "test-keySalt5", "name5", "contact5", "protocol5", 5, true, 5,  null, OperatorType.PRIVATE, "test-keyId"))
         );
     }
 }

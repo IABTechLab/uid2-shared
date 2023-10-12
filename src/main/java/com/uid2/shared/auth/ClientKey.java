@@ -31,6 +31,8 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     private boolean disabled;
     @JsonProperty("service_id")
     private int serviceId;
+    @JsonProperty("key_id")
+    private String keyId;
 
     @JsonCreator
     public ClientKey(
@@ -43,7 +45,8 @@ public class ClientKey implements IRoleAuthorizable<Role> {
             @JsonProperty("roles") Set<Role> roles,
             @JsonProperty("site_id") int siteId,
             @JsonProperty("disabled") boolean disabled,
-            @JsonProperty("service_id") int serviceId) {
+            @JsonProperty("service_id") int serviceId,
+            @JsonProperty("key_id") String keyId) {
         this.keyHash = keyHash;
         this.keySalt = keySalt;
         this.secret = secret;
@@ -55,18 +58,19 @@ public class ClientKey implements IRoleAuthorizable<Role> {
         this.siteId = siteId;
         this.disabled = disabled;
         this.serviceId = serviceId;
+        this.keyId = keyId;
     }
 
-    public ClientKey(String keyHash, String keySalt, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId, boolean disabled) {
-        this(keyHash, keySalt, secret, name, contact, created.getEpochSecond(), roles, siteId, disabled, 0);
+    public ClientKey(String keyHash, String keySalt, String secret, String name, String contact, Instant created, Set<Role> roles, int siteId, boolean disabled, String keyId) {
+        this(keyHash, keySalt, secret, name, contact, created.getEpochSecond(), roles, siteId, disabled, 0, keyId);
     }
 
-    public ClientKey(String keyHash, String keySalt, String secret, String name, Instant created, Set<Role> roles, int siteId, boolean disabled) {
-        this(keyHash, keySalt, secret, name, name, created.getEpochSecond(), roles, siteId, disabled, 0);
+    public ClientKey(String keyHash, String keySalt, String secret, String name, Instant created, Set<Role> roles, int siteId, boolean disabled, String keyId) {
+        this(keyHash, keySalt, secret, name, name, created.getEpochSecond(), roles, siteId, disabled, 0, keyId);
     }
 
-    public ClientKey(String keyHash, String keySalt, String secret, String name, Instant created, Set<Role> roles, int siteId) {
-        this(keyHash, keySalt, secret, name, name, created.getEpochSecond(), roles, siteId, false, 0);
+    public ClientKey(String keyHash, String keySalt, String secret, String name, Instant created, Set<Role> roles, int siteId, String keyId) {
+        this(keyHash, keySalt, secret, name, name, created.getEpochSecond(), roles, siteId, false, 0, keyId);
     }
 
     @Override
@@ -82,6 +86,9 @@ public class ClientKey implements IRoleAuthorizable<Role> {
     public String getSecret() {
         return secret;
     }
+
+    @Override
+    public String getKeyId() { return keyId; }
 
     @JsonIgnore
     public byte[] getSecretBytes() {

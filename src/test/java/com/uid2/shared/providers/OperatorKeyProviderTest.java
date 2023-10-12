@@ -32,7 +32,8 @@ public class OperatorKeyProviderTest {
                 "    \"name\": \"test-partner\",\n" +
                 "    \"contact\": \"test-partner@uid2.com\",\n" +
                 "    \"created\": 1617149276,\n" +
-                "    \"protocol\": \"aws-nitro\"\n" +
+                "    \"protocol\": \"aws-nitro\",\n" +
+                "    \"key_id\": \"test-key-id-1\"\n" +
                 "  },\n" +
                 "  {\n" +
                 "    \"key_hash\": \"EUqMA4TcQsESnNnNt15QxkO4S+Pi+7tdtPvj8q0Kswlq3n+quyva6M1BB+mqMJlD4o4cchoEbi3ute8Es8VYSg==\",\n" +
@@ -40,7 +41,8 @@ public class OperatorKeyProviderTest {
                 "    \"name\": \"trusted-partner\",\n" +
                 "    \"contact\": \"trusted-partner@uid2.com\",\n" +
                 "    \"created\": 1617149276,\n" +
-                "    \"protocol\": \"trusted\"\n" +
+                "    \"protocol\": \"trusted\",\n" +
+                "    \"key_id\": \"test-key-id-2\"\n" +
                 "  }\n" +
                 "]";
 
@@ -64,7 +66,8 @@ public class OperatorKeyProviderTest {
                 false,
                 null,
                 Set.of(),
-                OperatorType.PRIVATE
+                OperatorType.PRIVATE,
+                "test-key-id-1"
         );
         OperatorKey expectedTrustedKey = new OperatorKey(
                 "EUqMA4TcQsESnNnNt15QxkO4S+Pi+7tdtPvj8q0Kswlq3n+quyva6M1BB+mqMJlD4o4cchoEbi3ute8Es8VYSg==",
@@ -76,7 +79,8 @@ public class OperatorKeyProviderTest {
                 false,
                 null,
                 Set.of(),
-                OperatorType.PRIVATE
+                OperatorType.PRIVATE,
+                "test-key-id-2"
         );
         assertAll(
                 "testLoadOperatorKeys",

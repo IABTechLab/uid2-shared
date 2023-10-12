@@ -6,4 +6,5 @@ public interface IAuthorizable {
     String getContact();
     Integer getSiteId();
     boolean isDisabled();
+    String getKeyId();
 }

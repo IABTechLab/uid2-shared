@@ -76,7 +76,8 @@ public class RotatingKeyAclProviderTest {
                 "test-client-name",
                 Instant.MIN,
                 Set.of(),
-                siteId
+                siteId,
+                "test-key-id"
         );
     }
 
