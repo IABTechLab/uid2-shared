@@ -98,7 +98,7 @@ public class RotatingSiteStoreTest {
     }
 
     @Test
-    public void getSiteReturnsNullBeforeLoadContentIsCalled() {
+    public void getSiteReturnsNullBeforeLoadContentIsCalled() { //eg, loadContent() is never called for Private Operators as they don't currently require site data
         final var site = siteStore.getSite(1);
         assertNull(site);
     }
