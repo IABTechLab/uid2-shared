@@ -17,8 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import static com.uid2.shared.TestUtilites.makeInputStream;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 public class RotatingSiteStoreTest {
@@ -96,5 +95,11 @@ public class RotatingSiteStoreTest {
         assertTrue(siteStore.getAllSites().contains(s2));
         assertTrue(siteStore.getAllSites().contains(s3));
         assertTrue(siteStore.getAllSites().contains(s4));
+    }
+
+    @Test
+    public void getSiteReturnsNullBeforeLoadContentIsCalled() {
+        final var site = siteStore.getSite(1);
+        assertNull(site);
     }
 }
