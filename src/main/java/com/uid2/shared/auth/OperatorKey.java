@@ -173,11 +173,12 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 && Objects.equals(this.siteId, b.siteId)
                 && this.roles.equals(b.roles)
                 && this.created == b.created
-                && this.operatorType == b.operatorType;
+                && this.operatorType == b.operatorType
+                && this.keyId.equals(keyId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, roles, operatorType);
+        return Objects.hash(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, roles, operatorType, keyId);
     }
 }

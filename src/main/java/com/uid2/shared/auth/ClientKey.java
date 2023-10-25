@@ -191,11 +191,12 @@ public class ClientKey implements IRoleAuthorizable<Role> {
                 && this.siteId == b.siteId
                 && this.disabled == b.disabled
                 && Arrays.equals(this.secretBytes, b.secretBytes)
-                && this.serviceId == b.serviceId;
+                && this.serviceId == b.serviceId
+                && this.keyId.equals(keyId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(keyHash, keySalt, secret, name, contact, roles, created, siteId, disabled, Arrays.hashCode(secretBytes), serviceId);
+        return Objects.hash(keyHash, keySalt, secret, name, contact, roles, created, siteId, disabled, Arrays.hashCode(secretBytes), serviceId, keyId);
     }
 }
