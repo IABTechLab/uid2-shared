@@ -52,7 +52,7 @@ public class AttestationMiddlewareTest {
         HashSet<Role> roles = new HashSet<>();
         roles.add(Role.OPERATOR);
 
-        this.operatorKey = new OperatorKey(EXPECTED_OPERATOR_KEY_HASH, EXPECTED_OPERATOR_KEY_SALT, "name", "contact", "trusted", 1000, false, 999, roles, OperatorType.PUBLIC);
+        this.operatorKey = new OperatorKey(EXPECTED_OPERATOR_KEY_HASH, EXPECTED_OPERATOR_KEY_SALT, "name", "contact", "trusted", 1000, false, 999, roles, OperatorType.PUBLIC, "test-key-id");
 
         when(this.request.getHeader(Const.Attestation.AttestationJWTHeader)).thenReturn("dummy jwt");
         when(this.routingContext.request()).thenReturn(this.request);
@@ -172,7 +172,7 @@ public class AttestationMiddlewareTest {
 
     @Test
     void notTrustedNoAttestationTokenReturns401() throws JwtService.ValidationException {
-        this.operatorKey = new OperatorKey(EXPECTED_OPERATOR_KEY_HASH, EXPECTED_OPERATOR_KEY_SALT, "name", "contact", "not-trusted", 1000, false, 999, null, OperatorType.PUBLIC);
+        this.operatorKey = new OperatorKey(EXPECTED_OPERATOR_KEY_HASH, EXPECTED_OPERATOR_KEY_SALT, "name", "contact", "not-trusted", 1000, false, 999, null, OperatorType.PUBLIC, "test-key-id");
         this.data.put(AuthMiddleware.API_CLIENT_PROP, this.operatorKey);
 
         var attestationMiddleware = getAttestationMiddleware(true);
@@ -186,7 +186,7 @@ public class AttestationMiddlewareTest {
 
     @Test
     void notTrustedWithAttestationTokenReturns401() throws JwtService.ValidationException {
-        this.operatorKey = new OperatorKey(EXPECTED_OPERATOR_KEY_HASH, EXPECTED_OPERATOR_KEY_SALT, "name", "contact", "not-trusted", 1000, false, 999, null, OperatorType.PUBLIC);
+        this.operatorKey = new OperatorKey(EXPECTED_OPERATOR_KEY_HASH, EXPECTED_OPERATOR_KEY_SALT, "name", "contact", "not-trusted", 1000, false, 999, null, OperatorType.PUBLIC, "test-key-id");
         this.data.put(AuthMiddleware.API_CLIENT_PROP, this.operatorKey);
         when(this.request.getHeader(Const.Attestation.AttestationTokenHeader)).thenReturn("dummy attestation token");
         when(this.request.getHeader("Authorization")).thenReturn("BEARER dummy");

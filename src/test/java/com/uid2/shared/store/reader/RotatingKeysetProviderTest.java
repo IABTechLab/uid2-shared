@@ -78,7 +78,8 @@ public class RotatingKeysetProviderTest {
                 "test-client-name",
                 Instant.MIN,
                 Set.of(),
-                siteId
+                siteId,
+                "test-key-id"
         );
     }
 

@@ -24,6 +24,8 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     private Set<Role> roles;
     @JsonProperty("operator_type")
     private OperatorType operatorType;
+    @JsonProperty("key_id")
+    private String keyId;
 
     @JsonCreator
     public OperatorKey(
@@ -36,7 +38,8 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
             @JsonProperty("disabled") boolean disabled,
             @JsonProperty("site_id") Integer siteId,
             @JsonProperty("roles") Set<Role> roles,
-            @JsonProperty("operator_type") OperatorType operatorType) {
+            @JsonProperty("operator_type") OperatorType operatorType,
+            @JsonProperty("key_id") String keyId) {
         this.keyHash = keyHash;
         this.keySalt = keySalt;
         this.name = name;
@@ -47,18 +50,19 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
         this.siteId = siteId;
         this.roles = this.reorderAndAddDefaultRole(roles);
         this.operatorType = operatorType == null ? DEFAULT_OPERATOR_TYPE : operatorType;
+        this.keyId = keyId;
     }
 
-    public OperatorKey(String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles) {
-        this(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, roles, DEFAULT_OPERATOR_TYPE);
+    public OperatorKey(String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, Set<Role> roles, String keyId) {
+        this(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, roles, DEFAULT_OPERATOR_TYPE, keyId);
     }
 
-    public OperatorKey(String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled, Integer siteId) {
-        this(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, Set.of(Role.OPERATOR), DEFAULT_OPERATOR_TYPE);
+    public OperatorKey(String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled, Integer siteId, String keyId) {
+        this(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, Set.of(Role.OPERATOR), DEFAULT_OPERATOR_TYPE, keyId);
     }
 
-    public OperatorKey(String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled) {
-        this(keyHash, keySalt, name, contact, protocol, created, disabled, null, Set.of(Role.OPERATOR), DEFAULT_OPERATOR_TYPE);
+    public OperatorKey(String keyHash, String keySalt, String name, String contact, String protocol, long created, boolean disabled, String keyId) {
+        this(keyHash, keySalt, name, contact, protocol, created, disabled, null, Set.of(Role.OPERATOR), DEFAULT_OPERATOR_TYPE, keyId);
     }
 
     @Override
@@ -109,6 +113,8 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
     public Set<Role> getRoles() {
         return roles;
     }
+    @Override
+    public String getKeyId() {return keyId; }
 
     @Override
     public boolean hasRole(Role role) {
@@ -167,11 +173,12 @@ public class OperatorKey implements IRoleAuthorizable<Role> {
                 && Objects.equals(this.siteId, b.siteId)
                 && this.roles.equals(b.roles)
                 && this.created == b.created
-                && this.operatorType == b.operatorType;
+                && this.operatorType == b.operatorType
+                && this.keyId.equals(keyId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, roles, operatorType);
+        return Objects.hash(keyHash, keySalt, name, contact, protocol, created, disabled, siteId, roles, operatorType, keyId);
     }
 }
