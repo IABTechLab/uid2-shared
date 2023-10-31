@@ -20,6 +20,7 @@ public class KeyHasherTest {
     @Test
     public void hashKey_returnsNewHashEverytime_withRandomSalt() {
         KeyHasher hasher = new KeyHasher();
+
         KeyHashResult result1 = hasher.hashKey("test-key");
         KeyHashResult result2 = hasher.hashKey("test-key");
 
