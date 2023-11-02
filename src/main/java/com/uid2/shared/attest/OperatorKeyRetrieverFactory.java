@@ -10,4 +10,10 @@ public class OperatorKeyRetrieverFactory {
         Constructor<?> c = cls.getConstructor(String.class, String.class);
         return (IOperatorKeyRetriever) c.newInstance(vaultName, secretName);
     }
+
+    public static IOperatorKeyRetriever getGcpOperatorKeyRetriever(String secretVersionName) throws Exception {
+        Class<?> cls = Class.forName("com.uid2.attestation.gcp.GcpOperatorKeyRetriever");
+        Constructor<?> c = cls.getConstructor(String.class);
+        return (IOperatorKeyRetriever) c.newInstance(secretVersionName);
+    }
 }
