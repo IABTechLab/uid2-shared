@@ -1,5 +1,6 @@
 package com.uid2.shared.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.Instant;
@@ -9,6 +10,8 @@ import java.util.Objects;
 import java.util.Set;
 
 public class Site {
+    private static final String DEFAULT_DESCRIPTION = "";
+    private static final boolean DEFAULT_VISIBLE = true;
     private final int id;
     private final String name;
     private String description;
@@ -20,50 +23,66 @@ public class Site {
     private Boolean visible;
     private final long created;
 
+    @JsonCreator
+    public Site(@JsonProperty("id") int id,
+                @JsonProperty("name") String name,
+                @JsonProperty("description") String description,
+                @JsonProperty("enabled") Boolean enabled,
+                @JsonProperty("clientTypes") Set<ClientType> types,
+                @JsonProperty("domains") Set<String> domains,
+                @JsonProperty("visible") Boolean visible,
+                @JsonProperty("created") long created) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.enabled = enabled;
+        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
+        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.visible = visible;
+        this.created = created;
+    }
+
     public Site(int id, String name, Boolean enabled) {
         this.id = id;
         this.name = name;
+        this.description = DEFAULT_DESCRIPTION;
         this.enabled = enabled;
         this.domainNames = new HashSet<>();
         this.clientTypes = new HashSet<>();
+        this.visible = DEFAULT_VISIBLE;
         this.created = Instant.now().getEpochSecond();
     }
 
     public Site(int id, String name, Boolean enabled, Set<String> domains) {
         this.id = id;
         this.name = name;
+        this.description = DEFAULT_DESCRIPTION;
         this.enabled = enabled;
-        this.domainNames = domains;
+        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
         this.clientTypes = new HashSet<>();
+        this.visible = DEFAULT_VISIBLE;
         this.created = Instant.now().getEpochSecond();
     }
 
     public Site(int id, String name, Boolean enabled, Set<ClientType> types, Set<String> domains) {
         this.id = id;
         this.name = name;
+        this.description = DEFAULT_DESCRIPTION;
         this.enabled = enabled;
-        this.clientTypes = types;
-        this.domainNames = domains;
+        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
+        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.visible = DEFAULT_VISIBLE;
         this.created = Instant.now().getEpochSecond();
     }
 
     public Site(int id, String name, Boolean enabled, Set<ClientType> types, Set<String> domains, long created) {
         this.id = id;
         this.name = name;
+        this.description = DEFAULT_DESCRIPTION;
         this.enabled = enabled;
-        this.clientTypes = types;
-        this.domainNames = domains;
-        this.created = created;
-    }
-
-    public Site(int id, String name, String description, Boolean enabled, Set<ClientType> types, Set<String> domains, Boolean visible, long created) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.enabled = enabled;
-        this.clientTypes = types;
-        this.domainNames = domains;
-        this.visible = visible;
+        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
+        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.visible = DEFAULT_VISIBLE;
         this.created = created;
     }
 
@@ -85,7 +104,6 @@ public class Site {
     public void setDomainNames(Set<String> domainNames) { this.domainNames = domainNames; }
     public void setVisible(Boolean visible) { this.visible = visible; }
 
-
     @Override
     public String toString() {
         return "Site{" +
@@ -105,7 +123,7 @@ public class Site {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Site site = (Site) o;
-        return id == site.id && name.equals(site.name) && description.equals(site.description) && enabled.equals(site.enabled) && domainNames.equals(site.domainNames) && clientTypes.equals(site.clientTypes) && visible.equals(site.visible) && created == site.created;
+        return id == site.id && name.equals(site.name) && Objects.equals(description, site.description) && enabled.equals(site.enabled) && domainNames.equals(site.domainNames) && clientTypes.equals(site.clientTypes) && visible.equals(site.visible) && created == site.created;
     }
 
     @Override
