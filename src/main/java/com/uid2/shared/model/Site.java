@@ -34,7 +34,7 @@ public class Site {
                 @JsonProperty("created") long created) {
         this.id = id;
         this.name = name;
-        this.description = description;
+        this.description = (description != null) ? description : DEFAULT_DESCRIPTION;
         this.enabled = enabled;
         this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
         this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
@@ -84,6 +84,17 @@ public class Site {
         this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
         this.visible = DEFAULT_VISIBLE;
         this.created = created;
+    }
+
+    public Site(int id, String name, String description, Boolean enabled, Set<ClientType> types, Set<String> domains, Boolean visible) {
+        this.id = id;
+        this.name = name;
+        this.description = (description != null) ? description : DEFAULT_DESCRIPTION;
+        this.enabled = enabled;
+        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
+        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.visible = visible;
+        this.created = Instant.now().getEpochSecond();
     }
 
     public int getId() { return id; }
