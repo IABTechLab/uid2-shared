@@ -82,8 +82,8 @@ public class RotatingSiteStoreTest {
         JsonArray content = new JsonArray();
         Site s1 = addSite(content, 123, "test-1", "test-1-desc", true, true, Instant.now().getEpochSecond());
         Site s2 = addSite(content, 124, "test-2", "test-2-desc", false, true, Instant.now().minusSeconds(100).getEpochSecond());
-        Site s3 = addSite(content, 125, "test-3", "test-3-desc", true, true, Instant.now().plusSeconds(100).getEpochSecond());
-        Site s4 = addSite(content, 126, "test-4", "test-4-desc", false, true, Instant.now().getEpochSecond(), "testdomain1.com", "testdomain2.net");
+        Site s3 = addSite(content, 125, "test-3", "test-3-desc", true, false, Instant.now().plusSeconds(100).getEpochSecond());
+        Site s4 = addSite(content, 126, "test-4", "test-4-desc", false, false, Instant.now().getEpochSecond(), "testdomain1.com", "testdomain2.net");
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = siteStore.loadContent(makeMetadata("locationPath"));
