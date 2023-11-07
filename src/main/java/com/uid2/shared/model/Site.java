@@ -134,7 +134,7 @@ public class Site {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Site site = (Site) o;
-        return id == site.id && name.equals(site.name) && Objects.equals(description, site.description) && enabled.equals(site.enabled) && domainNames.equals(site.domainNames) && clientTypes.equals(site.clientTypes) && visible.equals(site.visible) && created == site.created;
+        return id == site.id && name.equals(site.name) && description.equals(site.description) && enabled.equals(site.enabled) && domainNames.equals(site.domainNames) && clientTypes.equals(site.clientTypes) && visible.equals(site.visible) && created == site.created;
     }
 
     @Override

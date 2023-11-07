@@ -10,8 +10,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class SiteParser implements Parser<Map<Integer,Site>> {
-
+public class SiteParser implements Parser<Map<Integer, Site>> {
     private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
 
     @Override
