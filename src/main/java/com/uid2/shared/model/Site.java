@@ -29,7 +29,7 @@ public class Site {
                 @JsonProperty("description") String description,
                 @JsonProperty("enabled") Boolean enabled,
                 @JsonProperty("clientTypes") Set<ClientType> types,
-                @JsonProperty("domains") Set<String> domains,
+                @JsonProperty("domain_names") Set<String> domains,
                 @JsonProperty("visible") Boolean visible,
                 @JsonProperty("created") long created) {
         this.id = id;

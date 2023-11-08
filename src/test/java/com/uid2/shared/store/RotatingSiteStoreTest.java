@@ -1,9 +1,12 @@
 package com.uid2.shared.store;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.model.Site;
 import com.uid2.shared.store.reader.RotatingSiteStore;
 import com.uid2.shared.store.scope.GlobalScope;
+import com.uid2.shared.util.Mapper;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
@@ -12,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 public class RotatingSiteStoreTest {
+    private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
     private AutoCloseable mocks;
     @Mock
     ICloudStorage cloudStorage;
@@ -49,22 +54,9 @@ public class RotatingSiteStoreTest {
     private Site addSite(JsonArray content, int siteId, String name, String description, boolean enabled, boolean visible, long created, String... domains) {
 
         Site s = new Site(siteId, name, description, enabled, new HashSet<>(), new HashSet<>(List.of(domains)), visible, created);
+        JsonNode jsonNode = OBJECT_MAPPER.convertValue(s, JsonNode.class);
+        content.add(jsonNode);
 
-        JsonArray ja = new JsonArray();
-        for (String domain : domains) {
-            ja.add(domain);
-        }
-
-        JsonObject site = new JsonObject();
-        site.put("id", siteId);
-        site.put("name", name);
-        site.put("description", description);
-        site.put("enabled", enabled);
-        site.put("domain_names", ja);
-        site.put("visible", visible);
-        site.put("created", created);
-
-        content.add(site);
         return s;
     }
 
