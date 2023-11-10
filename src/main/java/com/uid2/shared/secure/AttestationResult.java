@@ -6,27 +6,27 @@ public class AttestationResult {
 
     private final String enclaveId;
 
-    private final AttestationClientException attestationException;
+    private final AttestationClientException attestationClientException;
 
     public AttestationResult(AttestationFailure reasonToFail) {
         this.failure = reasonToFail;
         this.publicKey = null;
         this.enclaveId = "Failed attestation, enclave Id unknown";
-        this.attestationException = null;
+        this.attestationClientException = null;
     }
 
     public AttestationResult(AttestationClientException exception) {
         this.failure = AttestationFailure.OTHER;
         this.publicKey = null;
         this.enclaveId = "Failed attestation, enclave Id unknown";
-        this.attestationException = exception;
+        this.attestationClientException = exception;
     }
 
     public AttestationResult(byte[] publicKey, String enclaveId) {
         this.failure = AttestationFailure.NONE;
         this.publicKey = publicKey;
         this.enclaveId = enclaveId;
-        this.attestationException = null;
+        this.attestationClientException = null;
     }
 
     public boolean isSuccess() {
@@ -36,8 +36,8 @@ public class AttestationResult {
     public AttestationFailure getFailure() { return this.failure; }
 
     public String getReason() {
-        if(this.attestationException != null){
-            return this.attestationException.getMessage();
+        if(this.attestationClientException != null){
+            return this.attestationClientException.getMessage();
         }
         return this.failure.explain();
     }
