@@ -62,7 +62,6 @@ public class AzureCCAttestationProvider implements IAttestationProvider {
         catch (AttestationException ae) {
             handler.handle(Future.failedFuture(ae));
         } catch (Exception ex) {
-            // Server error
             handler.handle(Future.failedFuture(new AttestationException(ex)));
         }
     }
