@@ -5,6 +5,7 @@ import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Clock;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Strings;
+import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
 
 import java.io.IOException;
@@ -65,7 +66,7 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
                 tokenVerifier.verify(tokenString);
             }
         } catch (TokenVerifier.VerificationException e) {
-            throw new AttestationException("Fail to validate the token signature, error: " + e.getMessage());
+            throw new AttestationClientException("Fail to validate the token signature, error: " + e.getMessage());
         } catch (IOException e) {
             throw new AttestationException("Fail to parse token, error: " + e.getMessage());
         }

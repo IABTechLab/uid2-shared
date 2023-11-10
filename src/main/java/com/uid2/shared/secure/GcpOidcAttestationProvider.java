@@ -41,8 +41,11 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
             if (enclaveId != null) {
                 handler.handle(Future.succeededFuture(new AttestationResult(publicKey, enclaveId)));
             } else {
-                throw new AttestationException("unauthorized token");
+                handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.FORBIDDEN_ENCLAVE)));
             }
+        }
+        catch (AttestationClientException ace){
+            handler.handle(Future.succeededFuture(new AttestationResult(ace)));
         }
         catch (AttestationException ex){
             handler.handle(Future.failedFuture(ex));
@@ -79,7 +82,8 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
     // Returns
     //     null if validation failed
     //     enclaveId if validation succeed
-    private String validate(TokenPayload tokenPayload) {
+    private String validate(TokenPayload tokenPayload) throws Exception {
+        Exception lastException = null;
         for (var policyValidator : supportedPolicyValidators) {
             LOGGER.info("Validating policy... Validator version: " + policyValidator.getVersion());
             try {
@@ -91,8 +95,13 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
                     return enclaveId;
                 }
             } catch (Exception ex) {
+                lastException = ex;
                 LOGGER.warn("Fail to validator version: " + policyValidator.getVersion() + ", error :" + ex.getMessage());
             }
+        }
+
+        if(lastException != null){
+            throw lastException;
         }
         return null;
     }

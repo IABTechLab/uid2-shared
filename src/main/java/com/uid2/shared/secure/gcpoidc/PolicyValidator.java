@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.uid2.shared.Utils;
+import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -53,18 +54,18 @@ public class PolicyValidator implements IPolicyValidator {
 
     private static boolean checkConfidentialSpace(TokenPayload payload) throws AttestationException{
         if(!payload.isConfidentialSpaceSW()){
-            throw new AttestationException("Unexpected SW_NAME: " + payload.getSwName());
+            throw new AttestationClientException("Unexpected SW_NAME: " + payload.getSwName());
         }
         var isDebugMode = payload.isDebugMode();
         if(!isDebugMode && !payload.isStableVersion()){
-            throw new AttestationException("Confidential space image version is not stable.");
+            throw new AttestationClientException("Confidential space image version is not stable.");
         }
         return isDebugMode;
     }
 
     private static String checkWorkload(TokenPayload payload) throws AttestationException{
         if(!payload.isRestartPolicyNever()){
-            throw new AttestationException("Restart policy is not set to Never. Value: " + payload.getRestartPolicy());
+            throw new AttestationClientException("Restart policy is not set to Never. Value: " + payload.getRestartPolicy());
         }
         return payload.getWorkloadImageDigest();
     }
@@ -75,35 +76,35 @@ public class PolicyValidator implements IPolicyValidator {
     private static String checkRegion(TokenPayload payload) throws AttestationException{
         var region = payload.getGceZone();
         if(Strings.isNullOrEmpty(region) || region.startsWith(EU_REGION_PREFIX)){
-            throw new AttestationException("Region is not supported. Value: " + region);
+            throw new AttestationClientException("Region is not supported. Value: " + region);
         }
         return region;
     }
 
     private static void checkCmdOverrides(TokenPayload payload) throws AttestationException{
         if(!CollectionUtils.isEmpty(payload.getCmdOverrides())){
-            throw new AttestationException("Payload should not have cmd overrides");
+            throw new AttestationClientException("Payload should not have cmd overrides");
         }
     }
 
     private Environment checkEnvOverrides(TokenPayload payload) throws AttestationException{
         var envOverrides = payload.getEnvOverrides();
         if(MapUtils.isEmpty(envOverrides)){
-            throw new AttestationException("env overrides should not be empty");
+            throw new AttestationClientException("env overrides should not be empty");
         }
         HashMap<String, String> envOverridesCopy = new HashMap(envOverrides);
 
         // check all required env overrides
         for(var envKey: REQUIRED_ENV_OVERRIDES){
             if(Strings.isNullOrEmpty(envOverridesCopy.get(envKey))){
-                throw new AttestationException("Required env override is missing. key: " + envKey);
+                throw new AttestationClientException("Required env override is missing. key: " + envKey);
             }
         }
 
         // env could be parsed
         var env = Environment.fromString(envOverridesCopy.get(ENV_ENVIRONMENT));
         if(env == null){
-            throw new AttestationException("Environment can not be parsed. " + envOverridesCopy.get(ENV_ENVIRONMENT));
+            throw new AttestationClientException("Environment can not be parsed. " + envOverridesCopy.get(ENV_ENVIRONMENT));
         }
 
         // make sure there's no unexpected overrides
@@ -118,7 +119,7 @@ public class PolicyValidator implements IPolicyValidator {
         }
 
         if(!envOverridesCopy.isEmpty()){
-            throw new AttestationException("More env overrides than allowed. " + envOverridesCopy);
+            throw new AttestationClientException("More env overrides than allowed. " + envOverridesCopy);
         }
 
         return env;
