@@ -47,8 +47,8 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
         catch (AttestationClientException ace){
             handler.handle(Future.succeededFuture(new AttestationResult(ace)));
         }
-        catch (AttestationException ex){
-            handler.handle(Future.failedFuture(ex));
+        catch (AttestationException ae){
+            handler.handle(Future.failedFuture(ae));
         }
         catch (Exception ex) {
             handler.handle(Future.failedFuture(new AttestationException(ex)));
