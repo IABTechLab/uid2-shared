@@ -1,6 +1,7 @@
 package com.uid2.shared.attest;
 
 import com.uid2.shared.cloud.CloudUtils;
+import com.uid2.shared.util.URLConnectionHttpClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -14,7 +15,7 @@ import static org.mockito.Mockito.when;
 public class UidOptOutClientTest {
     private Proxy proxy = CloudUtils.defaultProxy;
     private AttestationTokenRetriever mockAttestationTokenRetriever = mock(AttestationTokenRetriever.class);
-    private HttpClient mockHttpClient = mock(HttpClient.class);
+    private URLConnectionHttpClient mockHttpClient = mock(URLConnectionHttpClient.class);
     private UidOptOutClient optOutClient;
 
     @BeforeEach

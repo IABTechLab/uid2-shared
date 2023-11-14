@@ -131,7 +131,8 @@ public class CloudStorageS3 implements TaggableCloudStorage {
             S3Object obj = this.s3.getObject(bucket, cloudPath);
             return obj.getObjectContent();
         } catch (Throwable t) {
-            throw new CloudStorageException("s3 get error: " + t.getMessage(), t);
+            // Do not log the message or the original exception as that may contain the pre-signed url
+            throw new CloudStorageException("s3 get error: " + t.getClass().getSimpleName() + ": " + bucket);
         }
     }
 
@@ -140,7 +141,7 @@ public class CloudStorageS3 implements TaggableCloudStorage {
         try {
             this.s3.deleteObject(bucket, cloudPath);
         } catch (Throwable t) {
-            throw new CloudStorageException("s3 get error: " + t.getMessage(), t);
+            throw new CloudStorageException("s3 delete error: " + t.getMessage(), t);
         }
     }
 

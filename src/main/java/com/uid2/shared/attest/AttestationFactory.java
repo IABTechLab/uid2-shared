@@ -24,9 +24,9 @@ public class AttestationFactory {
         return (IAttestationProvider) c.newInstance();
     }
 
-    public static IAttestationProvider getAzureAttestation() throws Exception {
-        Class<?> cls = Class.forName("com.uid2.attestation.azure.AzureAttestationProvider");
-        Constructor<?> c = cls.getConstructor();
-        return (IAttestationProvider) c.newInstance();
+    public static IAttestationProvider getAzureCCAttestation(String maaServerBaseUrl) throws Exception {
+        Class<?> cls = Class.forName("com.uid2.attestation.azure.AzureCCAttestationProvider");
+        Constructor<?> c = cls.getConstructor(String.class);
+        return (IAttestationProvider) c.newInstance(maaServerBaseUrl);
     }
 }

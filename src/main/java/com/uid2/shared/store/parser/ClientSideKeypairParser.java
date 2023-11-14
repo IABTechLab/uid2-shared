@@ -26,6 +26,7 @@ public class ClientSideKeypairParser implements Parser<IClientSideKeypairStore.I
             int siteId = pairSpec.getInteger("site_id");
             String contact = pairSpec.getString("contact");
             boolean disabled = pairSpec.getBoolean("disabled");
+            String name = pairSpec.getString("name", "");
             Instant created = Instant.ofEpochSecond(pairSpec.getLong("created"));
             ClientSideKeypair keypair = new ClientSideKeypair(
                     subscriptionId,
@@ -34,7 +35,8 @@ public class ClientSideKeypairParser implements Parser<IClientSideKeypairStore.I
                     siteId,
                     contact,
                     created,
-                    disabled
+                    disabled,
+                    name
             );
             keypairMap.put(subscriptionId, keypair);
             siteKeypairMap.computeIfAbsent(siteId, id -> new ArrayList<>()).add(keypair);

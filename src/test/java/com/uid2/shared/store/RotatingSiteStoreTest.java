@@ -1,9 +1,12 @@
 package com.uid2.shared.store;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.model.Site;
 import com.uid2.shared.store.reader.RotatingSiteStore;
 import com.uid2.shared.store.scope.GlobalScope;
+import com.uid2.shared.util.Mapper;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
@@ -22,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 public class RotatingSiteStoreTest {
+    private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
     private AutoCloseable mocks;
     @Mock
     ICloudStorage cloudStorage;
@@ -46,23 +50,12 @@ public class RotatingSiteStoreTest {
         return metadata;
     }
 
-    private Site addSite(JsonArray content, int siteId, String name, boolean enabled, long created, String... domains) {
+    private Site addSite(JsonArray content, int siteId, String name, String description, boolean enabled, boolean visible, long created, String... domains) {
 
-        Site s = new Site(siteId, name, enabled, new HashSet<>(), new HashSet<>(List.of(domains)), created);
+        Site s = new Site(siteId, name, description, enabled, new HashSet<>(), new HashSet<>(List.of(domains)), visible, created);
+        JsonNode jsonNode = OBJECT_MAPPER.convertValue(s, JsonNode.class);
+        content.add(jsonNode);
 
-        JsonArray ja = new JsonArray();
-        for (String domain : domains) {
-            ja.add(domain);
-        }
-
-        JsonObject site = new JsonObject();
-        site.put("id", siteId);
-        site.put("name", name);
-        site.put("enabled", enabled);
-        site.put("domain_names", ja);
-        site.put("created", created);
-
-        content.add(site);
         return s;
     }
 
@@ -78,10 +71,10 @@ public class RotatingSiteStoreTest {
     @Test
     public void loadContentMultipleSites() throws Exception {
         JsonArray content = new JsonArray();
-        Site s1 = addSite(content, 123, "test-1", true, Instant.now().getEpochSecond());
-        Site s2 = addSite(content, 124, "test-2", false, Instant.now().minusSeconds(100).getEpochSecond());
-        Site s3 = addSite(content, 125, "test-3", true, Instant.now().plusSeconds(100).getEpochSecond());
-        Site s4 = addSite(content, 126, "test-4", false, Instant.now().getEpochSecond(), "testdomain1.com", "testdomain2.net");
+        Site s1 = addSite(content, 123, "test-1", "test-1-desc", true, true, Instant.now().getEpochSecond());
+        Site s2 = addSite(content, 124, "test-2", "test-2-desc", false, true, Instant.now().minusSeconds(100).getEpochSecond());
+        Site s3 = addSite(content, 125, "test-3", "test-3-desc", true, false, Instant.now().plusSeconds(100).getEpochSecond());
+        Site s4 = addSite(content, 126, "test-4", "test-4-desc", false, false, Instant.now().getEpochSecond(), "testdomain1.com", "testdomain2.net");
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = siteStore.loadContent(makeMetadata("locationPath"));

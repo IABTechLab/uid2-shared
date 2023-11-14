@@ -2,6 +2,8 @@ package com.uid2.shared.attest;
 
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.*;
+import com.uid2.shared.cloud.CloudUtils;
+import com.uid2.shared.util.URLConnectionHttpClient;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
@@ -19,6 +21,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,9 +40,9 @@ public class AttestationTokenRetriever {
     private final AtomicReference<String> coreJwt;
     private final Handler<Pair<Integer, String>> responseWatcher;
     private final String attestationEndpoint;
-    private final HttpClient httpClient;
     private final IClock clock;
     private final Vertx vertx;
+    private final URLConnectionHttpClient httpClient;
     private boolean isExpiryCheckScheduled;
     private AtomicBoolean isAttesting;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
@@ -54,8 +57,9 @@ public class AttestationTokenRetriever {
                                      String clientApiToken,
                                      ApplicationVersion appVersion,
                                      IAttestationProvider attestationProvider,
-                                     Handler<Pair<Integer, String>> responseWatcher) {
-        this(vertx, attestationEndpoint, clientApiToken, appVersion, attestationProvider, responseWatcher, new InstantClock(), null, null, 60000);
+                                     Handler<Pair<Integer, String>> responseWatcher,
+                                     Proxy proxy) {
+        this(vertx, attestationEndpoint, clientApiToken, appVersion, attestationProvider, responseWatcher, proxy, new InstantClock(), null, null, 60000);
     }
     public AttestationTokenRetriever(Vertx vertx,
                                      String attestationEndpoint,
@@ -63,8 +67,9 @@ public class AttestationTokenRetriever {
                                      ApplicationVersion appVersion,
                                      IAttestationProvider attestationProvider,
                                      Handler<Pair<Integer, String>> responseWatcher,
+                                     Proxy proxy,
                                      IClock clock,
-                                     HttpClient httpClient,
+                                     URLConnectionHttpClient httpClient,
                                      AttestationTokenDecryptor attestationTokenDecryptor,
                                      int attestCheckMilliseconds) {
         this.vertx = vertx;
@@ -81,7 +86,7 @@ public class AttestationTokenRetriever {
         this.isAttesting = new AtomicBoolean(false);
         this.attestCheckMilliseconds = attestCheckMilliseconds;
         if (httpClient == null) {
-            this.httpClient = HttpClient.newHttpClient();
+            this.httpClient = new URLConnectionHttpClient(proxy);
         } else {
             this.httpClient = httpClient;
         }
@@ -161,15 +166,12 @@ public class AttestationTokenRetriever {
             }
             requestJson.put("components", components);
 
-            HttpRequest httpRequest = HttpRequest.newBuilder()
-                    .setHeader("Content-Type", "application/json")
-                    .setHeader("Authorization", "Bearer " + this.clientApiToken)
-                    .setHeader(Const.Http.AppVersionHeader, this.appVersionHeader)
-                    .uri(URI.create(attestationEndpoint))
-                    .POST(HttpRequest.BodyPublishers.ofString(requestJson.toString(), StandardCharsets.UTF_8))
-                    .build();
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Content-Type", "application/json");
+            headers.put("Authorization", "Bearer " + this.clientApiToken);
+            headers.put(Const.Http.AppVersionHeader, this.appVersionHeader);
 
-            HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<String> response = httpClient.post(attestationEndpoint, requestJson.toString(), headers);
 
             int statusCode = response.statusCode();
             String responseBody = response.body();

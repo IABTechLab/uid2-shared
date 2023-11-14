@@ -11,8 +11,8 @@ public class Service {
     @JsonProperty("service_id")
     private final int serviceId;
     @JsonProperty("site_id")
-    private final int siteId;
-    private final String name;
+    private int siteId;
+    private String name;
     private Set<Role> roles;
 
     public Service(int serviceId, int siteId, String name, Set<Role> roles) {
@@ -30,8 +30,16 @@ public class Service {
         return siteId;
     }
 
+    public void setSiteId(int siteId) {
+        this.siteId = siteId;
+    }
+
     public String getName() {
         return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public Set<Role> getRoles() {

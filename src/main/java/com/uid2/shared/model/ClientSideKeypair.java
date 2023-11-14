@@ -22,6 +22,8 @@ public class ClientSideKeypair {
 
     private final String contact;
 
+    private final String name;
+
     private final Instant created;
 
     private final boolean disabled;
@@ -29,12 +31,13 @@ public class ClientSideKeypair {
     private final String publicKeyPrefix;
     private final String privateKeyPrefix;
 
-    public ClientSideKeypair(String subscriptionId, String publicKeyString, String privateKeyString, int siteId, String contact, Instant created, boolean disabled){
+    public ClientSideKeypair(String subscriptionId, String publicKeyString, String privateKeyString, int siteId, String contact, Instant created, boolean disabled, String name){
         this.subscriptionId = subscriptionId;
         this.siteId = siteId;
         this.contact = contact;
         this.created = created;
         this.disabled = disabled;
+        this.name = name;
         try {
             this.publicKeyPrefix = publicKeyString.substring(0, KEYPAIR_KEY_PREFIX_LENGTH);
             final KeyFactory kf = KeyFactory.getInstance("EC");
@@ -89,6 +92,8 @@ public class ClientSideKeypair {
         return contact;
     }
 
+    public String getName() { return name; }
+
     public Instant getCreated() {
         return created;
     }
@@ -111,13 +116,14 @@ public class ClientSideKeypair {
                 && this.created.equals(b.created)
                 && this.contact.equals(b.contact)
                 && this.disabled == b.disabled
+                && this.name.equals(b.name)
                 && this.publicKeyPrefix.equals(b.publicKeyPrefix)
                 && this.privateKeyPrefix.equals(b.privateKeyPrefix);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(subscriptionId, Arrays.hashCode(publicKey.getEncoded()), Arrays.hashCode(privateKey.getEncoded()), siteId, created, contact, disabled, publicKeyPrefix, privateKeyPrefix);
+        return Objects.hash(subscriptionId, Arrays.hashCode(publicKey.getEncoded()), Arrays.hashCode(privateKey.getEncoded()), siteId, created, contact, disabled, name, publicKeyPrefix, privateKeyPrefix);
     }
 
 }

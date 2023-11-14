@@ -4,6 +4,8 @@ import com.uid2.enclave.AttestationException;
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.ApplicationVersion;
 import com.uid2.shared.IClock;
+import com.uid2.shared.cloud.CloudUtils;
+import com.uid2.shared.util.URLConnectionHttpClient;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import software.amazon.awssdk.utils.Pair;
 
 import java.io.IOException;
+import java.net.Proxy;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -23,6 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.*;
@@ -39,7 +43,8 @@ public class AttestationTokenRetrieverTest {
     private final IAttestationProvider attestationProvider = mock(IAttestationProvider.class);
     private final Handler<Pair<Integer, String>> responseWatcher = mock(Handler.class);
     private final IClock clock = mock(IClock.class);
-    private final HttpClient mockHttpClient = mock(HttpClient.class);
+    private final URLConnectionHttpClient mockHttpClient = mock(URLConnectionHttpClient.class);
+    private Proxy proxy = CloudUtils.defaultProxy;
     private final AttestationTokenDecryptor mockAttestationTokenDecryptor = mock(AttestationTokenDecryptor.class);
 
     private AttestationTokenRetriever attestationTokenRetriever = null;
@@ -61,7 +66,7 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         when(clock.now()).thenReturn(Instant.parse("2023-08-01T00:00:00.111Z"));
@@ -85,7 +90,7 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpResponse.statusCode()).thenReturn(200, 401, 401, 200);
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody, "bad", "bad", expectedResponseBody);
 
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         Instant tenSecondsAfterTenMinutesBeforeExpiry = Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).plusSeconds(10);
@@ -95,7 +100,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever.attest();
         testContext.awaitCompletion(1100, TimeUnit.MILLISECONDS);
         // Verify on httpClient because we can't mock attestationTokenRetriever
-        verify(mockHttpClient, times(4)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        verify(mockHttpClient, times(2)).post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class));
         verify(this.responseWatcher, times(2)).handle(Pair.of(200, expectedResponseBody));
         verify(this.responseWatcher, times(2)).handle(Pair.of(401, "bad"));
         testContext.completeNow();
@@ -113,7 +118,7 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(Map.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         when(clock.now()).thenReturn(Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).minusSeconds(100));
@@ -121,7 +126,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever.attest();
         testContext.awaitCompletion(1, TimeUnit.SECONDS);
         // Verify on httpClient because we can't mock attestationTokenRetriever
-        verify(mockHttpClient, times(1)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        verify(mockHttpClient, times(1)).post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class));
         verify(this.responseWatcher, times(1)).handle(Pair.of(200, expectedResponseBody));
         testContext.completeNow();
     }
@@ -141,7 +146,7 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         when(clock.now()).thenReturn(Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).plusSeconds(100));
@@ -149,7 +154,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever.attest();
         testContext.awaitCompletion(1, TimeUnit.SECONDS);
         // Verify on httpClient because we can't mock attestationTokenRetriever
-        verify(mockHttpClient, times(1)).send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class));
+        verify(mockHttpClient, times(1)).post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class));
         verify(this.responseWatcher, only()).handle(Pair.of(200, expectedResponseBody));
         verify(this.responseWatcher, times(1)).handle(Pair.of(200, expectedResponseBody));
         testContext.completeNow();
@@ -174,7 +179,7 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class))).thenReturn(mockHttpResponse);
 
         AttestationTokenRetrieverException result = Assertions.assertThrows(AttestationTokenRetrieverException.class, () -> {
             attestationTokenRetriever.attest();
@@ -204,7 +209,7 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class))).thenReturn(mockHttpResponse);
 
         AttestationTokenRetrieverException result = Assertions.assertThrows(AttestationTokenRetrieverException.class, () -> {
             attestationTokenRetriever.attest();
@@ -243,7 +248,7 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         attestationTokenRetriever.attest();
@@ -263,7 +268,7 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         attestationTokenRetriever.attest();
@@ -283,7 +288,7 @@ public class AttestationTokenRetrieverTest {
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
         when(mockHttpResponse.statusCode()).thenReturn(200);
 
-        when(mockHttpClient.send(any(HttpRequest.class), any(HttpResponse.BodyHandler.class))).thenReturn(mockHttpResponse);
+        when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         attestationTokenRetriever.attest();
@@ -294,6 +299,6 @@ public class AttestationTokenRetrieverTest {
     }
 
     private AttestationTokenRetriever getAttestationTokenRetriever(Vertx vertx) {
-        return new AttestationTokenRetriever(vertx, ATTESTATION_ENDPOINT, "testApiKey", APP_VERSION, attestationProvider, responseWatcher, clock, mockHttpClient, mockAttestationTokenDecryptor, 250);
+        return new AttestationTokenRetriever(vertx, ATTESTATION_ENDPOINT, "testApiKey", APP_VERSION, attestationProvider, responseWatcher, proxy, clock, mockHttpClient, mockAttestationTokenDecryptor, 250);
     }
 }

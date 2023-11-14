@@ -43,6 +43,7 @@ public class AuthorizableStore<T extends IAuthorizable> {
 
     public void refresh(Collection<T> authorizablesToRefresh) {
         authorizables.set(new AuthorizableStoreSnapshot(authorizablesToRefresh));
+        invalidateInvalidKeys();
     }
 
     public T getAuthorizableByKey(String key) {
@@ -98,6 +99,16 @@ public class AuthorizableStore<T extends IAuthorizable> {
         return Caffeine.newBuilder()
                 .maximumSize(CACHE_MAX_SIZE)
                 .build();
+    }
+
+    private void invalidateInvalidKeys() {
+        List<String> invalidKeys = keyToHashCache.asMap()
+                .entrySet()
+                .stream()
+                .filter(entry -> entry.getValue().isBlank())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+        invalidKeys.forEach(keyToHashCache::invalidate);
     }
 
     private ByteBuffer wrapHashToByteBuffer(String hash) {
