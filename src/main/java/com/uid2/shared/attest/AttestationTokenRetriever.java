@@ -126,8 +126,11 @@ public class AttestationTokenRetriever {
             }
 
             attest();
-        } catch (AttestationTokenRetrieverException | IOException e) {
+        } catch (AttestationTokenRetrieverException e) {
             notifyResponseWatcher(401, e.getMessage());
+            LOGGER.info("Re-attest failed: ", e);
+        } catch (IOException e){
+            notifyResponseWatcher(500, e.getMessage());
             LOGGER.info("Re-attest failed: ", e);
         } finally {
             this.isAttesting.set(false);

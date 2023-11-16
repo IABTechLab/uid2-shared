@@ -79,7 +79,7 @@ public class URLConnectionHttpClient {
         }
 
         int responseCode = connection.getResponseCode();
-        String responseBody = Utils.readToEnd(connection.getInputStream());
+        String responseBody = responseCode == 200 ? Utils.readToEnd(connection.getInputStream()) : Utils.readToEnd(connection.getErrorStream());
 
         return new URLConnectionHttpResponse<>(responseCode, responseBody);
     }
@@ -97,7 +97,7 @@ public class URLConnectionHttpClient {
         connection.getOutputStream().write(body.getBytes());
 
         int responseCode = connection.getResponseCode();
-        String responseBody = Utils.readToEnd(connection.getInputStream());
+        String responseBody = responseCode == 200 ? Utils.readToEnd(connection.getInputStream()) : Utils.readToEnd(connection.getErrorStream());
 
         return new URLConnectionHttpResponse<>(responseCode, responseBody);
     }
