@@ -36,7 +36,7 @@ public class AttestationResult {
     public AttestationFailure getFailure() { return this.failure; }
 
     public String getReason() {
-        if(this.attestationClientException != null){
+        if (this.attestationClientException != null) {
             return this.attestationClientException.getMessage();
         }
         return this.failure.explain();

@@ -3,7 +3,7 @@ package com.uid2.shared.secure;
 public class AttestationException extends Exception {
     private final boolean isClientError;
 
-    public boolean IsClientError(){
+    public boolean IsClientError() {
         return this.isClientError;
     }
 

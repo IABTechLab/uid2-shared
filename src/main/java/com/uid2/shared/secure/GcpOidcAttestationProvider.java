@@ -41,6 +41,7 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
             if (enclaveId != null) {
                 handler.handle(Future.succeededFuture(new AttestationResult(publicKey, enclaveId)));
             } else {
+                LOGGER.warn("Can not find registered gcp-oidc enclave id.");
                 handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.FORBIDDEN_ENCLAVE)));
             }
         }

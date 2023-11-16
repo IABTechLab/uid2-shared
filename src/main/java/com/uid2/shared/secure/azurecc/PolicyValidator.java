@@ -37,7 +37,7 @@ public class PolicyValidator implements IPolicyValidator{
             throw new AttestationClientException("Not run in Azure Compliance Utility VM");
         }
         if(maaTokenPayload.isVmDebuggable()){
-            throw new AttestationClientException("The underlying harware should not run in debug mode");
+            throw new AttestationClientException("The underlying hardware should not run in debug mode");
         }
     }
 
