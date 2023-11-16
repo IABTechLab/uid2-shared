@@ -110,7 +110,6 @@ public class AttestationTokenRetriever {
             LOGGER.warn("In the process of attesting. Skip re-attest.");
             return;
         }
-
         try {
             Instant currentTime = clock.now();
             Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
