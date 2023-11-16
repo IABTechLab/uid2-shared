@@ -2,7 +2,6 @@ package com.uid2.shared.attest;
 
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.*;
-import com.uid2.shared.cloud.CloudUtils;
 import com.uid2.shared.util.URLConnectionHttpClient;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -14,8 +13,6 @@ import software.amazon.awssdk.utils.Pair;
 
 import java.io.IOException;
 import java.net.*;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -129,11 +126,8 @@ public class AttestationTokenRetriever {
             }
 
             attest();
-        } catch (AttestationTokenRetrieverException e) {
+        } catch (AttestationTokenRetrieverException | IOException e) {
             notifyResponseWatcher(401, e.getMessage());
-            LOGGER.info("Re-attest failed: ", e);
-        } catch (IOException e) {
-            notifyResponseWatcher(500, e.getMessage());
             LOGGER.info("Re-attest failed: ", e);
         } finally {
             this.isAttesting.set(false);
