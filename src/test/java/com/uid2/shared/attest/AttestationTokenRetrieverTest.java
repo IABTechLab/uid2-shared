@@ -87,7 +87,7 @@ public class AttestationTokenRetrieverTest {
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
-        when(mockHttpResponse.statusCode()).thenReturn(200, 401, 401, 200);
+        when(mockHttpResponse.statusCode()).thenReturn(200, 500, 500, 200);
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody, "bad", "bad", expectedResponseBody);
 
         when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class))).thenReturn(mockHttpResponse);
@@ -102,7 +102,7 @@ public class AttestationTokenRetrieverTest {
         // Verify on httpClient because we can't mock attestationTokenRetriever
         verify(mockHttpClient, times(4)).post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class));
         verify(this.responseWatcher, times(2)).handle(Pair.of(200, expectedResponseBody));
-        verify(this.responseWatcher, times(2)).handle(Pair.of(401, "bad"));
+        verify(this.responseWatcher, times(2)).handle(Pair.of(500, "bad"));
         testContext.completeNow();
     }
 
