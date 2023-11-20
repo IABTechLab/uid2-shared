@@ -2,7 +2,6 @@ package com.uid2.shared.attest;
 
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.*;
-import com.uid2.shared.cloud.CloudUtils;
 import com.uid2.shared.util.URLConnectionHttpClient;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -10,11 +9,10 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.utils.Pair;
 
 import java.io.IOException;
 import java.net.*;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
@@ -37,7 +35,7 @@ public class AttestationTokenRetriever {
     private final AtomicReference<String> attestationToken;
     private final AtomicReference<String> optOutJwt;
     private final AtomicReference<String> coreJwt;
-    private final Handler<Integer> responseWatcher;
+    private final Handler<Pair<Integer, String>> responseWatcher;
     private final String attestationEndpoint;
     private final IClock clock;
     private final Vertx vertx;
@@ -49,26 +47,28 @@ public class AttestationTokenRetriever {
     private final Lock lock;
     private final AttestationTokenDecryptor attestationTokenDecryptor;
     private final String appVersionHeader;
+    private final int attestCheckMilliseconds;
 
     public AttestationTokenRetriever(Vertx vertx,
                                      String attestationEndpoint,
                                      String clientApiToken,
                                      ApplicationVersion appVersion,
                                      IAttestationProvider attestationProvider,
-                                     Handler<Integer> responseWatcher,
+                                     Handler<Pair<Integer, String>> responseWatcher,
                                      Proxy proxy) {
-        this(vertx, attestationEndpoint, clientApiToken, appVersion, attestationProvider, responseWatcher, proxy, new InstantClock(), null, null);
+        this(vertx, attestationEndpoint, clientApiToken, appVersion, attestationProvider, responseWatcher, proxy, new InstantClock(), null, null, 60000);
     }
     public AttestationTokenRetriever(Vertx vertx,
                                      String attestationEndpoint,
                                      String clientApiToken,
                                      ApplicationVersion appVersion,
                                      IAttestationProvider attestationProvider,
-                                     Handler<Integer> responseWatcher,
+                                     Handler<Pair<Integer, String>> responseWatcher,
                                      Proxy proxy,
                                      IClock clock,
                                      URLConnectionHttpClient httpClient,
-                                     AttestationTokenDecryptor attestationTokenDecryptor) {
+                                     AttestationTokenDecryptor attestationTokenDecryptor,
+                                     int attestCheckMilliseconds) {
         this.vertx = vertx;
         this.attestationEndpoint = attestationEndpoint;
         this.clientApiToken = clientApiToken;
@@ -80,8 +80,8 @@ public class AttestationTokenRetriever {
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.lock = new ReentrantLock();
-        this.isExpiryCheckScheduled = false;
         this.isAttesting = new AtomicBoolean(false);
+        this.attestCheckMilliseconds = attestCheckMilliseconds;
         if (httpClient == null) {
             this.httpClient = new URLConnectionHttpClient(proxy);
         } else {
@@ -110,7 +110,6 @@ public class AttestationTokenRetriever {
             LOGGER.warn("In the process of attesting. Skip re-attest.");
             return;
         }
-
         try {
             Instant currentTime = clock.now();
             Instant tenMinutesBeforeExpire = attestationTokenExpiresAt.minusSeconds(600);
@@ -126,8 +125,11 @@ public class AttestationTokenRetriever {
             }
 
             attest();
-        } catch (AttestationTokenRetrieverException | IOException e) {
-            notifyResponseStatusWatcher(401);
+        } catch (AttestationTokenRetrieverException e) {
+            notifyResponseWatcher(401, e.getMessage());
+            LOGGER.info("Re-attest failed: ", e);
+        } catch (IOException e){
+            notifyResponseWatcher(500, e.getMessage());
             LOGGER.info("Re-attest failed: ", e);
         } finally {
             this.isAttesting.set(false);
@@ -137,7 +139,7 @@ public class AttestationTokenRetriever {
     private void scheduleAttestationExpirationCheck() {
         if (!this.isExpiryCheckScheduled) {
             // Schedule the task to run every minute
-            this.vertx.setPeriodic(0, 60000, this::attestationExpirationCheck);
+            this.vertx.setPeriodic(0, attestCheckMilliseconds, this::attestationExpirationCheck);
             this.isExpiryCheckScheduled = true;
         }
     }
@@ -170,14 +172,14 @@ public class AttestationTokenRetriever {
             HttpResponse<String> response = httpClient.post(attestationEndpoint, requestJson.toString(), headers);
 
             int statusCode = response.statusCode();
-            notifyResponseStatusWatcher(statusCode);
+            String responseBody = response.body();
+            notifyResponseWatcher(statusCode, responseBody);
 
             if (statusCode < 200 || statusCode >= 300) {
                 LOGGER.warn("attestation failed with UID2 Core returning statusCode=" + statusCode);
                 throw new AttestationTokenRetrieverException(statusCode, "unexpected status code from uid core service");
             }
 
-            String responseBody = response.body();
             JsonObject responseJson = (JsonObject) Json.decodeValue(responseBody);
             if (isFailed(responseJson)) {
                 throw new AttestationTokenRetrieverException(statusCode, "response did not return a successful status");
@@ -274,11 +276,11 @@ public class AttestationTokenRetriever {
         return gen.generateKeyPair();
     }
 
-    private void notifyResponseStatusWatcher(int statusCode) {
+    private void notifyResponseWatcher(int statusCode, String responseBody) {
         this.lock.lock();
         try {
             if (this.responseWatcher != null)
-                this.responseWatcher.handle(statusCode);
+                this.responseWatcher.handle(Pair.of(statusCode, responseBody));
         } finally {
             lock.unlock();
         }

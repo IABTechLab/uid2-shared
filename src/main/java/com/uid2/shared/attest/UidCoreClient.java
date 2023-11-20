@@ -69,7 +69,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     @Override
     public InputStream download(String path) throws CloudStorageException {
         String coreJWT = this.getJWT();
-        return  this.internalDownload(path, coreJWT);
+        return this.internalDownload(path, coreJWT);
     }
 
     @Deprecated
@@ -78,7 +78,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return this.internalDownload(path, optOutJWT);
     }
 
-    protected  String getJWT(){
+    protected String getJWT() {
         return this.getAttestationTokenRetriever().getCoreJWT();
     }
 

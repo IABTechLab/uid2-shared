@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import software.amazon.awssdk.utils.Pair;
 
 import java.io.IOException;
 import java.net.Proxy;
@@ -40,7 +41,7 @@ public class AttestationTokenRetrieverTest {
     }});
 
     private final IAttestationProvider attestationProvider = mock(IAttestationProvider.class);
-    private final Handler<Integer> responseWatcher = mock(Handler.class);
+    private final Handler<Pair<Integer, String>> responseWatcher = mock(Handler.class);
     private final IClock clock = mock(IClock.class);
     private final URLConnectionHttpClient mockHttpClient = mock(URLConnectionHttpClient.class);
     private Proxy proxy = CloudUtils.defaultProxy;
@@ -73,40 +74,35 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever.attest();
         Assertions.assertEquals("test_attestation_token", attestationTokenRetriever.getAttestationToken());
         Assertions.assertEquals("appName=appVersion;Component1=Value1;Component2=Value2", attestationTokenRetriever.getAppVersionHeader());
-        verify(this.responseWatcher, times(1)).handle(200);
+        verify(this.responseWatcher, times(1)).handle(Pair.of(200, expectedResponseBody));
         testContext.completeNow();
     }
 
     @Test
-    public void attest_currentTimeAfterTenMinsBeforeAttestationTokenExpiry_expiryCheckCallsAttest(Vertx vertx, VertxTestContext testContext) throws Exception {
+    public void attest_currentTimeAfterTenMinsBeforeAttestationTokenExpiry_expiryCheckCallsAttestFixedIntervalUntilSuccess(Vertx vertx, VertxTestContext testContext) throws Exception {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
         when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt_optout\": \"\", \"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
-        when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
-        when(mockHttpResponse.statusCode()).thenReturn(200);
+        String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
+        when(mockHttpResponse.statusCode()).thenReturn(200, 500, 500, 200);
+        when(mockHttpResponse.body()).thenReturn(expectedResponseBody, "bad", "bad", expectedResponseBody);
 
-        HttpResponse<String> mockHttpResponseSecondAttest = mock(HttpResponse.class);
-        String expectedResponseBodySecondAttest = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
-        when(mockHttpResponseSecondAttest.body()).thenReturn(expectedResponseBodySecondAttest);
-        when(mockHttpResponseSecondAttest.statusCode()).thenReturn(300);
-
-        when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class))).thenReturn(mockHttpResponse, mockHttpResponseSecondAttest);
+        when(mockHttpClient.post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class))).thenReturn(mockHttpResponse);
         when(mockAttestationTokenDecryptor.decrypt(any(), any())).thenReturn("test_attestation_token".getBytes(StandardCharsets.UTF_8));
 
         Instant tenSecondsAfterTenMinutesBeforeExpiry = Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).plusSeconds(10);
         Instant tenSecondsBeforeTenMinutesBeforeExpiry = Instant.parse("2023-08-01T00:00:00.111Z").minusSeconds(600).minusSeconds(10);
-        when(clock.now()).thenReturn(tenSecondsAfterTenMinutesBeforeExpiry, tenSecondsBeforeTenMinutesBeforeExpiry);
+        when(clock.now()).thenReturn(tenSecondsBeforeTenMinutesBeforeExpiry, tenSecondsAfterTenMinutesBeforeExpiry, tenSecondsAfterTenMinutesBeforeExpiry, tenSecondsAfterTenMinutesBeforeExpiry, tenSecondsBeforeTenMinutesBeforeExpiry);
 
         attestationTokenRetriever.attest();
-        testContext.awaitCompletion(1, TimeUnit.SECONDS);
+        testContext.awaitCompletion(1100, TimeUnit.MILLISECONDS);
         // Verify on httpClient because we can't mock attestationTokenRetriever
-        verify(mockHttpClient, times(2)).post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class));
-        verify(this.responseWatcher, times(1)).handle(200);
-        verify(this.responseWatcher, times(1)).handle(300);
+        verify(mockHttpClient, times(4)).post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class));
+        verify(this.responseWatcher, times(2)).handle(Pair.of(200, expectedResponseBody));
+        verify(this.responseWatcher, times(2)).handle(Pair.of(500, "bad"));
         testContext.completeNow();
     }
 
@@ -131,7 +127,7 @@ public class AttestationTokenRetrieverTest {
         testContext.awaitCompletion(1, TimeUnit.SECONDS);
         // Verify on httpClient because we can't mock attestationTokenRetriever
         verify(mockHttpClient, times(1)).post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class));
-        verify(this.responseWatcher, times(1)).handle(200);
+        verify(this.responseWatcher, times(1)).handle(Pair.of(200, expectedResponseBody));
         testContext.completeNow();
     }
 
@@ -159,8 +155,8 @@ public class AttestationTokenRetrieverTest {
         testContext.awaitCompletion(1, TimeUnit.SECONDS);
         // Verify on httpClient because we can't mock attestationTokenRetriever
         verify(mockHttpClient, times(1)).post(eq(ATTESTATION_ENDPOINT), any(String.class), any(HashMap.class));
-        verify(this.responseWatcher, only()).handle(200);
-        verify(this.responseWatcher, times(1)).handle(200);
+        verify(this.responseWatcher, only()).handle(Pair.of(200, expectedResponseBody));
+        verify(this.responseWatcher, times(1)).handle(Pair.of(200, expectedResponseBody));
         testContext.completeNow();
     }
 
@@ -190,7 +186,7 @@ public class AttestationTokenRetrieverTest {
         });
         String expectedExceptionMessage = "com.uid2.shared.attest.AttestationTokenRetrieverException: http status: 200, response json does not contain body.attestation_token";
         Assertions.assertEquals(expectedExceptionMessage, result.getMessage());
-        verify(this.responseWatcher, times(1)).handle(200);
+        verify(this.responseWatcher, times(1)).handle(Pair.of(200, expectedResponseBody));
         testContext.completeNow();
     }
 
@@ -221,7 +217,7 @@ public class AttestationTokenRetrieverTest {
         String expectedExceptionMessage = "com.uid2.shared.attest.AttestationTokenRetrieverException: http status: 200, response json does not contain body.expiresAt";
 
         Assertions.assertEquals(expectedExceptionMessage, result.getMessage());
-        verify(this.responseWatcher, times(1)).handle(200);
+        verify(this.responseWatcher, times(1)).handle(Pair.of(200, expectedResponseBody));
         testContext.completeNow();
     }
 
@@ -257,7 +253,7 @@ public class AttestationTokenRetrieverTest {
 
         attestationTokenRetriever.attest();
         Assertions.assertEquals("test_jwt", attestationTokenRetriever.getOptOutJWT());
-        verify(this.responseWatcher, times(1)).handle(200);
+        verify(this.responseWatcher, times(1)).handle(Pair.of(200, expectedResponseBody));
         testContext.completeNow();
     }
     @Test
@@ -277,7 +273,7 @@ public class AttestationTokenRetrieverTest {
 
         attestationTokenRetriever.attest();
         Assertions.assertEquals("test_jwt_core", attestationTokenRetriever.getCoreJWT());
-        verify(this.responseWatcher, times(1)).handle(200);
+        verify(this.responseWatcher, times(1)).handle(Pair.of(200, expectedResponseBody));
         testContext.completeNow();
     }
     @Test
@@ -298,11 +294,11 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever.attest();
         Assertions.assertNull(attestationTokenRetriever.getOptOutJWT());
         Assertions.assertNull(attestationTokenRetriever.getCoreJWT());
-        verify(this.responseWatcher, times(1)).handle(200);
+        verify(this.responseWatcher, times(1)).handle(Pair.of(200, expectedResponseBody));
         testContext.completeNow();
     }
 
     private AttestationTokenRetriever getAttestationTokenRetriever(Vertx vertx) {
-        return new AttestationTokenRetriever(vertx, ATTESTATION_ENDPOINT, "testApiKey", APP_VERSION, attestationProvider, responseWatcher, proxy, clock, mockHttpClient, mockAttestationTokenDecryptor);
+        return new AttestationTokenRetriever(vertx, ATTESTATION_ENDPOINT, "testApiKey", APP_VERSION, attestationProvider, responseWatcher, proxy, clock, mockHttpClient, mockAttestationTokenDecryptor, 250);
     }
 }
