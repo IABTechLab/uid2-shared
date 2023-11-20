@@ -92,8 +92,10 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
                 LOGGER.info("Validator version: " + policyValidator.getVersion() + ", result: " + enclaveId);
 
                 if (allowedEnclaveIds.contains(enclaveId)) {
-                    LOGGER.info("Successfully attested OIDC against registered enclaves");
+                    LOGGER.info("Successfully attested gcp-oidc against registered enclaves");
                     return enclaveId;
+                } else {
+                    LOGGER.warn("Got unsupported gcp-oidc enclave id: " + enclaveId);
                 }
             } catch (Exception ex) {
                 lastException = ex;
