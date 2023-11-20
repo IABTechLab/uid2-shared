@@ -15,8 +15,7 @@ import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -45,9 +44,7 @@ class AzureCCAttestationProviderTest {
     @BeforeEach
     public void setup() throws AttestationException {
         when(alwaysPassTokenValidator.validate(any())).thenReturn(VALID_TOKEN_PAYLOAD);
-        when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationException("token signature validation failed"));
         when(alwaysPassPolicyValidator.validate(any(), any())).thenReturn(ENCLAVE_ID);
-        when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationException("policy validation failed"));
     }
 
     @Test
@@ -61,7 +58,21 @@ class AzureCCAttestationProviderTest {
     }
 
     @Test
-    public void testSignatureCheckFailed() throws AttestationException {
+    public void testSignatureCheckFailed_ClientError() throws AttestationException {
+        var errorStr = "token signature validation failed";
+        when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationClientException(errorStr));
+        var provider = new AzureCCAttestationProvider(alwaysFailTokenValidator, alwaysPassPolicyValidator);
+        provider.registerEnclave(ENCLAVE_ID);
+        attest(provider, ar -> {
+            assertTrue(ar.succeeded());
+            assertFalse(ar.result().isSuccess());
+            assertEquals(errorStr, ar.result().getReason());
+        });
+    }
+
+    @Test
+    public void testSignatureCheckFailed_ServerError() throws AttestationException {
+        when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationException("unknown server error"));
         var provider = new AzureCCAttestationProvider(alwaysFailTokenValidator, alwaysPassPolicyValidator);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
@@ -71,7 +82,21 @@ class AzureCCAttestationProviderTest {
     }
 
     @Test
-    public void testPolicyCheckFailed() throws AttestationException {
+    public void testPolicyCheckFailed_ClientError() throws AttestationException {
+        var errorStr = "policy validation failed";
+        when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationClientException(errorStr));
+        var provider = new AzureCCAttestationProvider(alwaysFailTokenValidator, alwaysFailPolicyValidator);
+        provider.registerEnclave(ENCLAVE_ID);
+        attest(provider, ar -> {
+            assertTrue(ar.succeeded());
+            assertFalse(ar.result().isSuccess());
+            assertEquals(errorStr, ar.result().getReason());
+        });
+    }
+
+    @Test
+    public void testPolicyCheckFailed_ServerError() throws AttestationException {
+        when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationException("unknown server error"));
         var provider = new AzureCCAttestationProvider(alwaysFailTokenValidator, alwaysFailPolicyValidator);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
@@ -84,8 +109,9 @@ class AzureCCAttestationProviderTest {
     public void testEnclaveNotRegistered() throws AttestationException {
         var provider = new AzureCCAttestationProvider(alwaysFailTokenValidator, alwaysPassPolicyValidator);
         attest(provider, ar -> {
-            assertFalse(ar.succeeded());
-            assertTrue(ar.cause() instanceof AttestationException);
+            assertTrue(ar.succeeded());
+            assertFalse(ar.result().isSuccess());
+            assertEquals(AttestationFailure.FORBIDDEN_ENCLAVE, ar.result().getFailure());
         });
     }
 

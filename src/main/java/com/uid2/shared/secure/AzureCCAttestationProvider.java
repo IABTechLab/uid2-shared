@@ -52,10 +52,15 @@ public class AzureCCAttestationProvider implements IAttestationProvider {
                 log.info("Successfully attested azure-cc against registered enclaves, enclave id: " + enclaveId);
                 handler.handle(Future.succeededFuture(new AttestationResult(publicKey, enclaveId)));
             } else {
-                throw new AttestationException("Unregistered enclave, enclave id: " + enclaveId);
+                log.warn("Got unsupported azure-cc enclave id: " + enclaveId);
+                handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.FORBIDDEN_ENCLAVE)));
             }
-        } catch (AttestationException ex) {
-            handler.handle(Future.failedFuture(ex));
+        }
+        catch (AttestationClientException ace){
+            handler.handle(Future.succeededFuture(new AttestationResult(ace)));
+        }
+        catch (AttestationException ae) {
+            handler.handle(Future.failedFuture(ae));
         } catch (Exception ex) {
             handler.handle(Future.failedFuture(new AttestationException(ex)));
         }
