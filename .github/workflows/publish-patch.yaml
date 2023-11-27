@@ -9,7 +9,7 @@ on:
         type: boolean
 jobs:
   build-publish-package:
-    uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-java-publish-versioned-package.yaml@main
+    uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-java-publish-versioned-package.yaml@v1.0
     with: 
       release_type: 'Patch'
       publish_to_maven: ${{ inputs.publish_to_maven }}
