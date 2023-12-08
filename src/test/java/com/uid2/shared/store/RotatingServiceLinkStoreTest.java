@@ -1,5 +1,6 @@
 package com.uid2.shared.store;
 
+import com.uid2.shared.auth.Role;
 import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.model.ServiceLink;
 import com.uid2.shared.store.reader.RotatingServiceLinkStore;
@@ -14,6 +15,7 @@ import org.mockito.MockitoAnnotations;
 
 
 import java.util.Arrays;
+import java.util.Set;
 
 import static com.uid2.shared.TestUtilites.makeInputStream;
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,8 +47,8 @@ public class RotatingServiceLinkStoreTest {
         return metadata;
     }
 
-    private ServiceLink addServiceLink(JsonArray content, String linkId, int serviceId, int siteId, String name) {
-        ServiceLink link = new ServiceLink(linkId, serviceId, siteId, name);
+    private ServiceLink addServiceLink(JsonArray content, String linkId, int serviceId, int siteId, String name, Set<Role> roles) {
+        ServiceLink link = new ServiceLink(linkId, serviceId, siteId, name, roles);
         JsonObject jo = JsonObject.mapFrom(link);
         content.add(jo);
         return link;
@@ -64,10 +66,10 @@ public class RotatingServiceLinkStoreTest {
     @Test
     public void loadContentMultipleServices() throws Exception {
         JsonArray content = new JsonArray();
-        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1");
-        ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1");
-        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1");
-        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2");
+        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of());
+        ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER));
+        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1", Set.of(Role.MAPPER, Role.SHARER));
+        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2", Set.of(Role.SHARER));
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
@@ -77,10 +79,10 @@ public class RotatingServiceLinkStoreTest {
     @Test
     public void findServiceLinksMultipleServices() throws Exception {
         JsonArray content = new JsonArray();
-        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1");
-        ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1");
-        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1");
-        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2");
+        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of());
+        ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER));
+        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1", Set.of(Role.MAPPER, Role.SHARER));
+        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2", Set.of(Role.SHARER));
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
