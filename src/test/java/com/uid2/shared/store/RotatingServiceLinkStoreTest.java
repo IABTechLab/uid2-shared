@@ -69,7 +69,7 @@ public class RotatingServiceLinkStoreTest {
         ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of());
         ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER));
         ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1", Set.of(Role.MAPPER, Role.SHARER));
-        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2", Set.of(Role.SHARER));
+        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2", null);
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
@@ -82,7 +82,7 @@ public class RotatingServiceLinkStoreTest {
         ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of());
         ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER));
         ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1", Set.of(Role.MAPPER, Role.SHARER));
-        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2", Set.of(Role.SHARER));
+        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2", null);
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));

@@ -3,12 +3,8 @@ package com.uid2.shared.store.parser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import com.uid2.shared.Utils;
-import com.uid2.shared.auth.ClientKey;
 import com.uid2.shared.model.ServiceLink;
 import com.uid2.shared.util.Mapper;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 
 import java.io.IOException;
 import java.io.InputStream;
