@@ -15,6 +15,7 @@ import org.mockito.MockitoAnnotations;
 
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import static com.uid2.shared.TestUtilites.makeInputStream;
@@ -87,12 +88,37 @@ public class RotatingServiceLinkStoreTest {
 
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
 
-        ServiceLink sl = serviceLinkStore.getServiceLink(1, "abc123");
-        assertNotNull(sl);
-        assertEquals("Test Service 1", sl.getName());
-        assertEquals(1, sl.getServiceId());
-        assertEquals(123, sl.getSiteId());
-        assertEquals("abc123", sl.getLinkId());
+        ServiceLink sl1 = serviceLinkStore.getServiceLink(1, "abc123");
+        assertNotNull(sl1);
+        assertEquals("Test Service 1", sl1.getName());
+        assertEquals(1, sl1.getServiceId());
+        assertEquals(123, sl1.getSiteId());
+        assertEquals("abc123", sl1.getLinkId());
+        assertEquals(new HashSet<Role>(), sl1.getRoles());
+
+        ServiceLink sl2 = serviceLinkStore.getServiceLink(2, "abc123");
+        assertNotNull(sl2);
+        assertEquals("test1", sl2.getName());
+        assertEquals(2, sl2.getServiceId());
+        assertEquals(123, sl2.getSiteId());
+        assertEquals("abc123", sl2.getLinkId());
+        assertEquals(Set.of(Role.MAPPER), sl2.getRoles());
+
+        ServiceLink sl3 = serviceLinkStore.getServiceLink(1, "ghi789");
+        assertNotNull(sl3);
+        assertEquals("Test Service 1", sl3.getName());
+        assertEquals(1, sl3.getServiceId());
+        assertEquals(123, sl3.getSiteId());
+        assertEquals("ghi789", sl3.getLinkId());
+        assertEquals(Set.of(Role.MAPPER, Role.SHARER), sl3.getRoles());
+
+        ServiceLink sl4 = serviceLinkStore.getServiceLink(3, "jkl1011");
+        assertNotNull(sl4);
+        assertEquals("test2", sl4.getName());
+        assertEquals(3, sl4.getServiceId());
+        assertEquals(124, sl4.getSiteId());
+        assertEquals("jkl1011", sl4.getLinkId());
+        assertEquals(new HashSet<Role>(), sl4.getRoles());
 
         assertNull(serviceLinkStore.getServiceLink(4, "missing"));
     }
