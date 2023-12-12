@@ -83,43 +83,27 @@ public class RotatingServiceLinkStoreTest {
         ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of());
         ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER));
         ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1", Set.of(Role.MAPPER, Role.SHARER));
-        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2", null);
+
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
 
-        ServiceLink sl1 = serviceLinkStore.getServiceLink(1, "abc123");
-        assertNotNull(sl1);
-        assertEquals("Test Service 1", sl1.getName());
-        assertEquals(1, sl1.getServiceId());
-        assertEquals(123, sl1.getSiteId());
-        assertEquals("abc123", sl1.getLinkId());
-        assertEquals(new HashSet<Role>(), sl1.getRoles());
-
-        ServiceLink sl2 = serviceLinkStore.getServiceLink(2, "abc123");
-        assertNotNull(sl2);
-        assertEquals("test1", sl2.getName());
-        assertEquals(2, sl2.getServiceId());
-        assertEquals(123, sl2.getSiteId());
-        assertEquals("abc123", sl2.getLinkId());
-        assertEquals(Set.of(Role.MAPPER), sl2.getRoles());
-
-        ServiceLink sl3 = serviceLinkStore.getServiceLink(1, "ghi789");
-        assertNotNull(sl3);
-        assertEquals("Test Service 1", sl3.getName());
-        assertEquals(1, sl3.getServiceId());
-        assertEquals(123, sl3.getSiteId());
-        assertEquals("ghi789", sl3.getLinkId());
-        assertEquals(Set.of(Role.MAPPER, Role.SHARER), sl3.getRoles());
-
-        ServiceLink sl4 = serviceLinkStore.getServiceLink(3, "jkl1011");
-        assertNotNull(sl4);
-        assertEquals("test2", sl4.getName());
-        assertEquals(3, sl4.getServiceId());
-        assertEquals(124, sl4.getSiteId());
-        assertEquals("jkl1011", sl4.getLinkId());
-        assertEquals(new HashSet<Role>(), sl4.getRoles());
+        assertEquals(Arrays.asList(serviceLinkStore.getServiceLink(1, "abc123"),
+                serviceLinkStore.getServiceLink(2, "abc123"),
+                serviceLinkStore.getServiceLink(1, "ghi789")), Arrays.asList(l1, l2, l3));
 
         assertNull(serviceLinkStore.getServiceLink(4, "missing"));
+    }
+
+    @Test
+    public void createServiceEmptyRole() throws Exception {
+        JsonArray content = new JsonArray();
+        ServiceLink sl = addServiceLink(content, "jkl1011", 3, 124, "Test Service", null);
+
+        when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
+
+        final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
+        assertEquals(1, count);
+        assertEquals(serviceLinkStore.getServiceLink(3, "jkl1011"), new ServiceLink("jkl1011", 3, 124, "Test Service", Set.of()));
     }
 }

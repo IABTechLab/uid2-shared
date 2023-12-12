@@ -15,10 +15,6 @@ public class ServiceLinkParser implements Parser<Map<String, ServiceLink>> {
 
     private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
 
-    static {
-        OBJECT_MAPPER.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);
-    }
-
     @Override
     public ParsingResult<Map<String, ServiceLink>> deserialize(InputStream inputStream) throws IOException {
         ServiceLink[] serviceLinks = OBJECT_MAPPER.readValue(inputStream, ServiceLink[].class);
