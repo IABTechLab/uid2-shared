@@ -5,7 +5,4 @@ on:
 jobs:
   build-publish-package:
     uses: IABTechLab/uid2-shared-actions/.github/workflows/test-commit.yaml@v2.3.5-pre-autopr
-    with: 
-      release_type: 'Snapshot'
-      publish_to_maven: ${{ inputs.publish_to_maven }}
     secrets: inherit
