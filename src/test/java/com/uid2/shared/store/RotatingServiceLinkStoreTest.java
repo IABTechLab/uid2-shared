@@ -56,7 +56,7 @@ public class RotatingServiceLinkStoreTest {
     }
 
     @Test
-    public void loadContentEmptyArray() throws Exception {
+    public void loadContent_EmptyArray_LoadsZeroServiceLinks() throws Exception {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
@@ -65,7 +65,7 @@ public class RotatingServiceLinkStoreTest {
     }
 
     @Test
-    public void loadContentMultipleServices() throws Exception {
+    public void loadContent_MultipleServiceLinksStored_LoadsAllServiceLinks() throws Exception {
         JsonArray content = new JsonArray();
         ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of());
         ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER));
@@ -77,8 +77,9 @@ public class RotatingServiceLinkStoreTest {
         assertEquals(4, count);
         assertTrue(serviceLinkStore.getAllServiceLinks().containsAll(Arrays.asList(l1, l2, l3, l4)));
     }
+
     @Test
-    public void findServiceLinksMultipleServices() throws Exception {
+    public void getServiceLink_MultipleServiceLinksStored_FindsCorrectServiceLink() throws Exception {
         JsonArray content = new JsonArray();
         ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of());
         ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER));
@@ -96,7 +97,7 @@ public class RotatingServiceLinkStoreTest {
     }
 
     @Test
-    public void createServiceEmptyRole() throws Exception {
+    public void createService_NullRole_CreatesServiceLinkWithEmptySetOfRoles() throws Exception {
         JsonArray content = new JsonArray();
         ServiceLink sl = addServiceLink(content, "jkl1011", 3, 124, "Test Service", null);
 
