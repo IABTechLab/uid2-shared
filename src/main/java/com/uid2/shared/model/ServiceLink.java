@@ -1,5 +1,6 @@
 package com.uid2.shared.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
@@ -9,6 +10,7 @@ import com.uid2.shared.auth.Role;
 import java.util.HashSet;
 import java.util.Set;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ServiceLink {
     @JsonProperty("site_id")
     private final int siteId;
