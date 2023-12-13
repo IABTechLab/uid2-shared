@@ -4,5 +4,5 @@ on:
 
 jobs:
   build-publish-package:
-    uses: IABTechLab/uid2-shared-actions/.github/workflows/test-commit.yaml@v2.3.7-prepr
+    uses: IABTechLab/uid2-shared-actions/.github/workflows/test-commit.yaml@llp-uid2-2236-auto-pr-action
     secrets: inherit
