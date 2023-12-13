@@ -16,6 +16,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static com.uid2.shared.TestUtilites.makeInputStream;
@@ -56,7 +57,7 @@ public class RotatingServiceLinkStoreTest {
     }
 
     @Test
-    public void loadContent_EmptyArray_LoadsZeroServiceLinks() throws Exception {
+    public void loadContent_emptyArray_loadsZeroServiceLinks() throws Exception {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
@@ -65,7 +66,7 @@ public class RotatingServiceLinkStoreTest {
     }
 
     @Test
-    public void loadContent_MultipleServiceLinksStored_LoadsAllServiceLinks() throws Exception {
+    public void loadContent_multipleServiceLinksStored_loadsAllServiceLinks() throws Exception {
         JsonArray content = new JsonArray();
         ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of());
         ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER));
@@ -79,7 +80,7 @@ public class RotatingServiceLinkStoreTest {
     }
 
     @Test
-    public void getServiceLink_MultipleServiceLinksStored_FindsCorrectServiceLink() throws Exception {
+    public void getServiceLink_multipleServiceLinksStored_findsCorrectServiceLink() throws Exception {
         JsonArray content = new JsonArray();
         ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of());
         ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER));
@@ -89,15 +90,18 @@ public class RotatingServiceLinkStoreTest {
 
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
 
-        assertEquals(Arrays.asList(serviceLinkStore.getServiceLink(1, "abc123"),
+        List<ServiceLink> expected = List.of(l1, l2, l3);
+        List<ServiceLink> actual = List.of(
+                serviceLinkStore.getServiceLink(1, "abc123"),
                 serviceLinkStore.getServiceLink(2, "abc123"),
-                serviceLinkStore.getServiceLink(1, "ghi789")), Arrays.asList(l1, l2, l3));
+                serviceLinkStore.getServiceLink(1, "ghi789"));
 
+        assertEquals(expected, actual);
         assertNull(serviceLinkStore.getServiceLink(4, "missing"));
     }
 
     @Test
-    public void createService_NullRole_CreatesServiceLinkWithEmptySetOfRoles() throws Exception {
+    public void createService_nullRole_createsServiceLinkWithEmptySetOfRoles() throws Exception {
         JsonArray content = new JsonArray();
         ServiceLink sl = addServiceLink(content, "jkl1011", 3, 124, "Test Service", null);
 
