@@ -1,31 +1,28 @@
 package com.uid2.shared.store.parser;
 
-import com.uid2.shared.Utils;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.uid2.shared.model.ServiceLink;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
+import com.uid2.shared.util.Mapper;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ServiceLinkParser implements Parser<Map<String, ServiceLink>> {
 
+    private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
+
+    static {
+        OBJECT_MAPPER.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE);
+    }
+
     @Override
     public ParsingResult<Map<String, ServiceLink>> deserialize(InputStream inputStream) throws IOException {
-        JsonArray spec = Utils.toJsonArray(inputStream);
-        final HashMap<String, ServiceLink> serviceLinkList = new HashMap<>();
-        for (int i = 0; i < spec.size(); i++) {
-            JsonObject serviceLinkSpec = spec.getJsonObject(i);
-            String linkId = serviceLinkSpec.getString("link_id");
-            int serviceId = serviceLinkSpec.getInteger("service_id");
-            int siteId = serviceLinkSpec.getInteger("site_id");
-            String name = serviceLinkSpec.getString("name");
-
-            ServiceLink serviceLink = new ServiceLink(linkId, serviceId, siteId, name);
-            String key = serviceId + "_" + linkId;
-            serviceLinkList.put(key, serviceLink);
-        }
+        ServiceLink[] serviceLinks = OBJECT_MAPPER.readValue(inputStream, ServiceLink[].class);
+        Map<String, ServiceLink> serviceLinkList = Arrays.stream(serviceLinks).collect(Collectors.toMap(s -> (s.getServiceId() + "_" + s.getLinkId()), s -> s));
         return new ParsingResult<>(serviceLinkList, serviceLinkList.size());
     }
 }
