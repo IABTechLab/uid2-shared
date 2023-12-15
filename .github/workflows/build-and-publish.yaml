@@ -1,0 +1,34 @@
+name: Build and Publish JAR Packages
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        type: choice
+        description: 'The type of release'
+        options:
+        - Major
+        - Minor
+        - Patch
+        - Snapshot
+      publish_to_maven:
+        description: 'True to publish the artifacts to Maven repository, false to skip the step'
+        default: false
+        required: false
+        type: boolean
+      java_version:
+        type: string
+        default: '11'
+      publish_vulnerabilities:
+        type: string
+        default: 'true'
+
+jobs:
+  build-and-pubish:
+    name: Build and publish JAR packages to Maven repository
+    uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-java-publish-versioned-package.yaml@v2.7
+    with:
+      release_type: ${{ inputs.release_type }}
+      publish_to_maven: ${{ inputs.publish_to_maven }}
+      java_version: ${{ inputs.java_version }}
+      publish_vulnerabilities: ${{ inputs.publish_vulnerabilities }}
+    secrets: inherit
