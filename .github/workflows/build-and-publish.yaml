@@ -26,7 +26,7 @@ on:
 jobs:
   build-and-pubish:
     name: Build and publish JAR Packages to Maven Repos
-    uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-java-publish-versioned-package.yaml@main
+    uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-java-publish-versioned-package.yaml@v2.7
     with:
       release_type: ${{ inputs.release_type }}
       publish_to_maven: ${{ inputs.publish_to_maven }}
