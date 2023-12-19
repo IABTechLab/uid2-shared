@@ -1,4 +1,5 @@
 name: Build and Publish JAR Packages
+run-name: ${{ inputs.release_type == 'Snapshot' && 'Publish pre-release' || format('Release {0}', inputs.release_type)}} Package by @${{ github.actor }}
 on:
   workflow_dispatch:
     inputs:
