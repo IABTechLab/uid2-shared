@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 
@@ -108,6 +106,9 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         }
 
         String attestationToken = attestationTokenRetriever.getAttestationToken();
+        if (jwtToken == null || jwtToken.isEmpty()) {
+            jwtToken = this.getJWT();
+        }
 
         HttpResponse<String> httpResponse;
         httpResponse = sendHttpRequest(path, attestationToken, jwtToken);
@@ -123,7 +124,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return Utils.convertHttpResponseToInputStream(httpResponse);
     }
 
-    private HttpResponse<String> sendHttpRequest(String path, String attestationToken, String attestationJWT) throws IOException, InterruptedException {
+    private HttpResponse<String> sendHttpRequest(String path, String attestationToken, String attestationJWT) throws IOException {
         URI uri = URI.create(path);
         if (this.enforceHttps && !"https".equalsIgnoreCase(uri.getScheme())) {
             throw new IOException("UidCoreClient requires HTTPS connection");
