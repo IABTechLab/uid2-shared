@@ -103,12 +103,12 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private InputStream getWithAttest(String path, String jwtToken) throws IOException, InterruptedException, AttestationTokenRetrieverException {
         if (!attestationTokenRetriever.attested()) {
             attestationTokenRetriever.attest();
+            if (jwtToken == null || jwtToken.isEmpty()) {
+                jwtToken = this.getJWT();
+            }
         }
 
         String attestationToken = attestationTokenRetriever.getAttestationToken();
-        if (jwtToken == null || jwtToken.isEmpty()) {
-            jwtToken = this.getJWT();
-        }
 
         HttpResponse<String> httpResponse;
         httpResponse = sendHttpRequest(path, attestationToken, jwtToken);

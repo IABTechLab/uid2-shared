@@ -14,6 +14,7 @@ import java.net.Proxy;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.Mockito.*;
 
 public class UidCoreClientTest {
@@ -60,7 +61,7 @@ public class UidCoreClientTest {
     }
 
     @Test
-    public void Download_With_Attest_Uses_JWT_Second_Call() throws IOException, CloudStorageException, AttestationTokenRetrieverException {
+    public void DownloadWithAttest_UsesJWTSecondCall() throws IOException, CloudStorageException, AttestationTokenRetrieverException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
 
         // this test checks that if the getCoreJWT returns null, then the UidCoreClient will call getCoreJWT after attestation to get the
@@ -82,10 +83,11 @@ public class UidCoreClientTest {
         when(mockHttpClient.get("https://download", expectedHeaders)).thenReturn(mockHttpResponse);
 
         uidCoreClient.download("https://download");
-        verify(mockAttestationTokenRetriever, times(1)).attest();
-        verify(mockAttestationTokenRetriever, times(2)).getCoreJWT();
-
-        verify(mockHttpClient, times(1)).get("https://download", expectedHeaders);
+        assertAll(
+                () -> verify(mockAttestationTokenRetriever, times(1)).attest(),
+                () -> verify(mockAttestationTokenRetriever, times(2)).getCoreJWT(),
+                () -> verify(mockHttpClient, times(1)).get("https://download", expectedHeaders)
+        );
     }
 
     @Test
