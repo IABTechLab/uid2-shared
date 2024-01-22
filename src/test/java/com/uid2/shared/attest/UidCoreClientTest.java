@@ -8,16 +8,13 @@ import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 import java.io.IOException;
 import java.net.Proxy;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.Mockito.*;
 
 public class UidCoreClientTest {
@@ -40,7 +37,7 @@ public class UidCoreClientTest {
     }
 
     @Test
-    public void Download_Succeed_RequestSentWithExpectedParameters() throws IOException, CloudStorageException, InterruptedException {
+    public void Download_Succeed_RequestSentWithExpectedParameters() throws IOException, CloudStorageException, AttestationTokenRetrieverException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
 
         when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
@@ -59,6 +56,8 @@ public class UidCoreClientTest {
         when(mockHttpClient.get("https://download", expectedHeaders)).thenReturn(mockHttpResponse);
 
         uidCoreClient.download("https://download");
+        verify(mockAttestationTokenRetriever, times(1)).attest();
+        verify(mockHttpClient, times(1)).get("https://download", expectedHeaders);
     }
 
     @Test

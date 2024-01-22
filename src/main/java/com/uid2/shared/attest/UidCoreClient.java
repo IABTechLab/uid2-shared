@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.*;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.HashMap;
 
@@ -68,28 +66,21 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
     @Override
     public InputStream download(String path) throws CloudStorageException {
-        String coreJWT = this.getJWT();
-        return this.internalDownload(path, coreJWT);
-    }
-
-    @Deprecated
-    public InputStream downloadFromOptOut(String path) throws CloudStorageException {
-        String optOutJWT = attestationTokenRetriever.getOptOutJWT();
-        return this.internalDownload(path, optOutJWT);
+        return this.internalDownload(path);
     }
 
     protected String getJWT() {
         return this.getAttestationTokenRetriever().getCoreJWT();
     }
 
-    private InputStream internalDownload(String path, String jwtToken) throws CloudStorageException {
+    private InputStream internalDownload(String path) throws CloudStorageException {
         try {
             InputStream inputStream;
             if (allowContentFromLocalFileSystem && path.startsWith("file:/tmp/uid2")) {
                 // returns `file:/tmp/uid2` urlConnection directly
                 inputStream = readContentFromLocalFileSystem(path, this.proxy);
             } else {
-                inputStream = getWithAttest(path, jwtToken);
+                inputStream = getWithAttest(path);
             }
             return inputStream;
         } catch (Exception e) {
@@ -102,7 +93,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return (proxy == null ? new URL(path).openConnection() : new URL(path).openConnection(proxy)).getInputStream();
     }
 
-    private InputStream getWithAttest(String path, String jwtToken) throws IOException, InterruptedException, AttestationTokenRetrieverException {
+    private InputStream getWithAttest(String path) throws IOException, AttestationTokenRetrieverException {
         if (!attestationTokenRetriever.attested()) {
             attestationTokenRetriever.attest();
         }
@@ -110,20 +101,20 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         String attestationToken = attestationTokenRetriever.getAttestationToken();
 
         HttpResponse<String> httpResponse;
-        httpResponse = sendHttpRequest(path, attestationToken, jwtToken);
+        httpResponse = sendHttpRequest(path, attestationToken);
 
         // This should never happen, but keeping this part of the code just to be extra safe.
         if (httpResponse.statusCode() == 401) {
             LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
             attestationTokenRetriever.attest();
             attestationToken = attestationTokenRetriever.getAttestationToken();
-            httpResponse = sendHttpRequest(path, attestationToken, jwtToken);
+            httpResponse = sendHttpRequest(path, attestationToken);
         }
 
         return Utils.convertHttpResponseToInputStream(httpResponse);
     }
 
-    private HttpResponse<String> sendHttpRequest(String path, String attestationToken, String attestationJWT) throws IOException, InterruptedException {
+    private HttpResponse<String> sendHttpRequest(String path, String attestationToken) throws IOException {
         URI uri = URI.create(path);
         if (this.enforceHttps && !"https".equalsIgnoreCase(uri.getScheme())) {
             throw new IOException("UidCoreClient requires HTTPS connection");
@@ -137,8 +128,12 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         if (attestationToken != null && !attestationToken.isBlank()) {
             headers.put(Const.Attestation.AttestationTokenHeader, attestationToken);
         }
-        if (attestationJWT != null && !attestationJWT.isBlank()) {
-            headers.put(Const.Attestation.AttestationJWTHeader, attestationJWT);
+
+        String jwtToken = this.getJWT();
+        if (jwtToken != null && !jwtToken.isBlank()) {
+            headers.put(Const.Attestation.AttestationJWTHeader, jwtToken);
+        } else {
+            LOGGER.warn("getJWT returned an empty or null string for the JWT");
         }
 
         HttpResponse<String> httpResponse;

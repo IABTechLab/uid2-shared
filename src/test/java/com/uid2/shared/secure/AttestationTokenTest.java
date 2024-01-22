@@ -82,8 +82,8 @@ public class AttestationTokenTest {
         final long defaultLifetime = 7200;
 
         // using the default constructor requires the use of a range, rather than a specific value
-        final Instant expiryLowerBound = Instant.now().plusSeconds(defaultLifetime + (5 * 60) + 1); // bounds are exclusive
-        final Instant expiryUpperBound = Instant.now().plusSeconds(defaultLifetime + (10 * 60) - 1);
+        final Instant expiryLowerBound = Instant.now().plusSeconds(defaultLifetime + (5 * 60)); // lower bound is inclusive
+        final Instant expiryUpperBound = Instant.now().plusSeconds(defaultLifetime + (10 * 60) - 1); // upper bound is exclusive
         final AttestationTokenService ats = new AttestationTokenService(ENCRYPTION_KEY, SALT); // until the default constructor is removed, this must use it for the test to be valid
 
         final String attestationToken = ats.createToken("userToken").getEncodedAttestationToken();
