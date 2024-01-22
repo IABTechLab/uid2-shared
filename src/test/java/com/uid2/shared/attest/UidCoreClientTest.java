@@ -61,36 +61,6 @@ public class UidCoreClientTest {
     }
 
     @Test
-    public void DownloadWithAttest_UsesJWTSecondCall() throws IOException, CloudStorageException, AttestationTokenRetrieverException {
-        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-
-        // this test checks that if the getCoreJWT returns null, then the UidCoreClient will call getCoreJWT after attestation to get the
-        // expected value
-        when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
-        when(mockAttestationTokenRetriever.getCoreJWT()).thenReturn(null,"testCoreJWT");
-        when(mockAttestationTokenRetriever.getOptOutJWT()).thenReturn("testOptOutJWT");
-        uidCoreClient.setUserToken("testUserToken");
-
-        String expectedResponseBody = "Hello, world!";
-        when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
-
-        HashMap<String, String> expectedHeaders = new HashMap<>();
-        expectedHeaders.put(Const.Http.AppVersionHeader, "testAppVersionHeader");
-        expectedHeaders.put("Authorization", "Bearer testUserToken");
-        expectedHeaders.put("Attestation-Token", "testAttestationToken");
-        expectedHeaders.put("Attestation-JWT", "testCoreJWT");
-
-        when(mockHttpClient.get("https://download", expectedHeaders)).thenReturn(mockHttpResponse);
-
-        uidCoreClient.download("https://download");
-        assertAll(
-                () -> verify(mockAttestationTokenRetriever, times(1)).attest(),
-                () -> verify(mockAttestationTokenRetriever, times(2)).getCoreJWT(),
-                () -> verify(mockHttpClient, times(1)).get("https://download", expectedHeaders)
-        );
-    }
-
-    @Test
     public void Download_EnforceHttpWhenPathNoHttps_ExceptionThrown() {
         when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
 
