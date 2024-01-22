@@ -132,6 +132,8 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         String jwtToken = this.getJWT();
         if (jwtToken != null && !jwtToken.isBlank()) {
             headers.put(Const.Attestation.AttestationJWTHeader, jwtToken);
+        } else {
+            LOGGER.warn("getJWT returned an empty or null string for the JWT");
         }
 
         HttpResponse<String> httpResponse;
