@@ -5,6 +5,7 @@ import com.uid2.shared.auth.*;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.net.HostAndPort;
 import io.vertx.ext.web.RoutingContext;
 
 import java.util.*;
@@ -100,8 +101,8 @@ public class AuthMiddleware {
         }
 
         public void handle(RoutingContext rc) {
-            String host = rc.request().host();
-            if (host == null || !host.startsWith("127.0.0.1")) {
+            HostAndPort hostAndPort = rc.request().authority();
+            if (hostAndPort == null || !hostAndPort.host().startsWith("127.0.0.1")) {
                 // Host not specified, or Host not start with 127.0.0.1
                 rc.fail(401);
             } else {
