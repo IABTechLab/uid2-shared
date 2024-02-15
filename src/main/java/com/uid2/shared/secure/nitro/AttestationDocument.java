@@ -6,6 +6,7 @@ import co.nstant.in.cbor.model.*;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertPath;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
@@ -46,6 +47,7 @@ public class AttestationDocument {
     private List<byte[]> cabundle;
     private byte[] publicKey;
     private byte[] userData;
+    private String userDataString;
     private byte[] nonce;
 
     private AttestationDocument() {}
@@ -96,6 +98,7 @@ public class AttestationDocument {
             this.userData = null;
         } else {
             this.userData = ((ByteString) d).getBytes();
+            this.userDataString = new String(this.userData, StandardCharsets.UTF_16);
         }
     }
 
@@ -144,6 +147,10 @@ public class AttestationDocument {
 
     public byte[] getUserData() {
         return userData;
+    }
+
+    public String getUserDataString() {
+        return userDataString;
     }
 
     public byte[] getNonce() {
