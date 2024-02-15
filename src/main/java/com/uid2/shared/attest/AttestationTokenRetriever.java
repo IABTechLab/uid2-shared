@@ -14,13 +14,11 @@ import software.amazon.awssdk.utils.Pair;
 import java.io.IOException;
 import java.net.*;
 import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.time.Instant;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -152,9 +150,8 @@ public class AttestationTokenRetriever {
         try {
             KeyPair keyPair = generateKeyPair();
             byte[] publicKey = keyPair.getPublic().getEncoded();
-            byte[] userData = StandardCharsets.UTF_16.encode(this.attestationEndpoint).array();
             JsonObject requestJson = JsonObject.of(
-                    "attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey, userData)),
+                    "attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey, this.encodeAttestationEndpoint())),
                     "public_key", Base64.getEncoder().encodeToString(publicKey),
                     "application_name", appVersion.getAppName(),
                     "application_version", appVersion.getAppVersion()
@@ -289,5 +286,11 @@ public class AttestationTokenRetriever {
 
     public boolean attested() {
         return this.attestationToken.get() != null && this.clock.now().isBefore(this.attestationTokenExpiresAt);
+    }
+
+    private byte[] encodeAttestationEndpoint() {
+        // buffer.array() may include extra empty bytes at the end. This returns only the bytes that have data
+        ByteBuffer buffer = StandardCharsets.UTF_8.encode(this.attestationEndpoint);
+        return Arrays.copyOf(buffer.array(), buffer.limit());
     }
 }

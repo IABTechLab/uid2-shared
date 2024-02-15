@@ -98,7 +98,7 @@ public class AttestationDocument {
             this.userData = null;
         } else {
             this.userData = ((ByteString) d).getBytes();
-            this.userDataString = new String(this.userData, StandardCharsets.UTF_16);
+            this.userDataString = new String(this.userData, StandardCharsets.UTF_8);
         }
     }
 
