@@ -59,7 +59,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
-        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+        when(attestationProvider.getAttestationRequest(any(), any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-03T09:09:30.608597Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
@@ -83,7 +83,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
-        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+        when(attestationProvider.getAttestationRequest(any(), any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
@@ -111,7 +111,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
-        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+        when(attestationProvider.getAttestationRequest(any(), any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
@@ -139,7 +139,7 @@ public class AttestationTokenRetrieverTest {
         // The first is by attest() with true returned so that expiration check will be scheduled.
         // The second is by attestationExpirationCheck() with false, so that current check will be skipped.
         when(attestationProvider.isReady()).thenReturn(true, false);
-        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+        when(attestationProvider.getAttestationRequest(any(), any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-01T00:00:00.111Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
@@ -165,7 +165,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
-        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+        when(attestationProvider.getAttestationRequest(any(), any())).thenReturn(new byte[1]);
 
         JsonObject content = new JsonObject();
         JsonObject body = new JsonObject();
@@ -195,7 +195,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
-        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+        when(attestationProvider.getAttestationRequest(any(), any())).thenReturn(new byte[1]);
 
         JsonObject content = new JsonObject();
         JsonObject body = new JsonObject();
@@ -226,7 +226,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(false);
-        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+        when(attestationProvider.getAttestationRequest(any(), any())).thenReturn(new byte[1]);
 
         AttestationTokenRetrieverException result = Assertions.assertThrows(AttestationTokenRetrieverException.class, () -> {
             attestationTokenRetriever.attest();
@@ -241,7 +241,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
-        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+        when(attestationProvider.getAttestationRequest(any(), any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-03T09:09:30.608597Z\",\"attestation_jwt_optout\": \"test_jwt\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
@@ -261,7 +261,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
-        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+        when(attestationProvider.getAttestationRequest(any(), any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-03T09:09:30.608597Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"test_jwt_core\"},\"status\": \"success\"}";
@@ -281,7 +281,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
-        when(attestationProvider.getAttestationRequest(any())).thenReturn(new byte[1]);
+        when(attestationProvider.getAttestationRequest(any(), any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-03T09:09:30.608597Z\"},\"status\": \"success\"}";

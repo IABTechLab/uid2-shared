@@ -27,6 +27,8 @@ public class PolicyValidator implements IPolicyValidator {
     public static final String ENV_OPT_OUT_ENDPOINT = "OPTOUT_BASE_URL";
     public static final String ENV_ENFORCE_HTTPS = "ENFORCE_HTTPS";
 
+    public static final String ENV_ENFORCE_HTTPS = "ENFORCE_HTTPS";
+
     public static final String EU_REGION_PREFIX = "europe";
 
     private static final List<String> REQUIRED_ENV_OVERRIDES = ImmutableList.of(
@@ -35,7 +37,8 @@ public class PolicyValidator implements IPolicyValidator {
     );
 
     private static final Map<Environment, List<String>> OPTIONAL_ENV_OVERRIDES_MAP = ImmutableMap.of(
-            Environment.Integration, ImmutableList.of(ENV_CORE_ENDPOINT, ENV_OPT_OUT_ENDPOINT, ENV_ENFORCE_HTTPS)
+            Environment.Integration, ImmutableList.of(ENV_CORE_ENDPOINT, ENV_OPT_OUT_ENDPOINT),
+            Environment.EndToEnd, ImmutableList.of(ENV_CORE_ENDPOINT, ENV_OPT_OUT_ENDPOINT, ENV_ENFORCE_HTTPS)
     );
 
     @Override

@@ -152,8 +152,9 @@ public class AttestationTokenRetriever {
         try {
             KeyPair keyPair = generateKeyPair();
             byte[] publicKey = keyPair.getPublic().getEncoded();
+            byte[] userData = this.attestationEndpoint.getBytes(StandardCharsets.UTF_8);
             JsonObject requestJson = JsonObject.of(
-                    "attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey)),
+                    "attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey, userData)),
                     "public_key", Base64.getEncoder().encodeToString(publicKey),
                     "application_name", appVersion.getAppName(),
                     "application_version", appVersion.getAppVersion()
