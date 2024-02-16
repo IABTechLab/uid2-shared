@@ -2,8 +2,9 @@ package com.uid2.shared.secure;
 
 import com.uid2.shared.secure.nitro.AttestationDocument;
 import com.uid2.shared.secure.nitro.AttestationRequest;
-import com.uid2.shared.secure.IAttestationProvider;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
@@ -11,16 +12,23 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.uid2.shared.util.UrlEquivalenceValidator;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class NitroAttestationProvider implements IAttestationProvider {
 
+    private final String attestationUrl;
     private Set<NitroEnclaveIdentifier> allowedEnclaveIds;
-    private ICertificateProvider certificateProvider;
+    private final ICertificateProvider certificateProvider;
 
-    public NitroAttestationProvider(ICertificateProvider certificateProvider) {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NitroAttestationProvider.class);
+
+    public NitroAttestationProvider(ICertificateProvider certificateProvider, String attestationUrl) {
+        this.attestationUrl = attestationUrl;
         this.allowedEnclaveIds = new HashSet<>();
         this.certificateProvider = certificateProvider;
     }
@@ -47,6 +55,11 @@ public class NitroAttestationProvider implements IAttestationProvider {
 
         if (!aReq.verifyCertChain(certificateProvider.getRootCertificate())) {
             return new AttestationResult(AttestationFailure.BAD_CERTIFICATE);
+        }
+
+        String givenAttestationUrl = aDoc.getUserDataString();
+        if (!UrlEquivalenceValidator.areUrlsEquivalent(this.attestationUrl, givenAttestationUrl, LOGGER)) {
+            return new AttestationResult(AttestationFailure.UNKNOWN_ATTESTATION_URL);
         }
 
         NitroEnclaveIdentifier id = NitroEnclaveIdentifier.fromRaw(aDoc.getPcr(0));
