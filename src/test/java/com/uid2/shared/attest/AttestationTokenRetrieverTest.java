@@ -64,7 +64,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
-        when(attestationProvider.getAttestationRequest(any(), eq(USER_DATA))).thenReturn(new byte[1]);
+        when(attestationProvider.getAttestationRequest(any(), any())).thenReturn(new byte[1]);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-03T09:09:30.608597Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
@@ -303,7 +303,7 @@ public class AttestationTokenRetrieverTest {
     }
 
     @Test
-    public void attest_succeed_jsonRequest_includes_attestUrl(Vertx vertx, VertxTestContext testContext) throws  Exception{
+    public void attest_succeed_jsonRequest_includes_attestUrl_in_attestation_request(Vertx vertx, VertxTestContext testContext) throws  Exception{
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);

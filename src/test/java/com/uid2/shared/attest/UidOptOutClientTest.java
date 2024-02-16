@@ -25,7 +25,7 @@ public class UidOptOutClientTest {
 
         optOutClient = new UidOptOutClient(
                 "userToken", proxy,
-                true, mockAttestationTokenRetriever, mockHttpClient);
+                mockAttestationTokenRetriever, mockHttpClient);
     }
 
     @Test

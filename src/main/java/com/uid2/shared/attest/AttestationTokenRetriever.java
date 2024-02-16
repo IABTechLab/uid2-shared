@@ -35,6 +35,7 @@ public class AttestationTokenRetriever {
     private final AtomicReference<String> coreJwt;
     private final Handler<Pair<Integer, String>> responseWatcher;
     private final String attestationEndpoint;
+    private final byte[] encodedAttestationEndpoint;
     private final IClock clock;
     private final Vertx vertx;
     private final URLConnectionHttpClient httpClient;
@@ -69,6 +70,7 @@ public class AttestationTokenRetriever {
                                      int attestCheckMilliseconds) {
         this.vertx = vertx;
         this.attestationEndpoint = attestationEndpoint;
+        this.encodedAttestationEndpoint = this.encodeStringUnicodeAttestationEndpoint(attestationEndpoint);
         this.clientApiToken = clientApiToken;
         this.appVersion = appVersion;
         this.attestationProvider = attestationProvider;
@@ -151,7 +153,7 @@ public class AttestationTokenRetriever {
             KeyPair keyPair = generateKeyPair();
             byte[] publicKey = keyPair.getPublic().getEncoded();
             JsonObject requestJson = JsonObject.of(
-                    "attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey, this.encodeAttestationEndpoint())),
+                    "attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey, this.encodedAttestationEndpoint)),
                     "public_key", Base64.getEncoder().encodeToString(publicKey),
                     "application_name", appVersion.getAppName(),
                     "application_version", appVersion.getAppVersion()
@@ -288,9 +290,9 @@ public class AttestationTokenRetriever {
         return this.attestationToken.get() != null && this.clock.now().isBefore(this.attestationTokenExpiresAt);
     }
 
-    private byte[] encodeAttestationEndpoint() {
+    private byte[] encodeStringUnicodeAttestationEndpoint(String data) {
         // buffer.array() may include extra empty bytes at the end. This returns only the bytes that have data
-        ByteBuffer buffer = StandardCharsets.UTF_8.encode(this.attestationEndpoint);
+        ByteBuffer buffer = StandardCharsets.UTF_8.encode(data);
         return Arrays.copyOf(buffer.array(), buffer.limit());
     }
 }
