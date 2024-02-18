@@ -26,6 +26,8 @@ public class UrlEquivalenceValidatorTest {
     @ParameterizedTest
     @CsvSource(value = {
             "http://example.com;http://example.com/",
+            "http://example.com/path1;http://example.com/path2",
+            "http://example.com/path1/path2;http://example.com/path2/path1",
             "https://example.com;https://example.com/",
             "https://example.com;https://EXAMPLE.com/",
             "https://example.com;https://example.COM/",
@@ -57,6 +59,7 @@ public class UrlEquivalenceValidatorTest {
             "http://example1.com;http//example2.com;URL could not be parsed to a valid URL. Given URL: http//example2.com",
             "foo://example1.com;http://example2.com;URL could not be parsed to a valid URL. Given URL: foo://example1.com",
             "http://example1.com;bar://example2.com;URL could not be parsed to a valid URL. Given URL: bar://example2.com",
+            "http://example1.com:abc;http://example2.com;URL could not be parsed to a valid URL. Given URL: http://example1.com:abc",
     }, delimiter = ';')
     public void urls_invalid(String first, String second, String expectedError) {
         Assert.assertFalse(UrlEquivalenceValidator.areUrlsEquivalent(first, second, loggerMock));

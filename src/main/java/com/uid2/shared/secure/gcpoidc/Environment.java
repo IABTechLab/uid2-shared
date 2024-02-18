@@ -10,8 +10,7 @@ import java.util.stream.Stream;
 
 public enum Environment {
     Production("prod"),
-    Integration("integ"),
-    EndToEnd("endtoend");
+    Integration("integ");
 
     @Getter
     private String name;

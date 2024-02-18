@@ -36,7 +36,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(VertxExtension.class)
 public class AttestationTokenRetrieverTest {
     private static final String ATTESTATION_ENDPOINT = "https://core-test.uidapi.com/attest";
-    private byte[] USER_DATA;
+    private byte[] ENCODED_ATTESTATION_ENDPOINT;
     private static final ApplicationVersion APP_VERSION = new ApplicationVersion("appName", "appVersion", new HashMap<String, String>()
     {{
         put("Component1", "Value1");
@@ -55,7 +55,7 @@ public class AttestationTokenRetrieverTest {
     @BeforeEach
     void setUp() {
         ByteBuffer buffer = StandardCharsets.UTF_8.encode(ATTESTATION_ENDPOINT);
-        USER_DATA = Arrays.copyOf(buffer.array(), buffer.limit());
+        ENCODED_ATTESTATION_ENDPOINT = Arrays.copyOf(buffer.array(), buffer.limit());
         when(clock.now()).thenReturn(Clock.systemUTC().instant().plusSeconds(100));
     }
 
@@ -307,7 +307,7 @@ public class AttestationTokenRetrieverTest {
         attestationTokenRetriever = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
-        when(attestationProvider.getAttestationRequest(any(), eq(USER_DATA))).thenReturn(USER_DATA);
+        when(attestationProvider.getAttestationRequest(any(), eq(ENCODED_ATTESTATION_ENDPOINT))).thenReturn(ENCODED_ATTESTATION_ENDPOINT);
 
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         String expectedResponseBody = "{\"body\": {\"attestation_token\": \"test\",\"expiresAt\": \"2023-08-03T09:09:30.608597Z\",\"attestation_jwt_optout\": \"\",\"attestation_jwt_core\": \"\"},\"status\": \"success\"}";
@@ -330,6 +330,8 @@ public class AttestationTokenRetrieverTest {
         byte[] data = Base64.decode(base64Content);
         String decodedUrl = new String(data, StandardCharsets.UTF_8);
         Assertions.assertEquals(ATTESTATION_ENDPOINT, decodedUrl);
+
+        verify(attestationProvider, times(1)).getAttestationRequest(any(), eq(ENCODED_ATTESTATION_ENDPOINT));
 
         testContext.completeNow();
     }
