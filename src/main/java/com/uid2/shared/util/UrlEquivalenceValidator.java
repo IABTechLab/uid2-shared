@@ -11,6 +11,7 @@ public class UrlEquivalenceValidator {
     }
 
     public static Boolean areUrlsEquivalent(String url1, String url2, Logger logger) {
+        logger.debug("Checking URLs equivalent: URL1: '{}', URL2: '{}'", url1, url2);
         URL first;
         try {
             first = new URL(url1);
