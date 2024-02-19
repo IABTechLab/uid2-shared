@@ -20,31 +20,27 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private final URLConnectionHttpClient httpClient;
     private String userToken;
     private final String appVersionHeader;
-    private final boolean enforceHttps;
     private boolean allowContentFromLocalFileSystem = false;
     private final AttestationTokenRetriever attestationTokenRetriever;
 
 
-    public static UidCoreClient createNoAttest(String userToken, boolean enforceHttps, AttestationTokenRetriever attestationTokenRetriever) {
-        return new UidCoreClient(userToken, CloudUtils.defaultProxy, enforceHttps, attestationTokenRetriever, null);
+    public static UidCoreClient createNoAttest(String userToken, AttestationTokenRetriever attestationTokenRetriever) {
+        return new UidCoreClient(userToken, CloudUtils.defaultProxy, attestationTokenRetriever, null);
     }
 
     public UidCoreClient(String userToken,
                          Proxy proxy,
-                         boolean enforceHttps,
                          AttestationTokenRetriever attestationTokenRetriever) {
-        this(userToken, proxy, enforceHttps, attestationTokenRetriever, null);
+        this(userToken, proxy, attestationTokenRetriever, null);
     }
 
     public UidCoreClient(String userToken,
                          Proxy proxy,
-                         boolean enforceHttps,
                          AttestationTokenRetriever attestationTokenRetriever,
                          URLConnectionHttpClient httpClient) {
         this.proxy = proxy;
         this.userToken = userToken;
         this.contentStorage = new PreSignedURLStorage(proxy);
-        this.enforceHttps = enforceHttps;
         if (httpClient == null) {
             this.httpClient = new URLConnectionHttpClient(proxy);
         } else {
@@ -116,9 +112,6 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
     private HttpResponse<String> sendHttpRequest(String path, String attestationToken) throws IOException {
         URI uri = URI.create(path);
-        if (this.enforceHttps && !"https".equalsIgnoreCase(uri.getScheme())) {
-            throw new IOException("UidCoreClient requires HTTPS connection");
-        }
 
         HashMap<String, String> headers = new HashMap<>();
         headers.put(Const.Http.AppVersionHeader, this.appVersionHeader);

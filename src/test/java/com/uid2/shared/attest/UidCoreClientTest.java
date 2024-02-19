@@ -33,7 +33,7 @@ public class UidCoreClientTest {
         when(mockAttestationTokenRetriever.getAppVersionHeader()).thenReturn("testAppVersionHeader");
         uidCoreClient = new UidCoreClient(
                 "userToken", proxy,
-                true, mockAttestationTokenRetriever, mockHttpClient);
+                mockAttestationTokenRetriever, mockHttpClient);
     }
 
     @Test
@@ -58,17 +58,6 @@ public class UidCoreClientTest {
         uidCoreClient.download("https://download");
         verify(mockAttestationTokenRetriever, times(1)).attest();
         verify(mockHttpClient, times(1)).get("https://download", expectedHeaders);
-    }
-
-    @Test
-    public void Download_EnforceHttpWhenPathNoHttps_ExceptionThrown() {
-        when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
-
-        CloudStorageException result = Assert.assertThrows(CloudStorageException.class, () -> {
-            uidCoreClient.download("http://download");
-        });
-        String expectedExceptionMessage = "download http://download error: UidCoreClient requires HTTPS connection";
-        Assert.assertEquals(expectedExceptionMessage, result.getMessage());
     }
 
     @Test

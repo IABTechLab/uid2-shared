@@ -8,21 +8,19 @@ import java.net.http.HttpClient;
 
 public class UidOptOutClient extends UidCoreClient {
     public static UidOptOutClient createNoAttest(String userToken, boolean enforceHttps, AttestationTokenRetriever attestationTokenRetriever) {
-        return new UidOptOutClient(userToken, CloudUtils.defaultProxy, enforceHttps, attestationTokenRetriever, null);
+        return new UidOptOutClient(userToken, CloudUtils.defaultProxy, attestationTokenRetriever, null);
     }
 
     public UidOptOutClient(String userToken,
                          Proxy proxy,
-                         boolean enforceHttps,
                          AttestationTokenRetriever attestationTokenRetriever) {
-        super(userToken, proxy, enforceHttps, attestationTokenRetriever, null);
+        super(userToken, proxy, attestationTokenRetriever, null);
     }
     public UidOptOutClient(String userToken,
                            Proxy proxy,
-                           boolean enforceHttps,
                            AttestationTokenRetriever attestationTokenRetriever,
                            URLConnectionHttpClient httpClient) {
-        super(userToken, proxy, enforceHttps, attestationTokenRetriever, httpClient);
+        super(userToken, proxy, attestationTokenRetriever, httpClient);
     }
 
     @Override

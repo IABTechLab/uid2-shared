@@ -4,7 +4,7 @@ import com.uid2.enclave.IAttestationProvider;
 
 public class NoAttestationProvider implements IAttestationProvider {
     @Override
-    public byte[] getAttestationRequest(byte[] publicKey) {
+    public byte[] getAttestationRequest(byte[] publicKey, byte[] userData) {
         byte[] req = {0};
         return req;
     }

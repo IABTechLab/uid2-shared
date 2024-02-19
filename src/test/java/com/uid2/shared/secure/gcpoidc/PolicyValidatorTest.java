@@ -11,14 +11,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class PolicyValidatorTest {
     @Test
-    public void testValicationSuccess_FullProd() throws AttestationException {
+    public void testValidationSuccess_FullProd() throws AttestationException {
         var validator = new PolicyValidator();
         var payload = generateBasicPayload();
         var enclaveId = validator.validate(payload);
     }
 
     @Test
-    public void testValicationFailure_MissRequiredEnvProd() {
+    public void testValidationFailure_MissRequiredEnvProd() {
         var validator = new PolicyValidator();
         var payload = generateBasicPayload();
         var envOverrides = new HashMap<>(payload.getEnvOverrides());
@@ -30,7 +30,7 @@ public class PolicyValidatorTest {
     }
 
     @Test
-    public void testValicationFailure_UnknownEnv() {
+    public void testValidationFailure_UnknownEnv() {
         var validator = new PolicyValidator();
         var payload = generateBasicPayload();
         var envOverrides = new HashMap<>(payload.getEnvOverrides());
@@ -42,24 +42,11 @@ public class PolicyValidatorTest {
     }
 
     @Test
-    public void testValicationSuccess_IntegNoOptionalEnv() throws AttestationException {
+    public void testValidationSuccess_IntegNoOptionalEnv() throws AttestationException {
         var validator = new PolicyValidator();
         var payload = generateBasicPayload();
         var envOverrides = new HashMap<>(payload.getEnvOverrides());
         envOverrides.put(PolicyValidator.ENV_ENVIRONMENT, "integ");
-        payload = payload.toBuilder()
-                .envOverrides(envOverrides)
-                .build();
-        var enclaveId = validator.validate(payload);
-    }
-
-    @Test
-    public void testValicationSuccess_IntegHasOptionalEnv() throws AttestationException {
-        var validator = new PolicyValidator();
-        var payload = generateBasicPayload();
-        var envOverrides = new HashMap<>(payload.getEnvOverrides());
-        envOverrides.put(PolicyValidator.ENV_ENVIRONMENT, "integ");
-        envOverrides.put(PolicyValidator.ENV_CORE_ENDPOINT, "coreendpoint");
         payload = payload.toBuilder()
                 .envOverrides(envOverrides)
                 .build();
@@ -171,7 +158,9 @@ public class PolicyValidatorTest {
                 .restartPolicy("NEVER")
                 .envOverrides(Map.of(
                         PolicyValidator.ENV_ENVIRONMENT, "prod",
-                        PolicyValidator.ENV_OPERATOR_API_KEY_SECRET_NAME, "dummy_api_key"
+                        PolicyValidator.ENV_OPERATOR_API_KEY_SECRET_NAME, "dummy_api_key",
+                        PolicyValidator.ENV_CORE_ENDPOINT, "core_endpoint",
+                        PolicyValidator.ENV_OPT_OUT_ENDPOINT, "optout_endpoint"
                 ));
         return builder.build();
     }
