@@ -33,7 +33,8 @@ public class UrlEquivalenceValidatorTest {
             "https://example.com;https://example.COM/",
             "https://example.com;HTTPS://example.com/",
             "http://example.com:8080;http://example.com:8080/",
-            "http://example.com:8080   ;http://example.com:8080/"
+            "http://example.com:8080   ;http://example.com:8080/",
+            "https://ade7-113-29-30-226.ngrok-free.app;https://ade7-113-29-30-226.ngrok-free.app/attest"
     }, delimiter = ';')
     public void urls_equal(String first, String second) {
         Assert.assertTrue(UrlEquivalenceValidator.areUrlsEquivalent(first, second, loggerMock));
