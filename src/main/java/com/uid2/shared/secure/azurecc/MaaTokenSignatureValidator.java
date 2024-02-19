@@ -86,6 +86,7 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
 
         if(runtime != null){
             var runtimeDataBuilder = RuntimeData.builder();
+            runtimeDataBuilder.attestationUrl(tryGetField(runtime, "attestationUrl", String.class));
             runtimeDataBuilder.location(tryGetField(runtime, "location", String.class));
             runtimeDataBuilder.publicKey(tryGetField(runtime, "publicKey", String.class));
             tokenPayloadBuilder.runtimeData(runtimeDataBuilder.build());

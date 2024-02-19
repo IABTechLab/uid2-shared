@@ -5,6 +5,7 @@ import com.uid2.shared.secure.azurecc.IMaaTokenSignatureValidator;
 import com.uid2.shared.secure.azurecc.IPolicyValidator;
 import com.uid2.shared.secure.azurecc.MaaTokenSignatureValidator;
 import com.uid2.shared.secure.azurecc.PolicyValidator;
+import com.uid2.shared.util.UrlEquivalenceValidator;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -18,6 +19,7 @@ import java.util.Set;
 // CC stands for Confidential Container
 @Slf4j
 public class AzureCCCoreAttestationService implements ICoreAttestationService {
+    private final String attestationUrl;
 
     private final Set<String> allowedEnclaveIds = new HashSet<>();
 
@@ -25,12 +27,13 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
 
     private final IPolicyValidator policyValidator;
 
-    public AzureCCCoreAttestationService(String maaServerBaseUrl) {
-        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator());
+    public AzureCCCoreAttestationService(String maaServerBaseUrl, String attestationUrl) {
+        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(), attestationUrl);
     }
 
     // used in UT
-    protected AzureCCCoreAttestationService(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator) {
+    protected AzureCCCoreAttestationService(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator, String attestationUrl) {
+        this.attestationUrl = attestationUrl;
         this.tokenSignatureValidator = tokenSignatureValidator;
         this.policyValidator = policyValidator;
     }
@@ -42,6 +45,10 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
 
             log.debug("Validating signature...");
             var tokenPayload = tokenSignatureValidator.validate(tokenString);
+
+            if (tokenPayload != null && !UrlEquivalenceValidator.areUrlsEquivalent(tokenPayload.getRuntimeData().getAttestationUrl(), this.attestationUrl, log)) {
+                handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.UNKNOWN_ATTESTATION_URL)));
+            }
 
             log.debug("Validating policy...");
             var encodedPublicKey = Utils.toBase64String(publicKey);
@@ -58,8 +65,7 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
         }
         catch (AttestationClientException ace){
             handler.handle(Future.succeededFuture(new AttestationResult(ace)));
-        }
-        catch (AttestationException ae) {
+        } catch (AttestationException ae) {
             handler.handle(Future.failedFuture(ae));
         } catch (Exception ex) {
             handler.handle(Future.failedFuture(new AttestationException(ex)));
