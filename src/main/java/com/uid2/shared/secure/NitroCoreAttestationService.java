@@ -56,8 +56,10 @@ public class NitroCoreAttestationService implements ICoreAttestationService {
         }
 
         String givenAttestationUrl = aDoc.getUserDataString();
-        if (!UrlEquivalenceValidator.areUrlsEquivalent(this.attestationUrl, givenAttestationUrl, LOGGER)) {
-            return new AttestationResult(AttestationFailure.UNKNOWN_ATTESTATION_URL);
+        if (givenAttestationUrl != null && !givenAttestationUrl.isEmpty()) {
+            if (!UrlEquivalenceValidator.areUrlsEquivalent(this.attestationUrl, givenAttestationUrl, LOGGER)) {
+                return new AttestationResult(AttestationFailure.UNKNOWN_ATTESTATION_URL);
+            }
         }
 
         NitroEnclaveIdentifier id = NitroEnclaveIdentifier.fromRaw(aDoc.getPcr(0));
