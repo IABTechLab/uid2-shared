@@ -7,8 +7,8 @@ import io.vertx.core.Handler;
 import java.util.Collection;
 import java.util.Collections;
 
-public class TrustedAttestationProvider implements IAttestationProvider {
-    public TrustedAttestationProvider() {}
+public class TrustedCoreAttestationService implements ICoreAttestationService {
+    public TrustedCoreAttestationService() {}
 
     @Override
     public void attest(byte[] attestationRequest, byte[] publicKey, Handler<AsyncResult<AttestationResult>> handler) {

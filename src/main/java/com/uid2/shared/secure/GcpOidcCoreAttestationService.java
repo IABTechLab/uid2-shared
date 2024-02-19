@@ -10,8 +10,8 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class GcpOidcAttestationProvider implements IAttestationProvider{
-    private static final Logger LOGGER = LoggerFactory.getLogger(GcpOidcAttestationProvider.class);
+public class GcpOidcCoreAttestationService implements ICoreAttestationService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GcpOidcCoreAttestationService.class);
 
     private final ITokenSignatureValidator tokenSignatureValidator;
 
@@ -19,12 +19,12 @@ public class GcpOidcAttestationProvider implements IAttestationProvider{
 
     private final Set<String> allowedEnclaveIds = new HashSet<>();
 
-    public GcpOidcAttestationProvider(){
+    public GcpOidcCoreAttestationService(){
         this(new TokenSignatureValidator(), Arrays.asList(new PolicyValidator()));
     }
 
     // used in UT
-    protected GcpOidcAttestationProvider(ITokenSignatureValidator tokenSignatureValidator, List<IPolicyValidator> supportedPolicyValidators){
+    protected GcpOidcCoreAttestationService(ITokenSignatureValidator tokenSignatureValidator, List<IPolicyValidator> supportedPolicyValidators){
         this.tokenSignatureValidator = tokenSignatureValidator;
         this.supportedPolicyValidators = supportedPolicyValidators;
     }

@@ -1,8 +1,8 @@
 package com.uid2.shared.secure;
 
-import com.uid2.shared.secure.gcpoidc.IPolicyValidator;
-import com.uid2.shared.secure.gcpoidc.ITokenSignatureValidator;
-import com.uid2.shared.secure.gcpoidc.TokenPayload;
+import com.uid2.shared.secure.azurecc.IMaaTokenSignatureValidator;
+import com.uid2.shared.secure.azurecc.IPolicyValidator;
+import com.uid2.shared.secure.azurecc.MaaTokenPayload;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -22,42 +21,36 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class GcpOidcAttestationProviderTest {
+class AzureCCCoreAttestationServiceTest {
     private static final String ATTESTATION_REQUEST = "test-attestation-request";
+
     private static final String PUBLIC_KEY = "test-public-key";
 
-    private static final String ENCLAVE_ID_1 = "test-enclave_1";
+    private static final String ENCLAVE_ID = "test-enclave";
 
-    private static final String ENCLAVE_ID_2 = "test-enclave_2";
-
-    private static final TokenPayload VALID_TOKEN_PAYLOAD = TokenPayload.builder().build();
+    private static final MaaTokenPayload VALID_TOKEN_PAYLOAD = MaaTokenPayload.builder().build();
+    @Mock
+    private IMaaTokenSignatureValidator alwaysPassTokenValidator;
 
     @Mock
-    private ITokenSignatureValidator alwaysPassTokenValidator;
-    @Mock
-    private ITokenSignatureValidator alwaysFailTokenValidator;
+    private IMaaTokenSignatureValidator alwaysFailTokenValidator;
 
     @Mock
-    private IPolicyValidator alwaysPassPolicyValidator1;
-
-    @Mock
-    private IPolicyValidator alwaysPassPolicyValidator2;
+    private IPolicyValidator alwaysPassPolicyValidator;
 
     @Mock
     private IPolicyValidator alwaysFailPolicyValidator;
 
-
     @BeforeEach
     public void setup() throws AttestationException {
         when(alwaysPassTokenValidator.validate(any())).thenReturn(VALID_TOKEN_PAYLOAD);
-        when(alwaysPassPolicyValidator1.validate(any())).thenReturn(ENCLAVE_ID_1);
-        when(alwaysPassPolicyValidator2.validate(any())).thenReturn(ENCLAVE_ID_2);
+        when(alwaysPassPolicyValidator.validate(any(), any())).thenReturn(ENCLAVE_ID);
     }
 
     @Test
     public void testHappyPath() throws AttestationException {
-        var provider = new GcpOidcAttestationProvider(alwaysPassTokenValidator, Arrays.asList(alwaysPassPolicyValidator1));
-        provider.registerEnclave(ENCLAVE_ID_1);
+        var provider = new AzureCCCoreAttestationService(alwaysPassTokenValidator, alwaysPassPolicyValidator);
+        provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
             assertTrue(ar.result().isSuccess());
@@ -66,10 +59,10 @@ public class GcpOidcAttestationProviderTest {
 
     @Test
     public void testSignatureCheckFailed_ClientError() throws AttestationException {
-        var errorStr = "signature validation failed";
+        var errorStr = "token signature validation failed";
         when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationClientException(errorStr));
-        var provider = new GcpOidcAttestationProvider(alwaysFailTokenValidator, Arrays.asList(alwaysPassPolicyValidator1));
-        provider.registerEnclave(ENCLAVE_ID_1);
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator);
+        provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
             assertFalse(ar.result().isSuccess());
@@ -80,8 +73,8 @@ public class GcpOidcAttestationProviderTest {
     @Test
     public void testSignatureCheckFailed_ServerError() throws AttestationException {
         when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationException("unknown server error"));
-        var provider = new GcpOidcAttestationProvider(alwaysFailTokenValidator, Arrays.asList(alwaysPassPolicyValidator1));
-        provider.registerEnclave(ENCLAVE_ID_1);
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator);
+        provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertFalse(ar.succeeded());
             assertTrue(ar.cause() instanceof AttestationException);
@@ -91,9 +84,9 @@ public class GcpOidcAttestationProviderTest {
     @Test
     public void testPolicyCheckFailed_ClientError() throws AttestationException {
         var errorStr = "policy validation failed";
-        when(alwaysFailPolicyValidator.validate(any())).thenThrow(new AttestationClientException(errorStr));
-        var provider = new GcpOidcAttestationProvider(alwaysPassTokenValidator, Arrays.asList(alwaysFailPolicyValidator));
-        provider.registerEnclave(ENCLAVE_ID_1);
+        when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationClientException(errorStr));
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator);
+        provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
             assertFalse(ar.result().isSuccess());
@@ -103,9 +96,9 @@ public class GcpOidcAttestationProviderTest {
 
     @Test
     public void testPolicyCheckFailed_ServerError() throws AttestationException {
-        when(alwaysFailPolicyValidator.validate(any())).thenThrow(new AttestationException("unknown server error"));
-        var provider = new GcpOidcAttestationProvider(alwaysPassTokenValidator, Arrays.asList(alwaysFailPolicyValidator));
-        provider.registerEnclave(ENCLAVE_ID_1);
+        when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationException("unknown server error"));
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator);
+        provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertFalse(ar.succeeded());
             assertTrue(ar.cause() instanceof AttestationException);
@@ -113,9 +106,8 @@ public class GcpOidcAttestationProviderTest {
     }
 
     @Test
-    public void testNoPolicyConfigured() throws AttestationException {
-        var provider = new GcpOidcAttestationProvider(alwaysPassTokenValidator, Arrays.asList());
-        provider.registerEnclave(ENCLAVE_ID_1);
+    public void testEnclaveNotRegistered() throws AttestationException {
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
             assertFalse(ar.result().isSuccess());
@@ -123,17 +115,7 @@ public class GcpOidcAttestationProviderTest {
         });
     }
 
-    @Test
-    public void testMultiplePolicyValidators() throws AttestationException {
-        var provider = new GcpOidcAttestationProvider(alwaysPassTokenValidator, Arrays.asList(alwaysPassPolicyValidator1, alwaysFailPolicyValidator, alwaysPassPolicyValidator2));
-        provider.registerEnclave(ENCLAVE_ID_2);
-        attest(provider, ar -> {
-            assertTrue(ar.succeeded());
-            assertTrue(ar.result().isSuccess());
-        });
-    }
-
-    private static void attest(IAttestationProvider provider, Handler<AsyncResult<AttestationResult>> handler) {
+    private static void attest(ICoreAttestationService provider, Handler<AsyncResult<AttestationResult>> handler) {
         provider.attest(
                 ATTESTATION_REQUEST.getBytes(StandardCharsets.UTF_8),
                 PUBLIC_KEY.getBytes(StandardCharsets.UTF_8),

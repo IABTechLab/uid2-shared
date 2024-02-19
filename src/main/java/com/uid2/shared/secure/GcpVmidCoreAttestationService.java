@@ -17,14 +17,14 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class GcpVmidAttestationProvider implements IAttestationProvider {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GcpVmidAttestationProvider.class);
+public class GcpVmidCoreAttestationService implements ICoreAttestationService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GcpVmidCoreAttestationService.class);
 
     private final InstanceDocumentVerifier idVerifier = new InstanceDocumentVerifier();
     private final VmConfigVerifier vmConfigVerifier;
     private final Set<String> allowedVmConfigIds = new HashSet<>();
 
-    public GcpVmidAttestationProvider(GoogleCredentials credentials, Set<String> enclaveParams) throws Exception {
+    public GcpVmidCoreAttestationService(GoogleCredentials credentials, Set<String> enclaveParams) throws Exception {
         LoadBalancerRegistry.getDefaultRegistry().register(new PickFirstLoadBalancerProvider());
         this.vmConfigVerifier = new VmConfigVerifier(credentials, enclaveParams);
         LOGGER.info("Using Google Service Account: " + credentials.toString());

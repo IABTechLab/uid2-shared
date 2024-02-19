@@ -3,8 +3,6 @@ package com.uid2.shared.secure;
 import com.uid2.shared.secure.nitro.AttestationDocument;
 import com.uid2.shared.secure.nitro.AttestationRequest;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
@@ -19,15 +17,15 @@ import io.vertx.core.Handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NitroAttestationProvider implements IAttestationProvider {
+public class NitroCoreAttestationService implements ICoreAttestationService {
 
     private final String attestationUrl;
     private Set<NitroEnclaveIdentifier> allowedEnclaveIds;
     private final ICertificateProvider certificateProvider;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NitroAttestationProvider.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NitroCoreAttestationService.class);
 
-    public NitroAttestationProvider(ICertificateProvider certificateProvider, String attestationUrl) {
+    public NitroCoreAttestationService(ICertificateProvider certificateProvider, String attestationUrl) {
         this.attestationUrl = attestationUrl;
         this.allowedEnclaveIds = new HashSet<>();
         this.certificateProvider = certificateProvider;

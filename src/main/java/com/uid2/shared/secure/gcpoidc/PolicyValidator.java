@@ -30,11 +30,13 @@ public class PolicyValidator implements IPolicyValidator {
 
     private static final List<String> REQUIRED_ENV_OVERRIDES = ImmutableList.of(
             ENV_ENVIRONMENT,
-            ENV_OPERATOR_API_KEY_SECRET_NAME
+            ENV_OPERATOR_API_KEY_SECRET_NAME,
+            ENV_CORE_ENDPOINT,
+            ENV_OPT_OUT_ENDPOINT
     );
 
     private static final Map<Environment, List<String>> OPTIONAL_ENV_OVERRIDES_MAP = ImmutableMap.of(
-            Environment.Integration, ImmutableList.of(ENV_CORE_ENDPOINT, ENV_OPT_OUT_ENDPOINT)
+            Environment.Integration, ImmutableList.of()
     );
 
     @Override
