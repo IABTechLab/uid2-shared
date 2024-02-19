@@ -3,6 +3,9 @@ package com.uid2.shared.secure.azurecc;
 import com.google.common.base.Strings;
 import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.AttestationFailure;
+import com.uid2.shared.secure.AttestationResult;
+import com.uid2.shared.util.UrlEquivalenceValidator;
 
 public class PolicyValidator implements IPolicyValidator{
     private static final String LOCATION_CHINA = "china";

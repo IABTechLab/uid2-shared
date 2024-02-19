@@ -6,6 +6,7 @@ import lombok.Value;
 @Value
 @Builder(toBuilder = true)
 public class RuntimeData {
+    private String attestationUrl;
     private String location;
     private String publicKey;
 }

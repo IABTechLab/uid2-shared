@@ -3,6 +3,7 @@ package com.uid2.shared.secure;
 import com.uid2.shared.secure.azurecc.IMaaTokenSignatureValidator;
 import com.uid2.shared.secure.azurecc.IPolicyValidator;
 import com.uid2.shared.secure.azurecc.MaaTokenPayload;
+import com.uid2.shared.secure.azurecc.RuntimeData;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,8 +28,10 @@ class AzureCCCoreAttestationServiceTest {
     private static final String PUBLIC_KEY = "test-public-key";
 
     private static final String ENCLAVE_ID = "test-enclave";
+    private static final String ATTESTATION_URL = "https://example.com";
+    private static final RuntimeData RUNTIME_DATA = RuntimeData.builder().attestationUrl(ATTESTATION_URL).build();
 
-    private static final MaaTokenPayload VALID_TOKEN_PAYLOAD = MaaTokenPayload.builder().build();
+    private static final MaaTokenPayload VALID_TOKEN_PAYLOAD = MaaTokenPayload.builder().runtimeData(RUNTIME_DATA).build();
     @Mock
     private IMaaTokenSignatureValidator alwaysPassTokenValidator;
 
@@ -49,7 +52,7 @@ class AzureCCCoreAttestationServiceTest {
 
     @Test
     public void testHappyPath() throws AttestationException {
-        var provider = new AzureCCCoreAttestationService(alwaysPassTokenValidator, alwaysPassPolicyValidator);
+        var provider = new AzureCCCoreAttestationService(alwaysPassTokenValidator, alwaysPassPolicyValidator, ATTESTATION_URL);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
@@ -61,7 +64,7 @@ class AzureCCCoreAttestationServiceTest {
     public void testSignatureCheckFailed_ClientError() throws AttestationException {
         var errorStr = "token signature validation failed";
         when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationClientException(errorStr));
-        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator);
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, ATTESTATION_URL);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
@@ -73,7 +76,7 @@ class AzureCCCoreAttestationServiceTest {
     @Test
     public void testSignatureCheckFailed_ServerError() throws AttestationException {
         when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationException("unknown server error"));
-        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator);
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, ATTESTATION_URL);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertFalse(ar.succeeded());
@@ -85,7 +88,7 @@ class AzureCCCoreAttestationServiceTest {
     public void testPolicyCheckFailed_ClientError() throws AttestationException {
         var errorStr = "policy validation failed";
         when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationClientException(errorStr));
-        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator);
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator, ATTESTATION_URL);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
@@ -97,7 +100,7 @@ class AzureCCCoreAttestationServiceTest {
     @Test
     public void testPolicyCheckFailed_ServerError() throws AttestationException {
         when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationException("unknown server error"));
-        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator);
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator, ATTESTATION_URL);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertFalse(ar.succeeded());
@@ -107,7 +110,7 @@ class AzureCCCoreAttestationServiceTest {
 
     @Test
     public void testEnclaveNotRegistered() throws AttestationException {
-        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator);
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, ATTESTATION_URL);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
             assertFalse(ar.result().isSuccess());
