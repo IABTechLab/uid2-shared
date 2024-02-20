@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.uid2.shared.Utils;
 import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.util.UrlEquivalenceValidator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
@@ -30,14 +31,21 @@ public class PolicyValidator implements IPolicyValidator {
 
     private static final List<String> REQUIRED_ENV_OVERRIDES = ImmutableList.of(
             ENV_ENVIRONMENT,
-            ENV_OPERATOR_API_KEY_SECRET_NAME,
-            ENV_CORE_ENDPOINT,
-            ENV_OPT_OUT_ENDPOINT
+            ENV_OPERATOR_API_KEY_SECRET_NAME
     );
 
     private static final Map<Environment, List<String>> OPTIONAL_ENV_OVERRIDES_MAP = ImmutableMap.of(
-            Environment.Integration, ImmutableList.of()
+            Environment.Integration, ImmutableList.of(
+                    ENV_CORE_ENDPOINT,
+                    ENV_OPT_OUT_ENDPOINT
+            )
     );
+    private final String attesationUrl;
+
+    public PolicyValidator(String attesationUrl) {
+
+        this.attesationUrl = attesationUrl;
+    }
 
     @Override
     public String getVersion() {
@@ -120,11 +128,22 @@ public class PolicyValidator implements IPolicyValidator {
             }
         }
 
+        checkAttestationUrl(new HashMap<>(envOverrides));
+
         if(!envOverridesCopy.isEmpty()){
             throw new AttestationClientException("More env overrides than allowed. " + envOverridesCopy);
         }
 
         return env;
+    }
+
+    private void checkAttestationUrl(HashMap<String, String> optionalEnvOverrides) throws AttestationException {
+        if (!Strings.isNullOrEmpty(optionalEnvOverrides.get(ENV_CORE_ENDPOINT))) {
+            String givenAttestationUrl = optionalEnvOverrides.get(ENV_CORE_ENDPOINT);
+            if (!UrlEquivalenceValidator.areUrlsEquivalent(givenAttestationUrl, this.attesationUrl, LOGGER)) {
+                throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + givenAttestationUrl);
+            }
+        }
     }
 
     private String generateEnclaveId(boolean isDebugMode, String imageDigest, Environment env) throws AttestationException {

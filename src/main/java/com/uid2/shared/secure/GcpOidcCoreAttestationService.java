@@ -19,8 +19,8 @@ public class GcpOidcCoreAttestationService implements ICoreAttestationService {
 
     private final Set<String> allowedEnclaveIds = new HashSet<>();
 
-    public GcpOidcCoreAttestationService(){
-        this(new TokenSignatureValidator(), Arrays.asList(new PolicyValidator()));
+    public GcpOidcCoreAttestationService(String attestationUrl){
+        this(new TokenSignatureValidator(), Arrays.asList(new PolicyValidator(attestationUrl)));
     }
 
     // used in UT
