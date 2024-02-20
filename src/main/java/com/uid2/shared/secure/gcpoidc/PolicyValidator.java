@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableMap;
 import com.uid2.shared.Utils;
 import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.AttestationFailure;
 import com.uid2.shared.util.UrlEquivalenceValidator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -67,18 +68,18 @@ public class PolicyValidator implements IPolicyValidator {
 
     private static boolean checkConfidentialSpace(TokenPayload payload) throws AttestationException{
         if(!payload.isConfidentialSpaceSW()){
-            throw new AttestationClientException("Unexpected SW_NAME: " + payload.getSwName());
+            throw new AttestationClientException("Unexpected SW_NAME: " + payload.getSwName(), AttestationFailure.BAD_FORMAT);
         }
         var isDebugMode = payload.isDebugMode();
         if(!isDebugMode && !payload.isStableVersion()){
-            throw new AttestationClientException("Confidential space image version is not stable.");
+            throw new AttestationClientException("Confidential space image version is not stable.", AttestationFailure.BAD_FORMAT);
         }
         return isDebugMode;
     }
 
     private static String checkWorkload(TokenPayload payload) throws AttestationException{
         if(!payload.isRestartPolicyNever()){
-            throw new AttestationClientException("Restart policy is not set to Never. Value: " + payload.getRestartPolicy());
+            throw new AttestationClientException("Restart policy is not set to Never. Value: " + payload.getRestartPolicy(), AttestationFailure.BAD_FORMAT);
         }
         return payload.getWorkloadImageDigest();
     }
@@ -89,35 +90,35 @@ public class PolicyValidator implements IPolicyValidator {
     private static String checkRegion(TokenPayload payload) throws AttestationException{
         var region = payload.getGceZone();
         if(Strings.isNullOrEmpty(region) || region.startsWith(EU_REGION_PREFIX)){
-            throw new AttestationClientException("Region is not supported. Value: " + region);
+            throw new AttestationClientException("Region is not supported. Value: " + region, AttestationFailure.BAD_FORMAT);
         }
         return region;
     }
 
     private static void checkCmdOverrides(TokenPayload payload) throws AttestationException{
         if(!CollectionUtils.isEmpty(payload.getCmdOverrides())){
-            throw new AttestationClientException("Payload should not have cmd overrides");
+            throw new AttestationClientException("Payload should not have cmd overrides", AttestationFailure.BAD_FORMAT);
         }
     }
 
     private Environment checkEnvOverrides(TokenPayload payload) throws AttestationException{
         var envOverrides = payload.getEnvOverrides();
         if(MapUtils.isEmpty(envOverrides)){
-            throw new AttestationClientException("env overrides should not be empty");
+            throw new AttestationClientException("env overrides should not be empty", AttestationFailure.BAD_FORMAT);
         }
         HashMap<String, String> envOverridesCopy = new HashMap(envOverrides);
 
         // check all required env overrides
         for(var envKey: REQUIRED_ENV_OVERRIDES){
             if(Strings.isNullOrEmpty(envOverridesCopy.get(envKey))){
-                throw new AttestationClientException("Required env override is missing. key: " + envKey);
+                throw new AttestationClientException("Required env override is missing. key: " + envKey, AttestationFailure.BAD_FORMAT);
             }
         }
 
         // env could be parsed
         var env = Environment.fromString(envOverridesCopy.get(ENV_ENVIRONMENT));
         if(env == null){
-            throw new AttestationClientException("Environment can not be parsed. " + envOverridesCopy.get(ENV_ENVIRONMENT));
+            throw new AttestationClientException("Environment can not be parsed. " + envOverridesCopy.get(ENV_ENVIRONMENT), AttestationFailure.BAD_FORMAT);
         }
 
         // make sure there's no unexpected overrides
@@ -134,7 +135,7 @@ public class PolicyValidator implements IPolicyValidator {
         checkAttestationUrl(new HashMap<>(envOverrides));
 
         if(!envOverridesCopy.isEmpty()){
-            throw new AttestationClientException("More env overrides than allowed. " + envOverridesCopy);
+            throw new AttestationClientException("More env overrides than allowed. " + envOverridesCopy, AttestationFailure.BAD_FORMAT);
         }
 
         return env;
@@ -144,7 +145,7 @@ public class PolicyValidator implements IPolicyValidator {
         if (!Strings.isNullOrEmpty(optionalEnvOverrides.get(ENV_CORE_ENDPOINT))) {
             String givenAttestationUrl = optionalEnvOverrides.get(ENV_CORE_ENDPOINT);
             if (!UrlEquivalenceValidator.areUrlsEquivalent(givenAttestationUrl, this.attestationUrl, LOGGER)) {
-                throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + givenAttestationUrl);
+                throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + givenAttestationUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
             }
         }
     }

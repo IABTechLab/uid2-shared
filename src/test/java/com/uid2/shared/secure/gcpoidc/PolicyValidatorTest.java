@@ -1,7 +1,11 @@
 package com.uid2.shared.secure.gcpoidc;
 
+import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.AttestationFailure;
 import org.junit.jupiter.api.Test;
+import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.instanceOf;
 
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +32,9 @@ public class PolicyValidatorTest {
         var newPayload = payload.toBuilder()
                 .envOverrides(envOverrides)
                 .build();
-        assertThrows(AttestationException.class, ()-> validator.validate(newPayload));
+        var e = assertThrows(AttestationException.class, ()-> validator.validate(newPayload));
+        assertThat(e, instanceOf(AttestationClientException.class));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
     }
 
     @Test
@@ -40,7 +46,8 @@ public class PolicyValidatorTest {
         var newPayload = payload.toBuilder()
                 .envOverrides(envOverrides)
                 .build();
-        assertThrows(AttestationException.class, ()-> validator.validate(newPayload));
+        var e = assertThrows(AttestationException.class, ()-> validator.validate(newPayload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
     }
 
     @Test
@@ -66,7 +73,8 @@ public class PolicyValidatorTest {
         var newPayload = payload.toBuilder()
                 .envOverrides(envOverrides)
                 .build();
-        assertThrows(AttestationException.class, ()-> validator.validate(newPayload));
+        var e = assertThrows(AttestationException.class, ()-> validator.validate(newPayload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
     }
 
     @Test
@@ -75,7 +83,8 @@ public class PolicyValidatorTest {
         var payload = generateBasicPayload().toBuilder()
                 .swName("dummy")
                 .build();
-        assertThrows(AttestationException.class, ()-> validator.validate(payload));
+        var e = assertThrows(AttestationException.class, ()-> validator.validate(payload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
     }
 
     @Test
@@ -84,7 +93,8 @@ public class PolicyValidatorTest {
         var payload = generateBasicPayload().toBuilder()
                 .gceZone("europe-north1-a")
                 .build();
-        assertThrows(AttestationException.class, ()-> validator.validate(payload));
+        var e = assertThrows(AttestationException.class, ()-> validator.validate(payload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
     }
 
     @Test
@@ -93,7 +103,8 @@ public class PolicyValidatorTest {
         var payload = generateBasicPayload().toBuilder()
                 .csSupportedAttributes(null)
                 .build();
-        assertThrows(AttestationException.class, ()-> validator.validate(payload));
+        var e = assertThrows(AttestationException.class, ()-> validator.validate(payload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
     }
 
     @Test
@@ -102,7 +113,8 @@ public class PolicyValidatorTest {
         var payload = generateBasicPayload().toBuilder()
                 .restartPolicy("")
                 .build();
-        assertThrows(AttestationException.class, ()-> validator.validate(payload));
+        var e = assertThrows(AttestationException.class, ()-> validator.validate(payload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
     }
 
     @Test
@@ -155,6 +167,8 @@ public class PolicyValidatorTest {
         var payload = generateBasicPayload();
         Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(payload));
         assertEquals("The given attestation URL is unknown. Given URL: " + attestationUrl, t.getMessage());
+        assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, ((AttestationClientException)t).getAttestationFailure());
+
     }
 
     @Test

@@ -60,7 +60,7 @@ class AzureCCCoreAttestationServiceTest {
     @Test
     public void testSignatureCheckFailed_ClientError() throws AttestationException {
         var errorStr = "token signature validation failed";
-        when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationClientException(errorStr));
+        when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationClientException(errorStr, AttestationFailure.BAD_PAYLOAD));
         var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
@@ -84,7 +84,7 @@ class AzureCCCoreAttestationServiceTest {
     @Test
     public void testPolicyCheckFailed_ClientError() throws AttestationException {
         var errorStr = "policy validation failed";
-        when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationClientException(errorStr));
+        when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationClientException(errorStr, AttestationFailure.BAD_PAYLOAD));
         var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
