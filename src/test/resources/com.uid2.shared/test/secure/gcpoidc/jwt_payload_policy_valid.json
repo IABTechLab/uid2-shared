@@ -29,7 +29,7 @@
       "env_override": {
         "DEPLOYMENT_ENVIRONMENT": "prod",
         "API_TOKEN_SECRET_NAME": "dummy",
-        "CORE_BASE_URL": "core-url",
+        "CORE_BASE_URL": "https://core-url.uidapi.com",
         "OPTOUT_BASE_URL": "optout-url"
       },
       "cmd_override": null,

@@ -35,6 +35,10 @@ public class PolicyValidator implements IPolicyValidator {
     );
 
     private static final Map<Environment, List<String>> OPTIONAL_ENV_OVERRIDES_MAP = ImmutableMap.of(
+            Environment.Production, ImmutableList.of(
+                    ENV_CORE_ENDPOINT,
+                    ENV_OPT_OUT_ENDPOINT
+            ),
             Environment.Integration, ImmutableList.of(
                     ENV_CORE_ENDPOINT,
                     ENV_OPT_OUT_ENDPOINT
