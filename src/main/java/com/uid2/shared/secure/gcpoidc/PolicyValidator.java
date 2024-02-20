@@ -44,11 +44,10 @@ public class PolicyValidator implements IPolicyValidator {
                     ENV_OPT_OUT_ENDPOINT
             )
     );
-    private final String attesationUrl;
+    private final String attestationUrl;
 
-    public PolicyValidator(String attesationUrl) {
-
-        this.attesationUrl = attesationUrl;
+    public PolicyValidator(String attestationUrl) {
+        this.attestationUrl = attestationUrl;
     }
 
     @Override
@@ -144,7 +143,7 @@ public class PolicyValidator implements IPolicyValidator {
     private void checkAttestationUrl(HashMap<String, String> optionalEnvOverrides) throws AttestationException {
         if (!Strings.isNullOrEmpty(optionalEnvOverrides.get(ENV_CORE_ENDPOINT))) {
             String givenAttestationUrl = optionalEnvOverrides.get(ENV_CORE_ENDPOINT);
-            if (!UrlEquivalenceValidator.areUrlsEquivalent(givenAttestationUrl, this.attesationUrl, LOGGER)) {
+            if (!UrlEquivalenceValidator.areUrlsEquivalent(givenAttestationUrl, this.attestationUrl, LOGGER)) {
                 throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + givenAttestationUrl);
             }
         }
