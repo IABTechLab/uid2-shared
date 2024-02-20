@@ -144,7 +144,7 @@ public class PolicyValidator implements IPolicyValidator {
     private void checkAttestationUrl(HashMap<String, String> optionalEnvOverrides) throws AttestationException {
         if (!Strings.isNullOrEmpty(optionalEnvOverrides.get(ENV_CORE_ENDPOINT))) {
             String givenAttestationUrl = optionalEnvOverrides.get(ENV_CORE_ENDPOINT);
-            if (!UrlEquivalenceValidator.areUrlsEquivalent(givenAttestationUrl, this.attestationUrl, LOGGER)) {
+            if (!UrlEquivalenceValidator.areUrlsEquivalent(givenAttestationUrl, this.attestationUrl)) {
                 throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + givenAttestationUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
             }
         }
