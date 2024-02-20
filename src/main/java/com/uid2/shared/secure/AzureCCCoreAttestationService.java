@@ -46,7 +46,7 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
             log.debug("Validating signature...");
             var tokenPayload = tokenSignatureValidator.validate(tokenString);
 
-            if (tokenPayload != null && !UrlEquivalenceValidator.areUrlsEquivalent(tokenPayload.getRuntimeData().getAttestationUrl(), this.allowedAttestationUrl, log)) {
+            if (tokenPayload != null && !UrlEquivalenceValidator.areUrlsEquivalent(tokenPayload.getRuntimeData().getDecodedAttestationUrl(), this.allowedAttestationUrl, log)) {
                 handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.UNKNOWN_ATTESTATION_URL)));
                 return;
             }

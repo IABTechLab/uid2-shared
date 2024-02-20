@@ -14,7 +14,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,13 +26,19 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AzureCCCoreAttestationServiceTest {
+    private static byte[] encodeStringUnicodeAttestationEndpoint(String data) {
+        // buffer.array() may include extra empty bytes at the end. This returns only the bytes that have data
+        ByteBuffer buffer = StandardCharsets.UTF_8.encode(data);
+        return Arrays.copyOf(buffer.array(), buffer.limit());
+    }
     private static final String ATTESTATION_REQUEST = "test-attestation-request";
 
     private static final String PUBLIC_KEY = "test-public-key";
 
     private static final String ENCLAVE_ID = "test-enclave";
     private static final String ATTESTATION_URL = "https://example.com";
-    private static final RuntimeData RUNTIME_DATA = RuntimeData.builder().attestationUrl(ATTESTATION_URL).build();
+    private static final String ENCODED_ATTESTATION_URL = Base64.getEncoder().encodeToString(encodeStringUnicodeAttestationEndpoint(ATTESTATION_URL));
+    private static final RuntimeData RUNTIME_DATA = RuntimeData.builder().attestationUrl(ENCODED_ATTESTATION_URL).build();
 
     private static final MaaTokenPayload VALID_TOKEN_PAYLOAD = MaaTokenPayload.builder().runtimeData(RUNTIME_DATA).build();
     @Mock
@@ -110,7 +119,8 @@ class AzureCCCoreAttestationServiceTest {
 
     @Test
     public void testPolicyCheckFailed_AttestationUrlError() throws AttestationException {
-        RuntimeData failedRunTimeData = RuntimeData.builder().attestationUrl("https://supposed-to-fail.com").build();
+        String encodedAttestationUrl = Base64.getEncoder().encodeToString(encodeStringUnicodeAttestationEndpoint("https://supposed-to-fail.com"));
+        RuntimeData failedRunTimeData = RuntimeData.builder().attestationUrl(encodedAttestationUrl).build();
         when(alwaysFailTokenValidator.validate(any())).thenReturn(MaaTokenPayload.builder().runtimeData(failedRunTimeData).build());
         var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, ATTESTATION_URL);
         provider.registerEnclave(ENCLAVE_ID);
