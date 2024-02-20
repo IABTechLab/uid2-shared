@@ -19,7 +19,7 @@ import java.util.Set;
 // CC stands for Confidential Container
 @Slf4j
 public class AzureCCCoreAttestationService implements ICoreAttestationService {
-    private final String attestationUrl;
+    private final String allowedAttestationUrl;
 
     private final Set<String> allowedEnclaveIds = new HashSet<>();
 
@@ -27,13 +27,13 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
 
     private final IPolicyValidator policyValidator;
 
-    public AzureCCCoreAttestationService(String maaServerBaseUrl, String attestationUrl) {
-        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(), attestationUrl);
+    public AzureCCCoreAttestationService(String maaServerBaseUrl, String allowedAttestationUrl) {
+        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(), allowedAttestationUrl);
     }
 
     // used in UT
-    protected AzureCCCoreAttestationService(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator, String attestationUrl) {
-        this.attestationUrl = attestationUrl;
+    protected AzureCCCoreAttestationService(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator, String allowedAttestationUrl) {
+        this.allowedAttestationUrl = allowedAttestationUrl;
         this.tokenSignatureValidator = tokenSignatureValidator;
         this.policyValidator = policyValidator;
     }
@@ -46,8 +46,9 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
             log.debug("Validating signature...");
             var tokenPayload = tokenSignatureValidator.validate(tokenString);
 
-            if (tokenPayload != null && !UrlEquivalenceValidator.areUrlsEquivalent(tokenPayload.getRuntimeData().getAttestationUrl(), this.attestationUrl, log)) {
+            if (tokenPayload != null && !UrlEquivalenceValidator.areUrlsEquivalent(tokenPayload.getRuntimeData().getAttestationUrl(), this.allowedAttestationUrl, log)) {
                 handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.UNKNOWN_ATTESTATION_URL)));
+                return;
             }
 
             log.debug("Validating policy...");
