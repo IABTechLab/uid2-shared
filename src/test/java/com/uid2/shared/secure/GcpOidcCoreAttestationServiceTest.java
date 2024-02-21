@@ -67,7 +67,7 @@ public class GcpOidcCoreAttestationServiceTest {
     @Test
     public void testSignatureCheckFailed_ClientError() throws AttestationException {
         var errorStr = "signature validation failed";
-        when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationClientException(errorStr));
+        when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationClientException(errorStr, AttestationFailure.BAD_PAYLOAD));
         var provider = new GcpOidcCoreAttestationService(alwaysFailTokenValidator, Arrays.asList(alwaysPassPolicyValidator1));
         provider.registerEnclave(ENCLAVE_ID_1);
         attest(provider, ar -> {
@@ -91,7 +91,7 @@ public class GcpOidcCoreAttestationServiceTest {
     @Test
     public void testPolicyCheckFailed_ClientError() throws AttestationException {
         var errorStr = "policy validation failed";
-        when(alwaysFailPolicyValidator.validate(any())).thenThrow(new AttestationClientException(errorStr));
+        when(alwaysFailPolicyValidator.validate(any())).thenThrow(new AttestationClientException(errorStr, AttestationFailure.BAD_PAYLOAD));
         var provider = new GcpOidcCoreAttestationService(alwaysPassTokenValidator, Arrays.asList(alwaysFailPolicyValidator));
         provider.registerEnclave(ENCLAVE_ID_1);
         attest(provider, ar -> {

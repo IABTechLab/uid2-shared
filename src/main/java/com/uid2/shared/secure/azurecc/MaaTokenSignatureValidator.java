@@ -7,6 +7,7 @@ import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Strings;
 import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.AttestationFailure;
 
 import java.io.IOException;
 import java.util.Map;
@@ -66,7 +67,7 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
                 tokenVerifier.verify(tokenString);
             }
         } catch (TokenVerifier.VerificationException e) {
-            throw new AttestationClientException("Fail to validate the token signature, error: " + e.getMessage());
+            throw new AttestationClientException("Fail to validate the token signature, error: " + e.getMessage(), AttestationFailure.BAD_PAYLOAD);
         } catch (IOException e) {
             throw new AttestationException("Fail to parse token, error: " + e.getMessage());
         }

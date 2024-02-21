@@ -57,7 +57,7 @@ public class NitroCoreAttestationService implements ICoreAttestationService {
 
         String givenAttestationUrl = aDoc.getUserDataString();
         if (givenAttestationUrl != null && !givenAttestationUrl.isEmpty()) {
-            if (!UrlEquivalenceValidator.areUrlsEquivalent(this.attestationUrl, givenAttestationUrl, LOGGER)) {
+            if (!UrlEquivalenceValidator.areUrlsEquivalent(this.attestationUrl, givenAttestationUrl)) {
                 return new AttestationResult(AttestationFailure.UNKNOWN_ATTESTATION_URL);
             }
         }
