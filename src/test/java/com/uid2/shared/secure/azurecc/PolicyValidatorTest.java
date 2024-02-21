@@ -1,6 +1,8 @@
 package com.uid2.shared.secure.azurecc;
 
+import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.AttestationFailure;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -19,7 +21,6 @@ class PolicyValidatorTest {
     }
     private static final String PUBLIC_KEY = "public_key";
     private static final String CCE_POLICY_DIGEST = "digest";
-
     private static final String ATTESTATION_URL = "https://example.com";
     private static final String ENCODED_ATTESTATION_URL = Base64.getEncoder().encodeToString(encodeStringUnicodeAttestationEndpoint(ATTESTATION_URL));
 
@@ -105,5 +106,15 @@ class PolicyValidatorTest {
                 .attestationUrl(ENCODED_ATTESTATION_URL)
                 .location("East US")
                 .build();
+    }
+
+    @Test
+    public void testValidationFailure_DifferentAttestationUrl() {
+        var validator = new PolicyValidator("https://someother.uidapi.com");
+        var payload = generateBasicPayload();
+        Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(payload, PUBLIC_KEY));
+        assertEquals("The given attestation URL is unknown. Given URL: " + ATTESTATION_URL, t.getMessage());
+        assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, ((AttestationClientException)t).getAttestationFailure());
+
     }
 }

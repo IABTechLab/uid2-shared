@@ -118,20 +118,6 @@ class AzureCCCoreAttestationServiceTest {
     }
 
     @Test
-    public void testPolicyCheckFailed_AttestationUrlError() throws AttestationException {
-        String encodedAttestationUrl = Base64.getEncoder().encodeToString(encodeStringUnicodeAttestationEndpoint("https://supposed-to-fail.com"));
-        RuntimeData failedRunTimeData = RuntimeData.builder().attestationUrl(encodedAttestationUrl).build();
-        when(alwaysFailTokenValidator.validate(any())).thenReturn(MaaTokenPayload.builder().runtimeData(failedRunTimeData).build());
-        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, ATTESTATION_URL);
-        provider.registerEnclave(ENCLAVE_ID);
-        attest(provider, ar -> {
-            assertTrue(ar.succeeded());
-            assertFalse(ar.result().isSuccess());
-            assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, ar.result().getFailure());
-        });
-    }
-
-    @Test
     public void testEnclaveNotRegistered() throws AttestationException {
         var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, ATTESTATION_URL);
         attest(provider, ar -> {
