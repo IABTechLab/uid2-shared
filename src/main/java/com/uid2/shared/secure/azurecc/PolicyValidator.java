@@ -5,9 +5,7 @@ import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
 import com.uid2.shared.secure.AttestationFailure;
 import com.uid2.shared.util.UrlEquivalenceValidator;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 public class PolicyValidator implements IPolicyValidator{
     private static final String LOCATION_CHINA = "china";
     private static final String LOCATION_EU = "europe";
