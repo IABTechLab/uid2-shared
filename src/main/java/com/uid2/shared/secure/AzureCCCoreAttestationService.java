@@ -28,7 +28,7 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
     private final IPolicyValidator policyValidator;
 
     public AzureCCCoreAttestationService(String maaServerBaseUrl, String attestationUrl) {
-        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(), attestationUrl);
+        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(attestationUrl), attestationUrl);
     }
 
     // used in UT
@@ -45,11 +45,6 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
 
             log.debug("Validating signature...");
             var tokenPayload = tokenSignatureValidator.validate(tokenString);
-
-            if (tokenPayload != null && !UrlEquivalenceValidator.areUrlsEquivalent(tokenPayload.getRuntimeData().getDecodedAttestationUrl(), this.attestationUrl, log)) {
-                handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.UNKNOWN_ATTESTATION_URL)));
-                return;
-            }
 
             log.debug("Validating policy...");
             var encodedPublicKey = Utils.toBase64String(publicKey);

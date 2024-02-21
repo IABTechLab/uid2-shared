@@ -4,15 +4,24 @@ import com.google.common.base.Strings;
 import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
 import com.uid2.shared.secure.AttestationFailure;
+import com.uid2.shared.util.UrlEquivalenceValidator;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class PolicyValidator implements IPolicyValidator{
     private static final String LOCATION_CHINA = "china";
     private static final String LOCATION_EU = "europe";
+    private String attestationUrl;
+
+    public PolicyValidator(String attestationUrl) {
+        this.attestationUrl = attestationUrl;
+    }
     @Override
     public String validate(MaaTokenPayload maaTokenPayload, String publicKey) throws AttestationException {
         verifyVM(maaTokenPayload);
         verifyLocation(maaTokenPayload);
         verifyPublicKey(maaTokenPayload, publicKey);
+        verifyAttestationUrl(maaTokenPayload);
         return maaTokenPayload.getCcePolicyDigest();
     }
 
@@ -23,11 +32,18 @@ public class PolicyValidator implements IPolicyValidator{
         var runtimePublicKey = maaTokenPayload.getRuntimeData().getPublicKey();
         if(!publicKey.equals(runtimePublicKey)){
             throw new AttestationClientException(
-                    String.format("Public key in payload is not match expected value. More info: runtime(%s), expected(%s)",
+                    String.format("Public key in payload does not match expected value. More info: runtime(%s), expected(%s)",
                             runtimePublicKey,
                             publicKey
                     ),
                     AttestationFailure.BAD_FORMAT);
+        }
+    }
+
+    private void verifyAttestationUrl(MaaTokenPayload maaTokenPayload) throws AttestationException {
+        String decodedRuntimeAttestationUrl = maaTokenPayload.getRuntimeData().getDecodedAttestationUrl();
+        if (maaTokenPayload != null && !UrlEquivalenceValidator.areUrlsEquivalent(decodedRuntimeAttestationUrl, this.attestationUrl)) {
+            throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + decodedRuntimeAttestationUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
         }
     }
 
