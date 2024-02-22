@@ -14,6 +14,9 @@ public class RuntimeData {
     private String publicKey;
 
     public String getDecodedAttestationUrl() {
-        return new String(Base64.decode(attestationUrl), StandardCharsets.UTF_8);
+        if (attestationUrl != null) {
+            return new String(Base64.decode(attestationUrl), StandardCharsets.UTF_8);
+        }
+        return null;
     }
 }

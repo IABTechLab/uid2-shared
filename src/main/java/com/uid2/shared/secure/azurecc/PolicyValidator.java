@@ -40,7 +40,9 @@ public class PolicyValidator implements IPolicyValidator{
 
     private void verifyAttestationUrl(MaaTokenPayload maaTokenPayload) throws AttestationException {
         String decodedRuntimeAttestationUrl = maaTokenPayload.getRuntimeData().getDecodedAttestationUrl();
-        if (maaTokenPayload != null && !UrlEquivalenceValidator.areUrlsEquivalent(decodedRuntimeAttestationUrl, this.attestationUrl)) {
+        if (decodedRuntimeAttestationUrl == null) {
+            return;
+        } else if (!UrlEquivalenceValidator.areUrlsEquivalent(decodedRuntimeAttestationUrl, this.attestationUrl)) {
             throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + decodedRuntimeAttestationUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
         }
     }
