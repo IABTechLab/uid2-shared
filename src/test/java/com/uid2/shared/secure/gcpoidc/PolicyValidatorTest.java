@@ -14,10 +14,10 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class PolicyValidatorTest {
-    private final String attestationUrl = "https://core.uidapi.com";
+    private static final String ATTESTATION_URL = "https://core.uidapi.com";
     @Test
     public void testValidationSuccess_FullProd() throws AttestationException {
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload();
         var enclaveId = validator.validate(payload);
         assertNotNull(enclaveId);
@@ -25,7 +25,7 @@ public class PolicyValidatorTest {
 
     @Test
     public void testValidationFailure_MissRequiredEnvProd() {
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload();
         var envOverrides = new HashMap<>(payload.getEnvOverrides());
         envOverrides.remove(PolicyValidator.ENV_ENVIRONMENT);
@@ -39,7 +39,7 @@ public class PolicyValidatorTest {
 
     @Test
     public void testValidationFailure_UnknownEnv() {
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload();
         var envOverrides = new HashMap<>(payload.getEnvOverrides());
         envOverrides.put(PolicyValidator.ENV_ENVIRONMENT, "env1");
@@ -52,7 +52,7 @@ public class PolicyValidatorTest {
 
     @Test
     public void testValidationSuccess_IntegNoOptionalEnv() throws AttestationException {
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload();
         var envOverrides = new HashMap<>(payload.getEnvOverrides());
         envOverrides.put(PolicyValidator.ENV_ENVIRONMENT, "integ");
@@ -65,7 +65,7 @@ public class PolicyValidatorTest {
 
     @Test
     public void testValidationFailure_ExtraEnvOverride(){
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload();
         var envOverrides = new HashMap<>(payload.getEnvOverrides());
         envOverrides.put(PolicyValidator.ENV_ENVIRONMENT, "integ");
@@ -79,7 +79,7 @@ public class PolicyValidatorTest {
 
     @Test
     public void testValidationFailure_NotConfidentialSpace(){
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload().toBuilder()
                 .swName("dummy")
                 .build();
@@ -89,7 +89,7 @@ public class PolicyValidatorTest {
 
     @Test
     public void testValidationFailure_EURegion(){
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload().toBuilder()
                 .gceZone("europe-north1-a")
                 .build();
@@ -99,7 +99,7 @@ public class PolicyValidatorTest {
 
     @Test
     public void testValidationFailure_NotStableConfidentialSpace(){
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload().toBuilder()
                 .csSupportedAttributes(null)
                 .build();
@@ -109,7 +109,7 @@ public class PolicyValidatorTest {
 
     @Test
     public void testValidationFailure_NoRestartPolicy(){
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload().toBuilder()
                 .restartPolicy("")
                 .build();
@@ -119,7 +119,7 @@ public class PolicyValidatorTest {
 
     @Test
     public void verifySameEnclaveId_DifferentPartner() throws AttestationException {
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload1 = generateBasicPayload();
         var enclaveId1 = validator.validate(payload1);
 
@@ -135,7 +135,7 @@ public class PolicyValidatorTest {
 
     @Test
     public void verifyDifferentEnclaveId_DifferentImageDigest() throws AttestationException {
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload1 = generateBasicPayload();
         var enclaveId1 = validator.validate(payload1);
 
@@ -149,7 +149,7 @@ public class PolicyValidatorTest {
 
     @Test
     public void verifyDifferentEnclaveId_DebugMode() throws AttestationException {
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload1 = generateBasicPayload();
         var enclaveId1 = validator.validate(payload1);
 
@@ -166,14 +166,14 @@ public class PolicyValidatorTest {
         var validator = new PolicyValidator("https://someother.uidapi.com");
         var payload = generateBasicPayload();
         Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(payload));
-        assertEquals("The given attestation URL is unknown. Given URL: " + attestationUrl, t.getMessage());
+        assertEquals("The given attestation URL is unknown. Given URL: " + ATTESTATION_URL, t.getMessage());
         assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, ((AttestationClientException)t).getAttestationFailure());
 
     }
 
     @Test
     public void testValidationSuccess_CoreUrlNotProvided() throws AttestationException {
-        var validator = new PolicyValidator(attestationUrl);
+        var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload();
         HashMap<String, String> envOverrides = new HashMap<>(payload.getEnvOverrides());
         envOverrides.remove(PolicyValidator.ENV_CORE_ENDPOINT);
@@ -200,7 +200,7 @@ public class PolicyValidatorTest {
                 .envOverrides(Map.of(
                         PolicyValidator.ENV_ENVIRONMENT, "prod",
                         PolicyValidator.ENV_OPERATOR_API_KEY_SECRET_NAME, "dummy_api_key",
-                        PolicyValidator.ENV_CORE_ENDPOINT, attestationUrl,
+                        PolicyValidator.ENV_CORE_ENDPOINT, ATTESTATION_URL,
                         PolicyValidator.ENV_OPT_OUT_ENDPOINT, "optout_endpoint"
                 ));
         return builder.build();
