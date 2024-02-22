@@ -109,6 +109,14 @@ class PolicyValidatorTest {
     }
 
     @Test
+    public void testValidationSuccess_SameAttestationUrl() throws AttestationException {
+        var validator = new PolicyValidator(ATTESTATION_URL);
+        var payload = generateBasicPayload();
+        var enclaveId = validator.validate(payload, PUBLIC_KEY);
+        assertEquals(CCE_POLICY_DIGEST, enclaveId);
+    }
+
+    @Test
     public void testValidationFailure_DifferentAttestationUrl() {
         var validator = new PolicyValidator("https://someother.uidapi.com");
         var payload = generateBasicPayload();
