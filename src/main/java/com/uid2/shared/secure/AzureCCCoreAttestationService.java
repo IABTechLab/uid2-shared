@@ -25,8 +25,8 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
 
     private final IPolicyValidator policyValidator;
 
-    public AzureCCCoreAttestationService(String maaServerBaseUrl) {
-        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator());
+    public AzureCCCoreAttestationService(String maaServerBaseUrl, String attestationUrl) {
+        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(attestationUrl));
     }
 
     // used in UT
@@ -58,8 +58,7 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
         }
         catch (AttestationClientException ace){
             handler.handle(Future.succeededFuture(new AttestationResult(ace)));
-        }
-        catch (AttestationException ae) {
+        } catch (AttestationException ae) {
             handler.handle(Future.failedFuture(ae));
         } catch (Exception ex) {
             handler.handle(Future.failedFuture(new AttestationException(ex)));
