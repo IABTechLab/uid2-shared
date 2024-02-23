@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+// TODO: Thomas Manson - should this be renamed? It does more things now
 public class AttestationTokenRetriever {
     private static final Logger LOGGER = LoggerFactory.getLogger(AttestationTokenRetriever.class);
 
@@ -47,6 +48,7 @@ public class AttestationTokenRetriever {
     private final AttestationTokenDecryptor attestationTokenDecryptor;
     private final String appVersionHeader;
     private final int attestCheckMilliseconds;
+    private final AtomicReference<String> optOutUrl;
 
     public AttestationTokenRetriever(Vertx vertx,
                                      String attestationEndpoint,
@@ -77,6 +79,7 @@ public class AttestationTokenRetriever {
         this.attestationToken = new AtomicReference<>(null);
         this.optOutJwt = new AtomicReference<>(null);
         this.coreJwt = new AtomicReference<>(null);
+        this.optOutUrl = new AtomicReference<>(null);
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.lock = new ReentrantLock();
@@ -205,6 +208,7 @@ public class AttestationTokenRetriever {
             setAttestationTokenExpiresAt(expiresAt);
             setOptoutJWTFromResponse(innerBody);
             setCoreJWTFromResponse(innerBody);
+            setOptoutURLFromResponse(innerBody);
 
             scheduleAttestationExpirationCheck();
         } catch (IOException ioe) {
@@ -228,6 +232,10 @@ public class AttestationTokenRetriever {
 
     public String getCoreJWT() {
         return this.coreJwt.get();
+    }
+
+    public String getOptOutUrl() {
+        return this.optOutUrl.get();
     }
 
     public String getAppVersionHeader() {
@@ -263,6 +271,16 @@ public class AttestationTokenRetriever {
         } else {
             LOGGER.info("Core JWT received");
             this.coreJwt.set(jwt);
+        }
+    }
+
+    private void setOptoutURLFromResponse(JsonObject responseBody) {
+        String url = responseBody.getString("optout_url");
+        if (url == null) {
+            LOGGER.info("Optout URL not received");
+        } else {
+            LOGGER.info("Optout URL received");
+            this.optOutUrl.set(url);
         }
     }
 
