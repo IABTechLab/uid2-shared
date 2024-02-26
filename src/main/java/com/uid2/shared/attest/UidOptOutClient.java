@@ -43,14 +43,17 @@ public class UidOptOutClient extends UidCoreClient {
             try {
                 URL baseUrl = new URL(this.attestationTokenRetriever.getOptOutUrl());
                 URL fullUrl = new URL(baseUrl, path);
-
                 return super.download(fullUrl.toExternalForm());
             } catch (MalformedURLException e) {
                 LOGGER.error("Unable to parse OptOut URL", e);
+            } catch (Exception e) {
+                // Specifically not logging the exception as it might contain sensitive URLs
+                LOGGER.error("Unexpected error in UidOptOutClient download");
             }
+        } else {
+            LOGGER.warn("UidOptOutClient attempting to download but OptOutUrl not available");
         }
 
-        LOGGER.warn("UidOptOutClient attempting to download from path: {}, but OptOutUrl not available", path);
         return InputStream.nullInputStream();
     }
 }

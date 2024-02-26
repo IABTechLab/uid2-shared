@@ -90,7 +90,7 @@ public class UidOptOutClientTest {
 
         InputStream is = this.optOutClient.download("/path");
         Assert.assertEquals(0, is.available());
-        verify(mockedLogger).warn("UidOptOutClient attempting to download from path: {}, but OptOutUrl not available", "/path");
+        verify(mockedLogger).warn("UidOptOutClient attempting to download but OptOutUrl not available");
     }
 
     @Test

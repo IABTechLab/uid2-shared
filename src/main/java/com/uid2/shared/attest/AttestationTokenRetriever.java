@@ -277,9 +277,10 @@ public class AttestationTokenRetriever {
     private void setOptoutURLFromResponse(JsonObject responseBody) {
         String url = responseBody.getString("optout_url");
         if (url == null) {
-            LOGGER.info("Optout URL not received");
+            LOGGER.info("OptOut URL not received");
         } else {
-            LOGGER.info("Optout URL received");
+            LOGGER.info("OptOut URL received");
+            LOGGER.debug("OptOut URL to use: {}", url);
             this.optOutUrl.set(url);
         }
     }
