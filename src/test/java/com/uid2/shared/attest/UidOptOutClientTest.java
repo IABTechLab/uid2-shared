@@ -19,14 +19,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.Proxy;
-import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 
 import static org.mockito.Mockito.*;
 
 public class UidOptOutClientTest {
     private Proxy proxy = CloudUtils.defaultProxy;
-    private AttestationTokenRetriever mockAttestationTokenRetriever = mock(AttestationTokenRetriever.class);
+    private AttestationResponseHandler mockAttestationResponseHandler = mock(AttestationResponseHandler.class);
     private URLConnectionHttpClient mockHttpClient = mock(URLConnectionHttpClient.class);
     private UidOptOutClient optOutClient;
 
@@ -48,12 +47,12 @@ public class UidOptOutClientTest {
         mockedLoggerFactory = mockStatic(LoggerFactory.class);
         mockedLoggerFactory.when(() -> LoggerFactory.getLogger(any(Class.class))).thenReturn(mockedLogger);
 
-        when(mockAttestationTokenRetriever.getOptOutJWT()).thenReturn("optOutJWT");
-        when(mockAttestationTokenRetriever.getCoreJWT()).thenReturn("coreJWT");
+        when(mockAttestationResponseHandler.getOptOutJWT()).thenReturn("optOutJWT");
+        when(mockAttestationResponseHandler.getCoreJWT()).thenReturn("coreJWT");
 
         optOutClient = new UidOptOutClient(
                 "userToken", proxy,
-                mockAttestationTokenRetriever, mockHttpClient);
+                mockAttestationResponseHandler, mockHttpClient);
     }
 
     @Test
@@ -74,19 +73,19 @@ public class UidOptOutClientTest {
         when(mockHttpResponse.statusCode()).thenReturn(200);
         when(mockHttpClient.get(any(), any())).thenReturn(mockHttpResponse);
 
-        when(mockAttestationTokenRetriever.attested()).thenReturn(true);
-        when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn("testAttToken");
-        when(mockAttestationTokenRetriever.getOptOutUrl()).thenReturn("https://core.example.com");
+        when(mockAttestationResponseHandler.attested()).thenReturn(true);
+        when(mockAttestationResponseHandler.getAttestationToken()).thenReturn("testAttToken");
+        when(mockAttestationResponseHandler.getOptOutUrl()).thenReturn("https://core.example.com");
 
         InputStream is = this.optOutClient.download(path);
-        verify(mockAttestationTokenRetriever, atLeastOnce()).getOptOutUrl();
+        verify(mockAttestationResponseHandler, atLeastOnce()).getOptOutUrl();
         verify(mockHttpClient).get(eq(expectedFullPath), any());
     }
 
     @Test
     void returnsEmptyStreamWhenNoOptOutUrl() throws CloudStorageException, IOException {
-        when(mockAttestationTokenRetriever.attested()).thenReturn(true);
-        when(mockAttestationTokenRetriever.getOptOutUrl()).thenReturn(null);
+        when(mockAttestationResponseHandler.attested()).thenReturn(true);
+        when(mockAttestationResponseHandler.getOptOutUrl()).thenReturn(null);
 
         InputStream is = this.optOutClient.download("/path");
         Assert.assertEquals(0, is.available());
@@ -95,8 +94,8 @@ public class UidOptOutClientTest {
 
     @Test
     void returnsEmptyStreamWhenMalformedUrl() throws CloudStorageException, IOException {
-        when(mockAttestationTokenRetriever.attested()).thenReturn(true);
-        when(mockAttestationTokenRetriever.getOptOutUrl()).thenReturn("nowhere");
+        when(mockAttestationResponseHandler.attested()).thenReturn(true);
+        when(mockAttestationResponseHandler.getOptOutUrl()).thenReturn("nowhere");
 
         InputStream is = this.optOutClient.download("/path");
         Assert.assertEquals(0, is.available());

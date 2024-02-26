@@ -1,17 +1,17 @@
 package com.uid2.shared.attest;
 
-public class AttestationTokenRetrieverException extends Exception {
+public class AttestationResponseHandlerException extends Exception {
     private int statusCode = 0;
 
-    public AttestationTokenRetrieverException(Throwable t) {
+    public AttestationResponseHandlerException(Throwable t) {
         super(t);
     }
 
-    public AttestationTokenRetrieverException(String message) {
+    public AttestationResponseHandlerException(String message) {
         super(message);
     }
 
-    public AttestationTokenRetrieverException(int statusCode, String message) {
+    public AttestationResponseHandlerException(int statusCode, String message) {
         super("http status: " + String.valueOf(statusCode) + ", " + message);
         this.statusCode = statusCode;
     }

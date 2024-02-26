@@ -12,20 +12,20 @@ import java.net.URL;
 
 public class UidOptOutClient extends UidCoreClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(UidOptOutClient.class);
-    private AttestationTokenRetriever attestationTokenRetriever;
+    private AttestationResponseHandler attestationResponseHandler;
 
     public UidOptOutClient(String userToken,
                          Proxy proxy,
-                         AttestationTokenRetriever attestationTokenRetriever) {
-        super(userToken, proxy, attestationTokenRetriever, null);
-        this.attestationTokenRetriever = attestationTokenRetriever;
+                         AttestationResponseHandler attestationResponseHandler) {
+        super(userToken, proxy, attestationResponseHandler, null);
+        this.attestationResponseHandler = attestationResponseHandler;
     }
     public UidOptOutClient(String userToken,
                            Proxy proxy,
-                           AttestationTokenRetriever attestationTokenRetriever,
+                           AttestationResponseHandler attestationResponseHandler,
                            URLConnectionHttpClient httpClient) {
-        super(userToken, proxy, attestationTokenRetriever, httpClient);
-        this.attestationTokenRetriever = attestationTokenRetriever;
+        super(userToken, proxy, attestationResponseHandler, httpClient);
+        this.attestationResponseHandler = attestationResponseHandler;
     }
 
     @Override
@@ -39,9 +39,9 @@ public class UidOptOutClient extends UidCoreClient {
             path = "";
         }
 
-        if (this.attestationTokenRetriever != null && this.attestationTokenRetriever.getOptOutUrl() != null) {
+        if (this.attestationResponseHandler != null && this.attestationResponseHandler.getOptOutUrl() != null) {
             try {
-                URL baseUrl = new URL(this.attestationTokenRetriever.getOptOutUrl());
+                URL baseUrl = new URL(this.attestationResponseHandler.getOptOutUrl());
                 URL fullUrl = new URL(baseUrl, path);
                 return super.download(fullUrl.toExternalForm());
             } catch (MalformedURLException e) {
