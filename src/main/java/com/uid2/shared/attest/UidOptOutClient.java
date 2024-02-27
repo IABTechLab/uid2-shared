@@ -15,11 +15,12 @@ public class UidOptOutClient extends UidCoreClient {
     private AttestationResponseHandler attestationResponseHandler;
 
     public UidOptOutClient(String userToken,
-                         Proxy proxy,
-                         AttestationResponseHandler attestationResponseHandler) {
+                           Proxy proxy,
+                           AttestationResponseHandler attestationResponseHandler) {
         super(userToken, proxy, attestationResponseHandler, null);
         this.attestationResponseHandler = attestationResponseHandler;
     }
+
     public UidOptOutClient(String userToken,
                            Proxy proxy,
                            AttestationResponseHandler attestationResponseHandler,
@@ -39,7 +40,7 @@ public class UidOptOutClient extends UidCoreClient {
             path = "";
         }
 
-        if (this.attestationResponseHandler != null && this.attestationResponseHandler.getOptOutUrl() != null) {
+        if (this.attestationResponseHandler.getOptOutUrl() != null) {
             try {
                 URL baseUrl = new URL(this.attestationResponseHandler.getOptOutUrl());
                 URL fullUrl = new URL(baseUrl, path);

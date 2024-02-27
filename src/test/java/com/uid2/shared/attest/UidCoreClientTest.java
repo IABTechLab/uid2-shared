@@ -84,6 +84,7 @@ public class UidCoreClientTest {
 
         uidCoreClient.download("https://download");
         verify(mockAttestationResponseHandler, times(2)).attest();
+        verify(mockAttestationResponseHandler, never()).getOptOutUrl();
     }
 
     @Test
