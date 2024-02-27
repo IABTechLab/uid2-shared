@@ -78,7 +78,7 @@ public class UidOptOutClientTest {
         when(mockAttestationResponseHandler.getOptOutUrl()).thenReturn("https://core.example.com");
 
         InputStream is = this.optOutClient.download(path);
-        verify(mockAttestationResponseHandler, atLeastOnce()).getOptOutUrl();
+        verify(mockAttestationResponseHandler, times(2)).getOptOutUrl();
         verify(mockHttpClient).get(eq(expectedFullPath), any());
     }
 
