@@ -71,8 +71,8 @@ public class MaskingLokiJsonEncoderTest {
 
         assertAll(
                 "testMaskedExceptionsWithS3",
-                () -> assertEquals(log.split("\n")[0].trim(), maskedMessage),
-                () -> assertTrue(log.split("\n")[1].trim().startsWith(stackTrace))
+                () -> assertEquals(log.split("\n")[0].trim(), maskedMessage, String.format("'%s' must equal '%s'", log.split("\n")[0].trim(), maskedMessage)),
+                () -> assertTrue(log.split("\n")[1].trim().startsWith(stackTrace), String.format("'%s' must start with '%s'", log.split("\n")[1].trim(), stackTrace))
         );
     }
 

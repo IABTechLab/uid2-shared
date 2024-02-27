@@ -24,8 +24,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-public class AttestationTokenRetriever {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AttestationTokenRetriever.class);
+public class AttestationResponseHandler {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AttestationResponseHandler.class);
 
     private final IAttestationProvider attestationProvider;
     private final String clientApiToken;
@@ -47,27 +47,28 @@ public class AttestationTokenRetriever {
     private final AttestationTokenDecryptor attestationTokenDecryptor;
     private final String appVersionHeader;
     private final int attestCheckMilliseconds;
+    private final AtomicReference<String> optOutUrl;
 
-    public AttestationTokenRetriever(Vertx vertx,
-                                     String attestationEndpoint,
-                                     String clientApiToken,
-                                     ApplicationVersion appVersion,
-                                     IAttestationProvider attestationProvider,
-                                     Handler<Pair<Integer, String>> responseWatcher,
-                                     Proxy proxy) {
+    public AttestationResponseHandler(Vertx vertx,
+                                      String attestationEndpoint,
+                                      String clientApiToken,
+                                      ApplicationVersion appVersion,
+                                      IAttestationProvider attestationProvider,
+                                      Handler<Pair<Integer, String>> responseWatcher,
+                                      Proxy proxy) {
         this(vertx, attestationEndpoint, clientApiToken, appVersion, attestationProvider, responseWatcher, proxy, new InstantClock(), null, null, 60000);
     }
-    public AttestationTokenRetriever(Vertx vertx,
-                                     String attestationEndpoint,
-                                     String clientApiToken,
-                                     ApplicationVersion appVersion,
-                                     IAttestationProvider attestationProvider,
-                                     Handler<Pair<Integer, String>> responseWatcher,
-                                     Proxy proxy,
-                                     IClock clock,
-                                     URLConnectionHttpClient httpClient,
-                                     AttestationTokenDecryptor attestationTokenDecryptor,
-                                     int attestCheckMilliseconds) {
+    public AttestationResponseHandler(Vertx vertx,
+                                      String attestationEndpoint,
+                                      String clientApiToken,
+                                      ApplicationVersion appVersion,
+                                      IAttestationProvider attestationProvider,
+                                      Handler<Pair<Integer, String>> responseWatcher,
+                                      Proxy proxy,
+                                      IClock clock,
+                                      URLConnectionHttpClient httpClient,
+                                      AttestationTokenDecryptor attestationTokenDecryptor,
+                                      int attestCheckMilliseconds) {
         this.vertx = vertx;
         this.attestationEndpoint = attestationEndpoint;
         this.encodedAttestationEndpoint = this.encodeStringUnicodeAttestationEndpoint(attestationEndpoint);
@@ -77,6 +78,7 @@ public class AttestationTokenRetriever {
         this.attestationToken = new AtomicReference<>(null);
         this.optOutJwt = new AtomicReference<>(null);
         this.coreJwt = new AtomicReference<>(null);
+        this.optOutUrl = new AtomicReference<>(null);
         this.responseWatcher = responseWatcher;
         this.clock = clock;
         this.lock = new ReentrantLock();
@@ -125,7 +127,7 @@ public class AttestationTokenRetriever {
             }
 
             attest();
-        } catch (AttestationTokenRetrieverException e) {
+        } catch (AttestationResponseHandlerException e) {
             notifyResponseWatcher(401, e.getMessage());
             LOGGER.info("Re-attest failed: ", e);
         } catch (IOException e){
@@ -144,9 +146,9 @@ public class AttestationTokenRetriever {
         }
     }
 
-    public void attest() throws IOException, AttestationTokenRetrieverException {
+    public void attest() throws IOException, AttestationResponseHandlerException {
         if (!attestationProvider.isReady()) {
-            throw new AttestationTokenRetrieverException("attestation provider is not ready");
+            throw new AttestationResponseHandlerException("attestation provider is not ready");
         }
 
         try {
@@ -177,26 +179,26 @@ public class AttestationTokenRetriever {
 
             if (statusCode < 200 || statusCode >= 300) {
                 LOGGER.warn("attestation failed with UID2 Core returning statusCode=" + statusCode);
-                throw new AttestationTokenRetrieverException(statusCode, "unexpected status code from uid core service");
+                throw new AttestationResponseHandlerException(statusCode, "unexpected status code from uid core service");
             }
 
             JsonObject responseJson = (JsonObject) Json.decodeValue(responseBody);
             if (isFailed(responseJson)) {
-                throw new AttestationTokenRetrieverException(statusCode, "response did not return a successful status");
+                throw new AttestationResponseHandlerException(statusCode, "response did not return a successful status");
             }
 
             JsonObject innerBody = responseJson.getJsonObject("body");
             if (innerBody == null) {
-                throw new AttestationTokenRetrieverException(statusCode, "response did not contain a body object");
+                throw new AttestationResponseHandlerException(statusCode, "response did not contain a body object");
             }
 
             String atoken = getAttestationToken(innerBody);
             if (atoken == null) {
-                throw new AttestationTokenRetrieverException(statusCode, "response json does not contain body.attestation_token");
+                throw new AttestationResponseHandlerException(statusCode, "response json does not contain body.attestation_token");
             }
             String expiresAt = getAttestationTokenExpiresAt(innerBody);
             if (expiresAt == null) {
-                throw new AttestationTokenRetrieverException(statusCode, "response json does not contain body.expiresAt");
+                throw new AttestationResponseHandlerException(statusCode, "response json does not contain body.expiresAt");
             }
 
             atoken = new String(attestationTokenDecryptor.decrypt(Base64.getDecoder().decode(atoken), keyPair.getPrivate()), StandardCharsets.UTF_8);
@@ -205,12 +207,13 @@ public class AttestationTokenRetriever {
             setAttestationTokenExpiresAt(expiresAt);
             setOptoutJWTFromResponse(innerBody);
             setCoreJWTFromResponse(innerBody);
+            setOptoutURLFromResponse(innerBody);
 
             scheduleAttestationExpirationCheck();
         } catch (IOException ioe) {
             throw ioe;
         } catch (Exception e) {
-            throw new AttestationTokenRetrieverException(e);
+            throw new AttestationResponseHandlerException(e);
         }
     }
 
@@ -228,6 +231,10 @@ public class AttestationTokenRetriever {
 
     public String getCoreJWT() {
         return this.coreJwt.get();
+    }
+
+    public String getOptOutUrl() {
+        return this.optOutUrl.get();
     }
 
     public String getAppVersionHeader() {
@@ -263,6 +270,17 @@ public class AttestationTokenRetriever {
         } else {
             LOGGER.info("Core JWT received");
             this.coreJwt.set(jwt);
+        }
+    }
+
+    private void setOptoutURLFromResponse(JsonObject responseBody) {
+        String url = responseBody.getString("optout_url");
+        if (url == null) {
+            LOGGER.info("OptOut URL not received");
+        } else {
+            LOGGER.info("OptOut URL received");
+            LOGGER.debug("OptOut URL to use: {}", url);
+            this.optOutUrl.set(url);
         }
     }
 

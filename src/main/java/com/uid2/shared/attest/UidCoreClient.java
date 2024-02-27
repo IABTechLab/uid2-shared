@@ -21,22 +21,22 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private String userToken;
     private final String appVersionHeader;
     private boolean allowContentFromLocalFileSystem = false;
-    private final AttestationTokenRetriever attestationTokenRetriever;
+    private final AttestationResponseHandler attestationResponseHandler;
 
 
-    public static UidCoreClient createNoAttest(String userToken, AttestationTokenRetriever attestationTokenRetriever) {
-        return new UidCoreClient(userToken, CloudUtils.defaultProxy, attestationTokenRetriever, null);
+    public static UidCoreClient createNoAttest(String userToken, AttestationResponseHandler attestationResponseHandler) {
+        return new UidCoreClient(userToken, CloudUtils.defaultProxy, attestationResponseHandler, null);
     }
 
     public UidCoreClient(String userToken,
                          Proxy proxy,
-                         AttestationTokenRetriever attestationTokenRetriever) {
-        this(userToken, proxy, attestationTokenRetriever, null);
+                         AttestationResponseHandler attestationResponseHandler) {
+        this(userToken, proxy, attestationResponseHandler, null);
     }
 
     public UidCoreClient(String userToken,
                          Proxy proxy,
-                         AttestationTokenRetriever attestationTokenRetriever,
+                         AttestationResponseHandler attestationResponseHandler,
                          URLConnectionHttpClient httpClient) {
         this.proxy = proxy;
         this.userToken = userToken;
@@ -46,13 +46,13 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         } else {
             this.httpClient = httpClient;
         }
-        if (attestationTokenRetriever == null) {
-            throw new IllegalArgumentException("attestationTokenRetriever can not be null");
+        if (attestationResponseHandler == null) {
+            throw new IllegalArgumentException("attestationResponseHandler can not be null");
         } else {
-            this.attestationTokenRetriever = attestationTokenRetriever;
+            this.attestationResponseHandler = attestationResponseHandler;
         }
 
-        this.appVersionHeader = attestationTokenRetriever.getAppVersionHeader();
+        this.appVersionHeader = attestationResponseHandler.getAppVersionHeader();
     }
 
     @Override
@@ -89,12 +89,12 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return (proxy == null ? new URL(path).openConnection() : new URL(path).openConnection(proxy)).getInputStream();
     }
 
-    private InputStream getWithAttest(String path) throws IOException, AttestationTokenRetrieverException {
-        if (!attestationTokenRetriever.attested()) {
-            attestationTokenRetriever.attest();
+    private InputStream getWithAttest(String path) throws IOException, AttestationResponseHandlerException {
+        if (!attestationResponseHandler.attested()) {
+            attestationResponseHandler.attest();
         }
 
-        String attestationToken = attestationTokenRetriever.getAttestationToken();
+        String attestationToken = attestationResponseHandler.getAttestationToken();
 
         HttpResponse<String> httpResponse;
         httpResponse = sendHttpRequest(path, attestationToken);
@@ -102,8 +102,8 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         // This should never happen, but keeping this part of the code just to be extra safe.
         if (httpResponse.statusCode() == 401) {
             LOGGER.info("Initial response from UID2 Core returned 401, performing attestation");
-            attestationTokenRetriever.attest();
-            attestationToken = attestationTokenRetriever.getAttestationToken();
+            attestationResponseHandler.attest();
+            attestationToken = attestationResponseHandler.getAttestationToken();
             httpResponse = sendHttpRequest(path, attestationToken);
         }
 
@@ -139,8 +139,8 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return httpResponse;
     }
 
-    protected AttestationTokenRetriever getAttestationTokenRetriever() {
-        return attestationTokenRetriever;
+    protected AttestationResponseHandler getAttestationTokenRetriever() {
+        return attestationResponseHandler;
     }
 
     public void setUserToken(String userToken) {

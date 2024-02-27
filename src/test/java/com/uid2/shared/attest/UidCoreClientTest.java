@@ -19,7 +19,7 @@ import static org.mockito.Mockito.*;
 
 public class UidCoreClientTest {
     private Proxy proxy = CloudUtils.defaultProxy;
-    private AttestationTokenRetriever mockAttestationTokenRetriever = mock(AttestationTokenRetriever.class);
+    private AttestationResponseHandler mockAttestationResponseHandler = mock(AttestationResponseHandler.class);
 
     private URLConnectionHttpClient mockHttpClient = mock(URLConnectionHttpClient.class);
 
@@ -30,19 +30,19 @@ public class UidCoreClientTest {
 
     @BeforeEach
     void setUp() {
-        when(mockAttestationTokenRetriever.getAppVersionHeader()).thenReturn("testAppVersionHeader");
+        when(mockAttestationResponseHandler.getAppVersionHeader()).thenReturn("testAppVersionHeader");
         uidCoreClient = new UidCoreClient(
                 "userToken", proxy,
-                mockAttestationTokenRetriever, mockHttpClient);
+                mockAttestationResponseHandler, mockHttpClient);
     }
 
     @Test
-    public void Download_Succeed_RequestSentWithExpectedParameters() throws IOException, CloudStorageException, AttestationTokenRetrieverException {
+    public void Download_Succeed_RequestSentWithExpectedParameters() throws IOException, CloudStorageException, AttestationResponseHandlerException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
 
-        when(mockAttestationTokenRetriever.getAttestationToken()).thenReturn("testAttestationToken");
-        when(mockAttestationTokenRetriever.getCoreJWT()).thenReturn("testCoreJWT");
-        when(mockAttestationTokenRetriever.getOptOutJWT()).thenReturn("testOptOutJWT");
+        when(mockAttestationResponseHandler.getAttestationToken()).thenReturn("testAttestationToken");
+        when(mockAttestationResponseHandler.getCoreJWT()).thenReturn("testCoreJWT");
+        when(mockAttestationResponseHandler.getOptOutJWT()).thenReturn("testOptOutJWT");
         uidCoreClient.setUserToken("testUserToken");
 
         String expectedResponseBody = "Hello, world!";
@@ -56,14 +56,14 @@ public class UidCoreClientTest {
         when(mockHttpClient.get("https://download", expectedHeaders)).thenReturn(mockHttpResponse);
 
         uidCoreClient.download("https://download");
-        verify(mockAttestationTokenRetriever, times(1)).attest();
+        verify(mockAttestationResponseHandler, times(1)).attest();
         verify(mockHttpClient, times(1)).get("https://download", expectedHeaders);
     }
 
     @Test
-    public void Download_AttestInternalFail_ExceptionThrown() throws IOException, AttestationTokenRetrieverException {
-        AttestationTokenRetrieverException exception = new AttestationTokenRetrieverException(401, "test failure");
-        doThrow(exception).when(mockAttestationTokenRetriever).attest();
+    public void Download_AttestInternalFail_ExceptionThrown() throws IOException, AttestationResponseHandlerException {
+        AttestationResponseHandlerException exception = new AttestationResponseHandlerException(401, "test failure");
+        doThrow(exception).when(mockAttestationResponseHandler).attest();
 
         CloudStorageException result = Assert.assertThrows(CloudStorageException.class, () -> {
             uidCoreClient.download("https://download");
@@ -73,7 +73,7 @@ public class UidCoreClientTest {
     }
 
     @Test
-    public void Download_Attest401_AttestCalledTwice() throws CloudStorageException, IOException, InterruptedException, AttestationTokenRetrieverException {
+    public void Download_Attest401_AttestCalledTwice() throws CloudStorageException, IOException, InterruptedException, AttestationResponseHandlerException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.statusCode()).thenReturn(401);
 
@@ -83,13 +83,14 @@ public class UidCoreClientTest {
         when(mockHttpClient.get(eq("https://download"), any(HashMap.class))).thenReturn(mockHttpResponse);
 
         uidCoreClient.download("https://download");
-        verify(mockAttestationTokenRetriever, times(2)).attest();
+        verify(mockAttestationResponseHandler, times(2)).attest();
+        verify(mockAttestationResponseHandler, never()).getOptOutUrl();
     }
 
     @Test
     void getJwtReturnsCoreToken() {
-        when(mockAttestationTokenRetriever.getOptOutJWT()).thenReturn("optOutJWT");
-        when(mockAttestationTokenRetriever.getCoreJWT()).thenReturn("coreJWT");
+        when(mockAttestationResponseHandler.getOptOutJWT()).thenReturn("optOutJWT");
+        when(mockAttestationResponseHandler.getCoreJWT()).thenReturn("coreJWT");
         Assertions.assertEquals("coreJWT", this.uidCoreClient.getJWT());
     }
 }
