@@ -69,7 +69,7 @@ public class RotatingServiceStoreTest {
         Service s1 = addService(content, 1, 123, "Test Service 1", Set.of());
         Service s2 = addService(content, 2, 123, "test1", Set.of(Role.GENERATOR));
         Service s3 = addService(content, 3, 124, "Test Service 1", Set.of(Role.GENERATOR, Role.SHARING_PORTAL));
-        Service s4 = addService(content, 4, 125, "test2", Set.of(Role.ALL));
+        Service s4 = addService(content, 4, 125, "test2", Set.of(Role.DEFAULT));
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = serviceStore.loadContent(makeMetadata("locationPath"));
