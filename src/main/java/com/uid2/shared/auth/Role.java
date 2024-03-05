@@ -20,7 +20,7 @@ public enum Role {
     ADMINISTRATOR,
     SHARING_PORTAL, // corresponds to custom okta scope 'uid2.admin.ss-portal'
     PRIVATE_SITE_REFRESHER, // UID2-575 - For cronjob to trigger private site data generated
-    DEFAULT, // corresponds to 'developer' okta group
+    MAINTAINER, // corresponds to 'developer' okta group
     PRIVILEGED, // corresponds to 'developer-elevated' okta group
     SUPER_USER, // corresponds to 'admin' okta group
     SECRET_ROTATION, // corresponds to custom okta scope 'uid2.admin.secret-rotation'
