@@ -66,7 +66,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     }
 
     protected String getJWT() {
-        return this.getAttestationTokenRetriever().getCoreJWT();
+        return this.getAttestationResponseHandler().getCoreJWT();
     }
 
     private InputStream internalDownload(String path) throws CloudStorageException {
@@ -133,13 +133,13 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         try {
             httpResponse = httpClient.get(path, headers);
         } catch (IOException e) {
-            LOGGER.error("Failed to send request with error: ", e);
+            LOGGER.error("Failed to send request to host: " + uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort() + " with error: ", e);
             throw e;
         }
         return httpResponse;
     }
 
-    protected AttestationResponseHandler getAttestationTokenRetriever() {
+    protected AttestationResponseHandler getAttestationResponseHandler() {
         return attestationResponseHandler;
     }
 
