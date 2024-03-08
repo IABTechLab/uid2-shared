@@ -4,8 +4,6 @@ import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
 import com.uid2.shared.secure.AttestationFailure;
 import org.junit.jupiter.api.Test;
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.CoreMatchers.instanceOf;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class PolicyValidatorTest {
     private static final String ATTESTATION_URL = "https://core.uidapi.com";
+
     @Test
     public void testValidationSuccess_FullProd() throws AttestationException {
         var validator = new PolicyValidator(ATTESTATION_URL);
@@ -32,9 +31,9 @@ public class PolicyValidatorTest {
         var newPayload = payload.toBuilder()
                 .envOverrides(envOverrides)
                 .build();
-        var e = assertThrows(AttestationException.class, ()-> validator.validate(newPayload));
-        assertThat(e, instanceOf(AttestationClientException.class));
-        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
+        var e = assertThrows(AttestationException.class, () -> validator.validate(newPayload));
+        assertInstanceOf(AttestationClientException.class, e);
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException) e).getAttestationFailure());
     }
 
     @Test
@@ -46,8 +45,8 @@ public class PolicyValidatorTest {
         var newPayload = payload.toBuilder()
                 .envOverrides(envOverrides)
                 .build();
-        var e = assertThrows(AttestationException.class, ()-> validator.validate(newPayload));
-        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
+        var e = assertThrows(AttestationException.class, () -> validator.validate(newPayload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException) e).getAttestationFailure());
     }
 
     @Test
@@ -64,7 +63,7 @@ public class PolicyValidatorTest {
     }
 
     @Test
-    public void testValidationFailure_ExtraEnvOverride(){
+    public void testValidationFailure_ExtraEnvOverride() {
         var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload();
         var envOverrides = new HashMap<>(payload.getEnvOverrides());
@@ -73,48 +72,48 @@ public class PolicyValidatorTest {
         var newPayload = payload.toBuilder()
                 .envOverrides(envOverrides)
                 .build();
-        var e = assertThrows(AttestationException.class, ()-> validator.validate(newPayload));
-        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
+        var e = assertThrows(AttestationException.class, () -> validator.validate(newPayload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException) e).getAttestationFailure());
     }
 
     @Test
-    public void testValidationFailure_NotConfidentialSpace(){
+    public void testValidationFailure_NotConfidentialSpace() {
         var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload().toBuilder()
                 .swName("dummy")
                 .build();
-        var e = assertThrows(AttestationException.class, ()-> validator.validate(payload));
-        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
+        var e = assertThrows(AttestationException.class, () -> validator.validate(payload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException) e).getAttestationFailure());
     }
 
     @Test
-    public void testValidationFailure_EURegion(){
+    public void testValidationFailure_EURegion() {
         var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload().toBuilder()
                 .gceZone("europe-north1-a")
                 .build();
-        var e = assertThrows(AttestationException.class, ()-> validator.validate(payload));
-        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
+        var e = assertThrows(AttestationException.class, () -> validator.validate(payload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException) e).getAttestationFailure());
     }
 
     @Test
-    public void testValidationFailure_NotStableConfidentialSpace(){
+    public void testValidationFailure_NotStableConfidentialSpace() {
         var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload().toBuilder()
                 .csSupportedAttributes(null)
                 .build();
-        var e = assertThrows(AttestationException.class, ()-> validator.validate(payload));
-        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
+        var e = assertThrows(AttestationException.class, () -> validator.validate(payload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException) e).getAttestationFailure());
     }
 
     @Test
-    public void testValidationFailure_NoRestartPolicy(){
+    public void testValidationFailure_NoRestartPolicy() {
         var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload().toBuilder()
                 .restartPolicy("")
                 .build();
-        var e = assertThrows(AttestationException.class, ()-> validator.validate(payload));
-        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)e).getAttestationFailure());
+        var e = assertThrows(AttestationException.class, () -> validator.validate(payload));
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException) e).getAttestationFailure());
     }
 
     @Test
@@ -165,9 +164,9 @@ public class PolicyValidatorTest {
     public void testValidationFailure_DifferentAttestationUrl() {
         var validator = new PolicyValidator("https://someother.uidapi.com");
         var payload = generateBasicPayload();
-        Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(payload));
+        Throwable t = assertThrows(AttestationException.class, () -> validator.validate(payload));
         assertEquals("The given attestation URL is unknown. Given URL: " + ATTESTATION_URL, t.getMessage());
-        assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, ((AttestationClientException)t).getAttestationFailure());
+        assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, ((AttestationClientException) t).getAttestationFailure());
 
     }
 
@@ -187,7 +186,7 @@ public class PolicyValidatorTest {
         assertNotNull(enclaveId);
     }
 
-    private TokenPayload generateBasicPayload(){
+    private TokenPayload generateBasicPayload() {
         var builder = TokenPayload.builder()
                 .gceZone("us-west1-b")
                 .swVersion("CONFIDENTIAL_SPACE")

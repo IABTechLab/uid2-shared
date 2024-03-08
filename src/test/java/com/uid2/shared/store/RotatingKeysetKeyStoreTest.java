@@ -7,15 +7,16 @@ import com.uid2.shared.store.scope.GlobalScope;
 import static com.uid2.shared.TestUtilites.makeInputStream;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 public class RotatingKeysetKeyStoreTest {
@@ -24,13 +25,13 @@ public class RotatingKeysetKeyStoreTest {
     ICloudStorage cloudStorage;
     private RotatingKeysetKeyStore keysetKeyStore;
 
-    @Before
+    @BeforeEach
     public void setup() {
         mocks = MockitoAnnotations.openMocks(this);
         keysetKeyStore = new RotatingKeysetKeyStore(cloudStorage, new GlobalScope(new CloudPath("metadata")));
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         mocks.close();
     }
@@ -68,10 +69,10 @@ public class RotatingKeysetKeyStoreTest {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = keysetKeyStore.loadContent(makeMetadata("locationPath"));
-        Assert.assertEquals(0, count);
-        Assert.assertNull(keysetKeyStore.getSnapshot().getKey(1));
-        Assert.assertNull(keysetKeyStore.getSnapshot().getActiveKey(1, Instant.now()));
-        Assert.assertTrue(keysetKeyStore.getSnapshot().getAllKeysetKeys().isEmpty());
+        assertEquals(0, count);
+        assertNull(keysetKeyStore.getSnapshot().getKey(1));
+        assertNull(keysetKeyStore.getSnapshot().getActiveKey(1, Instant.now()));
+        assertTrue(keysetKeyStore.getSnapshot().getAllKeysetKeys().isEmpty());
     }
 
     @Test
@@ -83,10 +84,10 @@ public class RotatingKeysetKeyStoreTest {
         KeysetKey key3 = addKey(content, 103, 3, "testsecret3", now);
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long conunt = keysetKeyStore.loadContent(makeMetadata("locationPath"));
-        Assert.assertEquals(3, conunt);
-        Assert.assertTrue(keysetKeyStore.getSnapshot().getKey(101).equals(key1));
-        Assert.assertTrue(keysetKeyStore.getSnapshot().getKey(102).equals(key2));
-        Assert.assertTrue(keysetKeyStore.getSnapshot().getKey(103).equals(key3));
+        assertEquals(3, conunt);
+        assertTrue(keysetKeyStore.getSnapshot().getKey(101).equals(key1));
+        assertTrue(keysetKeyStore.getSnapshot().getKey(102).equals(key2));
+        assertTrue(keysetKeyStore.getSnapshot().getKey(103).equals(key3));
     }
     @Test
     public void loadContentMultipleFromSingleKeyset() throws Exception {
@@ -98,13 +99,13 @@ public class RotatingKeysetKeyStoreTest {
         KeysetKey key4 = addKey(content, 104, 200, "key104set200", now.minusSeconds(5), now.minusSeconds(1)); // expired
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = keysetKeyStore.loadContent(makeMetadata("locationPath"));
-        Assert.assertEquals(4, count);
-        Assert.assertEquals(keysetKeyStore.getSnapshot().getKey(101), key1);
-        Assert.assertEquals(keysetKeyStore.getSnapshot().getKey(102), key2);
-        Assert.assertEquals(keysetKeyStore.getSnapshot().getKey(103), key3);
-        Assert.assertEquals(keysetKeyStore.getSnapshot().getKey(104), key4);
+        assertEquals(4, count);
+        assertEquals(keysetKeyStore.getSnapshot().getKey(101), key1);
+        assertEquals(keysetKeyStore.getSnapshot().getKey(102), key2);
+        assertEquals(keysetKeyStore.getSnapshot().getKey(103), key3);
+        assertEquals(keysetKeyStore.getSnapshot().getKey(104), key4);
         //Check active key is correct
-        Assert.assertEquals(keysetKeyStore.getSnapshot().getActiveKey(200, now), key3);
-        Assert.assertEquals(keysetKeyStore.getSnapshot().getActiveKey(200, keysetKeyStore.getSnapshot().getKey(103).getActivates()), key3);
+        assertEquals(keysetKeyStore.getSnapshot().getActiveKey(200, now), key3);
+        assertEquals(keysetKeyStore.getSnapshot().getActiveKey(200, keysetKeyStore.getSnapshot().getKey(103).getActivates()), key3);
     }
 }

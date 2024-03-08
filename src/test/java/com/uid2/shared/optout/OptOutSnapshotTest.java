@@ -1,20 +1,26 @@
 package com.uid2.shared.optout;
 
-import org.junit.Test;
+
+
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OptOutSnapshotTest {
-    @Test(expected = AssertionError.class)
+    @Test
     public void createFromNull_expectFail() {
-        OptOutPartition snapshot = new OptOutPartition(null);
+        assertThrows(AssertionError.class, () -> {
+            OptOutPartition snapshot = new OptOutPartition(null);
+        });
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void createFromEmpty_expectFail() {
-        OptOutPartition snapshot = new OptOutPartition(new byte[0]);
+        assertThrows(AssertionError.class, () -> {
+            OptOutPartition snapshot = new OptOutPartition(new byte[0]);
+        });
     }
 
     @Test

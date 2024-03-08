@@ -6,16 +6,16 @@ import com.uid2.shared.store.reader.RotatingClientSideKeypairStore;
 import com.uid2.shared.store.scope.GlobalScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 
 import static com.uid2.shared.TestUtilites.makeInputStream;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 public class RotatingClientSideKeypairStoreTest {
@@ -24,13 +24,13 @@ public class RotatingClientSideKeypairStoreTest {
     ICloudStorage cloudStorage;
     private RotatingClientSideKeypairStore keypairStore;
 
-    @Before
+    @BeforeEach
     public void setup() {
         mocks = MockitoAnnotations.openMocks(this);
         keypairStore = new RotatingClientSideKeypairStore(cloudStorage, new GlobalScope(new CloudPath("metadata")));
     }
 
-    @After
+    @AfterEach
     public void teardown() throws Exception {
         mocks.close();
     }
@@ -66,12 +66,12 @@ public class RotatingClientSideKeypairStoreTest {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = keypairStore.loadContent(makeMetadata("locationPath"));
-        Assert.assertEquals(0, count);
-        Assert.assertNull(keypairStore.getSnapshot().getKeypair("test-subscription-id"));
-        Assert.assertTrue(keypairStore.getSnapshot().getAll().isEmpty());
-        Assert.assertTrue(keypairStore.getAll().isEmpty());
-        Assert.assertNull(keypairStore.getSnapshot().getSiteKeypairs(25));
-        Assert.assertTrue(keypairStore.getSnapshot().getEnabledKeypairs().isEmpty());
+        assertEquals(0, count);
+        assertNull(keypairStore.getSnapshot().getKeypair("test-subscription-id"));
+        assertTrue(keypairStore.getSnapshot().getAll().isEmpty());
+        assertTrue(keypairStore.getAll().isEmpty());
+        assertNull(keypairStore.getSnapshot().getSiteKeypairs(25));
+        assertTrue(keypairStore.getSnapshot().getEnabledKeypairs().isEmpty());
     }
 
     @Test
@@ -84,25 +84,25 @@ public class RotatingClientSideKeypairStoreTest {
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = keypairStore.loadContent(makeMetadata("locationPath"));
-        Assert.assertEquals(4, count);
+        assertEquals(4, count);
 
-        Assert.assertTrue(keypairStore.getSnapshot().getKeypair("id-1").equals(keypair1));
-        Assert.assertTrue(keypairStore.getSnapshot().getKeypair("id-2").equals(keypair2));
-        Assert.assertTrue(keypairStore.getSnapshot().getKeypair("id-3").equals(keypair3));
-        Assert.assertTrue(keypairStore.getSnapshot().getKeypair("id-4").equals(keypair4));
+        assertTrue(keypairStore.getSnapshot().getKeypair("id-1").equals(keypair1));
+        assertTrue(keypairStore.getSnapshot().getKeypair("id-2").equals(keypair2));
+        assertTrue(keypairStore.getSnapshot().getKeypair("id-3").equals(keypair3));
+        assertTrue(keypairStore.getSnapshot().getKeypair("id-4").equals(keypair4));
 
-        Assert.assertEquals(1, keypairStore.getSnapshot().getSiteKeypairs(1).size());
-        Assert.assertEquals(1, keypairStore.getSnapshot().getSiteKeypairs(2).size());
-        Assert.assertEquals(2, keypairStore.getSnapshot().getSiteKeypairs(3).size());
+        assertEquals(1, keypairStore.getSnapshot().getSiteKeypairs(1).size());
+        assertEquals(1, keypairStore.getSnapshot().getSiteKeypairs(2).size());
+        assertEquals(2, keypairStore.getSnapshot().getSiteKeypairs(3).size());
 
-        Assert.assertTrue(keypairStore.getSnapshot().getSiteKeypairs(1).contains(keypair1));
-        Assert.assertTrue(keypairStore.getSnapshot().getSiteKeypairs(2).contains(keypair2));
-        Assert.assertTrue(keypairStore.getSnapshot().getSiteKeypairs(3).contains(keypair3));
-        Assert.assertTrue(keypairStore.getSnapshot().getSiteKeypairs(3).contains(keypair4));
+        assertTrue(keypairStore.getSnapshot().getSiteKeypairs(1).contains(keypair1));
+        assertTrue(keypairStore.getSnapshot().getSiteKeypairs(2).contains(keypair2));
+        assertTrue(keypairStore.getSnapshot().getSiteKeypairs(3).contains(keypair3));
+        assertTrue(keypairStore.getSnapshot().getSiteKeypairs(3).contains(keypair4));
 
-        Assert.assertEquals(2, keypairStore.getSnapshot().getEnabledKeypairs().size());
-        Assert.assertTrue(keypairStore.getSnapshot().getEnabledKeypairs().contains(keypair1));
-        Assert.assertTrue(keypairStore.getSnapshot().getEnabledKeypairs().contains(keypair2));
+        assertEquals(2, keypairStore.getSnapshot().getEnabledKeypairs().size());
+        assertTrue(keypairStore.getSnapshot().getEnabledKeypairs().contains(keypair1));
+        assertTrue(keypairStore.getSnapshot().getEnabledKeypairs().contains(keypair2));
     }
 
 }

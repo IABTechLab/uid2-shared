@@ -1,9 +1,6 @@
 package com.uid2.shared.optout;
 
 import com.uid2.shared.cloud.CloudUtils;
-import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class OptOutCloudSyncTest {
     /*

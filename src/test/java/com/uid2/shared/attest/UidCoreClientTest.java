@@ -4,7 +4,6 @@ import com.uid2.shared.Const;
 import com.uid2.shared.cloud.CloudStorageException;
 import com.uid2.shared.cloud.CloudUtils;
 import com.uid2.shared.util.URLConnectionHttpClient;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +15,7 @@ import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UidCoreClientTest {
     private Proxy proxy = CloudUtils.defaultProxy;
@@ -65,11 +65,11 @@ public class UidCoreClientTest {
         AttestationResponseHandlerException exception = new AttestationResponseHandlerException(401, "test failure");
         doThrow(exception).when(mockAttestationResponseHandler).attest();
 
-        CloudStorageException result = Assert.assertThrows(CloudStorageException.class, () -> {
+        CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
             uidCoreClient.download("https://download");
         });
         String expectedExceptionMessage = "download https://download error: http status: 401, test failure";
-        Assert.assertEquals(expectedExceptionMessage, result.getMessage());
+        assertEquals(expectedExceptionMessage, result.getMessage());
     }
 
     @Test

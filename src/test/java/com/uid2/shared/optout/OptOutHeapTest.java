@@ -1,20 +1,26 @@
 package com.uid2.shared.optout;
 
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class OptOutHeapTest {
-    @Test(expected = AssertionError.class)
+    @Test
     public void createZeroSize_expectFail() {
-        OptOutHeap heap = new OptOutHeap(0);
+        assertThrows(AssertionError.class, () -> {
+            OptOutHeap heap = new OptOutHeap(0);
+        });
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void createNegativeSize_expectFail() {
-        OptOutHeap heap = new OptOutHeap(-1);
+        assertThrows(AssertionError.class, () -> {
+            OptOutHeap heap = new OptOutHeap(-1);
+        });
     }
 
     @Test

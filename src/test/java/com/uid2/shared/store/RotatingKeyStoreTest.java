@@ -9,20 +9,17 @@ import com.uid2.shared.store.scope.GlobalScope;
 import static com.uid2.shared.TestUtilites.makeInputStream;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 public class RotatingKeyStoreTest {
@@ -30,12 +27,14 @@ public class RotatingKeyStoreTest {
     @Mock private ICloudStorage cloudStorage;
     private RotatingKeyStore keyStore;
 
-    @Before public void setup() {
+    @BeforeEach
+    public void setup() {
         mocks = MockitoAnnotations.openMocks(this);
         keyStore = new RotatingKeyStore(cloudStorage, new GlobalScope(new CloudPath("metadata")));
     }
 
-    @After public void teardown() throws Exception {
+    @AfterEach
+    public void teardown() throws Exception {
         mocks.close();
     }
 
@@ -66,26 +65,26 @@ public class RotatingKeyStoreTest {
     }
 
     private void checkKeyMatches(EncryptionKey key, int keyId, int siteId, String secret) {
-        Assert.assertNotNull(key);
-        Assert.assertEquals(keyId, key.getId());
-        Assert.assertEquals(siteId, key.getSiteId());
-        Assert.assertArrayEquals(secret.getBytes(), key.getKeyBytes());
+        assertNotNull(key);
+        assertEquals(keyId, key.getId());
+        assertEquals(siteId, key.getSiteId());
+        assertArrayEquals(secret.getBytes(), key.getKeyBytes());
     }
 
     private void checkActiveKeySetEquals(Integer... expectedKeyIds) {
         List<Integer> actualKeyIds = keyStore.getSnapshot().getActiveKeySet().stream().map((key) -> key.getId()).collect(Collectors.toList());
-        Assert.assertArrayEquals(expectedKeyIds, actualKeyIds.toArray(new Integer[0]));
+        assertArrayEquals(expectedKeyIds, actualKeyIds.toArray(new Integer[0]));
     }
 
     @Test public void loadContentEmptyArray() throws Exception {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = keyStore.loadContent(makeMetadata("locationPath"));
-        Assert.assertEquals(0, count);
-        Assert.assertNull(keyStore.getSnapshot().getMasterKey(Instant.now()));
-        Assert.assertNull(keyStore.getSnapshot().getKey(1));
-        Assert.assertNull(keyStore.getSnapshot().getActiveSiteKey(2, Instant.now()));
-        Assert.assertTrue(keyStore.getSnapshot().getActiveKeySet().isEmpty());
+        assertEquals(0, count);
+        assertNull(keyStore.getSnapshot().getMasterKey(Instant.now()));
+        assertNull(keyStore.getSnapshot().getKey(1));
+        assertNull(keyStore.getSnapshot().getActiveSiteKey(2, Instant.now()));
+        assertTrue(keyStore.getSnapshot().getActiveKeySet().isEmpty());
     }
 
     @Test public void loadContentMultipleKeysArray() throws Exception {
@@ -96,13 +95,13 @@ public class RotatingKeyStoreTest {
         addKey(content, 103, 203, "key103site203", now);
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = keyStore.loadContent(makeMetadata("locationPath"));
-        Assert.assertEquals(3, count);
+        assertEquals(3, count);
         checkKeyMatches(keyStore.getSnapshot().getMasterKey(now), 101, -1, "system");
-        Assert.assertNull(keyStore.getSnapshot().getKey(1));
+        assertNull(keyStore.getSnapshot().getKey(1));
         checkKeyMatches(keyStore.getSnapshot().getKey(101), 101, -1, "system");
         checkKeyMatches(keyStore.getSnapshot().getKey(102), 102, 202, "key102site202");
         checkKeyMatches(keyStore.getSnapshot().getKey(103), 103, 203, "key103site203");
-        Assert.assertNull(keyStore.getSnapshot().getActiveSiteKey(2, now));
+        assertNull(keyStore.getSnapshot().getActiveSiteKey(2, now));
         checkKeyMatches(keyStore.getSnapshot().getActiveSiteKey(202, now), 102, 202, "key102site202");
         checkKeyMatches(keyStore.getSnapshot().getActiveSiteKey(203, now), 103, 203, "key103site203");
         checkActiveKeySetEquals(101, 102, 103);
@@ -117,7 +116,7 @@ public class RotatingKeyStoreTest {
         addKey(content, 104, 200, "key104site200", now.minusSeconds(5), now.minusSeconds(1)); // expired
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = keyStore.loadContent(makeMetadata("locationPath"));
-        Assert.assertEquals(4, count);
+        assertEquals(4, count);
         checkKeyMatches(keyStore.getSnapshot().getKey(101), 101, 200, "key101site200");
         checkKeyMatches(keyStore.getSnapshot().getKey(102), 102, 200, "key102site200");
         checkKeyMatches(keyStore.getSnapshot().getKey(103), 103, 200, "key103site200");
@@ -134,7 +133,7 @@ public class RotatingKeyStoreTest {
         addKey(content, 103, Const.Data.MasterKeySiteId, "system3", now.minusSeconds(1));
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
         final long count = keyStore.loadContent(makeMetadata("locationPath"));
-        Assert.assertEquals(3, count);
+        assertEquals(3, count);
         checkKeyMatches(keyStore.getSnapshot().getMasterKey(now), 102, -1, "system2");
         checkKeyMatches(keyStore.getSnapshot().getKey(101), 101, -1, "system1");
         checkKeyMatches(keyStore.getSnapshot().getKey(102), 102, -1, "system2");

@@ -1,14 +1,12 @@
 package com.uid2.shared.secure.gcp;
 
 import com.google.auth.oauth2.GoogleCredentials;
-import com.uid2.shared.cloud.CloudUtils;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class VmConfigVerifierTest {
 
@@ -20,12 +18,12 @@ public class VmConfigVerifierTest {
             "    Environment=\"UID2_ENCLAVE_IMAGE_ID=test_value_2\"";
 
     public static void requireCredential() {
-        Assume.assumeTrue(System.getenv("GOOGLE_APPLICATION_CREDENTIALS") != null);
+        assumeTrue(System.getenv("GOOGLE_APPLICATION_CREDENTIALS") != null);
         Object defaultCredentials = null;
         try {
             defaultCredentials = GoogleCredentials.getApplicationDefault();
         } catch (Exception ex) {}
-        Assume.assumeTrue(defaultCredentials != null);
+        assumeTrue(defaultCredentials != null);
     }
 
     @Test
@@ -35,25 +33,25 @@ public class VmConfigVerifierTest {
         InstanceDocument id = InstanceDocumentVerifierTest.getTestInstanceDocument();
         VmConfigVerifier vmConfigVerifier = new VmConfigVerifier(GoogleCredentials.getApplicationDefault(), null);
         VmConfigId vmConfigId = vmConfigVerifier.getVmConfigId(id);
-        Assert.assertNotNull(vmConfigId);
-        Assert.assertTrue(vmConfigId.isValid());
+        assertNotNull(vmConfigId);
+        assertTrue(vmConfigId.isValid());
     }
 
     @Test
     public void testNullEnclaveParams() throws Exception {
         VmConfigVerifier vmConfigVerifier = new VmConfigVerifier(null, null);
-        Assert.assertEquals("abc", vmConfigVerifier.templatizeVmConfig("abc"));
-        Assert.assertEquals("#cloud-init\n", vmConfigVerifier.templatizeVmConfig("#cloud-init\n"));
-        Assert.assertEquals(testVmConfig, vmConfigVerifier.templatizeVmConfig(testVmConfig));
+        assertEquals("abc", vmConfigVerifier.templatizeVmConfig("abc"));
+        assertEquals("#cloud-init\n", vmConfigVerifier.templatizeVmConfig("#cloud-init\n"));
+        assertEquals(testVmConfig, vmConfigVerifier.templatizeVmConfig(testVmConfig));
     }
 
     @Test
     public void testEmptyEnclaveParams() throws Exception {
         Set<String> emptySet = new HashSet<>();
         VmConfigVerifier vmConfigVerifier = new VmConfigVerifier(null, emptySet);
-        Assert.assertEquals("abc", vmConfigVerifier.templatizeVmConfig("abc"));
-        Assert.assertEquals("#cloud-init\n", vmConfigVerifier.templatizeVmConfig("#cloud-init\n"));
-        Assert.assertEquals(testVmConfig, vmConfigVerifier.templatizeVmConfig(testVmConfig));
+        assertEquals("abc", vmConfigVerifier.templatizeVmConfig("abc"));
+        assertEquals("#cloud-init\n", vmConfigVerifier.templatizeVmConfig("#cloud-init\n"));
+        assertEquals(testVmConfig, vmConfigVerifier.templatizeVmConfig(testVmConfig));
     }
 
     @Test
@@ -62,22 +60,22 @@ public class VmConfigVerifierTest {
             Set<String> set1 = new HashSet<>();
             set1.add("api_token");
             VmConfigVerifier vmConfigVerifier1 = new VmConfigVerifier(null, set1);
-            Assert.assertEquals("abc", vmConfigVerifier1.templatizeVmConfig("abc"));
-            Assert.assertEquals("#cloud-init\n", vmConfigVerifier1.templatizeVmConfig("#cloud-init\n"));
+            assertEquals("abc", vmConfigVerifier1.templatizeVmConfig("abc"));
+            assertEquals("#cloud-init\n", vmConfigVerifier1.templatizeVmConfig("#cloud-init\n"));
 
             String expectedResult1 = testVmConfig.replace("test_value_1", "dummy");
-            Assert.assertEquals(expectedResult1, vmConfigVerifier1.templatizeVmConfig(testVmConfig));
+            assertEquals(expectedResult1, vmConfigVerifier1.templatizeVmConfig(testVmConfig));
         }
 
         {
             Set<String> set2 = new HashSet<>();
             set2.add("image_id");
             VmConfigVerifier vmConfigVerifier2 = new VmConfigVerifier(null, set2);
-            Assert.assertEquals("abc", vmConfigVerifier2.templatizeVmConfig("abc"));
-            Assert.assertEquals("#cloud-init\n", vmConfigVerifier2.templatizeVmConfig("#cloud-init\n"));
+            assertEquals("abc", vmConfigVerifier2.templatizeVmConfig("abc"));
+            assertEquals("#cloud-init\n", vmConfigVerifier2.templatizeVmConfig("#cloud-init\n"));
 
             String expectedResult2 = testVmConfig.replace("test_value_2", "dummy");
-            Assert.assertEquals(expectedResult2, vmConfigVerifier2.templatizeVmConfig(testVmConfig));
+            assertEquals(expectedResult2, vmConfigVerifier2.templatizeVmConfig(testVmConfig));
         }
     }
 
@@ -87,12 +85,12 @@ public class VmConfigVerifierTest {
         set.add("api_token");
         set.add("image_id");
         VmConfigVerifier vmConfigVerifier = new VmConfigVerifier(null, set);
-        Assert.assertEquals("abc", vmConfigVerifier.templatizeVmConfig("abc"));
-        Assert.assertEquals("#cloud-init\n", vmConfigVerifier.templatizeVmConfig("#cloud-init\n"));
+        assertEquals("abc", vmConfigVerifier.templatizeVmConfig("abc"));
+        assertEquals("#cloud-init\n", vmConfigVerifier.templatizeVmConfig("#cloud-init\n"));
 
         String expectedResult = testVmConfig.replace("test_value_1", "dummy")
                 .replace("test_value_2", "dummy");
-        Assert.assertEquals(expectedResult, vmConfigVerifier.templatizeVmConfig(testVmConfig));
+        assertEquals(expectedResult, vmConfigVerifier.templatizeVmConfig(testVmConfig));
 
     }
 }
