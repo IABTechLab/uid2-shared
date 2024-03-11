@@ -4,8 +4,9 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.uid2.shared.Const;
 import com.uid2.shared.cloud.CloudUtils;
 import io.vertx.core.json.JsonObject;
-import org.junit.Assume;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class InstanceDocumentVerifierTest {
 
@@ -19,14 +20,14 @@ public class InstanceDocumentVerifierTest {
 
     @Test
     public void verifyToken() throws Exception {
-        Assume.assumeTrue(INSTANCE_DOCUMENT.length() > 20);
+        assumeTrue(INSTANCE_DOCUMENT.length() > 20);
 
         InstanceDocument id = getTestInstanceDocument();
     }
 
     @Test
     public void loadEncodedCredentials() {
-        Assume.assumeTrue(GOOGLE_CREDENTIALS.length() > 20);
+        assumeTrue(GOOGLE_CREDENTIALS.length() > 20);
 
         JsonObject config = new JsonObject();
         config.put(Const.Config.GoogleCredentialsProp, GOOGLE_CREDENTIALS);

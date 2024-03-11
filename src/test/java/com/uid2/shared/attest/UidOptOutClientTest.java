@@ -3,12 +3,7 @@ package com.uid2.shared.attest;
 import com.uid2.shared.cloud.CloudStorageException;
 import com.uid2.shared.cloud.CloudUtils;
 import com.uid2.shared.util.URLConnectionHttpClient;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
@@ -22,6 +17,7 @@ import java.net.Proxy;
 import java.net.http.HttpResponse;
 
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UidOptOutClientTest {
     private Proxy proxy = CloudUtils.defaultProxy;
@@ -31,11 +27,6 @@ public class UidOptOutClientTest {
 
     private MockedStatic<LoggerFactory> mockedLoggerFactory;
     private static Logger mockedLogger = mock(Logger.class);
-
-    @BeforeClass
-    public static void classSetup() {
-
-    }
 
     @AfterEach
     public void close() {
@@ -88,7 +79,7 @@ public class UidOptOutClientTest {
         when(mockAttestationResponseHandler.getOptOutUrl()).thenReturn(null);
 
         InputStream is = this.optOutClient.download("/path");
-        Assert.assertEquals(0, is.available());
+        assertEquals(0, is.available());
         verify(mockedLogger).warn("UidOptOutClient attempting to download but OptOutUrl not available");
     }
 
@@ -98,7 +89,7 @@ public class UidOptOutClientTest {
         when(mockAttestationResponseHandler.getOptOutUrl()).thenReturn("nowhere");
 
         InputStream is = this.optOutClient.download("/path");
-        Assert.assertEquals(0, is.available());
+        assertEquals(0, is.available());
         verify(mockedLogger).error(eq("Unable to parse OptOut URL"), any(MalformedURLException.class));
     }
 }

@@ -1,10 +1,10 @@
 package com.uid2.shared.optout;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OptOutEntryTest {
     @Test
@@ -19,9 +19,9 @@ public class OptOutEntryTest {
         System.arraycopy(timestamp, 0, record, OptOutConst.Sha256Bytes * 2, Long.BYTES);
 
         final OptOutEntry entry = OptOutEntry.parse(record, 0);
-        Assert.assertArrayEquals(idHash, entry.identityHash);
-        Assert.assertArrayEquals(adsId, entry.advertisingId);
-        Assert.assertEquals(0x56555453525150l, entry.timestamp);
+        assertArrayEquals(idHash, entry.identityHash);
+        assertArrayEquals(adsId, entry.advertisingId);
+        assertEquals(0x56555453525150l, entry.timestamp);
     }
 
     @Test
@@ -42,9 +42,9 @@ public class OptOutEntryTest {
         System.arraycopy(adsId, 0, expectedAdsId, 1, OptOutConst.Sha256Bytes);
 
         final OptOutEntry entry = OptOutEntry.parse(record, 0);
-        Assert.assertArrayEquals(idHash, entry.identityHash);
-        Assert.assertArrayEquals(expectedAdsId, entry.advertisingId);
-        Assert.assertEquals(0x56555453525150l, entry.timestamp);
+        assertArrayEquals(idHash, entry.identityHash);
+        assertArrayEquals(expectedAdsId, entry.advertisingId);
+        assertEquals(0x56555453525150l, entry.timestamp);
     }
 
     @Test
@@ -66,9 +66,9 @@ public class OptOutEntryTest {
         System.arraycopy(adsId, 0, expectedAdsId, 1, OptOutConst.Sha256Bytes);
 
         final OptOutEntry entry = OptOutEntry.parse(records, offset);
-        Assert.assertArrayEquals(idHash, entry.identityHash);
-        Assert.assertArrayEquals(expectedAdsId, entry.advertisingId);
-        Assert.assertEquals(0x56555453525150l, entry.timestamp);
+        assertArrayEquals(idHash, entry.identityHash);
+        assertArrayEquals(expectedAdsId, entry.advertisingId);
+        assertEquals(0x56555453525150l, entry.timestamp);
     }
 
     @Test
@@ -85,7 +85,7 @@ public class OptOutEntryTest {
         System.arraycopy(timestamp, 0, records, offset + OptOutConst.Sha256Bytes * 2, Long.BYTES - 1);
         records[offset + OptOutConst.EntrySize - 1] = metadata;
 
-        Assert.assertEquals(0x56555453525150l, OptOutEntry.parseTimestamp(records, offset));
+        assertEquals(0x56555453525150l, OptOutEntry.parseTimestamp(records, offset));
     }
 
     @Test
@@ -110,9 +110,9 @@ public class OptOutEntryTest {
         System.arraycopy(adsId, 0, expectedAdsId, 1, OptOutConst.Sha256Bytes);
 
         final OptOutEntry entry = OptOutEntry.parse(records, offset);
-        Assert.assertArrayEquals(idHash, entry.identityHash);
-        Assert.assertArrayEquals(expectedAdsId, entry.advertisingId);
-        Assert.assertEquals(newTimestamp, entry.timestamp);
+        assertArrayEquals(idHash, entry.identityHash);
+        assertArrayEquals(expectedAdsId, entry.advertisingId);
+        assertEquals(newTimestamp, entry.timestamp);
     }
 
     @Test
@@ -128,9 +128,9 @@ public class OptOutEntryTest {
         input.copyToByteArray(records, offset);
 
         final OptOutEntry entry = OptOutEntry.parse(records, 12);
-        Assert.assertArrayEquals(idHash, entry.identityHash);
-        Assert.assertArrayEquals(adsId, entry.advertisingId);
-        Assert.assertEquals(0x56555453525150l, entry.timestamp);
+        assertArrayEquals(idHash, entry.identityHash);
+        assertArrayEquals(adsId, entry.advertisingId);
+        assertEquals(0x56555453525150l, entry.timestamp);
     }
 
     @Test
@@ -146,9 +146,9 @@ public class OptOutEntryTest {
         input.copyToByteArray(records, offset);
 
         final OptOutEntry entry = OptOutEntry.parse(records, 12);
-        Assert.assertArrayEquals(idHash, entry.identityHash);
-        Assert.assertArrayEquals(adsId, entry.advertisingId);
-        Assert.assertEquals(0x56555453525150l, entry.timestamp);
+        assertArrayEquals(idHash, entry.identityHash);
+        assertArrayEquals(adsId, entry.advertisingId);
+        assertEquals(0x56555453525150l, entry.timestamp);
     }
 
     @Test
@@ -162,8 +162,8 @@ public class OptOutEntryTest {
         OptOutEntry.writeTo(buffer, idHash, adsId, timestamp);
 
         final OptOutEntry entry = OptOutEntry.parse(buffer.array(), 0);
-        Assert.assertArrayEquals(idHash, entry.identityHash);
-        Assert.assertArrayEquals(adsId, entry.advertisingId);
-        Assert.assertEquals(0x56555453525150l, entry.timestamp);
+        assertArrayEquals(idHash, entry.identityHash);
+        assertArrayEquals(adsId, entry.advertisingId);
+        assertEquals(0x56555453525150l, entry.timestamp);
     }
 }
