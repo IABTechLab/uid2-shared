@@ -28,11 +28,6 @@ public class UidOptOutClientTest {
     private MockedStatic<LoggerFactory> mockedLoggerFactory;
     private static Logger mockedLogger = mock(Logger.class);
 
-    @BeforeAll
-    public static void classSetup() {
-
-    }
-
     @AfterEach
     public void close() {
         mockedLoggerFactory.close();
