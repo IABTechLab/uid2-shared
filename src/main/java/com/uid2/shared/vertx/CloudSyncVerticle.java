@@ -358,7 +358,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
 
                 // increase counter, send event
                 if (ar.succeeded()) {
-                    vertx.eventBus().send(this.eventDownloaded, this.cloudSync.toLocalPath(s3Path));
+                    vertx.eventBus().publish(this.eventDownloaded, this.cloudSync.toLocalPath(s3Path));
                     this.counterDownloaded.increment();
                 } else {
                     this.counterDownloadFailures.increment();
