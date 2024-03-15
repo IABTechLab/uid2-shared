@@ -2,7 +2,7 @@ package com.uid2.shared.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uid2.shared.util.Mapper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;

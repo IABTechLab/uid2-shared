@@ -6,15 +6,18 @@ import com.uid2.shared.auth.Role;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import static org.mockito.Mockito.*;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class AuthMiddlewareTest {
     @Mock private IAuthorizableProvider authProvider;
     @Mock private RoutingContext routingContext;
@@ -23,12 +26,14 @@ public class AuthMiddlewareTest {
     @Mock private IRoleAuthorizable<Role> profile;
     private AuthMiddleware auth;
 
-    @Before public void setup() {
+    @BeforeEach
+    public void setup() {
         auth = new AuthMiddleware(authProvider);
         when(routingContext.request()).thenReturn(request);
     }
 
-    @Test public void authHandlerNoAuthorizationHeader() {
+    @Test
+    public void authHandlerNoAuthorizationHeader() {
         Handler<RoutingContext> handler = auth.handle(nextHandler, Role.MAPPER, Role.ID_READER);
         handler.handle(routingContext);
         verifyNoInteractions(nextHandler);

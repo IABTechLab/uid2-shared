@@ -1,23 +1,29 @@
 package com.uid2.shared.optout;
 
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Random;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 public class BloomFilterTest {
     Random rand = new Random();
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void createZeroSize_expectFail() {
-        BloomFilter bf = new BloomFilter(0);
+        assertThrows(AssertionError.class, () -> {
+            BloomFilter bf = new BloomFilter(0);
+        });
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void createNegativeSize_expectFail() {
-        BloomFilter bf = new BloomFilter(-1);
+        assertThrows(AssertionError.class, () -> {
+            BloomFilter bf = new BloomFilter(-1);
+        });
     }
 
     @Test

@@ -28,7 +28,9 @@
       "image_id": "sha256:5be33a19451733a45ea1bdb340fcb858a0fc733e91ca0a0d99638652f6dcabd0",
       "env_override": {
         "DEPLOYMENT_ENVIRONMENT": "prod",
-        "API_TOKEN_SECRET_NAME": "dummy"
+        "API_TOKEN_SECRET_NAME": "dummy",
+        "CORE_BASE_URL": "https://core-url.uidapi.com",
+        "OPTOUT_BASE_URL": "optout-url"
       },
       "cmd_override": null,
       "env": {

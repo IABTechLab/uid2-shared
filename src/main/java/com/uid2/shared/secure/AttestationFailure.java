@@ -6,6 +6,7 @@ public enum AttestationFailure {
     BAD_PAYLOAD,
     BAD_CERTIFICATE,
     FORBIDDEN_ENCLAVE,
+    UNKNOWN_ATTESTATION_URL,
     UNKNOWN;
 
     public String explain() {
@@ -20,6 +21,8 @@ public enum AttestationFailure {
                 return "Cannot verify the certificate chain";
             case FORBIDDEN_ENCLAVE:
                 return "The enclave identifier is unknown";
+            case UNKNOWN_ATTESTATION_URL:
+                return "The given attestation URL is unknown";
             default:
                 return "Unknown reason";
         }

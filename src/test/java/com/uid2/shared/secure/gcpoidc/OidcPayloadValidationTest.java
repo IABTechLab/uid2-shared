@@ -17,7 +17,7 @@ public class OidcPayloadValidationTest {
         clock.setCurrentTimeMs(1688132563000L);
 
         var tokenPayload = validateAndParseToken(payload, clock);
-        var policyValidator = new PolicyValidator();
+        var policyValidator = new PolicyValidator("https://core-url.uidapi.com");
         var enclaveId = policyValidator.validate(tokenPayload);
     }
 }

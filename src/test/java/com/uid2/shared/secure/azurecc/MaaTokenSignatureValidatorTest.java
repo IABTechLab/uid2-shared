@@ -2,7 +2,7 @@ package com.uid2.shared.secure.azurecc;
 
 import com.uid2.shared.secure.AttestationException;
 import com.uid2.shared.secure.TestClock;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static com.uid2.shared.secure.TestUtils.loadFromJson;
@@ -31,7 +31,7 @@ public class MaaTokenSignatureValidatorTest {
         assertEquals(expectedPublicKey, tokenPayload.getRuntimeData().getPublicKey());
     }
 
-    @Ignore
+    @Disabled
     // replace below Placeholder with real MAA token to run E2E verification.
     public void testE2E() throws AttestationException {
         var maaToken = "<Placeholder>";

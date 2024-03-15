@@ -17,7 +17,7 @@ import java.util.Set;
 
 // CC stands for Confidential Container
 @Slf4j
-public class AzureCCAttestationProvider implements IAttestationProvider {
+public class AzureCCCoreAttestationService implements ICoreAttestationService {
 
     private final Set<String> allowedEnclaveIds = new HashSet<>();
 
@@ -25,12 +25,12 @@ public class AzureCCAttestationProvider implements IAttestationProvider {
 
     private final IPolicyValidator policyValidator;
 
-    public AzureCCAttestationProvider(String maaServerBaseUrl) {
-        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator());
+    public AzureCCCoreAttestationService(String maaServerBaseUrl, String attestationUrl) {
+        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(attestationUrl));
     }
 
     // used in UT
-    protected AzureCCAttestationProvider(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator) {
+    protected AzureCCCoreAttestationService(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator) {
         this.tokenSignatureValidator = tokenSignatureValidator;
         this.policyValidator = policyValidator;
     }
@@ -58,8 +58,7 @@ public class AzureCCAttestationProvider implements IAttestationProvider {
         }
         catch (AttestationClientException ace){
             handler.handle(Future.succeededFuture(new AttestationResult(ace)));
-        }
-        catch (AttestationException ae) {
+        } catch (AttestationException ae) {
             handler.handle(Future.failedFuture(ae));
         } catch (Exception ex) {
             handler.handle(Future.failedFuture(new AttestationException(ex)));

@@ -2,13 +2,14 @@ package com.uid2.shared.encryption;
 
 import com.uid2.shared.model.EncryptedPayload;
 import com.uid2.shared.model.KeysetKey;
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.time.Instant;
 
-public class BenchmarkTests extends TestCase {
+public class BenchmarkTests  {
+    @Test
     public void testBenchmarkCbc() throws Exception {
         if (System.getenv("SLOW_DEV_URANDOM") != null) {
             System.err.println("ignore this test since environment variable SLOW_DEV_URANDOM is set");
@@ -50,6 +51,7 @@ public class BenchmarkTests extends TestCase {
         System.out.println("Decryption Overhead per Entry (ms) = " + overheadPerEntry / (1000000 * 1.0));
     }
 
+    @Test
     public void testBenchmarkGcm() throws Exception {
         if (System.getenv("SLOW_DEV_URANDOM") != null) {
             System.err.println("ignore this test since environment variable SLOW_DEV_URANDOM is set");

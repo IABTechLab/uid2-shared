@@ -78,7 +78,7 @@ public class AttestationMiddlewareTest {
     void trustedValidJwtHasRequiredRoleReturnsSuccess() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
-                .withRoles(Role.OPERATOR, Role.ADMINISTRATOR, Role.OPTOUT)
+                .withRoles(Role.OPERATOR, Role.SUPER_USER, Role.OPTOUT)
                 .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST);
         when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
@@ -92,11 +92,11 @@ public class AttestationMiddlewareTest {
     void trustedValidJwtHasMultipleRolesReturnsSuccess() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
-                .withRoles(Role.OPERATOR, Role.ADMINISTRATOR, Role.OPTOUT)
+                .withRoles(Role.OPERATOR, Role.SUPER_USER, Role.OPTOUT)
                 .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST);
         when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
-        var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR, Role.ADMINISTRATOR);
+        var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR, Role.SUPER_USER);
         handler.handle(this.routingContext);
 
         verify(nextHandler).handle(routingContext);

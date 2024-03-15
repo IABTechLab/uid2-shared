@@ -13,8 +13,8 @@ import com.uid2.shared.store.scope.GlobalScope;
 import com.uid2.shared.store.scope.SiteScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -33,7 +33,7 @@ public class RotatingKeysetProviderTest {
 
     private RotatingKeysetProvider keysetProvider;
 
-    @Before
+    @BeforeEach
     public void setup() {
         MockitoAnnotations.openMocks(this);
         keysetProvider = new RotatingKeysetProvider(cloudStorage, new GlobalScope(new CloudPath("metadata")));

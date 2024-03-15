@@ -3,29 +3,35 @@ package com.uid2.shared.optout;
 import com.uid2.shared.Const;
 import com.uid2.shared.cloud.CloudUtils;
 import io.vertx.core.json.JsonObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.LinkedList;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OptOutUtilsTest {
-    @Test(expected = AssertionError.class)
+    @Test
     public void logTwo_zeroInput() {
-        OptOutUtils.logTwo(0);
+        assertThrows(AssertionError.class, () -> {
+            OptOutUtils.logTwo(0);
+        });
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void logTwo_negativeInput() {
-        OptOutUtils.logTwo(-1);
+        assertThrows(AssertionError.class, () -> {
+            OptOutUtils.logTwo(-1);
+        });
     }
 
-    @Test(expected = AssertionError.class)
+    @Test
     public void assertFailure_failsTests() {
-        assert false;
+        assertThrows(AssertionError.class, () -> {
+            assert false;
+        });
     }
 
     @Test
@@ -172,34 +178,34 @@ public class OptOutUtilsTest {
     @Test
     public void instantFloorByInterval_tests() {
         assertEquals(
-            Instant.parse("2021-02-09T00:00:00.000000Z"),
-            OptOutUtils.instantFloorByInterval(Instant.parse("2021-02-09T00:00:00.322Z"), 0));
+                Instant.parse("2021-02-09T00:00:00.000000Z"),
+                OptOutUtils.instantFloorByInterval(Instant.parse("2021-02-09T00:00:00.322Z"), 0));
 
         assertEquals(
-            Instant.parse("2021-02-09T00:05:00.000000Z"),
-            OptOutUtils.instantFloorByInterval(Instant.parse("2021-02-09T00:05:59.456Z"), 300));
+                Instant.parse("2021-02-09T00:05:00.000000Z"),
+                OptOutUtils.instantFloorByInterval(Instant.parse("2021-02-09T00:05:59.456Z"), 300));
 
         assertEquals(
-            Instant.parse("2021-02-09T09:15:00.000000Z"),
-            OptOutUtils.instantFloorByInterval(Instant.parse("2021-02-09T09:25:09.999Z"), 900));
+                Instant.parse("2021-02-09T09:15:00.000000Z"),
+                OptOutUtils.instantFloorByInterval(Instant.parse("2021-02-09T09:25:09.999Z"), 900));
 
         assertEquals(
-            Instant.parse("2021-02-09T00:00:00.000000Z"),
-            OptOutUtils.instantFloorByInterval(Instant.parse("2021-02-09T09:25:09.999Z"), 86400 / 2));
+                Instant.parse("2021-02-09T00:00:00.000000Z"),
+                OptOutUtils.instantFloorByInterval(Instant.parse("2021-02-09T09:25:09.999Z"), 86400 / 2));
 
         assertEquals(
-            Instant.parse("2021-02-09T12:00:00.000000Z"),
-            OptOutUtils.instantFloorByInterval(Instant.parse("2021-02-09T19:25:09.999Z"), 86400 / 2));
+                Instant.parse("2021-02-09T12:00:00.000000Z"),
+                OptOutUtils.instantFloorByInterval(Instant.parse("2021-02-09T19:25:09.999Z"), 86400 / 2));
     }
 
     @Test
     public void addSorted_tests() {
         LinkedList<String> l1 = new LinkedList<>();
         String[] items = OptOutUtils.toArray(
-            "optout/log/optout-log-000_2021-02-09T00.00.00Z_0000.dat",
-            "optout/log/optout-log-000_2021-02-09T02.00.00Z_0000.dat",
-            "optout/log/optout-log-000_2021-02-09T01.00.00Z_0000.dat",
-            "optout/log/optout-log-000_2021-02-08T23.00.00Z_0000.dat"
+                "optout/log/optout-log-000_2021-02-09T00.00.00Z_0000.dat",
+                "optout/log/optout-log-000_2021-02-09T02.00.00Z_0000.dat",
+                "optout/log/optout-log-000_2021-02-09T01.00.00Z_0000.dat",
+                "optout/log/optout-log-000_2021-02-08T23.00.00Z_0000.dat"
         );
 
         OptOutUtils.addSorted(l1, items[0], OptOutUtils.DeltaFilenameComparator);
