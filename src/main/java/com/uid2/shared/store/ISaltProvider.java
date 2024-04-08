@@ -15,6 +15,7 @@ public interface ISaltProvider {
         SaltEntry getRotatingSalt(byte[] identity);
 
         String getFirstLevelSalt();
+        Instant getExpires();
 
         List<SaltEntry> getModifiedSince(Instant timestamp);
 
