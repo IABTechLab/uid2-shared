@@ -176,6 +176,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
             return this.effective;
         }
 
+        @Override
         public Instant getExpires() {
             return this.expires;
         }
