@@ -129,9 +129,6 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         final Instant effective = Instant.ofEpochMilli(spec.getLong("effective"));
         final Instant expires = Instant.ofEpochMilli(spec.getLong("expires", defaultExpires.toEpochMilli()));
 
-        // no point in loading expired snapshots
-        if (now.isAfter(expires)) return null;
-
         final String path = spec.getString("location");
         int idx = 0;
         final SaltEntry[] entries = new SaltEntry[spec.getInteger("size")];
