@@ -121,7 +121,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
             if (!snapshot.isEffective(asOf)) break;
             current = snapshot;
         }
-        return current != null ? current : snapshots.get(snapshots.size()-1);
+        return current != null ? current : snapshots.get(snapshots.size() - 1);
     }
 
     private SaltSnapshot loadSnapshot(JsonObject spec, String firstLevelSalt, SaltEntryBuilder entryBuilder, Instant now) throws Exception {
