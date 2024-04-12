@@ -25,6 +25,7 @@ public enum Role {
     SUPER_USER, // corresponds to 'admin' okta group
     SECRET_ROTATION, // corresponds to custom okta scope 'uid2.admin.secret-rotation'
     PRIVATE_OPERATOR_SYNC, // corresponds to custom okta scope 'uid2.admin.site-sync'
+    METRICS_EXPORT, // corresponds to custom okta scope 'uid2.admin.metrics-export'
     @JsonEnumDefaultValue
     UNKNOWN
 }
