@@ -151,7 +151,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.364</version>
+            <version>1.12.701</version>
         </dependency>
         <dependency> <!--Needs to be on classpath for roles to work-->
             <groupId>com.amazonaws</groupId>
