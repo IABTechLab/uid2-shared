@@ -11,6 +11,13 @@ on:
         - Minor
         - Patch
         - Snapshot
+      vulnerability_severity:
+        description: The severity to fail the workflow if such vulnerability is detected. DO NOT override it unless a Jira ticket is raised.
+        type: choice
+        options:
+        - CRITICAL,HIGH
+        - CRITICAL,HIGH,MEDIUM
+        - CRITICAL (DO NOT use if JIRA ticket not raised)
       publish_to_maven:
         description: 'True to publish the artifacts to Maven repository, false to skip the step'
         default: false
@@ -32,4 +39,5 @@ jobs:
       publish_to_maven: ${{ inputs.publish_to_maven }}
       java_version: ${{ inputs.java_version }}
       publish_vulnerabilities: ${{ inputs.publish_vulnerabilities }}
+      vulnerability_failure_severity: ${{ inputs.vulnerability_severity }}
     secrets: inherit
