@@ -81,6 +81,18 @@ public class Site {
         this.created = Instant.now().getEpochSecond();
     }
 
+    public Site(int id, String name, Boolean enabled, Set<ClientType> types, Set<String> domains, Set<String> appNames) {
+        this.id = id;
+        this.name = name;
+        this.description = DEFAULT_DESCRIPTION;
+        this.enabled = enabled;
+        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
+        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.appNames = (appNames != null) ? new HashSet<>(appNames) : new HashSet<>();
+        this.visible = DEFAULT_VISIBLE;
+        this.created = Instant.now().getEpochSecond();
+    }
+
     public Site(int id, String name, Boolean enabled, Set<ClientType> types, Set<String> domains, long created) {
         this.id = id;
         this.name = name;
