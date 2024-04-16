@@ -18,7 +18,8 @@ public class Site {
     private Boolean enabled;
     @JsonProperty("domain_names")
     private Set<String> domainNames;
-
+    @JsonProperty("app_names")
+    private Set<String> appNames;
     private Set<ClientType> clientTypes;
     private Boolean visible;
     private final long created;
@@ -30,6 +31,7 @@ public class Site {
                 @JsonProperty("enabled") Boolean enabled,
                 @JsonProperty("clientTypes") Set<ClientType> types,
                 @JsonProperty("domain_names") Set<String> domains,
+                @JsonProperty("app_names") Set<String> appNames,
                 @JsonProperty("visible") Boolean visible,
                 @JsonProperty("created") long created) {
         this.id = id;
@@ -38,6 +40,7 @@ public class Site {
         this.enabled = enabled;
         this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
         this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.appNames = (appNames != null) ? new HashSet<>(appNames) : new HashSet<>();
         this.visible = visible;
         this.created = created;
     }
@@ -48,6 +51,7 @@ public class Site {
         this.description = DEFAULT_DESCRIPTION;
         this.enabled = enabled;
         this.domainNames = new HashSet<>();
+        this.appNames = new HashSet<>();
         this.clientTypes = new HashSet<>();
         this.visible = DEFAULT_VISIBLE;
         this.created = Instant.now().getEpochSecond();
@@ -59,6 +63,7 @@ public class Site {
         this.description = DEFAULT_DESCRIPTION;
         this.enabled = enabled;
         this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.appNames = new HashSet<>();
         this.clientTypes = new HashSet<>();
         this.visible = DEFAULT_VISIBLE;
         this.created = Instant.now().getEpochSecond();
@@ -71,6 +76,7 @@ public class Site {
         this.enabled = enabled;
         this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
         this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.appNames = new HashSet<>();
         this.visible = DEFAULT_VISIBLE;
         this.created = Instant.now().getEpochSecond();
     }
@@ -82,6 +88,7 @@ public class Site {
         this.enabled = enabled;
         this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
         this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.appNames = new HashSet<>();
         this.visible = DEFAULT_VISIBLE;
         this.created = created;
     }
@@ -93,6 +100,19 @@ public class Site {
         this.enabled = enabled;
         this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
         this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.appNames = new HashSet<>();
+        this.visible = visible;
+        this.created = Instant.now().getEpochSecond();
+    }
+
+    public Site(int id, String name, String description, Boolean enabled, Set<ClientType> types, Set<String> domains, Set<String> appNames, Boolean visible) {
+        this.id = id;
+        this.name = name;
+        this.description = (description != null) ? description : DEFAULT_DESCRIPTION;
+        this.enabled = enabled;
+        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
+        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.appNames = (appNames != null) ? new HashSet<>(appNames) : new HashSet<>();
         this.visible = visible;
         this.created = Instant.now().getEpochSecond();
     }
@@ -102,6 +122,7 @@ public class Site {
     public String getDescription() { return description; }
     public Boolean isEnabled() { return enabled; }
     public Set<String> getDomainNames() { return domainNames; }
+    public Set<String> getAppNames() { return appNames; }
     public Set<ClientType> getClientTypes() { return clientTypes; }
     public Boolean isVisible() { return visible; }
 
@@ -113,6 +134,7 @@ public class Site {
 
     public void setEnabled(Boolean enabled) { this.enabled = enabled; }
     public void setDomainNames(Set<String> domainNames) { this.domainNames = domainNames; }
+    public void setAppNames(Set<String> appNames) { this.appNames = appNames; }
     public void setVisible(Boolean visible) { this.visible = visible; }
 
     @Override
@@ -123,6 +145,7 @@ public class Site {
                 ", description=" + description +
                 ", enabled=" + enabled +
                 ", domain_names=" + domainNames.toString() +
+                ", app_names=" + domainNames.toString() +
                 ", clientTypes=" + clientTypes.toString() +
                 ", visible=" + visible +
                 ", created=" + String.valueOf(created) +
@@ -134,11 +157,11 @@ public class Site {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Site site = (Site) o;
-        return id == site.id && name.equals(site.name) && description.equals(site.description) && enabled.equals(site.enabled) && domainNames.equals(site.domainNames) && clientTypes.equals(site.clientTypes) && Objects.equals(visible, site.visible) && created == site.created;
+        return id == site.id && name.equals(site.name) && description.equals(site.description) && enabled.equals(site.enabled) && appNames.equals(site.appNames) && clientTypes.equals(site.clientTypes) && Objects.equals(visible, site.visible) && created == site.created && domainNames.equals(site.domainNames);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, enabled, domainNames,Arrays.hashCode(clientTypes.toArray()), visible, created);
+        return Objects.hash(id, name, description, enabled, domainNames, appNames, Arrays.hashCode(clientTypes.toArray()), visible, created);
     }
 }

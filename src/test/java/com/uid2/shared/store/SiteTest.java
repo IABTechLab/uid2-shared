@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SiteTest {
     @Test
     public void testEquals() {
-        Site a = new Site(1, "1 name", "1 desc", true, new HashSet<>(), new HashSet<>(), true, 0L);
-        Site b = new Site(1, "1 name", "1 desc", true, new HashSet<>(), new HashSet<>(), true, 0L);
-        Site c = new Site(1, "1 name", "1 desc", true, new HashSet<>(), new HashSet<>(), null, 0L);
+        Site a = new Site(1, "1 name", "1 desc", true, new HashSet<>(), new HashSet<>(), new HashSet<>(), true, 0L);
+        Site b = new Site(1, "1 name", "1 desc", true, new HashSet<>(), new HashSet<>(), new HashSet<>(), true, 0L);
+        Site c = new Site(1, "1 name", "1 desc", true, new HashSet<>(), new HashSet<>(), new HashSet<>(), null, 0L);
 
         assertTrue(a.equals(b));
         assertFalse(a.equals(c));
