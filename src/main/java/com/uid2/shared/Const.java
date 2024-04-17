@@ -73,6 +73,8 @@ public class Const {
         public static final String AwsKmsJwtSigningPublicKeysProp = "aws_kms_jwt_signing_public_keys";
         public static final String EnforceJwtProp = "enforceJwt";
         public static final String MaaServerBaseUrlProp ="maa_server_base_url";
+        public static final String MaxIdentityBucketsResponseEntries = "max_identity_buckets_response_entries";
+        public static final String IdentityBucketsResponseChunkSize = "identity_buckets_response_chunk_size";
     }
 
     public static class Http {
