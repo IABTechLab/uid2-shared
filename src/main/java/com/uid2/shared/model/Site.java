@@ -46,87 +46,31 @@ public class Site {
     }
 
     public Site(int id, String name, Boolean enabled) {
-        this.id = id;
-        this.name = name;
-        this.description = DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.domainNames = new HashSet<>();
-        this.appNames = new HashSet<>();
-        this.clientTypes = new HashSet<>();
-        this.visible = DEFAULT_VISIBLE;
-        this.created = Instant.now().getEpochSecond();
+        this(id, name, enabled, new HashSet<>());
     }
 
     public Site(int id, String name, Boolean enabled, Set<String> domains) {
-        this.id = id;
-        this.name = name;
-        this.description = DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        this.appNames = new HashSet<>();
-        this.clientTypes = new HashSet<>();
-        this.visible = DEFAULT_VISIBLE;
-        this.created = Instant.now().getEpochSecond();
+        this(id, name, enabled, new HashSet<>(), domains);
     }
 
     public Site(int id, String name, Boolean enabled, Set<ClientType> types, Set<String> domains) {
-        this.id = id;
-        this.name = name;
-        this.description = DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
-        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        this.appNames = new HashSet<>();
-        this.visible = DEFAULT_VISIBLE;
-        this.created = Instant.now().getEpochSecond();
-    }
-
-    public Site(int id, String name, Boolean enabled, Set<ClientType> types, Set<String> domains, Set<String> appNames) {
-        this.id = id;
-        this.name = name;
-        this.description = DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
-        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        this.appNames = (appNames != null) ? new HashSet<>(appNames) : new HashSet<>();
-        this.visible = DEFAULT_VISIBLE;
-        this.created = Instant.now().getEpochSecond();
+        this(id, name, enabled, types, domains, Instant.now().getEpochSecond());
     }
 
     public Site(int id, String name, Boolean enabled, Set<ClientType> types, Set<String> domains, long created) {
-        this.id = id;
-        this.name = name;
-        this.description = DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
-        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        this.appNames = new HashSet<>();
-        this.visible = DEFAULT_VISIBLE;
-        this.created = created;
+        this(id, name, DEFAULT_DESCRIPTION, enabled, types, domains, new HashSet<>(), DEFAULT_VISIBLE, created);
     }
 
     public Site(int id, String name, String description, Boolean enabled, Set<ClientType> types, Set<String> domains, Boolean visible) {
-        this.id = id;
-        this.name = name;
-        this.description = (description != null) ? description : DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
-        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        this.appNames = new HashSet<>();
-        this.visible = visible;
-        this.created = Instant.now().getEpochSecond();
+        this(id, name, description, enabled, types, domains, new HashSet<>(), visible);
+    }
+
+    public Site(int id, String name, Boolean enabled, Set<ClientType> types, Set<String> domains, Set<String> appNames) {
+        this(id, name, DEFAULT_DESCRIPTION, enabled, types, domains, appNames, DEFAULT_VISIBLE);
     }
 
     public Site(int id, String name, String description, Boolean enabled, Set<ClientType> types, Set<String> domains, Set<String> appNames, Boolean visible) {
-        this.id = id;
-        this.name = name;
-        this.description = (description != null) ? description : DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
-        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        this.appNames = (appNames != null) ? new HashSet<>(appNames) : new HashSet<>();
-        this.visible = visible;
-        this.created = Instant.now().getEpochSecond();
+        this(id, name, description, enabled, types, domains, appNames, visible, Instant.now().getEpochSecond());
     }
 
     public int getId() { return id; }
@@ -157,7 +101,7 @@ public class Site {
                 ", description=" + description +
                 ", enabled=" + enabled +
                 ", domain_names=" + domainNames.toString() +
-                ", app_names=" + domainNames.toString() +
+                ", app_names=" + appNames.toString() +
                 ", clientTypes=" + clientTypes.toString() +
                 ", visible=" + visible +
                 ", created=" + String.valueOf(created) +
