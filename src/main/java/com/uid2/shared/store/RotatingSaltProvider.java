@@ -121,16 +121,13 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
             if (!snapshot.isEffective(asOf)) break;
             current = snapshot;
         }
-        return current;
+        return current != null ? current : snapshots.get(snapshots.size() - 1);
     }
 
     private SaltSnapshot loadSnapshot(JsonObject spec, String firstLevelSalt, SaltEntryBuilder entryBuilder, Instant now) throws Exception {
         final Instant defaultExpires = now.plus(365, ChronoUnit.DAYS);
         final Instant effective = Instant.ofEpochMilli(spec.getLong("effective"));
         final Instant expires = Instant.ofEpochMilli(spec.getLong("expires", defaultExpires.toEpochMilli()));
-
-        // no point in loading expired snapshots
-        if (now.isAfter(expires)) return null;
 
         final String path = spec.getString("location");
         int idx = 0;
@@ -176,6 +173,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
             return this.effective;
         }
 
+        @Override
         public Instant getExpires() {
             return this.expires;
         }
