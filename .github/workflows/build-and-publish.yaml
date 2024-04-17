@@ -11,7 +11,7 @@ on:
         - Patch
         - Minor
         - Major
-      vulnerability_severity:
+      vulnerability_failure_severity:
         description: The severity to fail the workflow if such vulnerability is detected. DO NOT override it unless a Jira ticket is raised.
         type: choice
         options:
@@ -39,5 +39,5 @@ jobs:
       publish_to_maven: ${{ inputs.publish_to_maven }}
       java_version: ${{ inputs.java_version }}
       publish_vulnerabilities: ${{ inputs.publish_vulnerabilities }}
-      vulnerability_failure_severity: ${{ inputs.vulnerability_severity }}
+      vulnerability_failure_severity: ${{ inputs.vulnerability_failure_severity }}
     secrets: inherit
