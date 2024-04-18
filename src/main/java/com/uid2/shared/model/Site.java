@@ -2,6 +2,7 @@ package com.uid2.shared.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -9,6 +10,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+@Data
 public class Site {
     private static final String DEFAULT_DESCRIPTION = "";
     private static final boolean DEFAULT_VISIBLE = true;
@@ -73,25 +75,9 @@ public class Site {
         this(id, name, description, enabled, types, domains, appNames, visible, Instant.now().getEpochSecond());
     }
 
-    public int getId() { return id; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
     public Boolean isEnabled() { return enabled; }
-    public Set<String> getDomainNames() { return domainNames; }
-    public Set<String> getAppNames() { return appNames; }
-    public Set<ClientType> getClientTypes() { return clientTypes; }
     public Boolean isVisible() { return visible; }
-
-    public long getCreated() { return  created; }
-
-    public void setDescription(String description) { this.description = description; }
-
-    public void setClientTypes(Set<ClientType> clientTypes) { this.clientTypes = clientTypes; }
-
-    public void setEnabled(Boolean enabled) { this.enabled = enabled; }
-    public void setDomainNames(Set<String> domainNames) { this.domainNames = domainNames; }
-    public void setAppNames(Set<String> appNames) { this.appNames = appNames; }
-    public void setVisible(Boolean visible) { this.visible = visible; }
+    public void setAppNames(Set<String> appNames) { this.appNames = (appNames != null) ? appNames : new HashSet<>(); }
 
     @Override
     public String toString() {

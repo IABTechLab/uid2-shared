@@ -1,12 +1,14 @@
 package com.uid2.shared.store;
 
+import com.uid2.shared.model.ClientType;
 import com.uid2.shared.model.Site;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class SiteTest {
     @Test
@@ -19,5 +21,12 @@ public class SiteTest {
         assertFalse(a.equals(c));
         assertFalse(c.equals(a));
         assertTrue(c.equals(c));
+    }
+
+    @Test
+    public void testToString() {
+        Site a = new Site(1, "1 name", "1 desc", true, new HashSet<>(Collections.singletonList(ClientType.DSP)), new HashSet<>(Collections.singletonList("test.com")), new HashSet<>(Arrays.asList("123456789", "com.123.game.app.android")), true, 0L);
+        String expected = "Site{id=1, name='1 name', description=1 desc, enabled=true, domain_names=[test.com], app_names=[123456789, com.123.game.app.android], clientTypes=[DSP], visible=true, created=0}";
+        assertEquals(expected, a.toString());
     }
 }
