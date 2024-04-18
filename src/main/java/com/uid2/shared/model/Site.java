@@ -5,9 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 @Data
@@ -42,7 +40,7 @@ public class Site {
         this.enabled = enabled;
         this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
         this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        this.appNames = (appNames != null) ? new HashSet<>(appNames) : new HashSet<>();
+        setAppNames(appNames);
         this.visible = visible;
         this.created = created;
     }
@@ -78,32 +76,4 @@ public class Site {
     public Boolean isEnabled() { return enabled; }
     public Boolean isVisible() { return visible; }
     public void setAppNames(Set<String> appNames) { this.appNames = (appNames != null) ? appNames : new HashSet<>(); }
-
-    @Override
-    public String toString() {
-        return "Site{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description=" + description +
-                ", enabled=" + enabled +
-                ", domain_names=" + domainNames.toString() +
-                ", app_names=" + appNames.toString() +
-                ", clientTypes=" + clientTypes.toString() +
-                ", visible=" + visible +
-                ", created=" + String.valueOf(created) +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Site site = (Site) o;
-        return id == site.id && name.equals(site.name) && description.equals(site.description) && enabled.equals(site.enabled) && appNames.equals(site.appNames) && clientTypes.equals(site.clientTypes) && Objects.equals(visible, site.visible) && created == site.created && domainNames.equals(site.domainNames);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, description, enabled, domainNames, appNames, Arrays.hashCode(clientTypes.toArray()), visible, created);
-    }
 }

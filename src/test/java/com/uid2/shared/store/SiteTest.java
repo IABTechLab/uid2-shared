@@ -26,7 +26,7 @@ public class SiteTest {
     @Test
     public void testToString() {
         Site a = new Site(1, "1 name", "1 desc", true, new HashSet<>(Collections.singletonList(ClientType.DSP)), new HashSet<>(Collections.singletonList("test.com")), new HashSet<>(Arrays.asList("123456789", "com.123.game.app.android")), true, 0L);
-        String expected = "Site{id=1, name='1 name', description=1 desc, enabled=true, domain_names=[test.com], app_names=[123456789, com.123.game.app.android], clientTypes=[DSP], visible=true, created=0}";
+        String expected = "Site(id=1, name=1 name, description=1 desc, enabled=true, domainNames=[test.com], appNames=[123456789, com.123.game.app.android], clientTypes=[DSP], visible=true, created=0)";
         assertEquals(expected, a.toString());
     }
 }
