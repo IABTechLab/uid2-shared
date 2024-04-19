@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
+import lombok.NonNull;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,6 +19,7 @@ public class Site {
     private Boolean enabled;
     @JsonProperty("domain_names")
     private Set<String> domainNames;
+    @NonNull
     @JsonProperty("app_names")
     private Set<String> appNames;
     private Set<ClientType> clientTypes;
@@ -40,7 +42,7 @@ public class Site {
         this.enabled = enabled;
         this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
         this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        setAppNames(appNames);
+        this.appNames = (appNames != null) ? new HashSet<>(appNames) : new HashSet<>();
         this.visible = visible;
         this.created = created;
     }
@@ -75,5 +77,4 @@ public class Site {
 
     public Boolean isEnabled() { return enabled; }
     public Boolean isVisible() { return visible; }
-    public void setAppNames(Set<String> appNames) { this.appNames = (appNames != null) ? appNames : new HashSet<>(); }
 }
