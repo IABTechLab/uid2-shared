@@ -15,12 +15,14 @@ public class SiteTest {
     public void testEquals() {
         Site a = new Site(1, "1 name", "1 desc", true, new HashSet<>(Collections.singletonList(ClientType.DSP)), new HashSet<>(Collections.singletonList("test.com")), new HashSet<>(Arrays.asList("123456789", "com.123.Game.app.Android")), true, 0L);
         Site b = new Site(1, "1 name", "1 desc", true, new HashSet<>(Collections.singletonList(ClientType.DSP)), new HashSet<>(Collections.singletonList("test.com")), new HashSet<>(Arrays.asList("123456789", "com.123.Game.app.Android")), true, 0L);
+        Site b2 = new Site(1, "1 name", "1 desc", true, new HashSet<>(Collections.singletonList(ClientType.DSP)), new HashSet<>(Collections.singletonList("test.com")), new HashSet<>(Arrays.asList("com.123.Game.app.Android", "123456789")), true, 0L);
         Site c = new Site(1, "1 name", "1 desc", true, new HashSet<>(Collections.singletonList(ClientType.DSP)), new HashSet<>(Collections.singletonList("test.com")), new HashSet<>(Arrays.asList("123456789", "com.123.Game.app.Android")), null, 0L);
         Site d = new Site(1, "1 name", "1 desc", true, new HashSet<>(Collections.singletonList(ClientType.PUBLISHER)), new HashSet<>(Collections.singletonList("test.com")), new HashSet<>(Arrays.asList("123456789", "com.123.Game.app.Android")), true, 0L);
         Site e = new Site(1, "1 name", "1 desc", true, new HashSet<>(Collections.singletonList(ClientType.DSP)), new HashSet<>(Collections.singletonList("test1.com")), new HashSet<>(Arrays.asList("123456789", "com.123.Game.app.Android")), true, 0L);
         Site f = new Site(1, "1 name", "1 desc", true, new HashSet<>(Collections.singletonList(ClientType.DSP)), new HashSet<>(Collections.singletonList("test.com")), new HashSet<>(Arrays.asList("123456789", "com.123.Game.app.android")), true, 0L);
 
         assertTrue(a.equals(b));
+        assertTrue(a.equals(b2));
         assertFalse(a.equals(c));
         assertFalse(c.equals(a));
         assertTrue(c.equals(c));
