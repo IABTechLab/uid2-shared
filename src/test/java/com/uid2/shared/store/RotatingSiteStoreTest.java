@@ -18,6 +18,7 @@ import org.mockito.MockitoAnnotations;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static com.uid2.shared.TestUtilites.makeInputStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -50,9 +51,9 @@ public class RotatingSiteStoreTest {
         return metadata;
     }
 
-    private Site addSite(JsonArray content, int siteId, String name, String description, boolean enabled, boolean visible, long created, String... domains) {
+    private Site addSite(JsonArray content, int siteId, String name, String description, boolean enabled, boolean visible, long created, Set<String> domains, Set<String> appNames) {
 
-        Site s = new Site(siteId, name, description, enabled, new HashSet<>(), new HashSet<>(List.of(domains)), visible, created);
+        Site s = new Site(siteId, name, description, enabled, new HashSet<>(), domains, appNames, visible, created);
         JsonNode jsonNode = OBJECT_MAPPER.convertValue(s, JsonNode.class);
         content.add(jsonNode);
 
@@ -71,10 +72,10 @@ public class RotatingSiteStoreTest {
     @Test
     public void loadContentMultipleSites() throws Exception {
         JsonArray content = new JsonArray();
-        Site s1 = addSite(content, 123, "test-1", "test-1-desc", true, true, Instant.now().getEpochSecond());
-        Site s2 = addSite(content, 124, "test-2", "test-2-desc", false, true, Instant.now().minusSeconds(100).getEpochSecond());
-        Site s3 = addSite(content, 125, "test-3", "test-3-desc", true, false, Instant.now().plusSeconds(100).getEpochSecond());
-        Site s4 = addSite(content, 126, "test-4", "test-4-desc", false, false, Instant.now().getEpochSecond(), "testdomain1.com", "testdomain2.net");
+        Site s1 = addSite(content, 123, "test-1", "test-1-desc", true, true, Instant.now().getEpochSecond(), new HashSet<>(), new HashSet<>());
+        Site s2 = addSite(content, 124, "test-2", "test-2-desc", false, true, Instant.now().minusSeconds(100).getEpochSecond(), new HashSet<>(), new HashSet<>());
+        Site s3 = addSite(content, 125, "test-3", "test-3-desc", true, false, Instant.now().plusSeconds(100).getEpochSecond(), new HashSet<>(), new HashSet<>());
+        Site s4 = addSite(content, 126, "test-4", "test-4-desc", false, false, Instant.now().getEpochSecond(), new HashSet<>(List.of("testdomain1.com", "testdomain2.net")), new HashSet<>(List.of("testAppName1", "testAppName2")));
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = siteStore.loadContent(makeMetadata("locationPath"));

@@ -2,13 +2,14 @@ package com.uid2.shared.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
 
+import lombok.NonNull;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
+@Data
 public class Site {
     private static final String DEFAULT_DESCRIPTION = "";
     private static final boolean DEFAULT_VISIBLE = true;
@@ -18,7 +19,9 @@ public class Site {
     private Boolean enabled;
     @JsonProperty("domain_names")
     private Set<String> domainNames;
-
+    @NonNull
+    @JsonProperty("app_names")
+    private Set<String> appNames;
     private Set<ClientType> clientTypes;
     private Boolean visible;
     private final long created;
@@ -30,6 +33,7 @@ public class Site {
                 @JsonProperty("enabled") Boolean enabled,
                 @JsonProperty("clientTypes") Set<ClientType> types,
                 @JsonProperty("domain_names") Set<String> domains,
+                @JsonProperty("app_names") Set<String> appNames,
                 @JsonProperty("visible") Boolean visible,
                 @JsonProperty("created") long created) {
         this.id = id;
@@ -38,107 +42,39 @@ public class Site {
         this.enabled = enabled;
         this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
         this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
+        this.appNames = (appNames != null) ? new HashSet<>(appNames) : new HashSet<>();
         this.visible = visible;
         this.created = created;
     }
 
     public Site(int id, String name, Boolean enabled) {
-        this.id = id;
-        this.name = name;
-        this.description = DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.domainNames = new HashSet<>();
-        this.clientTypes = new HashSet<>();
-        this.visible = DEFAULT_VISIBLE;
-        this.created = Instant.now().getEpochSecond();
+        this(id, name, enabled, new HashSet<>());
     }
 
     public Site(int id, String name, Boolean enabled, Set<String> domains) {
-        this.id = id;
-        this.name = name;
-        this.description = DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        this.clientTypes = new HashSet<>();
-        this.visible = DEFAULT_VISIBLE;
-        this.created = Instant.now().getEpochSecond();
+        this(id, name, enabled, new HashSet<>(), domains);
     }
 
     public Site(int id, String name, Boolean enabled, Set<ClientType> types, Set<String> domains) {
-        this.id = id;
-        this.name = name;
-        this.description = DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
-        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        this.visible = DEFAULT_VISIBLE;
-        this.created = Instant.now().getEpochSecond();
+        this(id, name, enabled, types, domains, Instant.now().getEpochSecond());
     }
 
     public Site(int id, String name, Boolean enabled, Set<ClientType> types, Set<String> domains, long created) {
-        this.id = id;
-        this.name = name;
-        this.description = DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
-        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        this.visible = DEFAULT_VISIBLE;
-        this.created = created;
+        this(id, name, DEFAULT_DESCRIPTION, enabled, types, domains, new HashSet<>(), DEFAULT_VISIBLE, created);
     }
 
     public Site(int id, String name, String description, Boolean enabled, Set<ClientType> types, Set<String> domains, Boolean visible) {
-        this.id = id;
-        this.name = name;
-        this.description = (description != null) ? description : DEFAULT_DESCRIPTION;
-        this.enabled = enabled;
-        this.clientTypes = (types != null) ? new HashSet<>(types) : new HashSet<>();
-        this.domainNames = (domains != null) ? new HashSet<>(domains) : new HashSet<>();
-        this.visible = visible;
-        this.created = Instant.now().getEpochSecond();
+        this(id, name, description, enabled, types, domains, new HashSet<>(), visible);
     }
 
-    public int getId() { return id; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
+    public Site(int id, String name, Boolean enabled, Set<ClientType> types, Set<String> domains, Set<String> appNames) {
+        this(id, name, DEFAULT_DESCRIPTION, enabled, types, domains, appNames, DEFAULT_VISIBLE);
+    }
+
+    public Site(int id, String name, String description, Boolean enabled, Set<ClientType> types, Set<String> domains, Set<String> appNames, Boolean visible) {
+        this(id, name, description, enabled, types, domains, appNames, visible, Instant.now().getEpochSecond());
+    }
+
     public Boolean isEnabled() { return enabled; }
-    public Set<String> getDomainNames() { return domainNames; }
-    public Set<ClientType> getClientTypes() { return clientTypes; }
     public Boolean isVisible() { return visible; }
-
-    public long getCreated() { return  created; }
-
-    public void setDescription(String description) { this.description = description; }
-
-    public void setClientTypes(Set<ClientType> clientTypes) { this.clientTypes = clientTypes; }
-
-    public void setEnabled(Boolean enabled) { this.enabled = enabled; }
-    public void setDomainNames(Set<String> domainNames) { this.domainNames = domainNames; }
-    public void setVisible(Boolean visible) { this.visible = visible; }
-
-    @Override
-    public String toString() {
-        return "Site{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description=" + description +
-                ", enabled=" + enabled +
-                ", domain_names=" + domainNames.toString() +
-                ", clientTypes=" + clientTypes.toString() +
-                ", visible=" + visible +
-                ", created=" + String.valueOf(created) +
-                '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Site site = (Site) o;
-        return id == site.id && name.equals(site.name) && description.equals(site.description) && enabled.equals(site.enabled) && domainNames.equals(site.domainNames) && clientTypes.equals(site.clientTypes) && Objects.equals(visible, site.visible) && created == site.created;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, description, enabled, domainNames,Arrays.hashCode(clientTypes.toArray()), visible, created);
-    }
 }
