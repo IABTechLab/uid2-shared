@@ -14,7 +14,7 @@ public class Site {
     private static final String DEFAULT_DESCRIPTION = "";
     private static final boolean DEFAULT_VISIBLE = true;
     private final int id;
-    private final String name;
+    private String name;
     private String description;
     private Boolean enabled;
     @JsonProperty("domain_names")
