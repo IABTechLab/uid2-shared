@@ -39,6 +39,7 @@ public class GcpOidcCoreAttestationService implements ICoreAttestationService {
 
             var enclaveId = this.validate(tokenPayload);
             if (enclaveId != null) {
+                LOGGER.info("Successfully attested gcp-oidc against registered enclaves, enclave id: " + enclaveId);
                 handler.handle(Future.succeededFuture(new AttestationResult(publicKey, enclaveId)));
             } else {
                 LOGGER.warn("Can not find registered gcp-oidc enclave id.");
