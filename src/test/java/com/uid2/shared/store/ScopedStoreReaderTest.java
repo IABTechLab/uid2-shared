@@ -73,7 +73,6 @@ class ScopedStoreReaderTest {
 
         reader.loadContent(metadata, dataType);
         Collection<TestData> actual = reader.getSnapshot();
-
         Collection<TestData> expected = ImmutableList.of(
                 new TestData("value1"),
                 new TestData("value2")
