@@ -74,6 +74,8 @@ public class Const {
         public static final String EnforceJwtProp = "enforceJwt";
         public static final String MaaServerBaseUrlProp ="maa_server_base_url";
         public static final String SaltsExpiredShutdownHours = "salts_expired_shutdown_hours";
+        public static final String S3keysMetadataPathProp =  "s3_keys_metadata_path";
+
 
     }
 
