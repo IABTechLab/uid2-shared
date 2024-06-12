@@ -16,7 +16,7 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
     private final ScopedStoreReader<Map<Integer, S3Key>> reader;
 
     public RotatingS3KeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
-        this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new S3KeyParser(), "s3_keys");
+        this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new S3KeyParser(), "s3encryption_keys");
     }
 
     @Override
@@ -36,7 +36,7 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
 
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
-        return reader.loadContent(metadata, "s3_keys");
+        return reader.loadContent(metadata, "s3encryption_keys");
     }
 
     @Override

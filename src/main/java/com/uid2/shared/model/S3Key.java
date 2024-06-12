@@ -8,7 +8,7 @@ import lombok.Setter;
 public class S3Key {
     private int id;
     private int siteId;
-    private long activates;
-    private long expires;
+    private long activated;
+    private long created;
     private String secret;
 }

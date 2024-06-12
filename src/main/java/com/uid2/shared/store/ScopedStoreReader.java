@@ -27,7 +27,6 @@ public class ScopedStoreReader<T> {
     private final AtomicReference<T> latestSnapshot;
     private final AtomicLong latestEntryCount = new AtomicLong(-1L);
 
-    //intern: need to write an encrypted scope store reader, take in the key as a parameter
     public ScopedStoreReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, Parser<T> parser, String dataTypeName) {
         this.metadataStreamProvider = fileStreamProvider;
         this.scope = scope;
@@ -61,7 +60,6 @@ public class ScopedStoreReader<T> {
         }
     }
 
-    //intern: need to decrypt here
     private long loadContent(String path) throws Exception {
         try (InputStream inputStream = this.contentStreamProvider.download(path)) {
             ParsingResult<T> parsed = parser.deserialize(inputStream);
