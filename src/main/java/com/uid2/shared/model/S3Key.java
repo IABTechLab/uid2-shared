@@ -7,7 +7,8 @@ public class S3Key {
     private long created;
     private String secret;
 
-    // Constructor with parameters
+    public S3Key() {}
+
     public S3Key(int id, int siteId, long activates, long created, String secret) {
         this.id = id;
         this.siteId = siteId;
