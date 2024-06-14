@@ -14,7 +14,6 @@ import java.util.Map;
 
 
 public class RotatingSiteStore implements ISiteStore, StoreReader<Collection<Site>> {
-    public static final String SITES_METADATA_PATH = "sites_metadata_path";
     private final ScopedStoreReader<Map<Integer, Site>> reader;
 
     public RotatingSiteStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
@@ -36,7 +35,8 @@ public class RotatingSiteStore implements ISiteStore, StoreReader<Collection<Sit
 
     @Override
     public Site getSite(int siteId) {
-        return reader.getSnapshot().get(siteId);
+        final var snapshot = reader.getSnapshot();
+        return snapshot != null ? snapshot.get(siteId) : null;
     }
 
     public JsonObject getMetadata() throws Exception {
