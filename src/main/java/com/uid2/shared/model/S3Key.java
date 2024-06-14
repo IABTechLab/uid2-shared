@@ -1,5 +1,7 @@
 package com.uid2.shared.model;
 
+import java.util.Objects;
+
 public class S3Key {
     private int id;
     private int siteId;
@@ -17,7 +19,6 @@ public class S3Key {
         this.secret = secret;
     }
 
-    // Getter and Setter methods
     public int getId() {
         return id;
     }
@@ -56,5 +57,22 @@ public class S3Key {
 
     public void setSecret(String secret) {
         this.secret = secret;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        S3Key s3Key = (S3Key) o;
+        return id == s3Key.id &&
+                siteId == s3Key.siteId &&
+                activates == s3Key.activates &&
+                created == s3Key.created &&
+                Objects.equals(secret, s3Key.secret);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, siteId, activates, created, secret);
     }
 }
