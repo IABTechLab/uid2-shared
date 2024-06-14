@@ -9,11 +9,13 @@ import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
+
 import com.uid2.shared.model.S3Key;
 
 public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
-    private final ScopedStoreReader<Map<Integer, S3Key>> reader;
+    ScopedStoreReader<Map<Integer, S3Key>> reader;
 
     public RotatingS3KeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new S3KeyParser(), "s3encryption_keys");
@@ -41,8 +43,10 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
 
     @Override
     public Map<Integer, S3Key> getAll() {
-        return reader.getSnapshot();
+        Map<Integer, S3Key> keys = reader.getSnapshot();
+        return keys != null ? keys : new HashMap<>();
     }
+
 
     @Override
     public void loadContent() throws Exception {
