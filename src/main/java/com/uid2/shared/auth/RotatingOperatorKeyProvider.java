@@ -81,7 +81,8 @@ public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetad
 
     @Override
     public Collection<OperatorKey> getAll() {
-        return operatorKeyStore.getAuthorizables();}
+        return operatorKeyStore.getAuthorizables();
+    }
 
     @Override
     public IAuthorizable get(String key) {
