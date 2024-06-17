@@ -76,12 +76,13 @@ public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetad
 
     @Override
     public OperatorKey getOperatorKeyFromHash(String hash) {
-        return (OperatorKey) this.operatorKeyStore.getAuthorizableByHash(hash);
+        return operatorKeyStore.getAuthorizableByHash(hash);
     }
 
     @Override
     public Collection<OperatorKey> getAll() {
-        return operatorKeyStore.getAuthorizables();}
+        return operatorKeyStore.getAuthorizables();
+    }
 
     @Override
     public IAuthorizable get(String key) {
