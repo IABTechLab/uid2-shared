@@ -2,9 +2,11 @@ package com.uid2.shared.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.Objects;
 
+@JsonPropertyOrder({ "id", "siteId", "activates", "created", "secret" })
 public class S3Key {
     private final int id;
     private final int siteId;
