@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,7 +30,7 @@ class S3KeyParserTest {
                 "},{" +
                 "\"id\": 3, \"site_id\": 456, \"activates\": 1687635529, \"created\": 1687808329, \"secret\": \"S3keySecretByteHere3\"" +
                 "}]";
-        InputStream inputStream = new ByteArrayInputStream(json.getBytes());
+        InputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
 
         ParsingResult<Map<Integer, S3Key>> result = parser.deserialize(inputStream);
 
@@ -38,10 +39,29 @@ class S3KeyParserTest {
         assertTrue(result.getData().containsKey(1));
         assertTrue(result.getData().containsKey(2));
         assertTrue(result.getData().containsKey(3));
-        assertEquals("S3keySecretByteHere1", result.getData().get(1).getSecret());
-        assertEquals("S3keySecretByteHere2", result.getData().get(2).getSecret());
-        assertEquals("S3keySecretByteHere3", result.getData().get(3).getSecret());
+
+        S3Key key1 = result.getData().get(1);
+        assertEquals(1, key1.getId());
+        assertEquals(123, key1.getSiteId());
+        assertEquals(1687635529L, key1.getActivates());
+        assertEquals(1687808329L, key1.getCreated());
+        assertEquals("S3keySecretByteHere1", key1.getSecret());
+
+        S3Key key2 = result.getData().get(2);
+        assertEquals(2, key2.getId());
+        assertEquals(123, key2.getSiteId());
+        assertEquals(1687808429L, key2.getActivates());
+        assertEquals(1687808329L, key2.getCreated());
+        assertEquals("S3keySecretByteHere2", key2.getSecret());
+
+        S3Key key3 = result.getData().get(3);
+        assertEquals(3, key3.getId());
+        assertEquals(456, key3.getSiteId());
+        assertEquals(1687635529L, key3.getActivates());
+        assertEquals(1687808329L, key3.getCreated());
+        assertEquals("S3keySecretByteHere3", key3.getSecret());
     }
+
 
     @Test
     void testDeserializeEmpty() throws IOException {

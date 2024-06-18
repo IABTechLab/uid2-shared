@@ -1,17 +1,24 @@
 package com.uid2.shared.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
 public class S3Key {
-    private int id;
-    private int siteId;
-    private long activates;
-    private long created;
-    private String secret;
+    private final int id;
+    private final int siteId;
+    private final long activates;
+    private final long created;
+    private final String secret;
 
-    public S3Key() {}
-
-    public S3Key(int id, int siteId, long activates, long created, String secret) {
+    @JsonCreator
+    public S3Key(
+            @JsonProperty("id") int id,
+            @JsonProperty("site_id") int siteId,
+            @JsonProperty("activates") long activates,
+            @JsonProperty("created") long created,
+            @JsonProperty("secret") String secret) {
         this.id = id;
         this.siteId = siteId;
         this.activates = activates;
@@ -23,40 +30,20 @@ public class S3Key {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public int getSiteId() {
         return siteId;
-    }
-
-    public void setSiteId(int siteId) {
-        this.siteId = siteId;
     }
 
     public long getActivates() {
         return activates;
     }
 
-    public void setActivates(long activates) {
-        this.activates = activates;
-    }
-
     public long getCreated() {
         return created;
     }
 
-    public void setCreated(long created) {
-        this.created = created;
-    }
-
     public String getSecret() {
         return secret;
-    }
-
-    public void setSecret(String secret) {
-        this.secret = secret;
     }
 
     @Override
