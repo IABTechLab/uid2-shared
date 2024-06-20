@@ -167,4 +167,5 @@ public class RotatingS3KeyProviderTest {
         S3Key nonExistentKey = rotatingS3KeyProvider.getAll().get(99);
         assertNull(nonExistentKey);
     }
+
 }

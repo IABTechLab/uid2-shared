@@ -2,6 +2,7 @@ package com.uid2.shared.store.parser;
 
 import com.uid2.shared.model.S3Key;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -82,7 +83,9 @@ class S3KeyParserTest {
 
         assertThrows(IOException.class, () -> parser.deserialize(inputStream));
     }
-    public static class TestSerialization {
+
+    @Nested
+    class TestSerialization {
         @Test
         void testS3KeySerialization() throws Exception {
             S3Key s3Key = new S3Key(1, 999, 1718689091L, 1718689091L, "64bNHMpU/mjaywjOpVacFOvEIFZmbYYUsNVNVu1jJZs=");
