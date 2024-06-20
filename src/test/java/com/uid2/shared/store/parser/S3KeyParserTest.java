@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -84,16 +85,13 @@ class S3KeyParserTest {
         assertThrows(IOException.class, () -> parser.deserialize(inputStream));
     }
 
-    @Nested
-    class TestSerialization {
-        @Test
-        void testS3KeySerialization() throws Exception {
-            S3Key s3Key = new S3Key(1, 999, 1718689091L, 1718689091L, "64bNHMpU/mjaywjOpVacFOvEIFZmbYYUsNVNVu1jJZs=");
-            ObjectMapper mapper = new ObjectMapper();
-            String jsonString = mapper.writeValueAsString(s3Key);
+    @Test
+    void testS3KeySerialization() throws Exception {
+        S3Key s3Key = new S3Key(1, 999, 1718689091L, 1718689091L, "64bNHMpU/mjaywjOpVacFOvEIFZmbYYUsNVNVu1jJZs=");
+        ObjectMapper mapper = new ObjectMapper();
+        String jsonString = mapper.writeValueAsString(s3Key);
 
-            String expectedJson = "{\"id\":1,\"siteId\":999,\"activates\":1718689091,\"created\":1718689091,\"secret\":\"64bNHMpU/mjaywjOpVacFOvEIFZmbYYUsNVNVu1jJZs=\"}";
-            assertEquals(expectedJson, jsonString);
-        }
+        String expectedJson = "{\"id\":1,\"siteId\":999,\"activates\":1718689091,\"created\":1718689091,\"secret\":\"64bNHMpU/mjaywjOpVacFOvEIFZmbYYUsNVNVu1jJZs=\"}";
+        assertEquals(expectedJson, jsonString);
     }
 }
