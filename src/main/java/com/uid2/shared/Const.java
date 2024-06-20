@@ -63,6 +63,7 @@ public class Const {
         public static final String ServiceLinkMetadataPathProp = "service_links_metadata_path";
         public static final String SitesMetadataPathProp = "sites_metadata_path";
         public static final String OperatorsMetadataPathProp = "operators_metadata_path";
+        public static final String S3keysMetadataPathProp = "s3_keys_metadata_path";
         public static final String SaltsMetadataPathProp = "salts_metadata_path";
         public static final String OptOutMetadataPathProp = "optout_metadata_path";
         public static final String CoreAttestUrlProp = "core_attest_url";
@@ -72,7 +73,7 @@ public class Const {
         public static final String OptOutUrlProp = "optout_url";
         public static final String AwsKmsJwtSigningPublicKeysProp = "aws_kms_jwt_signing_public_keys";
         public static final String EnforceJwtProp = "enforceJwt";
-        public static final String MaaServerBaseUrlProp ="maa_server_base_url";
+        public static final String MaaServerBaseUrlProp = "maa_server_base_url";
         public static final String SaltsExpiredShutdownHours = "salts_expired_shutdown_hours";
     }
 

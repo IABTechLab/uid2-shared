@@ -2,3 +2,5 @@
 target/
 uid2-shared.iml
 dependencies/
+.DS_Store
+
