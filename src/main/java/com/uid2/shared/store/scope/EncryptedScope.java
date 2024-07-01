@@ -15,8 +15,7 @@ public class EncryptedScope extends SiteScope {
 
     @Override
     public CloudPath resolve(CloudPath cloudPath) {
-        CloudPath directory = super.getMetadataPath().getParent();
+        CloudPath directory = super.getMetadataPath().getParent().getParent();
         return directory.resolve("encryption").resolve("site").resolve(getId().toString()).resolve(cloudPath);
     }
-
 }
