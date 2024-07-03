@@ -1,5 +1,8 @@
 package com.uid2.shared.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
 public class EnclaveIdentifier {
@@ -8,7 +11,13 @@ public class EnclaveIdentifier {
     private final String identifier;
     private final long created;
 
-    public EnclaveIdentifier(String name, String protocol, String identifier, long created) {
+    @JsonCreator
+    public EnclaveIdentifier(
+            @JsonProperty("name") String name,
+            @JsonProperty("protocol") String protocol,
+            @JsonProperty("identifier") String identifier,
+            @JsonProperty("created") long created
+    ) {
         this.name = name;
         this.protocol = protocol;
         this.identifier = identifier;
