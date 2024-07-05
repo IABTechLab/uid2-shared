@@ -14,13 +14,24 @@ public class EncryptedScope implements StoreScope {
 
     @Override
     public CloudPath getMetadataPath() {
-        return resolve(rootMetadataPath.getFileName());
+        // Default to private for backward compatibility
+        return getMetadataPath(false);
     }
 
+    public CloudPath getMetadataPath(boolean isPublic) {
+        return resolve(rootMetadataPath.getFileName(), isPublic);
+    }
+
+    /*
     @Override
     public CloudPath resolve(CloudPath cloudPath) {
         CloudPath directory = rootMetadataPath.getParent();
         return directory.resolve("encryption").resolve("site").resolve(getId().toString()).resolve(cloudPath);
+    }
+     */
+    public CloudPath resolve(CloudPath cloudPath) {
+        // Default to private for backward compatibility
+        return resolve(cloudPath, false);
     }
 
     public CloudPath resolve(CloudPath cloudPath, boolean isPublic) {
