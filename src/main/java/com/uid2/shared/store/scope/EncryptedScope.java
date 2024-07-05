@@ -5,12 +5,19 @@ package com.uid2.shared.store.scope;
 import com.uid2.shared.store.CloudPath;
 
 public class EncryptedScope implements StoreScope {
-    public EncryptedScope(CloudPath rootMetadataPath, Integer siteId){
+    public EncryptedScope(CloudPath rootMetadataPath, Integer siteId) {
+        this(rootMetadataPath, siteId, false);
+    }
+
+    public EncryptedScope(CloudPath rootMetadataPath, Integer siteId, boolean isPublic){
         this.rootMetadataPath = rootMetadataPath;
         this.siteId = siteId;
+        this.isPublic=isPublic;
     }
     private final Integer siteId;
     private final CloudPath rootMetadataPath;
+    private final boolean isPublic;
+
 
     @Override
     public CloudPath getMetadataPath() {
