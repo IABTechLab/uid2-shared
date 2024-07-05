@@ -23,6 +23,12 @@ public class EncryptedScope implements StoreScope {
         return directory.resolve("encryption").resolve("site").resolve(getId().toString()).resolve(cloudPath);
     }
 
+    public CloudPath resolve(CloudPath cloudPath, boolean isPublic) {
+        CloudPath directory = rootMetadataPath.getParent();
+        String siteType = isPublic ? "public" : "private";
+        return directory.resolve("encrypted").resolve(siteId + "_" + siteType).resolve(cloudPath);
+    }
+
     @Override
     public Integer getId() {
         return siteId;
