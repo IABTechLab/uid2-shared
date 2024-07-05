@@ -45,6 +45,10 @@ public class EncryptedScope implements StoreScope {
         return siteId;
     }
 
+    public boolean getPublic() {
+        return isPublic;
+    }
+
     /* paths when we no longer need to distinguish private & public sites
     @Override
     public CloudPath resolve(CloudPath cloudPath) {
