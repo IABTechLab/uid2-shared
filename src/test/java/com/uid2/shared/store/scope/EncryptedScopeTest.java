@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EncryptedScopeTest {
     @Test
     void getMetadataPath() {
-        EncryptedScope scope = new EncryptedScope(new CloudPath("/original/path/metadata.json"), 5);
+        EncryptedScope scope = new EncryptedScope(new CloudPath("/original/path/metadata.json"), 5,false);
         CloudPath expected = new CloudPath("/original/path/encrypted/5_private/metadata.json");
 
         CloudPath actual = scope.getMetadataPath();
@@ -16,7 +16,7 @@ class EncryptedScopeTest {
 
     @Test
     void resolvesPathsRelativeToSiteDirectory() {
-        EncryptedScope scope = new EncryptedScope(new CloudPath("/original/path/metadata.json"), 5);
+        EncryptedScope scope = new EncryptedScope(new CloudPath("/original/path/metadata.json"), 5,false );
         CloudPath actual = scope.resolve(new CloudPath("file.xyz"));
         CloudPath expected = new CloudPath("/original/path/encrypted/5_private/file.xyz");
         assertThat(actual).isEqualTo(expected);
