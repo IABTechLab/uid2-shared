@@ -1,15 +1,14 @@
 package com.uid2.shared.store.scope;
 
 import com.uid2.shared.store.CloudPath;
-import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
-
+import static org.assertj.core.api.Assertions.assertThat;
 
 class EncryptedScopeTest {
     @Test
     void getMetadataPath() {
         EncryptedScope scope = new EncryptedScope(new CloudPath("/original/path/metadata.json"), 5);
-        CloudPath expected = new CloudPath("/original/path/encryption/site/5/metadata.json");
+        CloudPath expected = new CloudPath("/original/path/encrypted/5_private/metadata.json");
 
         CloudPath actual = scope.getMetadataPath();
         assertThat(actual).isEqualTo(expected);
@@ -19,8 +18,24 @@ class EncryptedScopeTest {
     void resolvesPathsRelativeToSiteDirectory() {
         EncryptedScope scope = new EncryptedScope(new CloudPath("/original/path/metadata.json"), 5);
         CloudPath actual = scope.resolve(new CloudPath("file.xyz"));
-        CloudPath expected = new CloudPath("/original/path/encryption/site/5/file.xyz");
+        CloudPath expected = new CloudPath("/original/path/encrypted/5_private/file.xyz");
         assertThat(actual).isEqualTo(expected);
+    }
 
+    @Test
+    void getMetadataPathPublic() {
+        EncryptedScope scope = new EncryptedScope(new CloudPath("/original/path/metadata.json"), 5);
+        CloudPath expected = new CloudPath("/original/path/encrypted/5_public/metadata.json");
+
+        CloudPath actual = scope.getMetadataPath(true);
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    void resolvesPathsRelativeToSiteDirectoryPublic() {
+        EncryptedScope scope = new EncryptedScope(new CloudPath("/original/path/metadata.json"), 5);
+        CloudPath actual = scope.resolve(new CloudPath("file.xyz"), true);
+        CloudPath expected = new CloudPath("/original/path/encrypted/5_public/file.xyz");
+        assertThat(actual).isEqualTo(expected);
     }
 }
