@@ -132,7 +132,7 @@ public class CloudStorageS3 implements TaggableCloudStorage {
             return obj.getObjectContent();
         } catch (AmazonS3Exception e) {
             if (e.getErrorCode().equals("NoSuchKey")) {
-                throw new CloudStorageException("The specified key does not exist" + e.getClass().getSimpleName() + ": " + bucket);
+                throw new CloudStorageException("The specified key does not exist: " + e.getClass().getSimpleName() + ": " + bucket);
             } else {
                 throw new CloudStorageException("s3 get error: " + e.getClass().getSimpleName() + ": " + bucket);
             }
