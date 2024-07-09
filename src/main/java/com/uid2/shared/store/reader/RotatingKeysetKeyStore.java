@@ -14,9 +14,14 @@ import java.util.Collection;
 public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Collection<KeysetKey>> {
     private final ScopedStoreReader<KeysetKeyStoreSnapshot> reader;
 
+    public RotatingKeysetKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
+        this(fileStreamProvider, scope, null);
+    }
+
     public RotatingKeysetKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
         this.reader = createReader(fileStreamProvider, scope, s3KeyProvider);
     }
+
 
     private ScopedStoreReader<KeysetKeyStoreSnapshot> createReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
         if (scope instanceof EncryptedScope) {

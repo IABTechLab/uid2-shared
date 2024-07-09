@@ -19,6 +19,10 @@ import java.util.Map;
 public class RotatingKeyAclProvider implements IKeyAclProvider, StoreReader<Map<Integer, EncryptionKeyAcl>> {
     private final ScopedStoreReader<AclSnapshot> reader;
 
+    public RotatingKeyAclProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
+        this(fileStreamProvider, scope, null);
+    }
+
     public RotatingKeyAclProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
         this.reader = createReader(fileStreamProvider, scope, s3KeyProvider);
     }

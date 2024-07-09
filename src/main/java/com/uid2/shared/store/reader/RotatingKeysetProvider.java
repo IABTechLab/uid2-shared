@@ -17,6 +17,10 @@ import java.util.Map;
 public class RotatingKeysetProvider implements StoreReader<Map<Integer, Keyset>> {
     private final ScopedStoreReader<KeysetSnapshot> reader;
 
+    public RotatingKeysetProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
+        this(fileStreamProvider, scope, null);
+    }
+
     public RotatingKeysetProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
         this.reader = createReader(fileStreamProvider, scope, s3KeyProvider);
     }

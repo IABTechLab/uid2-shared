@@ -48,6 +48,10 @@ import java.util.Collection;
 public class RotatingKeyStore implements IKeyStore, StoreReader<Collection<EncryptionKey>> {
     private final ScopedStoreReader<IKeyStoreSnapshot> reader;
 
+    public RotatingKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
+        this(fileStreamProvider, scope, null);
+    }
+
     public RotatingKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
         this.reader = createReader(fileStreamProvider, scope, s3KeyProvider);
     }

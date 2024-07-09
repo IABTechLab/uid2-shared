@@ -19,6 +19,10 @@ public class RotatingSiteStore implements ISiteStore, StoreReader<Collection<Sit
     public static final String SITES_METADATA_PATH = "sites_metadata_path";
     private final ScopedStoreReader<Map<Integer, Site>> reader;
 
+    public RotatingSiteStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
+        this(fileStreamProvider, scope, null);
+    }
+
     public RotatingSiteStore(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
         this.reader = createReader(fileStreamProvider, scope, s3KeyProvider);
     }
