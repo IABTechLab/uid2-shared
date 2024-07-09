@@ -1,14 +1,10 @@
 package com.uid2.shared.store;
 
-import com.uid2.shared.Utils;
-import com.uid2.shared.attest.UidCoreClient;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.model.S3Key;
 import com.uid2.shared.store.parser.Parser;
 import com.uid2.shared.store.parser.ParsingResult;
 import com.uid2.shared.store.scope.StoreScope;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.Metrics;
 import com.uid2.shared.store.reader.RotatingS3KeyProvider;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
@@ -22,11 +18,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(EncryptedScopedStoreReader.class);
-    private static final Charset CHARSET = StandardCharsets.UTF_8;
 
     private final int siteId;
     private final RotatingS3KeyProvider s3KeyProvider;

@@ -2,11 +2,9 @@ package com.uid2.shared.store.reader;
 
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.model.KeysetKey;
-import com.uid2.shared.store.CloudPath;
-import com.uid2.shared.store.IKeysetKeyStore;
-import com.uid2.shared.store.KeysetKeyStoreSnapshot;
-import com.uid2.shared.store.ScopedStoreReader;
+import com.uid2.shared.store.*;
 import com.uid2.shared.store.parser.KeysetKeyParser;
+import com.uid2.shared.store.scope.EncryptedScope;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
@@ -16,8 +14,29 @@ import java.util.Collection;
 public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Collection<KeysetKey>> {
     private final ScopedStoreReader<KeysetKeyStoreSnapshot> reader;
 
-    public RotatingKeysetKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
-        this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeysetKeyParser(), "keyset_keys");
+    public RotatingKeysetKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
+        this.reader = createReader(fileStreamProvider, scope, s3KeyProvider);
+    }
+
+    private ScopedStoreReader<KeysetKeyStoreSnapshot> createReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
+        if (scope instanceof EncryptedScope) {
+            EncryptedScope encryptedScope = (EncryptedScope) scope;
+            return new EncryptedScopedStoreReader<>(
+                    fileStreamProvider,
+                    encryptedScope,
+                    new KeysetKeyParser(),
+                    "keyset_keys",
+                    encryptedScope.getId(),
+                    s3KeyProvider
+            );
+        } else {
+            return new ScopedStoreReader<>(
+                    fileStreamProvider,
+                    scope,
+                    new KeysetKeyParser(),
+                    "keyset_keys"
+            );
+        }
     }
 
     @Override

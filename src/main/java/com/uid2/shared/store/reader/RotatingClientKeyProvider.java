@@ -5,9 +5,11 @@ import com.uid2.shared.auth.ClientKey;
 import com.uid2.shared.auth.IAuthorizable;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.store.CloudPath;
+import com.uid2.shared.store.EncryptedScopedStoreReader;
 import com.uid2.shared.store.IClientKeyProvider;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.ClientParser;
+import com.uid2.shared.store.scope.EncryptedScope;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
@@ -42,9 +44,30 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
     private final ScopedStoreReader<Collection<ClientKey>> reader;
     private final AuthorizableStore<ClientKey> authorizableStore;
 
-    public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
-        this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys");
+    public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
+        this.reader = createReader(fileStreamProvider, scope, s3KeyProvider);
         this.authorizableStore = new AuthorizableStore<>(ClientKey.class);
+    }
+
+    private ScopedStoreReader<Collection<ClientKey>> createReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
+        if (scope instanceof EncryptedScope) {
+            EncryptedScope encryptedScope = (EncryptedScope) scope;
+            return new EncryptedScopedStoreReader<>(
+                    fileStreamProvider,
+                    encryptedScope,
+                    new ClientParser(),
+                    "auth keys",
+                    encryptedScope.getId(),
+                    s3KeyProvider
+            );
+        } else {
+            return new ScopedStoreReader<>(
+                    fileStreamProvider,
+                    scope,
+                    new ClientParser(),
+                    "auth keys"
+            );
+        }
     }
 
     @Override
