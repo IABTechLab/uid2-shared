@@ -19,13 +19,13 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ScopedStoreReader<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScopedStoreReader.class);
 
-    private final DownloadCloudStorage metadataStreamProvider;
-    private final StoreScope scope;
-    private final Parser<T> parser;
-    private final String dataTypeName;
-    private final DownloadCloudStorage contentStreamProvider;
-    private final AtomicReference<T> latestSnapshot;
-    private final AtomicLong latestEntryCount = new AtomicLong(-1L);
+    protected final DownloadCloudStorage metadataStreamProvider;
+    protected final StoreScope scope;
+    protected final Parser<T> parser;
+    protected final String dataTypeName;
+    protected final DownloadCloudStorage contentStreamProvider;
+    protected final AtomicReference<T> latestSnapshot;
+    protected final AtomicLong latestEntryCount = new AtomicLong(-1L);
 
     public ScopedStoreReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, Parser<T> parser, String dataTypeName) {
         this.metadataStreamProvider = fileStreamProvider;
@@ -60,7 +60,7 @@ public class ScopedStoreReader<T> {
         }
     }
 
-    private long loadContent(String path) throws Exception {
+    protected long loadContent(String path) throws Exception {
         try (InputStream inputStream = this.contentStreamProvider.download(path)) {
             ParsingResult<T> parsed = parser.deserialize(inputStream);
             latestSnapshot.set(parsed.getData());
