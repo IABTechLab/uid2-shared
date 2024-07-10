@@ -15,12 +15,12 @@ public class EncryptedScope implements StoreScope {
     private final CloudPath rootMetadataPath;
     private final boolean isPublic;
 
-
     @Override
     public CloudPath getMetadataPath() {
         return resolve(rootMetadataPath.getFileName());
     }
 
+    @Override
     public CloudPath resolve(CloudPath cloudPath) {
         CloudPath directory = rootMetadataPath.getParent();
         String siteType = isPublic ? "public" : "private";
