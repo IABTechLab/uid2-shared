@@ -36,7 +36,7 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
         try (InputStream inputStream = this.contentStreamProvider.download(path)) {
             String encryptedContent = inputStreamToString(inputStream);
             String decryptedContent = getDecryptedContent(encryptedContent);
-            ParsingResult<T> parsed = parser.deserialize(new ByteArrayInputStream(decryptedContent.getBytes(StandardCharsets.UTF_8)));
+            ParsingResult<T> parsed = this.parser.deserialize(new ByteArrayInputStream(decryptedContent.getBytes(StandardCharsets.UTF_8)));
             latestSnapshot.set(parsed.getData());
 
             final int count = parsed.getCount();

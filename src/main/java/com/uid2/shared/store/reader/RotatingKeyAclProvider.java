@@ -24,8 +24,7 @@ public class RotatingKeyAclProvider implements IKeyAclProvider, StoreReader<Map<
     }
 
     public RotatingKeyAclProvider(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, RotatingS3KeyProvider s3KeyProvider) {
-        this.reader =  new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new KeyAclParser(), "key acls", scope.getId(), s3KeyProvider
-        );
+        this.reader =  new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new KeyAclParser(), "key acls", scope.getId(), s3KeyProvider);
     }
 
     @Override
