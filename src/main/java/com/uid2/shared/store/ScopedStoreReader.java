@@ -19,8 +19,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class ScopedStoreReader<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(ScopedStoreReader.class);
 
-    protected final DownloadCloudStorage metadataStreamProvider;
-    protected final StoreScope scope;
+    private final DownloadCloudStorage metadataStreamProvider;
+    private final StoreScope scope;
     protected final Parser<T> parser;
     protected final String dataTypeName;
     protected final DownloadCloudStorage contentStreamProvider;
