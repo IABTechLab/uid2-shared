@@ -49,32 +49,11 @@ public class RotatingKeyStore implements IKeyStore, StoreReader<Collection<Encry
     private final ScopedStoreReader<IKeyStoreSnapshot> reader;
 
     public RotatingKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
-        this(fileStreamProvider, scope, null);
+        this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeyParser(), "keys");
     }
 
-    public RotatingKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
-        this.reader = createReader(fileStreamProvider, scope, s3KeyProvider);
-    }
-
-    private ScopedStoreReader<IKeyStoreSnapshot> createReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
-        if (scope instanceof EncryptedScope) {
-            EncryptedScope encryptedScope = (EncryptedScope) scope;
-            return new EncryptedScopedStoreReader<>(
-                    fileStreamProvider,
-                    encryptedScope,
-                    new KeyParser(),
-                    "keys",
-                    encryptedScope.getId(),
-                    s3KeyProvider
-            );
-        } else {
-            return new ScopedStoreReader<>(
-                    fileStreamProvider,
-                    scope,
-                    new KeyParser(),
-                    "keys"
-            );
-        }
+    public RotatingKeyStore(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, RotatingS3KeyProvider s3KeyProvider) {
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new KeyParser(), "keys", scope.getId(), s3KeyProvider);
     }
 
     @Override

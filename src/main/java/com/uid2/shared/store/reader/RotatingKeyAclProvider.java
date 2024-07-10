@@ -20,32 +20,12 @@ public class RotatingKeyAclProvider implements IKeyAclProvider, StoreReader<Map<
     private final ScopedStoreReader<AclSnapshot> reader;
 
     public RotatingKeyAclProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
-        this(fileStreamProvider, scope, null);
+        this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeyAclParser(), "key acls");
     }
 
-    public RotatingKeyAclProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
-        this.reader = createReader(fileStreamProvider, scope, s3KeyProvider);
-    }
-
-    private ScopedStoreReader<AclSnapshot> createReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
-        if (scope instanceof EncryptedScope) {
-            EncryptedScope encryptedScope = (EncryptedScope) scope;
-            return new EncryptedScopedStoreReader<>(
-                    fileStreamProvider,
-                    encryptedScope,
-                    new KeyAclParser(),
-                    "key acls",
-                    encryptedScope.getId(),
-                    s3KeyProvider
-            );
-        } else {
-            return new ScopedStoreReader<>(
-                    fileStreamProvider,
-                    scope,
-                    new KeyAclParser(),
-                    "key acls"
-            );
-        }
+    public RotatingKeyAclProvider(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, RotatingS3KeyProvider s3KeyProvider) {
+        this.reader =  new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new KeyAclParser(), "key acls", scope.getId(), s3KeyProvider
+        );
     }
 
     @Override

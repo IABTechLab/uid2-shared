@@ -20,32 +20,11 @@ public class RotatingSiteStore implements ISiteStore, StoreReader<Collection<Sit
     private final ScopedStoreReader<Map<Integer, Site>> reader;
 
     public RotatingSiteStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
-        this(fileStreamProvider, scope, null);
+        this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new SiteParser(), "sites");
     }
 
-    public RotatingSiteStore(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
-        this.reader = createReader(fileStreamProvider, scope, s3KeyProvider);
-    }
-
-    private ScopedStoreReader<Map<Integer, Site>> createReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
-        if (scope instanceof EncryptedScope) {
-            EncryptedScope encryptedScope = (EncryptedScope) scope;
-            return new EncryptedScopedStoreReader<>(
-                    fileStreamProvider,
-                    encryptedScope,
-                    new SiteParser(),
-                    "sites",
-                    encryptedScope.getId(),
-                    s3KeyProvider
-            );
-        } else {
-            return new ScopedStoreReader<>(
-                    fileStreamProvider,
-                    scope,
-                    new SiteParser(),
-                    "sites"
-            );
-        }
+    public RotatingSiteStore(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, RotatingS3KeyProvider s3KeyProvider) {
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new SiteParser(), "sites", scope.getId(), s3KeyProvider);
     }
 
     @Override
