@@ -9,8 +9,10 @@ import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.uid2.shared.model.S3Key;
 
@@ -47,9 +49,39 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
         return keys != null ? keys : new HashMap<>();
     }
 
-
     @Override
     public void loadContent() throws Exception {
         this.loadContent(this.getMetadata());
+    }
+
+    public Collection<S3Key> getKeysForSite(Integer siteId) {
+        Map<Integer, S3Key> allKeys = getAll();
+        return allKeys.values().stream()
+                .filter(key -> key.getSiteId()==(siteId))
+                .collect(Collectors.toList());
+    }
+
+    public S3Key getEncryptionKeyForSite(Integer siteId) {
+        Collection<S3Key> keys = getKeysForSite(siteId);
+        if (keys.isEmpty()) {
+            throw new IllegalStateException("No S3 keys available for encryption for site ID: " + siteId);
+        } else {
+            Map<Integer, S3Key> allKeys = getAll();
+            S3Key largestKey = null;
+            for (S3Key key : allKeys.values()) {
+                if (key.getSiteId() == siteId) {
+                    if (largestKey == null || key.getId() > largestKey.getId()) {
+                        largestKey = key;
+                    }
+                }
+            }
+            return largestKey;
+        }
+    }
+    public S3Key findKeyById(int siteId, int keyId) {
+        return getAll().values().stream()
+                .filter(key -> key.getSiteId() == siteId && key.getId() == keyId)
+                .findFirst()
+                .orElse(null);
     }
 }
