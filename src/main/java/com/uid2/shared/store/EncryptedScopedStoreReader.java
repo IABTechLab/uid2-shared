@@ -4,6 +4,7 @@ import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.model.S3Key;
 import com.uid2.shared.store.parser.Parser;
 import com.uid2.shared.store.parser.ParsingResult;
+import com.uid2.shared.store.scope.EncryptedScope;
 import com.uid2.shared.store.scope.StoreScope;
 import com.uid2.shared.store.reader.RotatingS3KeyProvider;
 import io.vertx.core.json.JsonObject;
@@ -25,9 +26,9 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
     private final int siteId;
     private final RotatingS3KeyProvider s3KeyProvider;
 
-    public EncryptedScopedStoreReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, Parser<T> parser, String dataTypeName, int siteId, RotatingS3KeyProvider s3KeyProvider) {
+    public EncryptedScopedStoreReader(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, Parser<T> parser, String dataTypeName, RotatingS3KeyProvider s3KeyProvider) {
         super(fileStreamProvider, scope, parser, dataTypeName);
-        this.siteId = siteId;
+        this.siteId = scope.getId();
         this.s3KeyProvider = s3KeyProvider;
     }
 

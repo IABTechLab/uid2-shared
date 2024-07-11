@@ -7,6 +7,7 @@ import com.uid2.shared.model.S3Key;
 import com.uid2.shared.store.parser.Parser;
 import com.uid2.shared.store.parser.ParsingResult;
 import com.uid2.shared.store.reader.RotatingS3KeyProvider;
+import com.uid2.shared.store.scope.EncryptedScope;
 import com.uid2.shared.store.scope.GlobalScope;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +30,7 @@ class EncryptedScopedStoreReaderTest {
     private final CloudPath metadataPath = new CloudPath("test/test-metadata.json");
     private final CloudPath dataPath = new CloudPath("test/data.json");
     private final String dataType = "test-data-type";
-    private final GlobalScope scope = new GlobalScope(metadataPath);
+    private final EncryptedScope scope = new EncryptedScope(metadataPath,10, false);
     private final JsonObject metadata = new JsonObject()
             .put(dataType, new JsonObject().put(
                     "location", dataPath.toString()
@@ -71,7 +72,7 @@ class EncryptedScopedStoreReaderTest {
         storage.upload(toInputStream(encryptedJson.encodePrettily()), dataPath.toString());
         storage.upload(toInputStream(metadata.encodePrettily()), metadataPath.toString());
 
-        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, testSiteId, keyProvider);
+        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, keyProvider);
 
         reader.loadContent(metadata, dataType);
         Collection<TestData> actual = reader.getSnapshot();
@@ -98,7 +99,7 @@ class EncryptedScopedStoreReaderTest {
         storage.upload(toInputStream(encryptedJson.encodePrettily()), dataPath.toString());
         storage.upload(toInputStream(metadata.encodePrettily()), metadataPath.toString());
 
-        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, testSiteId, keyProvider);
+        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, keyProvider);
 
         assertThatThrownBy(() -> reader.loadContent(metadata, dataType))
                 .isInstanceOf(IllegalStateException.class)
@@ -118,7 +119,7 @@ class EncryptedScopedStoreReaderTest {
                 .put("encrypted_payload", encryptedPayloadBase64);
 
         String encryptedContent = encryptedJson.encodePrettily();
-        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, testSiteId, keyProvider);
+        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, keyProvider);
 
         String decryptedContent = reader.getDecryptedContent(encryptedContent);
 
@@ -142,7 +143,7 @@ class EncryptedScopedStoreReaderTest {
         storage.upload(toInputStream(encryptedJson.encodePrettily()), dataPath.toString());
         storage.upload(toInputStream(metadata.encodePrettily()), metadataPath.toString());
 
-        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, testSiteId, keyProvider);
+        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, keyProvider);
 
         assertThatThrownBy(() -> reader.loadContent(metadata, dataType))
                 .isInstanceOf(IllegalStateException.class)
@@ -172,7 +173,7 @@ class EncryptedScopedStoreReaderTest {
         storage.upload(toInputStream(encryptedJson.encodePrettily()), dataPath.toString());
         storage.upload(toInputStream(metadata.encodePrettily()), metadataPath.toString());
 
-        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, testSiteId, keyProvider);
+        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, keyProvider);
 
         reader.loadContent(metadata, dataType);
         Collection<TestData> actual = reader.getSnapshot();

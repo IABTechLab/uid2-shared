@@ -22,7 +22,7 @@ public class RotatingKeysetProvider implements StoreReader<Map<Integer, Keyset>>
     }
 
     public RotatingKeysetProvider(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, RotatingS3KeyProvider s3KeyProvider) {
-        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider,scope,new KeysetParser(),"keysers",scope.getId(),s3KeyProvider);
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider,scope,new KeysetParser(),"keysers",s3KeyProvider);
     }
 
     public KeysetSnapshot getSnapshot(Instant asOf) {

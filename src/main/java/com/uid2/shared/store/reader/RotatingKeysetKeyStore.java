@@ -19,7 +19,7 @@ public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Coll
     }
 
     public RotatingKeysetKeyStore(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, RotatingS3KeyProvider s3KeyProvider) {
-        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new KeysetKeyParser(), "keyset_keys", scope.getId(), s3KeyProvider);
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new KeysetKeyParser(), "keyset_keys", s3KeyProvider);
     }
 
     @Override
