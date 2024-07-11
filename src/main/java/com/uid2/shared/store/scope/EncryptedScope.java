@@ -9,7 +9,7 @@ public class EncryptedScope implements StoreScope {
     public EncryptedScope(CloudPath rootMetadataPath, Integer siteId, boolean isPublic){
         this.rootMetadataPath = rootMetadataPath;
         this.siteId = siteId;
-        this.isPublic=isPublic;
+        this.isPublic = isPublic;
     }
     private final Integer siteId;
     private final CloudPath rootMetadataPath;
