@@ -30,7 +30,7 @@ class EncryptedScopedStoreReaderTest {
     private final CloudPath metadataPath = new CloudPath("test/test-metadata.json");
     private final CloudPath dataPath = new CloudPath("test/data.json");
     private final String dataType = "test-data-type";
-    private final EncryptedScope scope = new EncryptedScope(metadataPath,10, false);
+    private final EncryptedScope scope = new EncryptedScope(metadataPath,123, false);
     private final JsonObject metadata = new JsonObject()
             .put(dataType, new JsonObject().put(
                     "location", dataPath.toString()
