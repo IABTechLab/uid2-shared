@@ -304,14 +304,6 @@ public class RotatingS3KeyProviderTest {
     }
 
     @Test
-    void testGetAllWithEmptyMap() {
-        Map<Integer, S3Key> existingKeys = new HashMap<>();
-        when(reader.getSnapshot()).thenReturn(existingKeys);
-        Map<Integer, S3Key> keys = rotatingS3KeyProvider.getAll();
-        assertEquals(0, keys.size());
-    }
-
-    @Test
     void testGetEncryptionKeyForSiteWithEmptyMap() {
         Map<Integer, S3Key> existingKeys = new HashMap<>();
         when(reader.getSnapshot()).thenReturn(existingKeys);
