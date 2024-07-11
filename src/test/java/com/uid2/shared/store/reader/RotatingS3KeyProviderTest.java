@@ -209,27 +209,4 @@ public class RotatingS3KeyProviderTest {
         when(reader.getSnapshot()).thenReturn(new HashMap<>());
         assertThrows(IllegalStateException.class, () -> rotatingS3KeyProvider.getEncryptionKeyForSite(456));
     }
-
-    @Test
-    void testFindKeyById() {
-        Map<Integer, S3Key> existingKeys = new HashMap<>();
-        S3Key key1 = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
-        S3Key key2 = new S3Key(2, 123, 1687808429, 1687808329, "S3keySecretByteHere2");
-        S3Key key3 = new S3Key(3, 456, 1687635529, 1687808329, "S3keySecretByteHere3");
-        existingKeys.put(1, key1);
-        existingKeys.put(2, key2);
-        existingKeys.put(3, key3);
-        when(reader.getSnapshot()).thenReturn(existingKeys);
-
-        S3Key retrievedKey = rotatingS3KeyProvider.findKeyById(123, 2);
-        assertNotNull(retrievedKey);
-        assertEquals(key2, retrievedKey);
-
-        S3Key nonExistentKey = rotatingS3KeyProvider.findKeyById(123, 4);
-        assertNull(nonExistentKey);
-
-        S3Key keyFromAnotherSite = rotatingS3KeyProvider.findKeyById(456, 3);
-        assertNotNull(keyFromAnotherSite);
-        assertEquals(key3, keyFromAnotherSite);
-    }
 }

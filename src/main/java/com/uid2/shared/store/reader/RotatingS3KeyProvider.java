@@ -78,16 +78,4 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
             return largestKey;
         }
     }
-    public S3Key findKeyById(int siteId, int keyId) {
-        Map<Integer, S3Key> allKeys = getAll();
-        S3Key decryptionKey = null;
-
-        for (S3Key key : allKeys.values()) {
-            if (key.getSiteId() == siteId && key.getId() == keyId) {
-                decryptionKey = key;
-                break;
-            }
-        }
-        return decryptionKey;
-    }
 }
