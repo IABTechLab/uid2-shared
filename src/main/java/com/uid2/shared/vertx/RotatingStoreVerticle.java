@@ -3,6 +3,7 @@ package com.uid2.shared.vertx;
 import com.uid2.shared.health.HealthComponent;
 import com.uid2.shared.health.HealthManager;
 import com.uid2.shared.store.reader.IMetadataVersionedStore;
+import com.uid2.shared.store.reader.RotatingS3KeyProvider;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
@@ -128,6 +129,9 @@ public class RotatingStoreVerticle extends AbstractVerticle {
         final long version = this.versionedStore.getVersion(metadata);
         if (version > this.latestVersion.get()) {
             long entryCount = this.versionedStore.loadContent(metadata);
+            if (this.versionedStore instanceof RotatingS3KeyProvider) {
+                ((RotatingS3KeyProvider) this.versionedStore).updateSiteToKeysMapping();
+            }
             this.latestVersion.set(version);
             this.latestEntryCount.set(entryCount);
             LOGGER.info("Successfully loaded " + this.storeName + " version " + version);
