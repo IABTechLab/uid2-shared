@@ -1,6 +1,7 @@
 package com.uid2.shared.store.reader;
 
 import com.uid2.shared.auth.KeysetSnapshot;
+import com.uid2.shared.auth.RotatingOperatorKeyProvider;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.ScopedStoreReader;
@@ -15,8 +16,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.uid2.shared.model.S3Key;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RotatingOperatorKeyProvider.class);
+
     ScopedStoreReader<Map<Integer, S3Key>> reader;
 
     public RotatingS3KeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
@@ -38,10 +43,12 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
         return metadata.getLong("version");
     }
 
+
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
-        return reader.loadContent(metadata, "s3encryption_keys");
-    }
+        long loadedKeysCount = reader.loadContent(metadata, "s3encryption_keys");
+        LOGGER.info("Loaded {} S3 encryption keys", loadedKeysCount);
+        return loadedKeysCount;    }
 
     @Override
     public Map<Integer, S3Key> getAll() {
