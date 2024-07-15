@@ -10,9 +10,7 @@ import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Instant;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.uid2.shared.model.S3Key;
@@ -23,6 +21,8 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingOperatorKeyProvider.class);
 
     ScopedStoreReader<Map<Integer, S3Key>> reader;
+    private final Map<Integer, List<S3Key>> siteToKeysMap = new HashMap<>();
+
 
     public RotatingS3KeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new S3KeyParser(), "s3encryption_keys");
@@ -43,12 +43,20 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
         return metadata.getLong("version");
     }
 
-
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
         long loadedKeysCount = reader.loadContent(metadata, "s3encryption_keys");
         LOGGER.info("Loaded {} S3 encryption keys", loadedKeysCount);
         return loadedKeysCount;
+    }
+
+    public void updateSiteToKeysMapping() {
+        Map<Integer, S3Key> allKeys = getAll();
+        siteToKeysMap.clear();
+        for (S3Key key : allKeys.values()) {
+            siteToKeysMap.computeIfAbsent(key.getSiteId(), k -> new ArrayList<>()).add(key);
+        }
+        LOGGER.info("Updated site-to-keys mapping for {} sites", siteToKeysMap.size());
     }
 
     @Override
@@ -63,10 +71,7 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
     }
 
     public Collection<S3Key> getKeysForSite(Integer siteId) {
-        Map<Integer, S3Key> allKeys = getAll();
-        return allKeys.values().stream()
-                .filter(key -> key.getSiteId()==(siteId))
-                .collect(Collectors.toList());
+        return siteToKeysMap.getOrDefault(siteId, Collections.emptyList());
     }
 
     public S3Key getEncryptionKeyForSite(Integer siteId) {
@@ -85,5 +90,13 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
             }
             return largestKey;
         }
+    }
+
+    public Set<Integer> getAllSiteIds() {
+        return new HashSet<>(siteToKeysMap.keySet());
+    }
+
+    public int getTotalSites() {
+        return siteToKeysMap.size();
     }
 }
