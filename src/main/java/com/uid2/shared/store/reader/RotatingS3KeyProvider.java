@@ -48,7 +48,8 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
     public long loadContent(JsonObject metadata) throws Exception {
         long loadedKeysCount = reader.loadContent(metadata, "s3encryption_keys");
         LOGGER.info("Loaded {} S3 encryption keys", loadedKeysCount);
-        return loadedKeysCount;    }
+        return loadedKeysCount;
+    }
 
     @Override
     public Map<Integer, S3Key> getAll() {
