@@ -132,7 +132,9 @@ public class RequestCapturingHandlerTest {
 
     @ParameterizedTest
     @MethodSource("siteIdRoutingContextData")
-    public void getSiteIdFromRoutingContextData(String key, Object value, String siteId, Vertx vertx, VertxTestContext testContext) {
+    public void
+
+    getSiteIdFromRoutingContextData(String key, Object value, String siteId, Vertx vertx, VertxTestContext testContext) {
         Router router = Router.router(vertx);
         router.route().handler(new RequestCapturingHandler());
         router.get("/test").handler(ctx -> {
