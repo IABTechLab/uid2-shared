@@ -4,8 +4,10 @@ import com.uid2.shared.auth.Keyset;
 import com.uid2.shared.auth.KeysetSnapshot;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.store.CloudPath;
+import com.uid2.shared.store.EncryptedScopedStoreReader;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.KeysetParser;
+import com.uid2.shared.store.scope.EncryptedScope;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
@@ -17,6 +19,10 @@ public class RotatingKeysetProvider implements StoreReader<Map<Integer, Keyset>>
 
     public RotatingKeysetProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeysetParser(), "keysets");
+    }
+
+    public RotatingKeysetProvider(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, RotatingS3KeyProvider s3KeyProvider) {
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider,scope,new KeysetParser(),"keysers",s3KeyProvider);
     }
 
     public KeysetSnapshot getSnapshot(Instant asOf) {
