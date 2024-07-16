@@ -15,6 +15,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -341,5 +342,82 @@ public class RotatingS3KeyProviderTest {
         Collection<S3Key> retrievedKeys = rotatingS3KeyProvider.getKeysForSite(456);
         assertNotNull(retrievedKeys);
         assertEquals(0, retrievedKeys.size());
+    }
+
+    @Test
+    void testUpdateSiteToKeysMapping() {
+        Map<Integer, S3Key> existingKeys = new HashMap<>();
+        S3Key key1 = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
+        S3Key key2 = new S3Key(2, 123, 1687808429, 1687808329, "S3keySecretByteHere2");
+        S3Key key3 = new S3Key(3, 456, 1687635529, 1687808329, "S3keySecretByteHere3");
+        existingKeys.put(1, key1);
+        existingKeys.put(2, key2);
+        existingKeys.put(3, key3);
+        when(reader.getSnapshot()).thenReturn(existingKeys);
+
+        rotatingS3KeyProvider.updateSiteToKeysMapping();
+
+        // Verify the behavior that depends on siteToKeysMap
+        Collection<S3Key> site123Keys = rotatingS3KeyProvider.getKeysForSite(123);
+        Collection<S3Key> site456Keys = rotatingS3KeyProvider.getKeysForSite(456);
+
+        assertEquals(2, site123Keys.size());
+        assertTrue(site123Keys.contains(key1));
+        assertTrue(site123Keys.contains(key2));
+
+        assertEquals(1, site456Keys.size());
+        assertTrue(site456Keys.contains(key3));
+
+        assertEquals(2, rotatingS3KeyProvider.getTotalSites());
+        Set<Integer> allSiteIds = rotatingS3KeyProvider.getAllSiteIds();
+        assertEquals(2, allSiteIds.size());
+        assertTrue(allSiteIds.contains(123));
+        assertTrue(allSiteIds.contains(456));
+    }
+
+    @Test
+    void testLoadContentOverride() throws Exception {
+        JsonObject metadata = new JsonObject();
+        when(reader.getMetadata()).thenReturn(metadata);
+        when(reader.loadContent(metadata, "s3encryption_keys")).thenReturn(1L);
+
+        rotatingS3KeyProvider.loadContent();
+
+        verify(reader, times(1)).getMetadata();
+        verify(reader, times(1)).loadContent(metadata, "s3encryption_keys");
+    }
+
+    @Test
+    void testGetAllSiteIds() {
+        Map<Integer, S3Key> existingKeys = new HashMap<>();
+        S3Key key1 = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
+        S3Key key2 = new S3Key(2, 456, 1687808429, 1687808329, "S3keySecretByteHere2");
+        existingKeys.put(1, key1);
+        existingKeys.put(2, key2);
+        when(reader.getSnapshot()).thenReturn(existingKeys);
+
+        rotatingS3KeyProvider.updateSiteToKeysMapping();
+
+        Set<Integer> allSiteIds = rotatingS3KeyProvider.getAllSiteIds();
+        assertEquals(2, allSiteIds.size());
+        assertTrue(allSiteIds.contains(123));
+        assertTrue(allSiteIds.contains(456));
+    }
+
+    @Test
+    void testGetTotalSites() {
+        Map<Integer, S3Key> existingKeys = new HashMap<>();
+        S3Key key1 = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
+        S3Key key2 = new S3Key(2, 123, 1687808429, 1687808329, "S3keySecretByteHere2");
+        S3Key key3 = new S3Key(3, 456, 1687635529, 1687808329, "S3keySecretByteHere3");
+        existingKeys.put(1, key1);
+        existingKeys.put(2, key2);
+        existingKeys.put(3, key3);
+        when(reader.getSnapshot()).thenReturn(existingKeys);
+
+        rotatingS3KeyProvider.updateSiteToKeysMapping();
+
+        int totalSites = rotatingS3KeyProvider.getTotalSites();
+        assertEquals(2, totalSites);
     }
 }
