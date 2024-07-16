@@ -9,7 +9,6 @@ class EncryptedScopeTest {
     void getMetadataPath() {
         EncryptedScope scope = new EncryptedScope(new CloudPath("/original/path/metadata.json"), 5,false);
         CloudPath expected = new CloudPath("/original/path/encrypted/5_private/metadata.json");
-
         CloudPath actual = scope.getMetadataPath();
         assertThat(actual).isEqualTo(expected);
     }
@@ -17,8 +16,8 @@ class EncryptedScopeTest {
     @Test
     void resolvesPathsRelativeToSiteDirectory() {
         EncryptedScope scope = new EncryptedScope(new CloudPath("/original/path/metadata.json"), 5,false );
-        CloudPath actual = scope.resolve(new CloudPath("file.xyz"));
         CloudPath expected = new CloudPath("/original/path/encrypted/5_private/file.xyz");
+        CloudPath actual = scope.resolve(new CloudPath("file.xyz"));
         assertThat(actual).isEqualTo(expected);
     }
 
@@ -26,7 +25,6 @@ class EncryptedScopeTest {
     void getMetadataPathPublic() {
         EncryptedScope scope = new EncryptedScope(new CloudPath("/original/path/metadata.json"), 5, true);
         CloudPath expected = new CloudPath("/original/path/encrypted/5_public/metadata.json");
-
         CloudPath actual = scope.getMetadataPath();
         assertThat(actual).isEqualTo(expected);
     }
