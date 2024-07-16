@@ -1,6 +1,5 @@
 package com.uid2.shared.store.reader;
 
-import com.uid2.shared.auth.KeysetSnapshot;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.ScopedStoreReader;
@@ -8,12 +7,8 @@ import com.uid2.shared.store.parser.S3KeyParser;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
-import java.time.Instant;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
