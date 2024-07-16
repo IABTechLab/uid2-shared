@@ -3,9 +3,11 @@ package com.uid2.shared.store.reader;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.model.EncryptionKey;
 import com.uid2.shared.store.CloudPath;
+import com.uid2.shared.store.EncryptedScopedStoreReader;
 import com.uid2.shared.store.IKeyStore;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.KeyParser;
+import com.uid2.shared.store.scope.EncryptedScope;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
@@ -48,6 +50,10 @@ public class RotatingKeyStore implements IKeyStore, StoreReader<Collection<Encry
 
     public RotatingKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeyParser(), "keys");
+    }
+
+    public RotatingKeyStore(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, RotatingS3KeyProvider s3KeyProvider) {
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new KeyParser(), "keys", s3KeyProvider);
     }
 
     @Override

@@ -7,7 +7,9 @@ import com.uid2.shared.store.IKeysetKeyStore;
 import com.uid2.shared.store.KeysetKeyStoreSnapshot;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.KeysetKeyParser;
+import com.uid2.shared.store.scope.EncryptedScope;
 import com.uid2.shared.store.scope.StoreScope;
+import com.uid2.shared.store.EncryptedScopedStoreReader;
 import io.vertx.core.json.JsonObject;
 
 import java.time.Instant;
@@ -18,6 +20,10 @@ public class RotatingKeysetKeyStore implements IKeysetKeyStore, StoreReader<Coll
 
     public RotatingKeysetKeyStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new KeysetKeyParser(), "keyset_keys");
+    }
+
+    public RotatingKeysetKeyStore(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, RotatingS3KeyProvider s3KeyProvider) {
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new KeysetKeyParser(), "keyset_keys", s3KeyProvider);
     }
 
     @Override
