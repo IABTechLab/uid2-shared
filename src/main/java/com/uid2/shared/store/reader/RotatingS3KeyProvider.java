@@ -6,13 +6,9 @@ import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.S3KeyParser;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
+
+import java.util.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.stream.Collectors;
@@ -46,7 +42,9 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
 
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
-        return reader.loadContent(metadata, "s3encryption_keys");
+        long result = reader.loadContent(metadata, "s3encryption_keys");
+        updateSiteToKeysMapping();
+        return result;
     }
 
     @Override
@@ -84,21 +82,22 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
                 .collect(Collectors.toList());
     }
 
+    public List<S3Key> getKeysForSiteFromMap(int siteId) {
+        return siteToKeysMap.getOrDefault(siteId, new ArrayList<>());
+    }
+
     public S3Key getEncryptionKeyForSite(Integer siteId) {
         Collection<S3Key> keys = getKeysForSite(siteId);
         if (keys.isEmpty()) {
             throw new IllegalStateException("No S3 keys available for encryption for site ID: " + siteId);
-        } else {
-            Map<Integer, S3Key> allKeys = getAll();
-            S3Key largestKey = null;
-            for (S3Key key : allKeys.values()) {
-                if (key.getSiteId() == siteId) {
-                    if (largestKey == null || key.getId() > largestKey.getId()) {
-                        largestKey = key;
-                    }
-                }
-            }
-            return largestKey;
         }
+        return findLargestKey(keys);
     }
+
+    S3Key findLargestKey(Collection<S3Key> keys) {
+        return keys.stream()
+                .max(Comparator.comparingInt(S3Key::getId))
+                .orElseThrow(() -> new IllegalStateException("No keys found"));
+    }
+
 }

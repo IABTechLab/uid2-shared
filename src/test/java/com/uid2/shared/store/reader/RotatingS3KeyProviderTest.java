@@ -12,10 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -39,6 +36,7 @@ public class RotatingS3KeyProviderTest {
         rotatingS3KeyProvider = new RotatingS3KeyProvider(fileStreamProvider, scope);
         // Inject the mock reader into the RotatingS3KeyProvider
         rotatingS3KeyProvider.reader = reader;
+        rotatingS3KeyProvider.siteToKeysMap = new HashMap<>();
     }
 
     @Test
@@ -419,5 +417,45 @@ public class RotatingS3KeyProviderTest {
 
         int totalSites = rotatingS3KeyProvider.getTotalSites();
         assertEquals(2, totalSites);
+    }
+
+    @Test
+    void testGetKeysForSiteFromMap() {
+        S3Key key1 = new S3Key(1, 100, 1687635529, 1687808329, "secret1");
+        S3Key key2 = new S3Key(2, 100, 1687808429, 1687981229, "secret2");
+        S3Key key3 = new S3Key(3, 200, 1687981329, 1688154129, "secret3");
+
+        Map<Integer, List<S3Key>> testMap = new HashMap<>();
+        testMap.put(100, Arrays.asList(key1, key2));
+        testMap.put(200, Collections.singletonList(key3));
+
+        rotatingS3KeyProvider.siteToKeysMap = testMap;
+
+        List<S3Key> result1 = rotatingS3KeyProvider.getKeysForSiteFromMap(100);
+        assertEquals(2, result1.size());
+        assertTrue(result1.contains(key1));
+        assertTrue(result1.contains(key2));
+
+        List<S3Key> result2 = rotatingS3KeyProvider.getKeysForSiteFromMap(200);
+        assertEquals(1, result2.size());
+        assertTrue(result2.contains(key3));
+
+        List<S3Key> result3 = rotatingS3KeyProvider.getKeysForSiteFromMap(300);
+        assertTrue(result3.isEmpty());
+    }
+
+    @Test
+    void testGetKeysForSiteFromMapWithEmptyMap() {
+        rotatingS3KeyProvider.siteToKeysMap = new HashMap<>();
+
+        List<S3Key> result = rotatingS3KeyProvider.getKeysForSiteFromMap(100);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void testGetKeysForSiteFromMapWithNullMap() {
+        rotatingS3KeyProvider.siteToKeysMap = null;
+
+        assertThrows(NullPointerException.class, () -> rotatingS3KeyProvider.getKeysForSiteFromMap(100));
     }
 }
