@@ -92,18 +92,26 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
         return siteToKeysMap.getOrDefault(siteId, new ArrayList<>());
     }
 
-    public S3Key getEncryptionKeyForSite(Integer siteId) {
+    public List<S3Key> getMostRecentKeysForSite(int siteId) {
+        List<S3Key> keys = getKeys(siteId);
+        if (keys.isEmpty()) {
+            throw new IllegalStateException("No keys found for site ID: " + siteId);
+        }
+        return keys.stream()
+                .sorted(Comparator.comparingLong(S3Key::getCreated).reversed())
+                // Get most recently created 3 keys
+                .limit(3)
+                .collect(Collectors.toList());
+    }
+
+    S3Key getEncryptionKeyForSite(Integer siteId, long currentTime) {
         Collection<S3Key> keys = getKeysForSite(siteId);
         if (keys.isEmpty()) {
             throw new IllegalStateException("No S3 keys available for encryption for site ID: " + siteId);
         }
-        return findLargestKey(keys);
-    }
-
-    S3Key findLargestKey(Collection<S3Key> keys) {
         return keys.stream()
-                .max(Comparator.comparingInt(S3Key::getId))
-                .orElseThrow(() -> new IllegalStateException("No keys found"));
+                .filter(key -> key.getActivates() <= currentTime)
+                .max(Comparator.comparingLong(S3Key::getCreated))
+                .orElseThrow(() -> new IllegalStateException("No active keys found for site ID: " + siteId));
     }
-
 }
