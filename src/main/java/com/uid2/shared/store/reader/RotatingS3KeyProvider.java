@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.time.Instant;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -108,13 +109,14 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
                 .collect(Collectors.toList());
     }
 
-     public S3Key getEncryptionKeyForSite(Integer siteId, long currentTime) {
+     public S3Key getEncryptionKeyForSite(Integer siteId) {
         Collection<S3Key> keys = getKeysForSite(siteId);
-        if (keys.isEmpty()) {
+         long now = Instant.now().getEpochSecond();
+         if (keys.isEmpty()) {
             throw new IllegalStateException("No S3 keys available for encryption for site ID: " + siteId);
         }
         return keys.stream()
-                .filter(key -> key.getActivates() <= currentTime)
+                .filter(key -> key.getActivates() <= now)
                 .max(Comparator.comparingLong(S3Key::getCreated))
                 .orElseThrow(() -> new IllegalStateException("No active keys found for site ID: " + siteId));
     }
