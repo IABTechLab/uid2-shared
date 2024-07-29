@@ -13,6 +13,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -508,5 +510,45 @@ public class RotatingS3KeyProviderTest {
 
         assertThrows(IllegalStateException.class,
                 () -> rotatingS3KeyProvider.getEncryptionKeyForSite(123, CURRENT_TIME));
+    }
+
+    @Test
+    public void testRaceCondition() throws InterruptedException, ExecutionException {
+        int threadCount = 100;
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(1);
+        Map<Integer, S3Key> keysMap = new HashMap<>();
+        keysMap.put(1, new S3Key(1, 88, 1687635529, 1687808329, "secret1"));
+        keysMap.put(2, new S3Key(2, 88, 1687635530, 1687808330, "secret2"));
+        keysMap.put(3, new S3Key(3, 88, 1687635531, 1687808331, "secret3"));
+        keysMap.put(4, new S3Key(4, 89, 1687635532, 1687808332, "secret4"));
+
+        when(reader.getSnapshot()).thenReturn(keysMap);
+        List<Callable<Void>> tasks = new ArrayList<>();
+        for (int i = 0; i < threadCount; i++) {
+            tasks.add(() -> {
+                latch.await();
+                if (ThreadLocalRandom.current().nextBoolean()) {
+                    rotatingS3KeyProvider.updateSiteToKeysMapping();
+                } else {
+                    rotatingS3KeyProvider.getKeysForSite(88);
+                }
+                return null;
+            });
+        }
+
+        // Start all tasks simultaneously
+        for (Callable<Void> task : tasks) {
+            executorService.submit(task);
+        }
+        latch.countDown();  // Allow all threads to proceed
+
+        executorService.shutdown();
+        executorService.awaitTermination(1, TimeUnit.MINUTES);
+
+        List<S3Key> keysForSite88 = rotatingS3KeyProvider.getKeysForSite(88).stream()
+                .filter(key -> key.getSiteId() == 88)
+                .collect(Collectors.toList());
+        assertEquals(3, keysForSite88.size());
     }
 }

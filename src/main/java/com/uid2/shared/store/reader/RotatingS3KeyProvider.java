@@ -17,6 +17,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import com.uid2.shared.model.S3Key;
@@ -25,7 +27,7 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
     ScopedStoreReader<Map<Integer, S3Key>> reader;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingS3KeyProvider.class);
-    public Map<Integer, List<S3Key>> siteToKeysMap = new HashMap<>();
+    Map<Integer, List<S3Key>> siteToKeysMap = new ConcurrentHashMap<>();
 
     public RotatingS3KeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new S3KeyParser(), "s3encryption_keys");
@@ -62,9 +64,11 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
     public void updateSiteToKeysMapping() {
         Map<Integer, S3Key> allKeys = getAll();
         siteToKeysMap.clear();
-        for (S3Key key : allKeys.values()) {
-            siteToKeysMap.computeIfAbsent(key.getSiteId(), k -> new ArrayList<>()).add(key);
-        }
+        allKeys.values().forEach(key ->
+                        this.siteToKeysMap
+                                .computeIfAbsent(key.getSiteId(), k -> new ArrayList<>())
+                                .add(key)
+        );
         LOGGER.info("Updated site-to-keys mapping for {} sites", siteToKeysMap.size());
     }
 
@@ -104,7 +108,7 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
                 .collect(Collectors.toList());
     }
 
-    S3Key getEncryptionKeyForSite(Integer siteId, long currentTime) {
+     S3Key getEncryptionKeyForSite(Integer siteId, long currentTime) {
         Collection<S3Key> keys = getKeysForSite(siteId);
         if (keys.isEmpty()) {
             throw new IllegalStateException("No S3 keys available for encryption for site ID: " + siteId);
