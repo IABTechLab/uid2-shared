@@ -431,16 +431,16 @@ public class RotatingS3KeyProviderTest {
 
         rotatingS3KeyProvider.siteToKeysMap = testMap;
 
-        List<S3Key> result1 = rotatingS3KeyProvider.getKeysForSiteFromMap(100);
+        List<S3Key> result1 = rotatingS3KeyProvider.getKeys(100);
         assertEquals(2, result1.size());
         assertTrue(result1.contains(key1));
         assertTrue(result1.contains(key2));
 
-        List<S3Key> result2 = rotatingS3KeyProvider.getKeysForSiteFromMap(200);
+        List<S3Key> result2 = rotatingS3KeyProvider.getKeys(200);
         assertEquals(1, result2.size());
         assertTrue(result2.contains(key3));
 
-        List<S3Key> result3 = rotatingS3KeyProvider.getKeysForSiteFromMap(300);
+        List<S3Key> result3 = rotatingS3KeyProvider.getKeys(300);
         assertTrue(result3.isEmpty());
     }
 
@@ -448,7 +448,7 @@ public class RotatingS3KeyProviderTest {
     void testGetKeysForSiteFromMapWithEmptyMap() {
         rotatingS3KeyProvider.siteToKeysMap = new HashMap<>();
 
-        List<S3Key> result = rotatingS3KeyProvider.getKeysForSiteFromMap(100);
+        List<S3Key> result = rotatingS3KeyProvider.getKeys(100);
         assertTrue(result.isEmpty());
     }
 
@@ -456,6 +456,6 @@ public class RotatingS3KeyProviderTest {
     void testGetKeysForSiteFromMapWithNullMap() {
         rotatingS3KeyProvider.siteToKeysMap = null;
 
-        assertThrows(NullPointerException.class, () -> rotatingS3KeyProvider.getKeysForSiteFromMap(100));
+        assertThrows(NullPointerException.class, () -> rotatingS3KeyProvider.getKeys(100));
     }
 }
