@@ -108,7 +108,7 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
                 .collect(Collectors.toList());
     }
 
-     S3Key getEncryptionKeyForSite(Integer siteId, long currentTime) {
+     public S3Key getEncryptionKeyForSite(Integer siteId, long currentTime) {
         Collection<S3Key> keys = getKeysForSite(siteId);
         if (keys.isEmpty()) {
             throw new IllegalStateException("No S3 keys available for encryption for site ID: " + siteId);
