@@ -128,7 +128,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
         final JsonObject metadata = this.versionedStore.getMetadata();
         System.out.println("refresh: " + metadata.toString());
 
-        if (versionedStore instanceof RotatingS3KeyProvider) {
+        if (metadata.getValue("s3Keys")!=null) {
             ((RotatingS3KeyProvider) versionedStore).loadContentsWithoutDownloading(metadata);
             LOGGER.info("Successfully loaded " + this.storeName + " without downloading " + versionedStore.getClass());
         } else {
