@@ -12,7 +12,9 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -85,5 +87,28 @@ public class ScopedStoreReader<T> {
         JsonObject clientKeysMetadata = metadata.getJsonObject(dataType);
         String path = clientKeysMetadata.getString("location");
         return loadContent(path);
+    }
+
+    public long loadContentsWithoutDownloading(JsonObject contents, String dataType) throws Exception {
+        if (contents == null) {
+            throw new IllegalArgumentException(String.format("No contents provided for loading data type %s, can not load content", dataType));
+        }
+        try {
+            JsonObject plaintextcontents = contents.getJsonObject(dataType);
+            System.out.println(plaintextcontents.toString());
+            // Convert JsonObject to InputStream
+            InputStream inputStream = new ByteArrayInputStream(plaintextcontents.toString().getBytes(StandardCharsets.UTF_8));
+            ParsingResult<T> parsed = parser.deserialize(inputStream);
+            latestSnapshot.set(parsed.getData());
+
+            final int count = parsed.getCount();
+            latestEntryCount.set(count);
+            LOGGER.info(String.format("Loaded %d %s", count, dataTypeName));
+            return count;
+        } catch (Exception e) {
+            // Do not log the message or the original exception as that may contain the pre-signed url
+            LOGGER.error(String.format("Unable to load %s", dataTypeName));
+            throw e;
+        }
     }
 }

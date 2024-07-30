@@ -126,12 +126,19 @@ public class RotatingStoreVerticle extends AbstractVerticle {
 
     public synchronized void refresh() throws Exception {
         final JsonObject metadata = this.versionedStore.getMetadata();
-        final long version = this.versionedStore.getVersion(metadata);
-        if (version > this.latestVersion.get()) {
-            long entryCount = this.versionedStore.loadContent(metadata);
-            this.latestVersion.set(version);
-            this.latestEntryCount.set(entryCount);
-            LOGGER.info("Successfully loaded " + this.storeName + " version " + version);
+        System.out.println("refresh: " + metadata.toString());
+
+        if (versionedStore instanceof RotatingS3KeyProvider) {
+            ((RotatingS3KeyProvider) versionedStore).loadContentsWithoutDownloading(metadata);
+            LOGGER.info("Successfully loaded " + this.storeName + " without downloading " + versionedStore.getClass());
+        } else {
+            final long version = this.versionedStore.getVersion(metadata);
+            if (version > this.latestVersion.get()) {
+                long entryCount = this.versionedStore.loadContent(metadata);
+                this.latestVersion.set(version);
+                this.latestEntryCount.set(entryCount);
+                LOGGER.info("Successfully loaded " + this.storeName + " version " + version);
+            }
         }
     }
 }

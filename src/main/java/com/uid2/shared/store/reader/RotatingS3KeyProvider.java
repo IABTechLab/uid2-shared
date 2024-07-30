@@ -56,6 +56,11 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
         return result;
     }
 
+    public long loadContentsWithoutDownloading(JsonObject contents) throws Exception {
+        long result = reader.loadContentsWithoutDownloading(contents, "s3Keys");
+        return result;
+    }
+
     @Override
     public Map<Integer, S3Key> getAll() {
         Map<Integer, S3Key> keys = reader.getSnapshot();

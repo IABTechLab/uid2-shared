@@ -62,6 +62,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
     @Override
     public InputStream download(String path) throws CloudStorageException {
+        System.out.println("download: " + path);
         return this.internalDownload(path);
     }
 
@@ -98,6 +99,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
         HttpResponse<String> httpResponse;
         httpResponse = sendHttpRequest(path, attestationToken);
+        System.out.println("attestation: " + httpResponse.body());
 
         // This should never happen, but keeping this part of the code just to be extra safe.
         if (httpResponse.statusCode() == 401) {
