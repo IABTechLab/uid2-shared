@@ -96,20 +96,13 @@ public class ScopedStoreReader<T> {
             throw new IllegalArgumentException(String.format("No contents provided for loading data type %s, cannot load content", dataType));
         }
         try {
-            // Get the "s3Keys" array from the JsonObject
-            JsonArray s3KeysArray = contents.getJsonArray("s3Keys");
+            JsonArray s3KeysArray = contents.getJsonArray(dataType);
             if (s3KeysArray == null) {
-                throw new IllegalArgumentException("No 's3Keys' array found in the contents");
+                throw new IllegalArgumentException("No array found in the contents");
             }
 
-            // Convert JsonArray to JSON string
             String jsonString = s3KeysArray.toString();
-            System.out.println(jsonString);
-
-            // Convert JSON string to InputStream
             InputStream inputStream = new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8));
-
-            // Assuming T is Map<Integer, S3Key> for this parser
             ParsingResult<T> parsed = parser.deserialize(inputStream);
             latestSnapshot.set(parsed.getData());
 
