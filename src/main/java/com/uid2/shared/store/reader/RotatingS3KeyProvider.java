@@ -28,7 +28,7 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
     ScopedStoreReader<Map<Integer, S3Key>> reader;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingS3KeyProvider.class);
-    Map<Integer, List<S3Key>> siteToKeysMap = new ConcurrentHashMap<>();
+    public Map<Integer, List<S3Key>> siteToKeysMap = new HashMap<>();
 
     public RotatingS3KeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new S3KeyParser(), "s3encryption_keys");
