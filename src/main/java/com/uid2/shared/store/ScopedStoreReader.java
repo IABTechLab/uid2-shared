@@ -8,6 +8,7 @@ import com.uid2.shared.store.parser.ParsingResult;
 import com.uid2.shared.store.scope.StoreScope;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -91,13 +93,23 @@ public class ScopedStoreReader<T> {
 
     public long loadContentsWithoutDownloading(JsonObject contents, String dataType) throws Exception {
         if (contents == null) {
-            throw new IllegalArgumentException(String.format("No contents provided for loading data type %s, can not load content", dataType));
+            throw new IllegalArgumentException(String.format("No contents provided for loading data type %s, cannot load content", dataType));
         }
         try {
-            JsonObject plaintextcontents = contents.getJsonObject(dataType);
-            System.out.println(plaintextcontents.toString());
-            // Convert JsonObject to InputStream
-            InputStream inputStream = new ByteArrayInputStream(plaintextcontents.toString().getBytes(StandardCharsets.UTF_8));
+            // Get the "s3Keys" array from the JsonObject
+            JsonArray s3KeysArray = contents.getJsonArray("s3Keys");
+            if (s3KeysArray == null) {
+                throw new IllegalArgumentException("No 's3Keys' array found in the contents");
+            }
+
+            // Convert JsonArray to JSON string
+            String jsonString = s3KeysArray.toString();
+            System.out.println(jsonString);
+
+            // Convert JSON string to InputStream
+            InputStream inputStream = new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8));
+
+            // Assuming T is Map<Integer, S3Key> for this parser
             ParsingResult<T> parsed = parser.deserialize(inputStream);
             latestSnapshot.set(parsed.getData());
 
