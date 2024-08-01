@@ -46,7 +46,6 @@ public class RotatingS3KeyProviderTest {
         rotatingS3KeyProvider = new RotatingS3KeyProvider(fileStreamProvider, scope);
         // Inject the mock reader into the RotatingS3KeyProvider
         rotatingS3KeyProvider.reader = reader;
-        rotatingS3KeyProvider.siteToKeysMap = new HashMap<>();
     }
 
     @Test
