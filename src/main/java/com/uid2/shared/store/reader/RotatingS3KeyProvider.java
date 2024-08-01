@@ -86,15 +86,15 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
         return siteToKeysMap.size();
     }
 
+    public List<S3Key> getKeys(int siteId) {
+        return siteToKeysMap.getOrDefault(siteId, new ArrayList<>());
+    }
+
     public Collection<S3Key> getKeysForSite(Integer siteId) {
         Map<Integer, S3Key> allKeys = getAll();
         return allKeys.values().stream()
                 .filter(key -> key.getSiteId()==(siteId))
                 .collect(Collectors.toList());
-    }
-
-    public List<S3Key> getKeys(int siteId) {
-        return siteToKeysMap.getOrDefault(siteId, new ArrayList<>());
     }
 
      public S3Key getEncryptionKeyForSite(Integer siteId) {
