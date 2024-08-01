@@ -129,9 +129,6 @@ public class RotatingStoreVerticle extends AbstractVerticle {
         final long version = this.versionedStore.getVersion(metadata);
         if (version > this.latestVersion.get()) {
             long entryCount = this.versionedStore.loadContent(metadata);
-            if (this.versionedStore instanceof RotatingS3KeyProvider) {
-                ((RotatingS3KeyProvider) this.versionedStore).updateSiteToKeysMapping();
-            }
             this.latestVersion.set(version);
             this.latestEntryCount.set(entryCount);
             LOGGER.info("Successfully loaded " + this.storeName + " version " + version);

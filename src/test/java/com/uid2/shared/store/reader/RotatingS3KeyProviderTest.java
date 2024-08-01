@@ -12,10 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.time.Instant;
 import java.util.Set;
+import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -32,6 +36,8 @@ public class RotatingS3KeyProviderTest {
     private ScopedStoreReader<Map<Integer, S3Key>> reader;
 
     private RotatingS3KeyProvider rotatingS3KeyProvider;
+
+    private static final long CURRENT_TIME = Instant.now().getEpochSecond();
 
     @BeforeEach
     void setUp() {
@@ -193,25 +199,6 @@ public class RotatingS3KeyProviderTest {
     }
 
     @Test
-    void testGetEncryptionKeyForSite() {
-        Map<Integer, S3Key> existingKeys = new HashMap<>();
-        S3Key key1 = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
-        S3Key key2 = new S3Key(2, 123, 1687808429, 1687808329, "S3keySecretByteHere2");
-        S3Key key3 = new S3Key(3, 123, 1687635529, 1687808329, "S3keySecretByteHere3");
-        existingKeys.put(1, key1);
-        existingKeys.put(2, key2);
-        existingKeys.put(3, key3);
-        when(reader.getSnapshot()).thenReturn(existingKeys);
-
-        S3Key retrievedKey = rotatingS3KeyProvider.getEncryptionKeyForSite(123);
-        assertNotNull(retrievedKey);
-        assertEquals(key3, retrievedKey);
-
-        when(reader.getSnapshot()).thenReturn(new HashMap<>());
-        assertThrows(IllegalStateException.class, () -> rotatingS3KeyProvider.getEncryptionKeyForSite(456));
-    }
-
-    @Test
     void testGetAllWithSingleKey() {
         Map<Integer, S3Key> existingKeys = new HashMap<>();
         S3Key singleKey = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
@@ -226,7 +213,7 @@ public class RotatingS3KeyProviderTest {
     @Test
     void testGetEncryptionKeyForSiteWithSingleKey() {
         Map<Integer, S3Key> existingKeys = new HashMap<>();
-        S3Key singleKey = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
+        S3Key singleKey = new S3Key(1, 123, CURRENT_TIME - 1000, CURRENT_TIME + 1000, "S3keySecretByteHere1");
         existingKeys.put(1, singleKey);
         when(reader.getSnapshot()).thenReturn(existingKeys);
 
@@ -265,27 +252,16 @@ public class RotatingS3KeyProviderTest {
     }
 
     @Test
-    void testGetEncryptionKeyForSiteWithMultipleKeys() {
-        Map<Integer, S3Key> existingKeys = new HashMap<>();
-        S3Key key1 = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
-        S3Key key2 = new S3Key(2, 123, 1687808429, 1687808329, "S3keySecretByteHere2");
-        existingKeys.put(1, key1);
-        existingKeys.put(2, key2);
-        when(reader.getSnapshot()).thenReturn(existingKeys);
-
-        S3Key retrievedKey = rotatingS3KeyProvider.getEncryptionKeyForSite(123);
-        assertNotNull(retrievedKey);
-        assertEquals(key2, retrievedKey);
-    }
-
-    @Test
     void testGetEncryptionKeyForNonExistentSite() {
         Map<Integer, S3Key> existingKeys = new HashMap<>();
-        S3Key key1 = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
+        S3Key key1 = new S3Key(1, 123, CURRENT_TIME - 1000, CURRENT_TIME + 1000, "S3keySecretByteHere1");
         existingKeys.put(1, key1);
         when(reader.getSnapshot()).thenReturn(existingKeys);
 
-        assertThrows(IllegalStateException.class, () -> rotatingS3KeyProvider.getEncryptionKeyForSite(456));
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> rotatingS3KeyProvider.getEncryptionKeyForSite(456));
+
+        assertEquals("No S3 keys available for encryption for site ID: 456", exception.getMessage());
     }
 
     @Test
@@ -323,12 +299,16 @@ public class RotatingS3KeyProviderTest {
     @Test
     void testGetEncryptionKeyForSiteWithMultipleKeysAndNonExistentSite() {
         Map<Integer, S3Key> existingKeys = new HashMap<>();
-        S3Key key1 = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
-        S3Key key2 = new S3Key(2, 123, 1687808429, 1687808329, "S3keySecretByteHere2");
+        S3Key key1 = new S3Key(1, 123, CURRENT_TIME - 2000, CURRENT_TIME + 1000, "S3keySecretByteHere1");
+        S3Key key2 = new S3Key(2, 123, CURRENT_TIME - 1000, CURRENT_TIME + 2000, "S3keySecretByteHere2");
         existingKeys.put(1, key1);
         existingKeys.put(2, key2);
         when(reader.getSnapshot()).thenReturn(existingKeys);
-        assertThrows(IllegalStateException.class, () -> rotatingS3KeyProvider.getEncryptionKeyForSite(456));
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> rotatingS3KeyProvider.getEncryptionKeyForSite(456));
+
+        assertEquals("No S3 keys available for encryption for site ID: 456", exception.getMessage());
     }
 
     @Test
@@ -419,5 +399,75 @@ public class RotatingS3KeyProviderTest {
 
         int totalSites = rotatingS3KeyProvider.getTotalSites();
         assertEquals(2, totalSites);
+    }
+
+    @Test
+    void testGetKeysForSiteFromMap() {
+        S3Key key1 = new S3Key(1, 100, 1687635529, 1687808329, "secret1");
+        S3Key key2 = new S3Key(2, 100, 1687808429, 1687981229, "secret2");
+        S3Key key3 = new S3Key(3, 200, 1687981329, 1688154129, "secret3");
+
+        Map<Integer, List<S3Key>> testMap = new HashMap<>();
+        testMap.put(100, Arrays.asList(key1, key2));
+        testMap.put(200, Collections.singletonList(key3));
+
+        rotatingS3KeyProvider.siteToKeysMap = testMap;
+
+        List<S3Key> result1 = rotatingS3KeyProvider.getKeys(100);
+        assertEquals(2, result1.size());
+        assertTrue(result1.contains(key1));
+        assertTrue(result1.contains(key2));
+
+        List<S3Key> result2 = rotatingS3KeyProvider.getKeys(200);
+        assertEquals(1, result2.size());
+        assertTrue(result2.contains(key3));
+
+        List<S3Key> result3 = rotatingS3KeyProvider.getKeys(300);
+        assertTrue(result3.isEmpty());
+    }
+
+    @Test
+    void testGetKeysForSiteFromMapWithEmptyMap() {
+        rotatingS3KeyProvider.siteToKeysMap = new HashMap<>();
+
+        List<S3Key> result = rotatingS3KeyProvider.getKeys(100);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void testGetKeysForSiteFromMapWithNullMap() {
+        rotatingS3KeyProvider.siteToKeysMap = null;
+
+        assertThrows(NullPointerException.class, () -> rotatingS3KeyProvider.getKeys(100));
+    }
+
+    @Test
+    void testGetEncryptionKeyForSite() {
+        Map<Integer, S3Key> existingKeys = new HashMap<>();
+        S3Key key1 = new S3Key(1, 123, CURRENT_TIME - 3000, 1687808329, "S3keySecretByteHere1");
+        S3Key key2 = new S3Key(2, 123, CURRENT_TIME - 2000, 1687981229, "S3keySecretByteHere2");
+        S3Key key3 = new S3Key(3, 123, CURRENT_TIME - 1000, 1688154129, "S3keySecretByteHere3");
+        S3Key key4 = new S3Key(4, 123, CURRENT_TIME + 1000, 1688327029, "S3keySecretByteHere4"); // Future key
+        existingKeys.put(1, key1);
+        existingKeys.put(2, key2);
+        existingKeys.put(3, key3);
+        existingKeys.put(4, key4);
+        when(reader.getSnapshot()).thenReturn(existingKeys);
+
+        S3Key retrievedKey = rotatingS3KeyProvider.getEncryptionKeyForSite(123);
+        assertNotNull(retrievedKey);
+        assertEquals(key3, retrievedKey); // Should return the most recent active key
+    }
+
+    @Test
+    void testGetEncryptionKeyForSiteWithNoActiveKeys() {
+        Map<Integer, S3Key> existingKeys = new HashMap<>();
+        S3Key key1 = new S3Key(1, 123, CURRENT_TIME + 1000, 1687808329, "S3keySecretByteHere1");
+        S3Key key2 = new S3Key(2, 123, CURRENT_TIME + 2000, 1687981229, "S3keySecretByteHere2");
+        existingKeys.put(1, key1);
+        existingKeys.put(2, key2);
+        when(reader.getSnapshot()).thenReturn(existingKeys);
+
+        assertThrows(IllegalStateException.class, () -> rotatingS3KeyProvider.getEncryptionKeyForSite(123));
     }
 }
