@@ -65,11 +65,12 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return this.internalDownload(path);
     }
 
-    protected String getJWT() {
+    public String getJWT() {
         return this.getAttestationResponseHandler().getCoreJWT();
     }
 
     private InputStream internalDownload(String path) throws CloudStorageException {
+        LOGGER.info("UidCoreClient download: {}", path);
         try {
             InputStream inputStream;
             if (allowContentFromLocalFileSystem && path.startsWith("file:/tmp/uid2")) {

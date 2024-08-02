@@ -1,6 +1,7 @@
 package com.uid2.shared.vertx;
 
 import com.uid2.shared.Const;
+import com.uid2.shared.attest.UidCoreClient;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -45,6 +46,10 @@ public class VertxUtils {
     // see https://vertx.io/blog/vert-x-application-configuration/
     //
     public static ConfigRetriever createConfigRetriever(Vertx vertx) {
+        return ConfigRetriever.create(vertx, createConfigRetrieverOptions(vertx));
+    }
+
+    public static ConfigRetrieverOptions createConfigRetrieverOptions(Vertx vertx) {
         ConfigRetrieverOptions retrieverOptions = new ConfigRetrieverOptions();
 
         {
@@ -53,14 +58,14 @@ public class VertxUtils {
                 String format = extractFormatFromFileExtension(defaultConfigPath);
                 LOGGER.info("Default config file path: " + defaultConfigPath + ", format:" + format);
                 ConfigStoreOptions defaultStore = new ConfigStoreOptions()
-                    .setType("file").setFormat(format)
-                    .setConfig(new JsonObject().put("path", defaultConfigPath));
+                        .setType("file").setFormat(format)
+                        .setConfig(new JsonObject().put("path", defaultConfigPath));
                 retrieverOptions.addStore(defaultStore);
             }
         }
 
         ConfigStoreOptions vertxConfig = new ConfigStoreOptions().setType("json")
-            .setConfig(vertx.getOrCreateContext().config());
+                .setConfig(vertx.getOrCreateContext().config());
         ConfigStoreOptions sysConfig = new ConfigStoreOptions().setType("sys");
         ConfigStoreOptions envConfig = new ConfigStoreOptions().setType("env");
         retrieverOptions.addStore(vertxConfig).addStore(sysConfig).addStore(envConfig);
@@ -71,13 +76,13 @@ public class VertxUtils {
                 String format = extractFormatFromFileExtension(overrideConfigPath);
                 LOGGER.info("Override config file path: " + overrideConfigPath + ", format:" + format);
                 ConfigStoreOptions overrideStore = new ConfigStoreOptions()
-                    .setType("file").setFormat(format)
-                    .setConfig(new JsonObject().put("path", overrideConfigPath));
+                        .setType("file").setFormat(format)
+                        .setConfig(new JsonObject().put("path", overrideConfigPath));
                 retrieverOptions.addStore(overrideStore);
             }
         }
 
-        return ConfigRetriever.create(vertx, retrieverOptions);
+        return retrieverOptions;
     }
 
     public static Map.Entry<String, String> parseClientAppVersion(String appVersions) {

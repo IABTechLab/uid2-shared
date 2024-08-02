@@ -30,7 +30,7 @@ public class UidOptOutClient extends UidCoreClient {
     }
 
     @Override
-    protected String getJWT() {
+    public String getJWT() {
         return this.getAttestationResponseHandler().getOptOutJWT();
     }
 
