@@ -52,11 +52,6 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
         return result;
     }
 
-    public long loadContentsWithoutDownloading(JsonObject contents) throws Exception {
-        long result = reader.loadContentsWithoutDownloading(contents, "s3Keys");
-        return result;
-    }
-
     @Override
     public Map<Integer, S3Key> getAll() {
         Map<Integer, S3Key> keys = reader.getSnapshot();
@@ -67,9 +62,9 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
         Map<Integer, S3Key> allKeys = getAll();
         siteToKeysMap.clear();
         allKeys.values().forEach(key ->
-                        this.siteToKeysMap
-                                .computeIfAbsent(key.getSiteId(), k -> new ArrayList<>())
-                                .add(key)
+                this.siteToKeysMap
+                        .computeIfAbsent(key.getSiteId(), k -> new ArrayList<>())
+                        .add(key)
         );
         LOGGER.info("Updated site-to-keys mapping for {} sites", siteToKeysMap.size());
     }
@@ -99,11 +94,11 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
                 .collect(Collectors.toList());
     }
 
-     public S3Key getEncryptionKeyForSite(Integer siteId) {
+    public S3Key getEncryptionKeyForSite(Integer siteId) {
         //get the youngest activated key
         Collection<S3Key> keys = getKeysForSite(siteId);
-         long now = Instant.now().getEpochSecond();
-         if (keys.isEmpty()) {
+        long now = Instant.now().getEpochSecond();
+        if (keys.isEmpty()) {
             throw new IllegalStateException("No S3 keys available for encryption for site ID: " + siteId);
         }
         return keys.stream()
