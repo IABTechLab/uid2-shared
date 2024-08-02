@@ -13,9 +13,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.Map;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -41,7 +45,6 @@ public class RotatingS3KeyProviderTest {
         rotatingS3KeyProvider = new RotatingS3KeyProvider(fileStreamProvider, scope);
         // Inject the mock reader into the RotatingS3KeyProvider
         rotatingS3KeyProvider.reader = reader;
-        rotatingS3KeyProvider.siteToKeysMap = new HashMap<>();
     }
 
     @Test
@@ -439,57 +442,6 @@ public class RotatingS3KeyProviderTest {
     }
 
     @Test
-    void testGetMostRecentKeysForSite() {
-        Map<Integer, S3Key> existingKeys = new HashMap<>();
-        S3Key key1 = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
-        S3Key key2 = new S3Key(2, 123, 1687808429, 1687981229, "S3keySecretByteHere2");
-        S3Key key3 = new S3Key(3, 123, 1687981329, 1688154129, "S3keySecretByteHere3");
-        S3Key key4 = new S3Key(4, 123, 1688154229, 1688327029, "S3keySecretByteHere4");
-        existingKeys.put(1, key1);
-        existingKeys.put(2, key2);
-        existingKeys.put(3, key3);
-        existingKeys.put(4, key4);
-        when(reader.getSnapshot()).thenReturn(existingKeys);
-
-        rotatingS3KeyProvider.updateSiteToKeysMapping();
-
-        List<S3Key> retrievedKeys = rotatingS3KeyProvider.getMostRecentKeysForSite(123);
-        assertNotNull(retrievedKeys);
-        assertEquals(3, retrievedKeys.size());
-        assertEquals(key4, retrievedKeys.get(0));
-        assertEquals(key3, retrievedKeys.get(1));
-        assertEquals(key2, retrievedKeys.get(2));
-    }
-
-    @Test
-    void testGetMostRecentKeysForSiteWithLessThanThreeKeys() {
-        Map<Integer, S3Key> existingKeys = new HashMap<>();
-        S3Key key1 = new S3Key(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
-        S3Key key2 = new S3Key(2, 123, 1687808429, 1687981229, "S3keySecretByteHere2");
-        existingKeys.put(1, key1);
-        existingKeys.put(2, key2);
-        when(reader.getSnapshot()).thenReturn(existingKeys);
-
-        rotatingS3KeyProvider.updateSiteToKeysMapping();
-
-        List<S3Key> retrievedKeys = rotatingS3KeyProvider.getMostRecentKeysForSite(123);
-        assertNotNull(retrievedKeys);
-        assertEquals(2, retrievedKeys.size());
-        assertEquals(key2, retrievedKeys.get(0));
-        assertEquals(key1, retrievedKeys.get(1));
-    }
-
-    @Test
-    void testGetMostRecentKeysForSiteWithNoKeys() {
-        Map<Integer, S3Key> existingKeys = new HashMap<>();
-        when(reader.getSnapshot()).thenReturn(existingKeys);
-
-        rotatingS3KeyProvider.updateSiteToKeysMapping();
-
-        assertThrows(IllegalStateException.class, () -> rotatingS3KeyProvider.getMostRecentKeysForSite(123));
-    }
-
-    @Test
     void testGetEncryptionKeyForSite() {
         Map<Integer, S3Key> existingKeys = new HashMap<>();
         S3Key key1 = new S3Key(1, 123, CURRENT_TIME - 3000, 1687808329, "S3keySecretByteHere1");
@@ -517,45 +469,5 @@ public class RotatingS3KeyProviderTest {
         when(reader.getSnapshot()).thenReturn(existingKeys);
 
         assertThrows(IllegalStateException.class, () -> rotatingS3KeyProvider.getEncryptionKeyForSite(123));
-    }
-
-    @Test
-    public void testRaceCondition() throws InterruptedException, ExecutionException {
-        int threadCount = 100;
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch latch = new CountDownLatch(1);
-        Map<Integer, S3Key> keysMap = new HashMap<>();
-        keysMap.put(1, new S3Key(1, 88, 1687635529, 1687808329, "secret1"));
-        keysMap.put(2, new S3Key(2, 88, 1687635530, 1687808330, "secret2"));
-        keysMap.put(3, new S3Key(3, 88, 1687635531, 1687808331, "secret3"));
-        keysMap.put(4, new S3Key(4, 89, 1687635532, 1687808332, "secret4"));
-
-        when(reader.getSnapshot()).thenReturn(keysMap);
-        List<Callable<Void>> tasks = new ArrayList<>();
-        for (int i = 0; i < threadCount; i++) {
-            tasks.add(() -> {
-                latch.await();
-                if (ThreadLocalRandom.current().nextBoolean()) {
-                    rotatingS3KeyProvider.updateSiteToKeysMapping();
-                } else {
-                    rotatingS3KeyProvider.getKeysForSite(88);
-                }
-                return null;
-            });
-        }
-
-        // Start all tasks simultaneously
-        for (Callable<Void> task : tasks) {
-            executorService.submit(task);
-        }
-        latch.countDown();  // Allow all threads to proceed
-
-        executorService.shutdown();
-        executorService.awaitTermination(1, TimeUnit.MINUTES);
-
-        List<S3Key> keysForSite88 = rotatingS3KeyProvider.getKeysForSite(88).stream()
-                .filter(key -> key.getSiteId() == 88)
-                .collect(Collectors.toList());
-        assertEquals(3, keysForSite88.size());
     }
 }

@@ -5,8 +5,8 @@ import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.S3KeyParser;
 import com.uid2.shared.store.scope.StoreScope;
+import com.uid2.shared.model.S3Key;
 import io.vertx.core.json.JsonObject;
-
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -15,20 +15,16 @@ import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.time.Instant;
-
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import com.uid2.shared.model.S3Key;
 
 public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
     ScopedStoreReader<Map<Integer, S3Key>> reader;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingS3KeyProvider.class);
-    Map<Integer, List<S3Key>> siteToKeysMap = new ConcurrentHashMap<>();
+    public Map<Integer, List<S3Key>> siteToKeysMap = new HashMap<>();
 
     public RotatingS3KeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new S3KeyParser(), "s3encryption_keys");
@@ -91,6 +87,11 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
         return siteToKeysMap.size();
     }
 
+    public List<S3Key> getKeys(int siteId) {
+        //for s3 encryption keys retrieval
+        return siteToKeysMap.getOrDefault(siteId, new ArrayList<>());
+    }
+
     public Collection<S3Key> getKeysForSite(Integer siteId) {
         Map<Integer, S3Key> allKeys = getAll();
         return allKeys.values().stream()
@@ -98,23 +99,8 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
                 .collect(Collectors.toList());
     }
 
-    public List<S3Key> getKeys(int siteId) {
-        return siteToKeysMap.getOrDefault(siteId, new ArrayList<>());
-    }
-
-    public List<S3Key> getMostRecentKeysForSite(int siteId) {
-        List<S3Key> keys = getKeys(siteId);
-        if (keys.isEmpty()) {
-            throw new IllegalStateException("No keys found for site ID: " + siteId);
-        }
-        return keys.stream()
-                .sorted(Comparator.comparingLong(S3Key::getCreated).reversed())
-                // Get most recently created 3 keys
-                .limit(3)
-                .collect(Collectors.toList());
-    }
-
      public S3Key getEncryptionKeyForSite(Integer siteId) {
+        //get the youngest activated key
         Collection<S3Key> keys = getKeysForSite(siteId);
          long now = Instant.now().getEpochSecond();
          if (keys.isEmpty()) {
