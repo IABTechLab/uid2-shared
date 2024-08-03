@@ -23,12 +23,17 @@ import java.util.Map;
 public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(EncryptedScopedStoreReader.class);
 
-    private final int siteId;
+    private int siteId = -1;
     private final RotatingS3KeyProvider s3KeyProvider;
 
     public EncryptedScopedStoreReader(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, Parser<T> parser, String dataTypeName, RotatingS3KeyProvider s3KeyProvider) {
         super(fileStreamProvider, scope, parser, dataTypeName);
         this.siteId = scope.getId();
+        this.s3KeyProvider = s3KeyProvider;
+    }
+
+    public EncryptedScopedStoreReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, Parser<T> parser, String dataTypeName, RotatingS3KeyProvider s3KeyProvider) {
+        super(fileStreamProvider, scope, parser, dataTypeName);
         this.s3KeyProvider = s3KeyProvider;
     }
 
@@ -57,11 +62,19 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
 
         Map<Integer, S3Key> s3Keys = s3KeyProvider.getAll();
         S3Key decryptionKey = null;
-
-        for (S3Key key : s3Keys.values()) {
-            if (key.getSiteId() == siteId && key.getId() == keyId) {
-                decryptionKey = key;
-                break;
+        if (siteId > 0){
+            for (S3Key key : s3Keys.values()) {
+                if (key.getSiteId() == siteId && key.getId() == keyId) {
+                    decryptionKey = key;
+                    break;
+                }
+            }
+        }else{
+            for (S3Key key : s3Keys.values()) {
+                if (key.getId() == keyId) {
+                    decryptionKey = key;
+                    break;
+                }
             }
         }
 
