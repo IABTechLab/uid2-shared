@@ -26,14 +26,11 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
     private int siteId = -1;
     private final RotatingS3KeyProvider s3KeyProvider;
 
-    public EncryptedScopedStoreReader(DownloadCloudStorage fileStreamProvider, EncryptedScope scope, Parser<T> parser, String dataTypeName, RotatingS3KeyProvider s3KeyProvider) {
-        super(fileStreamProvider, scope, parser, dataTypeName);
-        this.siteId = scope.getId();
-        this.s3KeyProvider = s3KeyProvider;
-    }
-
     public EncryptedScopedStoreReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, Parser<T> parser, String dataTypeName, RotatingS3KeyProvider s3KeyProvider) {
         super(fileStreamProvider, scope, parser, dataTypeName);
+        if (scope instanceof EncryptedScope) {
+            this.siteId = scope.getId();
+        }
         this.s3KeyProvider = s3KeyProvider;
     }
 
@@ -62,7 +59,7 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
 
         Map<Integer, S3Key> s3Keys = s3KeyProvider.getAll();
         S3Key decryptionKey = null;
-        if (siteId > 0){
+        if (siteId > -1){
             for (S3Key key : s3Keys.values()) {
                 if (key.getSiteId() == siteId && key.getId() == keyId) {
                     decryptionKey = key;
