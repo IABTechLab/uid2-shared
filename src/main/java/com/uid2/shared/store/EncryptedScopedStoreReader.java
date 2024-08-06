@@ -23,14 +23,10 @@ import java.util.Map;
 public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(EncryptedScopedStoreReader.class);
 
-    private int siteId = -1;
     private final RotatingS3KeyProvider s3KeyProvider;
 
     public EncryptedScopedStoreReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, Parser<T> parser, String dataTypeName, RotatingS3KeyProvider s3KeyProvider) {
         super(fileStreamProvider, scope, parser, dataTypeName);
-        if (scope instanceof EncryptedScope) {
-            this.siteId = scope.getId();
-        }
         this.s3KeyProvider = s3KeyProvider;
     }
 
@@ -56,27 +52,17 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
         JsonObject json = new JsonObject(encryptedContent);
         int keyId = json.getInteger("key_id");
         String encryptedPayload = json.getString("encrypted_payload");
-
         Map<Integer, S3Key> s3Keys = s3KeyProvider.getAll();
         S3Key decryptionKey = null;
-        if (siteId > -1){
-            for (S3Key key : s3Keys.values()) {
-                if (key.getSiteId() == siteId && key.getId() == keyId) {
-                    decryptionKey = key;
-                    break;
-                }
-            }
-        }else{
             for (S3Key key : s3Keys.values()) {
                 if (key.getId() == keyId) {
                     decryptionKey = key;
                     break;
                 }
             }
-        }
 
         if (decryptionKey == null) {
-            throw new IllegalStateException("No matching S3 key found for decryption for site ID: " + siteId + " and key ID: " + keyId);
+            throw new IllegalStateException("No matching S3 key found for decryption for key ID: " + keyId);
         }
 
         byte[] secret = Base64.getDecoder().decode(decryptionKey.getSecret());
