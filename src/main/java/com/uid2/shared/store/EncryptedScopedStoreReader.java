@@ -34,7 +34,6 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
     protected long loadContent(String path) throws Exception {
         try (InputStream inputStream = this.contentStreamProvider.download(path)) {
             String encryptedContent = inputStreamToString(inputStream);
-            System.out.println(encryptedContent);
             String decryptedContent = getDecryptedContent(encryptedContent);
             ParsingResult<T> parsed = this.parser.deserialize(new ByteArrayInputStream(decryptedContent.getBytes(StandardCharsets.UTF_8)));
             latestSnapshot.set(parsed.getData());
