@@ -25,7 +25,7 @@ on:
         type: boolean
       java_version:
         type: string
-        default: '11'
+        default: '21'
       publish_vulnerabilities:
         type: string
         default: 'true'
