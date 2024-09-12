@@ -29,6 +29,7 @@ public class AttestationResponseHandler {
 
     private final IAttestationProvider attestationProvider;
     private final String clientApiToken;
+    private final String operatorType;
     private final ApplicationVersion appVersion;
     private final AtomicReference<String> attestationToken;
     private final AtomicReference<String> optOutJwt;
@@ -52,15 +53,17 @@ public class AttestationResponseHandler {
     public AttestationResponseHandler(Vertx vertx,
                                       String attestationEndpoint,
                                       String clientApiToken,
+                                      String operatorType,
                                       ApplicationVersion appVersion,
                                       IAttestationProvider attestationProvider,
                                       Handler<Pair<Integer, String>> responseWatcher,
                                       Proxy proxy) {
-        this(vertx, attestationEndpoint, clientApiToken, appVersion, attestationProvider, responseWatcher, proxy, new InstantClock(), null, null, 60000);
+        this(vertx, attestationEndpoint, clientApiToken, operatorType, appVersion, attestationProvider, responseWatcher, proxy, new InstantClock(), null, null, 60000);
     }
     public AttestationResponseHandler(Vertx vertx,
                                       String attestationEndpoint,
                                       String clientApiToken,
+                                      String operatorType,
                                       ApplicationVersion appVersion,
                                       IAttestationProvider attestationProvider,
                                       Handler<Pair<Integer, String>> responseWatcher,
@@ -73,6 +76,7 @@ public class AttestationResponseHandler {
         this.attestationEndpoint = attestationEndpoint;
         this.encodedAttestationEndpoint = this.encodeStringUnicodeAttestationEndpoint(attestationEndpoint);
         this.clientApiToken = clientApiToken;
+        this.operatorType = operatorType;
         this.appVersion = appVersion;
         this.attestationProvider = attestationProvider;
         this.attestationToken = new AtomicReference<>(null);
@@ -158,7 +162,8 @@ public class AttestationResponseHandler {
                     "attestation_request", Base64.getEncoder().encodeToString(attestationProvider.getAttestationRequest(publicKey, this.encodedAttestationEndpoint)),
                     "public_key", Base64.getEncoder().encodeToString(publicKey),
                     "application_name", appVersion.getAppName(),
-                    "application_version", appVersion.getAppVersion()
+                    "application_version", appVersion.getAppVersion(),
+                    "operator_type", this.operatorType
             );
             JsonObject components = new JsonObject();
             for (Map.Entry<String, String> kv : appVersion.getComponentVersions().entrySet()) {
@@ -178,7 +183,7 @@ public class AttestationResponseHandler {
             notifyResponseWatcher(statusCode, responseBody);
 
             if (statusCode < 200 || statusCode >= 300) {
-                LOGGER.warn("attestation failed with UID2 Core returning statusCode=" + statusCode);
+                LOGGER.warn("attestation failed with UID2 Core returning statusCode={}", statusCode);
                 throw new AttestationResponseHandlerException(statusCode, "unexpected status code from uid core service");
             }
 

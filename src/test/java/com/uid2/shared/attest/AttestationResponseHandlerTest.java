@@ -36,6 +36,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(VertxExtension.class)
 public class AttestationResponseHandlerTest {
     private static final String ATTESTATION_ENDPOINT = "https://core-test.uidapi.com/attest";
+    private static final String OPERATOR_TYPE = "public";
     private byte[] ENCODED_ATTESTATION_ENDPOINT;
     private static final ApplicationVersion APP_VERSION = new ApplicationVersion("appName", "appVersion", new HashMap<String, String>()
     {{
@@ -303,7 +304,7 @@ public class AttestationResponseHandlerTest {
     }
 
     @Test
-    public void attest_succeed_jsonRequest_includes_attestUrl_in_attestation_request(Vertx vertx, VertxTestContext testContext) throws  Exception{
+    public void attest_succeed_jsonRequest_includes_expected_properties(Vertx vertx, VertxTestContext testContext) throws  Exception{
         attestationResponseHandler = getAttestationTokenRetriever(vertx);
 
         when(attestationProvider.isReady()).thenReturn(true);
@@ -331,12 +332,15 @@ public class AttestationResponseHandlerTest {
         String decodedUrl = new String(data, StandardCharsets.UTF_8);
         Assertions.assertEquals(ATTESTATION_ENDPOINT, decodedUrl);
 
+        Assertions.assertNotNull(jsonBody.getString("operator_type"));
+        Assertions.assertEquals(OPERATOR_TYPE, jsonBody.getString("operator_type"));
+
         verify(attestationProvider, times(1)).getAttestationRequest(any(), eq(ENCODED_ATTESTATION_ENDPOINT));
 
         testContext.completeNow();
     }
 
     private AttestationResponseHandler getAttestationTokenRetriever(Vertx vertx) {
-        return new AttestationResponseHandler(vertx, ATTESTATION_ENDPOINT, "testApiKey", APP_VERSION, attestationProvider, responseWatcher, proxy, clock, mockHttpClient, mockAttestationTokenDecryptor, 250);
+        return new AttestationResponseHandler(vertx, ATTESTATION_ENDPOINT, "testApiKey", OPERATOR_TYPE, APP_VERSION, attestationProvider, responseWatcher, proxy, clock, mockHttpClient, mockAttestationTokenDecryptor, 250);
     }
 }
