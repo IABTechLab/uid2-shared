@@ -132,8 +132,13 @@ public class AttestationResponseHandler {
 
             attest();
         } catch (AttestationResponseHandlerException e) {
-            notifyResponseWatcher(401, e.getMessage());
-            LOGGER.info("Re-attest failed: ", e);
+            if (e.isAttestationFailure()) {
+                notifyResponseWatcher(401, e.getMessage());
+                LOGGER.info("Re-attest failed with attestation failure: ", e);
+            } else {
+                notifyResponseWatcher(e.getStatusCode(), e.getMessage());
+                LOGGER.info("Re-attest failed with retryable failure: ", e);
+            }
         } catch (IOException e){
             notifyResponseWatcher(500, e.getMessage());
             LOGGER.info("Re-attest failed: ", e);
@@ -181,6 +186,11 @@ public class AttestationResponseHandler {
             int statusCode = response.statusCode();
             String responseBody = response.body();
             notifyResponseWatcher(statusCode, responseBody);
+
+            if (statusCode == 401 || statusCode == 403) {
+                LOGGER.warn("attestation failed with UID2 Core returning statusCode={}", statusCode);
+                throw new AttestationResponseHandlerException(statusCode, "Attestation Failure response from Core");
+            }
 
             if (statusCode < 200 || statusCode >= 300) {
                 LOGGER.warn("attestation failed with UID2 Core returning statusCode={}", statusCode);
