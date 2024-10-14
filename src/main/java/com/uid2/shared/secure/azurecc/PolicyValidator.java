@@ -15,7 +15,7 @@ public class PolicyValidator implements IPolicyValidator{
         this.attestationUrl = attestationUrl;
     }
     @Override
-    public String validate(MaaTokenPayload maaTokenPayload, String publicKey) throws AttestationException {
+    public String validate(MaaTokenPayload maaTokenPayload, String publicKey) throws AttestationClientException {
         verifyVM(maaTokenPayload);
         verifyLocation(maaTokenPayload);
         verifyPublicKey(maaTokenPayload, publicKey);
@@ -23,7 +23,7 @@ public class PolicyValidator implements IPolicyValidator{
         return maaTokenPayload.getCcePolicyDigest();
     }
 
-    private void verifyPublicKey(MaaTokenPayload maaTokenPayload, String publicKey) throws AttestationException {
+    private void verifyPublicKey(MaaTokenPayload maaTokenPayload, String publicKey) throws AttestationClientException {
         if(Strings.isNullOrEmpty(publicKey)){
             throw new AttestationClientException("public key to check is null or empty", AttestationFailure.BAD_FORMAT);
         }
@@ -38,7 +38,7 @@ public class PolicyValidator implements IPolicyValidator{
         }
     }
 
-    private void verifyAttestationUrl(MaaTokenPayload maaTokenPayload) throws AttestationException {
+    private void verifyAttestationUrl(MaaTokenPayload maaTokenPayload) throws AttestationClientException {
         String decodedRuntimeAttestationUrl = maaTokenPayload.getRuntimeData().getDecodedAttestationUrl();
         if (decodedRuntimeAttestationUrl == null) {
             return;
@@ -47,7 +47,7 @@ public class PolicyValidator implements IPolicyValidator{
         }
     }
 
-    private void verifyVM(MaaTokenPayload maaTokenPayload) throws AttestationException {
+    private void verifyVM(MaaTokenPayload maaTokenPayload) throws AttestationClientException {
         if(!maaTokenPayload.isSevSnpVM()){
             throw new AttestationClientException("Not in SevSnp VM", AttestationFailure.BAD_FORMAT);
         }
@@ -59,7 +59,7 @@ public class PolicyValidator implements IPolicyValidator{
         }
     }
 
-    private void verifyLocation(MaaTokenPayload maaTokenPayload) throws AttestationException {
+    private void verifyLocation(MaaTokenPayload maaTokenPayload) throws AttestationClientException {
         var location = maaTokenPayload.getRuntimeData().getLocation();
         if(Strings.isNullOrEmpty(location)){
             throw new AttestationClientException("Location is not specified.", AttestationFailure.BAD_PAYLOAD);

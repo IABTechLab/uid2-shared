@@ -5,7 +5,8 @@ import com.google.api.client.json.webtoken.JsonWebSignature;
 import com.google.api.client.util.Clock;
 import com.google.auth.oauth2.TokenVerifier;
 import com.google.common.base.Strings;
-import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.AttestationClientException;
+import com.uid2.shared.secure.AttestationFailure;
 
 import java.io.IOException;
 import java.security.PublicKey;
@@ -51,7 +52,7 @@ public class TokenSignatureValidator implements ITokenSignatureValidator {
     }
 
     @Override
-    public TokenPayload validate(String tokenString) throws AttestationException {
+    public TokenPayload validate(String tokenString) throws AttestationClientException {
         if (Strings.isNullOrEmpty(tokenString)) {
             throw new IllegalArgumentException("tokenString can not be null or empty");
         }
@@ -65,9 +66,9 @@ public class TokenSignatureValidator implements ITokenSignatureValidator {
                 signature = tokenVerifier.verify(tokenString);
             }
         } catch (TokenVerifier.VerificationException e) {
-            throw new AttestationException("Fail to validate the token signature, error: " + e.getMessage());
+            throw new AttestationClientException("Fail to validate the token signature, error: " + e.getMessage(), AttestationFailure.BAD_CERTIFICATE);
         } catch (IOException e) {
-            throw new AttestationException("Fail to parse token, error: " + e.getMessage());
+            throw new AttestationClientException("Fail to parse token, error: " + e.getMessage(), AttestationFailure.BAD_PAYLOAD);
         }
 
         // Parse Payload
@@ -78,20 +79,20 @@ public class TokenSignatureValidator implements ITokenSignatureValidator {
         tokenPayloadBuilder.dbgStat(tryGetField(rawPayload, "dbgstat", String.class));
         tokenPayloadBuilder.swName(tryGetField(rawPayload, "swname", String.class));
         var swVersion = tryGetField(rawPayload, "swversion", List.class);
-        if(swVersion != null && !swVersion.isEmpty()){
+        if (swVersion != null && !swVersion.isEmpty()) {
             tokenPayloadBuilder.swVersion(tryConvert(swVersion.get(0), String.class));
         }
 
-        var subModsDetails = tryGetField(rawPayload,"submods",  Map.class);
+        var subModsDetails = tryGetField(rawPayload, "submods", Map.class);
 
-        if(subModsDetails != null){
+        if (subModsDetails != null) {
             var confidential_space = tryGetField(subModsDetails, "confidential_space", Map.class);
-            if(confidential_space != null){
+            if (confidential_space != null) {
                 tokenPayloadBuilder.csSupportedAttributes(tryGetField(confidential_space, "support_attributes", List.class));
             }
 
             var container = tryGetField(subModsDetails, "container", Map.class);
-            if(container != null){
+            if (container != null) {
                 tokenPayloadBuilder.workloadImageReference(tryGetField(container, "image_reference", String.class));
                 tokenPayloadBuilder.workloadImageDigest(tryGetField(container, "image_digest", String.class));
                 tokenPayloadBuilder.restartPolicy(tryGetField(container, "restart_policy", String.class));
@@ -101,7 +102,7 @@ public class TokenSignatureValidator implements ITokenSignatureValidator {
             }
 
             var gce = tryGetField(subModsDetails, "gce", Map.class);
-            if(gce != null){
+            if (gce != null) {
                 var gceZone = tryGetField(gce, "zone", String.class);
                 tokenPayloadBuilder.gceZone(gceZone);
             }
@@ -109,6 +110,4 @@ public class TokenSignatureValidator implements ITokenSignatureValidator {
 
         return tokenPayloadBuilder.build();
     }
-
-
 }
