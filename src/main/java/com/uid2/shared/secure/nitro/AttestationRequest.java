@@ -7,7 +7,8 @@ import co.nstant.in.cbor.model.Array;
 import co.nstant.in.cbor.model.ByteString;
 import co.nstant.in.cbor.model.DataItem;
 import co.nstant.in.cbor.model.UnicodeString;
-import com.uid2.shared.secure.BadFormatException;
+import com.uid2.shared.secure.AttestationClientException;
+import com.uid2.shared.secure.AttestationFailure;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -22,7 +23,7 @@ public class AttestationRequest {
     private byte[] protectedHeader;
     private byte[] signature;
 
-    public static AttestationRequest createFrom(byte[] data) throws BadFormatException {
+    public static AttestationRequest createFrom(byte[] data) throws AttestationClientException {
         try {
             AttestationRequest aReq = new AttestationRequest();
             ByteArrayInputStream stream = new ByteArrayInputStream(data);
@@ -34,11 +35,11 @@ public class AttestationRequest {
             aReq.signature = ((ByteString) dataItems.get(3)).getBytes();
             return aReq;
         } catch (CborException ce) {
-            throw new BadFormatException(ce.getMessage(), ce);
+            throw new AttestationClientException(ce.getMessage(), AttestationFailure.BAD_FORMAT);
         }
     }
 
-    public static AttestationRequest createFrom(String base64data) throws BadFormatException {
+    public static AttestationRequest createFrom(String base64data) throws AttestationClientException {
         return createFrom(Base64.getDecoder().decode(base64data));
     }
 

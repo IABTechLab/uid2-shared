@@ -16,7 +16,7 @@ public class AttestationResult {
     }
 
     public AttestationResult(AttestationClientException exception) {
-        this.failure = AttestationFailure.UNKNOWN;
+        this.failure = exception.getAttestationFailure();
         this.publicKey = null;
         this.enclaveId = "Failed attestation, enclave Id unknown";
         this.attestationClientException = exception;

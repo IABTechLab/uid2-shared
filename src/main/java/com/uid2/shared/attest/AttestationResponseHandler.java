@@ -7,6 +7,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.utils.Pair;
@@ -34,7 +35,7 @@ public class AttestationResponseHandler {
     private final AtomicReference<String> attestationToken;
     private final AtomicReference<String> optOutJwt;
     private final AtomicReference<String> coreJwt;
-    private final Handler<Pair<Integer, String>> responseWatcher;
+    private final Handler<Pair<AttestationResponseCode, String>> responseWatcher;
     private final String attestationEndpoint;
     private final byte[] encodedAttestationEndpoint;
     private final IClock clock;
@@ -46,6 +47,7 @@ public class AttestationResponseHandler {
     private Instant attestationTokenExpiresAt = Instant.MAX;
     private final Lock lock;
     private final AttestationTokenDecryptor attestationTokenDecryptor;
+    @Getter
     private final String appVersionHeader;
     private final int attestCheckMilliseconds;
     private final AtomicReference<String> optOutUrl;
@@ -56,17 +58,18 @@ public class AttestationResponseHandler {
                                       String operatorType,
                                       ApplicationVersion appVersion,
                                       IAttestationProvider attestationProvider,
-                                      Handler<Pair<Integer, String>> responseWatcher,
+                                      Handler<Pair<AttestationResponseCode, String>> responseWatcher,
                                       Proxy proxy) {
         this(vertx, attestationEndpoint, clientApiToken, operatorType, appVersion, attestationProvider, responseWatcher, proxy, new InstantClock(), null, null, 60000);
     }
+
     public AttestationResponseHandler(Vertx vertx,
                                       String attestationEndpoint,
                                       String clientApiToken,
                                       String operatorType,
                                       ApplicationVersion appVersion,
                                       IAttestationProvider attestationProvider,
-                                      Handler<Pair<Integer, String>> responseWatcher,
+                                      Handler<Pair<AttestationResponseCode, String>> responseWatcher,
                                       Proxy proxy,
                                       IClock clock,
                                       URLConnectionHttpClient httpClient,
@@ -131,11 +134,7 @@ public class AttestationResponseHandler {
             }
 
             attest();
-        } catch (AttestationResponseHandlerException e) {
-            notifyResponseWatcher(401, e.getMessage());
-            LOGGER.info("Re-attest failed: ", e);
-        } catch (IOException e){
-            notifyResponseWatcher(500, e.getMessage());
+        } catch (AttestationResponseHandlerException | IOException e) {
             LOGGER.info("Re-attest failed: ", e);
         } finally {
             this.isAttesting.set(false);
@@ -180,30 +179,32 @@ public class AttestationResponseHandler {
 
             int statusCode = response.statusCode();
             String responseBody = response.body();
-            notifyResponseWatcher(statusCode, responseBody);
 
-            if (statusCode < 200 || statusCode >= 300) {
-                LOGGER.warn("attestation failed with UID2 Core returning statusCode={}", statusCode);
-                throw new AttestationResponseHandlerException(statusCode, "unexpected status code from uid core service");
+            AttestationResponseCode responseCode = this.getAttestationResponseCodeFromHttpStatus(statusCode);
+
+            notifyResponseWatcher(responseCode, responseBody);
+
+            if (responseCode != AttestationResponseCode.Success) {
+                throw new AttestationResponseHandlerException(responseCode, "Non-success response from Core on attest");
             }
 
             JsonObject responseJson = (JsonObject) Json.decodeValue(responseBody);
             if (isFailed(responseJson)) {
-                throw new AttestationResponseHandlerException(statusCode, "response did not return a successful status");
+                throw new AttestationResponseHandlerException(AttestationResponseCode.RetryableFailure, "response did not return a successful status");
             }
 
             JsonObject innerBody = responseJson.getJsonObject("body");
             if (innerBody == null) {
-                throw new AttestationResponseHandlerException(statusCode, "response did not contain a body object");
+                throw new AttestationResponseHandlerException(AttestationResponseCode.RetryableFailure, "response did not contain a body object");
             }
 
             String atoken = getAttestationToken(innerBody);
             if (atoken == null) {
-                throw new AttestationResponseHandlerException(statusCode, "response json does not contain body.attestation_token");
+                throw new AttestationResponseHandlerException(AttestationResponseCode.RetryableFailure, "response json does not contain body.attestation_token");
             }
             String expiresAt = getAttestationTokenExpiresAt(innerBody);
             if (expiresAt == null) {
-                throw new AttestationResponseHandlerException(statusCode, "response json does not contain body.expiresAt");
+                throw new AttestationResponseHandlerException(AttestationResponseCode.RetryableFailure, "response json does not contain body.expiresAt");
             }
 
             atoken = new String(attestationTokenDecryptor.decrypt(Base64.getDecoder().decode(atoken), keyPair.getPrivate()), StandardCharsets.UTF_8);
@@ -215,8 +216,8 @@ public class AttestationResponseHandler {
             setOptoutURLFromResponse(innerBody);
 
             scheduleAttestationExpirationCheck();
-        } catch (IOException ioe) {
-            throw ioe;
+        } catch (AttestationResponseHandlerException | IOException e) {
+            throw e;
         } catch (Exception e) {
             throw new AttestationResponseHandlerException(e);
         }
@@ -240,10 +241,6 @@ public class AttestationResponseHandler {
 
     public String getOptOutUrl() {
         return this.optOutUrl.get();
-    }
-
-    public String getAppVersionHeader() {
-        return this.appVersionHeader;
     }
 
     private void setAttestationTokenExpiresAt(String expiresAt) {
@@ -299,11 +296,15 @@ public class AttestationResponseHandler {
         return gen.generateKeyPair();
     }
 
-    private void notifyResponseWatcher(int statusCode, String responseBody) {
+    private void notifyResponseWatcher(AttestationResponseCode responseCode, String responseBody) {
+        if (responseCode != AttestationResponseCode.Success) {
+            LOGGER.warn("Received a non-success response code on Attestation: ResponseCode: {}, Message: {}", responseCode, responseBody);
+        }
+
         this.lock.lock();
         try {
             if (this.responseWatcher != null)
-                this.responseWatcher.handle(Pair.of(statusCode, responseBody));
+                this.responseWatcher.handle(Pair.of(responseCode, responseBody));
         } finally {
             lock.unlock();
         }
@@ -317,5 +318,17 @@ public class AttestationResponseHandler {
         // buffer.array() may include extra empty bytes at the end. This returns only the bytes that have data
         ByteBuffer buffer = StandardCharsets.UTF_8.encode(data);
         return Arrays.copyOf(buffer.array(), buffer.limit());
+    }
+
+    private AttestationResponseCode getAttestationResponseCodeFromHttpStatus(int httpStatus) {
+        if (httpStatus == 401 || httpStatus == 403) {
+            return AttestationResponseCode.AttestationFailure;
+        }
+
+        if (httpStatus == 200) {
+            return AttestationResponseCode.Success;
+        }
+
+        return AttestationResponseCode.RetryableFailure;
     }
 }

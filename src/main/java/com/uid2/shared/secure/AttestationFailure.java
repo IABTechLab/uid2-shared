@@ -7,6 +7,10 @@ public enum AttestationFailure {
     BAD_CERTIFICATE,
     FORBIDDEN_ENCLAVE,
     UNKNOWN_ATTESTATION_URL,
+    INVALID_PROTOCOL,
+    INTERNAL_ERROR,
+    INVALID_TYPE,
+    RESPONSE_ENCRYPTION_ERROR,
     UNKNOWN;
 
     public String explain() {
@@ -23,6 +27,14 @@ public enum AttestationFailure {
                 return "The enclave identifier is unknown";
             case UNKNOWN_ATTESTATION_URL:
                 return "The given attestation URL is unknown";
+            case INVALID_PROTOCOL:
+                return "The given protocol is not valid";
+            case INTERNAL_ERROR:
+                return "There was an internal processing error";
+            case INVALID_TYPE:
+                return "Invalid Operator Type";
+            case RESPONSE_ENCRYPTION_ERROR:
+                return "Error encrypting the response";
             default:
                 return "Unknown reason";
         }
