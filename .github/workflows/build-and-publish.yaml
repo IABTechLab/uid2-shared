@@ -20,12 +20,12 @@ on:
         - CRITICAL (DO NOT use if JIRA ticket not raised)
       publish_to_maven:
         description: 'True to publish the artifacts to Maven repository, false to skip the step'
-        default: false
+        default: true
         required: false
         type: boolean
       java_version:
         type: string
-        default: '11'
+        default: '21'
       publish_vulnerabilities:
         type: string
         default: 'true'

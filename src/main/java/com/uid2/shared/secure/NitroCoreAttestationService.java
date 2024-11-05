@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 public class NitroCoreAttestationService implements ICoreAttestationService {
 
     private final String attestationUrl;
-    private Set<NitroEnclaveIdentifier> allowedEnclaveIds;
+    private final Set<NitroEnclaveIdentifier> allowedEnclaveIds;
     private final ICertificateProvider certificateProvider;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NitroCoreAttestationService.class);
@@ -37,6 +37,8 @@ public class NitroCoreAttestationService implements ICoreAttestationService {
             AttestationRequest aReq = AttestationRequest.createFrom(attestationRequest);
             AttestationDocument aDoc = aReq.getAttestationDocument();
             handler.handle(Future.succeededFuture(attestInternal(publicKey, aReq, aDoc)));
+        } catch (AttestationClientException ace) {
+            handler.handle(Future.succeededFuture(new AttestationResult(ace)));
         } catch (Exception e) {
             handler.handle(Future.failedFuture(new AttestationException(e)));
         }
@@ -105,5 +107,4 @@ public class NitroCoreAttestationService implements ICoreAttestationService {
     public void removeIdentifier(NitroEnclaveIdentifier id) {
         this.allowedEnclaveIds.remove(id);
     }
-
 }

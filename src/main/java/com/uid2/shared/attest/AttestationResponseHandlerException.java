@@ -1,7 +1,10 @@
 package com.uid2.shared.attest;
 
+import lombok.Getter;
+
+@Getter
 public class AttestationResponseHandlerException extends Exception {
-    private int statusCode = 0;
+    private AttestationResponseCode responseCode;
 
     public AttestationResponseHandlerException(Throwable t) {
         super(t);
@@ -11,12 +14,13 @@ public class AttestationResponseHandlerException extends Exception {
         super(message);
     }
 
-    public AttestationResponseHandlerException(int statusCode, String message) {
-        super("http status: " + String.valueOf(statusCode) + ", " + message);
-        this.statusCode = statusCode;
+    public AttestationResponseHandlerException(AttestationResponseCode responseCode, String message) {
+        super("AttestationResponseCode: " + String.valueOf(responseCode) + ", " + message);
+        this.responseCode = responseCode;
     }
 
     public boolean isAttestationFailure() {
-        return statusCode == 401;
+        return responseCode == AttestationResponseCode.AttestationFailure;
     }
+
 }

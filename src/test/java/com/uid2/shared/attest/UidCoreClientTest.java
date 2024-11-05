@@ -62,18 +62,18 @@ public class UidCoreClientTest {
 
     @Test
     public void Download_AttestInternalFail_ExceptionThrown() throws IOException, AttestationResponseHandlerException {
-        AttestationResponseHandlerException exception = new AttestationResponseHandlerException(401, "test failure");
+        AttestationResponseHandlerException exception = new AttestationResponseHandlerException(AttestationResponseCode.AttestationFailure, "test failure");
         doThrow(exception).when(mockAttestationResponseHandler).attest();
 
         CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
             uidCoreClient.download("https://download");
         });
-        String expectedExceptionMessage = "download https://download error: http status: 401, test failure";
+        String expectedExceptionMessage = "download error: AttestationResponseCode: AttestationFailure, test failure";
         assertEquals(expectedExceptionMessage, result.getMessage());
     }
 
     @Test
-    public void Download_Attest401_AttestCalledTwice() throws CloudStorageException, IOException, InterruptedException, AttestationResponseHandlerException {
+    public void Download_Attest401_getOptOut_NotCalled() throws CloudStorageException, IOException, AttestationResponseHandlerException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.statusCode()).thenReturn(401);
 
@@ -83,7 +83,7 @@ public class UidCoreClientTest {
         when(mockHttpClient.get(eq("https://download"), any(HashMap.class))).thenReturn(mockHttpResponse);
 
         uidCoreClient.download("https://download");
-        verify(mockAttestationResponseHandler, times(2)).attest();
+        verify(mockAttestationResponseHandler, times(1)).attest();
         verify(mockAttestationResponseHandler, never()).getOptOutUrl();
     }
 

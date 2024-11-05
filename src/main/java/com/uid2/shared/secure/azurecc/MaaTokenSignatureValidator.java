@@ -69,7 +69,7 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
         } catch (TokenVerifier.VerificationException e) {
             throw new AttestationClientException("Fail to validate the token signature, error: " + e.getMessage(), AttestationFailure.BAD_PAYLOAD);
         } catch (IOException e) {
-            throw new AttestationException("Fail to parse token, error: " + e.getMessage());
+            throw new AttestationClientException("Fail to parse token, error: " + e.getMessage(), AttestationFailure.BAD_PAYLOAD);
         }
 
         // Parse Payload
