@@ -7,6 +7,7 @@ import com.uid2.shared.store.parser.S3KeyParser;
 import com.uid2.shared.store.scope.StoreScope;
 import com.uid2.shared.model.S3Key;
 import io.vertx.core.json.JsonObject;
+
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -16,8 +17,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.time.Instant;
 
 public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
@@ -90,7 +93,7 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
     public Collection<S3Key> getKeysForSite(Integer siteId) {
         Map<Integer, S3Key> allKeys = getAll();
         return allKeys.values().stream()
-                .filter(key -> key.getSiteId()==(siteId))
+                .filter(key -> key.getSiteId() == (siteId))
                 .collect(Collectors.toList());
     }
 

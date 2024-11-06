@@ -54,12 +54,12 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
         String encryptedPayload = json.getString("encrypted_payload");
         Map<Integer, S3Key> s3Keys = s3KeyProvider.getAll();
         S3Key decryptionKey = null;
-            for (S3Key key : s3Keys.values()) {
-                if (key.getId() == keyId) {
-                    decryptionKey = key;
-                    break;
-                }
+        for (S3Key key : s3Keys.values()) {
+            if (key.getId() == keyId) {
+                decryptionKey = key;
+                break;
             }
+        }
 
         if (decryptionKey == null) {
             throw new IllegalStateException("No matching S3 key found for decryption for key ID: " + keyId);
