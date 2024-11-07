@@ -33,7 +33,7 @@ on:
 jobs:
   build-and-pubish:
     name: Build and publish JAR packages to Maven repository
-    uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-publish-to-maven-versioned.yaml@v2
+    uses: IABTechLab/uid2-shared-actions/.github/workflows/shared-publish-to-maven-versioned.yaml@v3
     with:
       release_type: ${{ inputs.release_type }}
       publish_to_maven: ${{ inputs.publish_to_maven }}
