@@ -5,9 +5,11 @@ import com.uid2.shared.auth.ClientKey;
 import com.uid2.shared.auth.IAuthorizable;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.store.CloudPath;
+import com.uid2.shared.store.EncryptedScopedStoreReader;
 import com.uid2.shared.store.IClientKeyProvider;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.ClientParser;
+import com.uid2.shared.store.scope.EncryptedScope;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
@@ -44,6 +46,11 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
 
     public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys");
+        this.authorizableStore = new AuthorizableStore<>(ClientKey.class);
+    }
+
+    public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys", s3KeyProvider);
         this.authorizableStore = new AuthorizableStore<>(ClientKey.class);
     }
 

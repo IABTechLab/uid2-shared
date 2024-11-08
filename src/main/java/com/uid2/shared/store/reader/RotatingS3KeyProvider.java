@@ -7,6 +7,7 @@ import com.uid2.shared.store.parser.S3KeyParser;
 import com.uid2.shared.store.scope.StoreScope;
 import com.uid2.shared.model.S3Key;
 import io.vertx.core.json.JsonObject;
+
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -16,8 +17,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.time.Instant;
 
 public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
@@ -62,9 +65,9 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
         Map<Integer, S3Key> allKeys = getAll();
         siteToKeysMap.clear();
         allKeys.values().forEach(key ->
-                        this.siteToKeysMap
-                                .computeIfAbsent(key.getSiteId(), k -> new ArrayList<>())
-                                .add(key)
+                this.siteToKeysMap
+                        .computeIfAbsent(key.getSiteId(), k -> new ArrayList<>())
+                        .add(key)
         );
         LOGGER.info("Updated site-to-keys mapping for {} sites", siteToKeysMap.size());
     }
@@ -90,15 +93,15 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
     public Collection<S3Key> getKeysForSite(Integer siteId) {
         Map<Integer, S3Key> allKeys = getAll();
         return allKeys.values().stream()
-                .filter(key -> key.getSiteId()==(siteId))
+                .filter(key -> key.getSiteId() == (siteId))
                 .collect(Collectors.toList());
     }
 
-     public S3Key getEncryptionKeyForSite(Integer siteId) {
+    public S3Key getEncryptionKeyForSite(Integer siteId) {
         //get the youngest activated key
         Collection<S3Key> keys = getKeysForSite(siteId);
-         long now = Instant.now().getEpochSecond();
-         if (keys.isEmpty()) {
+        long now = Instant.now().getEpochSecond();
+        if (keys.isEmpty()) {
             throw new IllegalStateException("No S3 keys available for encryption for site ID: " + siteId);
         }
         return keys.stream()
