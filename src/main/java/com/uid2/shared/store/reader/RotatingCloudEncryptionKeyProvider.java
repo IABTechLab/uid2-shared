@@ -3,9 +3,9 @@ package com.uid2.shared.store.reader;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.store.CloudPath;
 import com.uid2.shared.store.ScopedStoreReader;
-import com.uid2.shared.store.parser.S3KeyParser;
+import com.uid2.shared.store.parser.CloudEncryptionKeyParser;
 import com.uid2.shared.store.scope.StoreScope;
-import com.uid2.shared.model.S3Key;
+import com.uid2.shared.model.CloudEncryptionKey;
 import io.vertx.core.json.JsonObject;
 
 import java.util.Set;
@@ -23,14 +23,14 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 
-public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
-    ScopedStoreReader<Map<Integer, S3Key>> reader;
+public class RotatingCloudEncryptionKeyProvider implements StoreReader<Map<Integer, CloudEncryptionKey>> {
+    ScopedStoreReader<Map<Integer, CloudEncryptionKey>> reader;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RotatingS3KeyProvider.class);
-    public Map<Integer, List<S3Key>> siteToKeysMap = new HashMap<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(RotatingCloudEncryptionKeyProvider.class);
+    public Map<Integer, List<CloudEncryptionKey>> siteToKeysMap = new HashMap<>();
 
-    public RotatingS3KeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
-        this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new S3KeyParser(), "s3encryption_keys");
+    public RotatingCloudEncryptionKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
+        this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new CloudEncryptionKeyParser(), "cloud_encryption_keys");
     }
 
     @Override
@@ -50,19 +50,19 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
 
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
-        long result = reader.loadContent(metadata, "s3encryption_keys");
+        long result = reader.loadContent(metadata, "cloud_encryption_keys");
         updateSiteToKeysMapping();
         return result;
     }
 
     @Override
-    public Map<Integer, S3Key> getAll() {
-        Map<Integer, S3Key> keys = reader.getSnapshot();
+    public Map<Integer, CloudEncryptionKey> getAll() {
+        Map<Integer, CloudEncryptionKey> keys = reader.getSnapshot();
         return keys != null ? keys : new HashMap<>();
     }
 
     public void updateSiteToKeysMapping() {
-        Map<Integer, S3Key> allKeys = getAll();
+        Map<Integer, CloudEncryptionKey> allKeys = getAll();
         siteToKeysMap.clear();
         allKeys.values().forEach(key ->
                 this.siteToKeysMap
@@ -85,28 +85,28 @@ public class RotatingS3KeyProvider implements StoreReader<Map<Integer, S3Key>> {
         return siteToKeysMap.size();
     }
 
-    public List<S3Key> getKeys(int siteId) {
+    public List<CloudEncryptionKey> getKeys(int siteId) {
         //for s3 encryption keys retrieval
         return siteToKeysMap.getOrDefault(siteId, new ArrayList<>());
     }
 
-    public Collection<S3Key> getKeysForSite(Integer siteId) {
-        Map<Integer, S3Key> allKeys = getAll();
+    public Collection<CloudEncryptionKey> getKeysForSite(Integer siteId) {
+        Map<Integer, CloudEncryptionKey> allKeys = getAll();
         return allKeys.values().stream()
                 .filter(key -> key.getSiteId() == (siteId))
                 .collect(Collectors.toList());
     }
 
-    public S3Key getEncryptionKeyForSite(Integer siteId) {
+    public CloudEncryptionKey getEncryptionKeyForSite(Integer siteId) {
         //get the youngest activated key
-        Collection<S3Key> keys = getKeysForSite(siteId);
+        Collection<CloudEncryptionKey> keys = getKeysForSite(siteId);
         long now = Instant.now().getEpochSecond();
         if (keys.isEmpty()) {
             throw new IllegalStateException("No S3 keys available for encryption for site ID: " + siteId);
         }
         return keys.stream()
                 .filter(key -> key.getActivates() <= now)
-                .max(Comparator.comparingLong(S3Key::getCreated))
+                .max(Comparator.comparingLong(CloudEncryptionKey::getCreated))
                 .orElseThrow(() -> new IllegalStateException("No active keys found for site ID: " + siteId));
     }
 }

@@ -9,7 +9,6 @@ import com.uid2.shared.store.EncryptedScopedStoreReader;
 import com.uid2.shared.store.IClientKeyProvider;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.ClientParser;
-import com.uid2.shared.store.scope.EncryptedScope;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
@@ -49,8 +48,8 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
         this.authorizableStore = new AuthorizableStore<>(ClientKey.class);
     }
 
-    public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
-        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys", s3KeyProvider);
+    public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider) {
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys", cloudEncryptionKeyProvider);
         this.authorizableStore = new AuthorizableStore<>(ClientKey.class);
     }
 

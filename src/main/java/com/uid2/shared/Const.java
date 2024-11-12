@@ -63,7 +63,7 @@ public class Const {
         public static final String ServiceLinkMetadataPathProp = "service_links_metadata_path";
         public static final String SitesMetadataPathProp = "sites_metadata_path";
         public static final String OperatorsMetadataPathProp = "operators_metadata_path";
-        public static final String S3keysMetadataPathProp = "s3_keys_metadata_path";
+        public static final String CloudEncryptionKeysMetadataPathProp = "cloud_encryption_keys_metadata_path";
         public static final String SaltsMetadataPathProp = "salts_metadata_path";
         public static final String OptOutMetadataPathProp = "optout_metadata_path";
         public static final String CoreAttestUrlProp = "core_attest_url";

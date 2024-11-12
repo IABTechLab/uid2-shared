@@ -1,8 +1,7 @@
 package com.uid2.shared.store.parser;
 
-import com.uid2.shared.model.S3Key;
+import com.uid2.shared.model.CloudEncryptionKey;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -15,13 +14,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class S3KeyParserTest {
+class CloudEncryptionKeyParserTest {
 
-    private S3KeyParser parser;
+    private CloudEncryptionKeyParser parser;
 
     @BeforeEach
     void setUp() {
-        parser = new S3KeyParser();
+        parser = new CloudEncryptionKeyParser();
     }
 
     @Test
@@ -35,7 +34,7 @@ class S3KeyParserTest {
                 "}]";
         InputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
 
-        ParsingResult<Map<Integer, S3Key>> result = parser.deserialize(inputStream);
+        ParsingResult<Map<Integer, CloudEncryptionKey>> result = parser.deserialize(inputStream);
 
         assertNotNull(result);
         assertEquals(3, result.getData().size());
@@ -43,21 +42,21 @@ class S3KeyParserTest {
         assertTrue(result.getData().containsKey(2));
         assertTrue(result.getData().containsKey(3));
 
-        S3Key key1 = result.getData().get(1);
+        CloudEncryptionKey key1 = result.getData().get(1);
         assertEquals(1, key1.getId());
         assertEquals(123, key1.getSiteId());
         assertEquals(1687635529L, key1.getActivates());
         assertEquals(1687808329L, key1.getCreated());
         assertEquals("S3keySecretByteHere1", key1.getSecret());
 
-        S3Key key2 = result.getData().get(2);
+        CloudEncryptionKey key2 = result.getData().get(2);
         assertEquals(2, key2.getId());
         assertEquals(123, key2.getSiteId());
         assertEquals(1687808429L, key2.getActivates());
         assertEquals(1687808329L, key2.getCreated());
         assertEquals("S3keySecretByteHere2", key2.getSecret());
 
-        S3Key key3 = result.getData().get(3);
+        CloudEncryptionKey key3 = result.getData().get(3);
         assertEquals(3, key3.getId());
         assertEquals(456, key3.getSiteId());
         assertEquals(1687635529L, key3.getActivates());
@@ -71,7 +70,7 @@ class S3KeyParserTest {
         String json = "[]";
         InputStream inputStream = new ByteArrayInputStream(json.getBytes());
 
-        ParsingResult<Map<Integer, S3Key>> result = parser.deserialize(inputStream);
+        ParsingResult<Map<Integer, CloudEncryptionKey>> result = parser.deserialize(inputStream);
 
         assertNotNull(result);
         assertTrue(result.getData().isEmpty());
@@ -86,10 +85,10 @@ class S3KeyParserTest {
     }
 
     @Test
-    void testS3KeySerialization() throws Exception {
-        S3Key s3Key = new S3Key(1, 999, 1718689091L, 1718689091L, "64bNHMpU/mjaywjOpVacFOvEIFZmbYYUsNVNVu1jJZs=");
+    void testCloudEncryptionKeySerialization() throws Exception {
+        CloudEncryptionKey cloudEncryptionKey = new CloudEncryptionKey(1, 999, 1718689091L, 1718689091L, "64bNHMpU/mjaywjOpVacFOvEIFZmbYYUsNVNVu1jJZs=");
         ObjectMapper mapper = new ObjectMapper();
-        String jsonString = mapper.writeValueAsString(s3Key);
+        String jsonString = mapper.writeValueAsString(cloudEncryptionKey);
 
         String expectedJson = "{\"id\":1,\"siteId\":999,\"activates\":1718689091,\"created\":1718689091,\"secret\":\"64bNHMpU/mjaywjOpVacFOvEIFZmbYYUsNVNVu1jJZs=\"}";
         assertEquals(expectedJson, jsonString);
@@ -122,7 +121,7 @@ class S3KeyParserTest {
                 "    ]";
         InputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
 
-        ParsingResult<Map<Integer, S3Key>> result = parser.deserialize(inputStream);
+        ParsingResult<Map<Integer, CloudEncryptionKey>> result = parser.deserialize(inputStream);
 
         assertNotNull(result);
         assertEquals(3, result.getCount());
@@ -131,21 +130,21 @@ class S3KeyParserTest {
         assertTrue(result.getData().containsKey(2));
         assertTrue(result.getData().containsKey(3));
 
-        S3Key key1 = result.getData().get(1);
+        CloudEncryptionKey key1 = result.getData().get(1);
         assertEquals(1, key1.getId());
         assertEquals(999, key1.getSiteId());
         assertEquals(1720641670L, key1.getActivates());
         assertEquals(1720641670L, key1.getCreated());
         assertEquals("mydrCudb2PZOm01Qn0SpthltmexHUAA11Hy1m+uxjVw=", key1.getSecret());
 
-        S3Key key2 = result.getData().get(2);
+        CloudEncryptionKey key2 = result.getData().get(2);
         assertEquals(2, key2.getId());
         assertEquals(999, key2.getSiteId());
         assertEquals(1720728070L, key2.getActivates());
         assertEquals(1720641670L, key2.getCreated());
         assertEquals("FtdslrFSsvVXOuhOWGwEI+0QTkCvM8SGZAP3k2u3PgY=", key2.getSecret());
 
-        S3Key key3 = result.getData().get(3);
+        CloudEncryptionKey key3 = result.getData().get(3);
         assertEquals(3, key3.getId());
         assertEquals(999, key3.getSiteId());
         assertEquals(1720814470L, key3.getActivates());

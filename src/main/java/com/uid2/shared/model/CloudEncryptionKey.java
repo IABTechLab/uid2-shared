@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.Objects;
 
 @JsonPropertyOrder({ "id", "siteId", "activates", "created", "secret" })
-public class S3Key {
+public class CloudEncryptionKey {
     private final int id;
     private final int siteId;
     private final long activates;
@@ -15,7 +15,7 @@ public class S3Key {
     private final String secret;
 
     @JsonCreator
-    public S3Key(
+    public CloudEncryptionKey(
             @JsonProperty("id") int id,
             @JsonProperty("site_id") int siteId,
             @JsonProperty("activates") long activates,
@@ -52,12 +52,12 @@ public class S3Key {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        S3Key s3Key = (S3Key) o;
-        return id == s3Key.id &&
-                siteId == s3Key.siteId &&
-                activates == s3Key.activates &&
-                created == s3Key.created &&
-                Objects.equals(secret, s3Key.secret);
+        CloudEncryptionKey cloudEncryptionKey = (CloudEncryptionKey) o;
+        return id == cloudEncryptionKey.id &&
+                siteId == cloudEncryptionKey.siteId &&
+                activates == cloudEncryptionKey.activates &&
+                created == cloudEncryptionKey.created &&
+                Objects.equals(secret, cloudEncryptionKey.secret);
     }
 
     @Override
