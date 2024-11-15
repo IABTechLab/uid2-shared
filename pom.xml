@@ -58,9 +58,9 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <vertx.version>4.3.8</vertx.version>
+        <vertx.version>4.5.3</vertx.version>
         <!-- check micrometer.version vertx-micrometer-metrics consumes before bumping up -->
-        <micrometer.version>1.1.0</micrometer.version>
+        <micrometer.version>1.12.2</micrometer.version>
         <image.version>${project.version}</image.version>
     </properties>
     <dependencyManagement>
@@ -191,22 +191,12 @@
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-logging</artifactId>
-            <version>3.15.12</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>3.25.5</version>
+            <version>3.20.6</version>
         </dependency>
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-security-attestation</artifactId>
             <version>1.1.29</version>
-        </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec-http2</artifactId>
-            <version>4.1.100.Final</version>
         </dependency>
         <dependency>
             <groupId>com.azure</groupId>
