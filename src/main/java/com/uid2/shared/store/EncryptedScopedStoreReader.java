@@ -1,12 +1,11 @@
 package com.uid2.shared.store;
 
 import com.uid2.shared.cloud.DownloadCloudStorage;
-import com.uid2.shared.model.S3Key;
+import com.uid2.shared.model.CloudEncryptionKey;
 import com.uid2.shared.store.parser.Parser;
 import com.uid2.shared.store.parser.ParsingResult;
-import com.uid2.shared.store.scope.EncryptedScope;
 import com.uid2.shared.store.scope.StoreScope;
-import com.uid2.shared.store.reader.RotatingS3KeyProvider;
+import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +14,6 @@ import java.io.*;
 
 import com.uid2.shared.encryption.AesGcm;
 
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
@@ -23,11 +21,11 @@ import java.util.Map;
 public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(EncryptedScopedStoreReader.class);
 
-    private final RotatingS3KeyProvider s3KeyProvider;
+    private final RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider;
 
-    public EncryptedScopedStoreReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, Parser<T> parser, String dataTypeName, RotatingS3KeyProvider s3KeyProvider) {
+    public EncryptedScopedStoreReader(DownloadCloudStorage fileStreamProvider, StoreScope scope, Parser<T> parser, String dataTypeName, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider) {
         super(fileStreamProvider, scope, parser, dataTypeName);
-        this.s3KeyProvider = s3KeyProvider;
+        this.cloudEncryptionKeyProvider = cloudEncryptionKeyProvider;
     }
 
     @Override
@@ -52,9 +50,9 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
         JsonObject json = new JsonObject(encryptedContent);
         int keyId = json.getInteger("key_id");
         String encryptedPayload = json.getString("encrypted_payload");
-        Map<Integer, S3Key> s3Keys = s3KeyProvider.getAll();
-        S3Key decryptionKey = null;
-        for (S3Key key : s3Keys.values()) {
+        Map<Integer, CloudEncryptionKey> cloudEncryptionKeys = cloudEncryptionKeyProvider.getAll();
+        CloudEncryptionKey decryptionKey = null;
+        for (CloudEncryptionKey key : cloudEncryptionKeys.values()) {
             if (key.getId() == keyId) {
                 decryptionKey = key;
                 break;

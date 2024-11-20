@@ -3,12 +3,11 @@ package com.uid2.shared.store;
 import com.google.common.collect.ImmutableList;
 import com.uid2.shared.cloud.InMemoryStorageMock;
 import com.uid2.shared.encryption.AesGcm;
-import com.uid2.shared.model.S3Key;
+import com.uid2.shared.model.CloudEncryptionKey;
 import com.uid2.shared.store.parser.Parser;
 import com.uid2.shared.store.parser.ParsingResult;
-import com.uid2.shared.store.reader.RotatingS3KeyProvider;
+import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
 import com.uid2.shared.store.scope.EncryptedScope;
-import com.uid2.shared.store.scope.GlobalScope;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,8 +15,6 @@ import org.junit.jupiter.api.Test;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static com.uid2.shared.TestUtilites.toInputStream;
@@ -37,22 +34,22 @@ class EncryptedScopedStoreReaderTest {
             ));
     private InMemoryStorageMock storage;
     private final TestDataParser parser = new TestDataParser();
-    private RotatingS3KeyProvider keyProvider;
+    private RotatingCloudEncryptionKeyProvider keyProvider;
     private final int testSiteId = 123;
-    private S3Key encryptionKey;
+    private CloudEncryptionKey encryptionKey;
 
     @BeforeEach
     void setUp() {
         storage = new InMemoryStorageMock();
-        keyProvider = mock(RotatingS3KeyProvider.class);
+        keyProvider = mock(RotatingCloudEncryptionKeyProvider.class);
 
         // Generate a valid 32-byte AES key
         byte[] keyBytes = new byte[32];
         new Random().nextBytes(keyBytes);
         String base64Key = Base64.getEncoder().encodeToString(keyBytes);
-        encryptionKey = new S3Key(1, testSiteId, 0, 0, base64Key);
+        encryptionKey = new CloudEncryptionKey(1, testSiteId, 0, 0, base64Key);
 
-        Map<Integer, S3Key> mockKeyMap = new HashMap<>();
+        Map<Integer, CloudEncryptionKey> mockKeyMap = new HashMap<>();
         mockKeyMap.put(encryptionKey.getId(), encryptionKey);
         when(keyProvider.getAll()).thenReturn(mockKeyMap);
     }
@@ -156,9 +153,9 @@ class EncryptedScopedStoreReaderTest {
         byte[] newKeyBytes = new byte[32];
         new Random().nextBytes(newKeyBytes);
         String base64NewKey = Base64.getEncoder().encodeToString(newKeyBytes);
-        S3Key newKey = new S3Key(2, testSiteId, 0, 0, base64NewKey);
+        CloudEncryptionKey newKey = new CloudEncryptionKey(2, testSiteId, 0, 0, base64NewKey);
 
-        Map<Integer, S3Key> mockKeyMap = new HashMap<>();
+        Map<Integer, CloudEncryptionKey> mockKeyMap = new HashMap<>();
         mockKeyMap.put(encryptionKey.getId(), encryptionKey);
         mockKeyMap.put(newKey.getId(), newKey);
         when(keyProvider.getAll()).thenReturn(mockKeyMap);

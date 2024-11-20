@@ -7,7 +7,6 @@ import com.uid2.shared.store.EncryptedScopedStoreReader;
 import com.uid2.shared.store.ISiteStore;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.SiteParser;
-import com.uid2.shared.store.scope.EncryptedScope;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
@@ -23,8 +22,8 @@ public class RotatingSiteStore implements ISiteStore, StoreReader<Collection<Sit
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new SiteParser(), "sites");
     }
 
-    public RotatingSiteStore(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingS3KeyProvider s3KeyProvider) {
-        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new SiteParser(), "sites", s3KeyProvider);
+    public RotatingSiteStore(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider) {
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new SiteParser(), "sites", cloudEncryptionKeyProvider);
     }
 
     @Override

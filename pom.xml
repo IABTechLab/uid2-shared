@@ -5,7 +5,7 @@
 
     <groupId>com.uid2</groupId>
     <artifactId>uid2-shared</artifactId>
-    <version>7.21.7</version>
+    <version>7.21.12-alpha-165-SNAPSHOT</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Library for all the shared uid2 operations</description>
     <url>https://github.com/IABTechLab/uid2docs</url>
@@ -68,7 +68,7 @@
             <dependency>
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>26.26.0</version>
+                <version>26.50.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -186,12 +186,22 @@
         <dependency>
             <groupId>com.google.auth</groupId>
             <artifactId>google-auth-library-oauth2-http</artifactId>
-            <version>1.23.0</version>
+            <version>1.30.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.auth</groupId>
+            <artifactId>google-auth-library-credentials</artifactId>
+            <version>1.30.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-logging</artifactId>
-            <version>3.20.6</version>
+            <version>3.15.12</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.25.5</version>
         </dependency>
         <dependency>
             <groupId>com.azure</groupId>
