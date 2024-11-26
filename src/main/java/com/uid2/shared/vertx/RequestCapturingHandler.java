@@ -34,10 +34,14 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
     private Queue<String> _capturedRequests = null;
     private final Map<String, Counter> _apiMetricCounters = new HashMap<>();
     private final Map<String, Counter> _clientAppVersionCounters = new HashMap<>();
-    private final ISiteStore siteStore;
+    private ISiteStore siteStore;
 
     private static String formatRFC1123DateTime(long time) {
         return DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant.ofEpochMilli(time).atZone(ZONE_GMT));
+    }
+
+    public RequestCapturingHandler()
+    {
     }
 
     public RequestCapturingHandler(ISiteStore siteStore)
@@ -115,7 +119,7 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         final Integer siteId = getSiteId(context);
 
         String siteName = "unknown";
-        if (siteId != null) {
+        if (siteId != null && siteStore != null) {
             Site site = siteStore.getSite(siteId);
             if (site != null)
             {
