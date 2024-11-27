@@ -149,8 +149,7 @@ public class RequestCapturingHandlerTest {
 
     @ParameterizedTest
     @MethodSource("siteIdRoutingContextData")
-    public void getSiteIdFromRoutingContextData(String key, Object value, String siteId, String siteName,
-                                                Vertx vertx, VertxTestContext testContext) {
+    public void getSiteIdFromRoutingContextData(String key, Object value, String siteId, String siteName, Vertx vertx, VertxTestContext testContext) {
         Router router = Router.router(vertx);
         router.route().handler(new RequestCapturingHandler(siteStore));
         router.get("/test").handler(ctx -> {
@@ -180,12 +179,9 @@ public class RequestCapturingHandlerTest {
         // Arguments are: routing context data key, routing context data value, site ID tag.
         return Stream.of(
                 Arguments.of(Const.RoutingContextData.SiteId, 100, "100", "test-100"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new ClientKey("keyHash", "keySalt",
-                        "secret", "", Instant.MIN, Set.of(), 200, "test-key-id-1"), "200", "test-200"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("test-keyHash", "test-keySalt",
-                        "name", "contact", "protocol", 0, false, "test-key-id-2"), "null", "unknown"),
-                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("test-keyHash", "test-keySalt",
-                        "name", "contact", "protocol", 0, false, 300, "test-key-id-3"), "300", "unknown"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new ClientKey("keyHash", "keySalt", "secret", "", Instant.MIN, Set.of(), 200, "test-key-id-1"), "200", "test-200"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("test-keyHash", "test-keySalt", "name", "contact", "protocol", 0, false, "test-key-id-2"), "null", "unknown"),
+                Arguments.of(AuthMiddleware.API_CLIENT_PROP, new OperatorKey("test-keyHash", "test-keySalt", "name", "contact", "protocol", 0, false, 300, "test-key-id-3"), "300", "unknown"),
                 Arguments.of(null, null, "null", "unknown")
         );
     }
