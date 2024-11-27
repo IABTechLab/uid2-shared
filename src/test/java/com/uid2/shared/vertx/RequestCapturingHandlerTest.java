@@ -107,7 +107,7 @@ public class RequestCapturingHandlerTest {
     @Test
     public void captureStaticPath(Vertx vertx, VertxTestContext testContext) {
         Router router = Router.router(vertx);
-        router.route().handler(new RequestCapturingHandler(siteStore));
+        router.route().handler(new RequestCapturingHandler());
         router.get("/static/*").handler(dummyResponseHandler);
 
         vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
