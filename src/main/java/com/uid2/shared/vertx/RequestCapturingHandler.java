@@ -218,16 +218,14 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         return null;
     }
 
-    private void incrementMetricCounter(String apiContact, Integer siteId, String siteName,
-                                        String host, int status, HttpMethod method, String path) {
+    private void incrementMetricCounter(String apiContact, Integer siteId, String siteName, String host, int status, HttpMethod method, String path) {
         assert apiContact != null;
         String key = apiContact + "|" + siteId + "|" + siteName + "|" + host + "|" + status + "|" + method.name() + "|" + path;
         if (!_apiMetricCounters.containsKey(key)) {
             Counter counter = Counter
                     .builder("uid2.http_requests")
                     .description("counter for how many http requests are processed per each api contact and status code")
-                    .tags("api_contact", apiContact, "site_id", String.valueOf(siteId), "site_name", siteName,
-                            "host", host, "status", String.valueOf(status), "method", method.name(), "path", path)
+                    .tags("api_contact", apiContact, "site_id", String.valueOf(siteId), "site_name", siteName, "host", host, "status", String.valueOf(status), "method", method.name(), "path", path)
                     .register(Metrics.globalRegistry);
             _apiMetricCounters.put(key, counter);
         }
