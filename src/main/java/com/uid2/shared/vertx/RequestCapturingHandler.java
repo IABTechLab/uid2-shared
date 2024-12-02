@@ -4,6 +4,8 @@ import com.uid2.shared.Const;
 import com.uid2.shared.auth.IAuthorizable;
 import com.uid2.shared.jmx.AdminApi;
 import com.uid2.shared.middleware.AuthMiddleware;
+import com.uid2.shared.model.Site;
+import com.uid2.shared.store.ISiteStore;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Metrics;
 import io.vertx.core.Handler;
@@ -32,9 +34,20 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
     private Queue<String> _capturedRequests = null;
     private final Map<String, Counter> _apiMetricCounters = new HashMap<>();
     private final Map<String, Counter> _clientAppVersionCounters = new HashMap<>();
+    private ISiteStore siteStore;
 
     private static String formatRFC1123DateTime(long time) {
         return DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant.ofEpochMilli(time).atZone(ZONE_GMT));
+    }
+
+    @Deprecated
+    public RequestCapturingHandler()
+    {
+    }
+
+    public RequestCapturingHandler(ISiteStore siteStore)
+    {
+        this.siteStore = siteStore;
     }
 
     @Override
@@ -105,7 +118,17 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         }
 
         final Integer siteId = getSiteId(context);
-        incrementMetricCounter(apiContact, siteId, host, status, method, path);
+
+        String siteName = "unknown";
+        if (siteId != null && siteStore != null) {
+            Site site = siteStore.getSite(siteId);
+            if (site != null)
+            {
+                siteName = site.getName();
+            }
+        }
+
+        incrementMetricCounter(apiContact, siteId, siteName, host, status, method, path);
 
         if (request.headers().contains(Const.Http.AppVersionHeader)) {
             incrementAppVersionCounter(apiContact, request.headers().get(Const.Http.AppVersionHeader));
@@ -196,14 +219,14 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         return null;
     }
 
-    private void incrementMetricCounter(String apiContact, Integer siteId, String host, int status, HttpMethod method, String path) {
+    private void incrementMetricCounter(String apiContact, Integer siteId, String siteName, String host, int status, HttpMethod method, String path) {
         assert apiContact != null;
-        String key = apiContact + "|" + siteId + "|" + host + "|" + status + "|" + method.name() + "|" + path;
+        String key = apiContact + "|" + siteId + "|" + siteName + "|" + host + "|" + status + "|" + method.name() + "|" + path;
         if (!_apiMetricCounters.containsKey(key)) {
             Counter counter = Counter
                     .builder("uid2.http_requests")
                     .description("counter for how many http requests are processed per each api contact and status code")
-                    .tags("api_contact", apiContact, "site_id", String.valueOf(siteId), "host", host, "status", String.valueOf(status), "method", method.name(), "path", path)
+                    .tags("api_contact", apiContact, "site_id", String.valueOf(siteId), "site_name", siteName, "host", host, "status", String.valueOf(status), "method", method.name(), "path", path)
                     .register(Metrics.globalRegistry);
             _apiMetricCounters.put(key, counter);
         }
