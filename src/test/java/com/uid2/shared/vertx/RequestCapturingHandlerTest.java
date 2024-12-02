@@ -176,7 +176,7 @@ public class RequestCapturingHandlerTest {
     }
 
     private static Stream<Arguments> siteIdRoutingContextData() {
-        // Arguments are: routing context data key, routing context data value, site ID tag.
+        // Arguments are: routing context data key, routing context data value, site ID tag, site Name
         return Stream.of(
                 Arguments.of(Const.RoutingContextData.SiteId, 100, "100", "test-100"),
                 Arguments.of(AuthMiddleware.API_CLIENT_PROP, new ClientKey("keyHash", "keySalt", "secret", "", Instant.MIN, Set.of(), 200, "test-key-id-1"), "200", "test-200"),

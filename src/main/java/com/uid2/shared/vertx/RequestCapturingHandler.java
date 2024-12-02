@@ -40,6 +40,7 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         return DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant.ofEpochMilli(time).atZone(ZONE_GMT));
     }
 
+    @Deprecated
     public RequestCapturingHandler()
     {
     }
