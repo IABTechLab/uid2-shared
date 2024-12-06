@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.hashids.Hashids;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /*
   1. metadata.json format
@@ -132,18 +134,27 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         final String path = spec.getString("location");
         int idx = 0;
         final SaltEntry[] entries = new SaltEntry[spec.getInteger("size")];
-
-        try (InputStream inputStream = this.contentStreamProvider.download(path);
-             InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-             BufferedReader reader = new BufferedReader(inputStreamReader)) {
-            for (String l; (l = reader.readLine()) != null; ++idx) {
-                final SaltEntry entry = entryBuilder.toEntry(l);
-                entries[idx] = entry;
-            }
+        Stream<String> stream = readInputStream(this.contentStreamProvider.download(path)).lines();
+        for (String l : stream.toList()) {
+            final SaltEntry entry = entryBuilder.toEntry(l);
+            entries[idx] = entry;
+            idx++;
         }
 
         LOGGER.info("Loaded " + idx + " salts");
         return new SaltSnapshot(effective, expires, entries, firstLevelSalt);
+    }
+
+    protected String readInputStream(InputStream inputStream) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            StringBuilder stringBuilder = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line);
+                stringBuilder.append(System.lineSeparator());
+            }
+            return stringBuilder.toString();
+        }
     }
 
     public static class SaltSnapshot implements ISaltSnapshot {
