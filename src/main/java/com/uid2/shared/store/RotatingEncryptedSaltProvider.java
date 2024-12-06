@@ -5,13 +5,15 @@ import com.uid2.shared.encryption.AesGcm;
 import com.uid2.shared.model.CloudEncryptionKey;
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
 
+import com.uid2.shared.store.reader.StoreReader;
 import io.vertx.core.json.JsonObject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Collection;
 
-public class RotatingEncryptedSaltProvider extends RotatingSaltProvider{
+public class RotatingEncryptedSaltProvider extends RotatingSaltProvider implements StoreReader<Collection<RotatingSaltProvider.SaltSnapshot>> {
     private final RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider;
 
     public RotatingEncryptedSaltProvider(DownloadCloudStorage fileStreamProvider, String metadataPath, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider) {
@@ -37,5 +39,10 @@ public class RotatingEncryptedSaltProvider extends RotatingSaltProvider{
         byte[] decryptedBytes = AesGcm.decrypt(encryptedBytes, 0, secret);
 
         return new String(decryptedBytes, StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public Collection<SaltSnapshot> getAll() {
+        return super.getSnapshots();
     }
 }
