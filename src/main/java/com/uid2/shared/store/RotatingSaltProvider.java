@@ -132,28 +132,24 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         final Instant expires = Instant.ofEpochMilli(spec.getLong("expires", defaultExpires.toEpochMilli()));
 
         final String path = spec.getString("location");
-        int idx = 0;
-        final SaltEntry[] entries = new SaltEntry[spec.getInteger("size")];
-        Stream<String> stream = readInputStream(this.contentStreamProvider.download(path)).lines();
-        for (String l : stream.toList()) {
-            final SaltEntry entry = entryBuilder.toEntry(l);
-            entries[idx] = entry;
-            idx++;
-        }
+        Integer size = spec.getInteger("size");
+        SaltEntry[] entries = readInputStream(this.contentStreamProvider.download(path), entryBuilder, size);
 
-        LOGGER.info("Loaded " + idx + " salts");
+        LOGGER.info("Loaded " + size + " salts");
         return new SaltSnapshot(effective, expires, entries, firstLevelSalt);
     }
 
-    protected String readInputStream(InputStream inputStream) throws IOException {
+    protected SaltEntry[] readInputStream(InputStream inputStream, SaltEntryBuilder entryBuilder, Integer size) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-            StringBuilder stringBuilder = new StringBuilder();
             String line;
+            SaltEntry[] entries = new SaltEntry[size];
+            int idx = 0;
             while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line);
-                stringBuilder.append(System.lineSeparator());
+                final SaltEntry entry = entryBuilder.toEntry(line);
+                entries[idx] = entry;
+                idx++;
             }
-            return stringBuilder.toString();
+            return entries;
         }
     }
 
@@ -225,7 +221,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         }
     }
 
-    static final class SaltEntryBuilder {
+    protected static final class SaltEntryBuilder {
         private final IdHashingScheme idHashingScheme;
 
         public SaltEntryBuilder(IdHashingScheme idHashingScheme) {

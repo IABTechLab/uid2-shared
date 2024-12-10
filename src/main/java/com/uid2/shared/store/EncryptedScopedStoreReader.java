@@ -1,22 +1,18 @@
 package com.uid2.shared.store;
 
 import com.uid2.shared.cloud.DownloadCloudStorage;
-import com.uid2.shared.model.CloudEncryptionKey;
 import com.uid2.shared.store.parser.Parser;
 import com.uid2.shared.store.parser.ParsingResult;
 import com.uid2.shared.store.scope.StoreScope;
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
-import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 
-import com.uid2.shared.encryption.AesGcm;
-
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.Map;
+
+import static com.uid2.shared.util.CloudEncryptionHelpers.decryptInputStream;
 
 public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
     private static final Logger LOGGER = LoggerFactory.getLogger(EncryptedScopedStoreReader.class);
@@ -31,8 +27,7 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
     @Override
     protected long loadContent(String path) throws Exception {
         try (InputStream inputStream = this.contentStreamProvider.download(path)) {
-            String encryptedContent = inputStreamToString(inputStream);
-            String decryptedContent = getDecryptedContent(encryptedContent);
+            String decryptedContent = decryptInputStream(inputStream, cloudEncryptionKeyProvider);
             ParsingResult<T> parsed = this.parser.deserialize(new ByteArrayInputStream(decryptedContent.getBytes(StandardCharsets.UTF_8)));
             latestSnapshot.set(parsed.getData());
 
@@ -43,34 +38,6 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
         } catch (Exception e) {
             LOGGER.error(String.format("Unable to load %s", dataTypeName));
             throw e;
-        }
-    }
-
-    protected String getDecryptedContent(String encryptedContent) throws Exception {
-        JsonObject json = new JsonObject(encryptedContent);
-        int keyId = json.getInteger("key_id");
-        String encryptedPayload = json.getString("encrypted_payload");
-        CloudEncryptionKey decryptionKey = cloudEncryptionKeyProvider.getKey(keyId);
-
-        if (decryptionKey == null) {
-            throw new IllegalStateException("No matching S3 key found for decryption for key ID: " + keyId);
-        }
-
-        byte[] secret = Base64.getDecoder().decode(decryptionKey.getSecret());
-        byte[] encryptedBytes = Base64.getDecoder().decode(encryptedPayload);
-        byte[] decryptedBytes = AesGcm.decrypt(encryptedBytes, 0, secret);
-
-        return new String(decryptedBytes, StandardCharsets.UTF_8);
-    }
-
-    public static String inputStreamToString(InputStream inputStream) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-            StringBuilder stringBuilder = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-            return stringBuilder.toString();
         }
     }
 }

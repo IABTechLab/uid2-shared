@@ -107,26 +107,6 @@ class EncryptedScopedStoreReaderTest {
     }
 
     @Test
-    void testDecryptionOfEncryptedContent() throws Exception {
-        // Simulate encrypted content
-        String secretKey = encryptionKey.getSecret();
-        byte[] secretKeyBytes = Base64.getDecoder().decode(secretKey);
-        byte[] encryptedPayload = AesGcm.encrypt("value1,value2".getBytes(StandardCharsets.UTF_8), secretKeyBytes);
-        String encryptedPayloadBase64 = Base64.getEncoder().encodeToString(encryptedPayload);
-
-        JsonObject encryptedJson = new JsonObject()
-                .put("key_id", encryptionKey.getId())
-                .put("encrypted_payload", encryptedPayloadBase64);
-
-        String encryptedContent = encryptedJson.encodePrettily();
-        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, keyProvider);
-
-        String decryptedContent = reader.getDecryptedContent(encryptedContent);
-
-        assertThat(decryptedContent).isEqualTo("value1,value2");
-    }
-
-    @Test
     void testHandlingInvalidEncryptionKey() throws Exception {
         // Set key provider to return an empty map
         when(keyProvider.getAll()).thenReturn(new HashMap<>());
