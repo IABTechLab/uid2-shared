@@ -61,6 +61,15 @@ public class RotatingCloudEncryptionKeyProvider implements StoreReader<Map<Integ
         return keys != null ? keys : new HashMap<>();
     }
 
+    public CloudEncryptionKey getKey(int id) {
+        Map<Integer, CloudEncryptionKey> snapshot = reader.getSnapshot();
+        if(snapshot == null) {
+            return null;
+        }
+
+        return snapshot.get(id);
+    }
+
     public void updateSiteToKeysMapping() {
         Map<Integer, CloudEncryptionKey> allKeys = getAll();
         siteToKeysMap.clear();

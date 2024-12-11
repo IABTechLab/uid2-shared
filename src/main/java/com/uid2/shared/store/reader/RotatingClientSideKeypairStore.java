@@ -3,6 +3,7 @@ package com.uid2.shared.store.reader;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.model.ClientSideKeypair;
 import com.uid2.shared.store.CloudPath;
+import com.uid2.shared.store.EncryptedScopedStoreReader;
 import com.uid2.shared.store.IClientSideKeypairStore;
 import com.uid2.shared.store.ScopedStoreReader;
 import com.uid2.shared.store.parser.ClientSideKeypairParser;
@@ -17,6 +18,10 @@ public class RotatingClientSideKeypairStore implements IClientSideKeypairStore, 
 
     public RotatingClientSideKeypairStore(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientSideKeypairParser(), "client_side_keypairs");
+    }
+
+    public RotatingClientSideKeypairStore(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider) {
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new ClientSideKeypairParser(), "client_side_keypairs", cloudEncryptionKeyProvider);
     }
 
     @Override

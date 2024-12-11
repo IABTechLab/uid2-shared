@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.hashids.Hashids;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
@@ -21,6 +22,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /*
   1. metadata.json format
@@ -130,20 +132,25 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         final Instant expires = Instant.ofEpochMilli(spec.getLong("expires", defaultExpires.toEpochMilli()));
 
         final String path = spec.getString("location");
-        int idx = 0;
-        final SaltEntry[] entries = new SaltEntry[spec.getInteger("size")];
+        Integer size = spec.getInteger("size");
+        SaltEntry[] entries = readInputStream(this.contentStreamProvider.download(path), entryBuilder, size);
 
-        try (InputStream inputStream = this.contentStreamProvider.download(path);
-             InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-             BufferedReader reader = new BufferedReader(inputStreamReader)) {
-            for (String l; (l = reader.readLine()) != null; ++idx) {
-                final SaltEntry entry = entryBuilder.toEntry(l);
-                entries[idx] = entry;
-            }
-        }
-
-        LOGGER.info("Loaded " + idx + " salts");
+        LOGGER.info("Loaded " + size + " salts");
         return new SaltSnapshot(effective, expires, entries, firstLevelSalt);
+    }
+
+    protected SaltEntry[] readInputStream(InputStream inputStream, SaltEntryBuilder entryBuilder, Integer size) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+            String line;
+            SaltEntry[] entries = new SaltEntry[size];
+            int idx = 0;
+            while ((line = reader.readLine()) != null) {
+                final SaltEntry entry = entryBuilder.toEntry(line);
+                entries[idx] = entry;
+                idx++;
+            }
+            return entries;
+        }
     }
 
     public static class SaltSnapshot implements ISaltSnapshot {
@@ -214,7 +221,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         }
     }
 
-    static final class SaltEntryBuilder {
+    protected static final class SaltEntryBuilder {
         private final IdHashingScheme idHashingScheme;
 
         public SaltEntryBuilder(IdHashingScheme idHashingScheme) {

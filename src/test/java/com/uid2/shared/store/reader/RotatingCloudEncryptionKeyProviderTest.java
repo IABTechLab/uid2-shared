@@ -136,6 +136,35 @@ public class RotatingCloudEncryptionKeyProviderTest {
     }
 
     @Test
+    void testGet() {
+        Map<Integer, CloudEncryptionKey> expectedKeys = new HashMap<>();
+        CloudEncryptionKey key1 = new CloudEncryptionKey(1, 123, 1687635529, 1687808329, "S3keySecretByteHere1");
+        CloudEncryptionKey key2 = new CloudEncryptionKey(2, 123, 1687808429, 1687808329, "S3keySecretByteHere2");
+        expectedKeys.put(1, key1);
+        expectedKeys.put(2, key2);
+        when(reader.getSnapshot()).thenReturn(expectedKeys);
+
+        CloudEncryptionKey key = rotatingCloudEncryptionKeyProvider.getKey(1);
+        assertEquals(key1, key);
+    }
+
+    @Test
+    void testGetEmpty() {
+        when(reader.getSnapshot()).thenReturn(new HashMap<>());
+
+        CloudEncryptionKey key = rotatingCloudEncryptionKeyProvider.getKey(1);
+        assertNull(key);
+    }
+
+    @Test
+    void testGetNullSnapshot() {
+        when(reader.getSnapshot()).thenReturn(null);
+
+        CloudEncryptionKey key = rotatingCloudEncryptionKeyProvider.getKey(1);
+        assertNull(key);
+    }
+
+    @Test
     void testUpdateExistingKey() throws Exception {
         Map<Integer, CloudEncryptionKey> existingKeys = new HashMap<>();
         CloudEncryptionKey existingKey = new CloudEncryptionKey(1, 123, 1687635529, 1687808329, "oldSecret");
