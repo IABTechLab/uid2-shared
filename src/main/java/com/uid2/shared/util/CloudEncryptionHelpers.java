@@ -1,6 +1,10 @@
 package com.uid2.shared.util;
 
 import java.io.InputStream;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
 import com.uid2.shared.encryption.AesGcm;
 import com.uid2.shared.model.CloudEncryptionKey;
 
@@ -13,10 +17,27 @@ import java.io.*;
 
 public class CloudEncryptionHelpers {
     public static String decryptInputStream(InputStream inputStream, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider) throws IOException {
-        String encryptedContent = inputStreamToString(inputStream);
-        JsonObject json = new JsonObject(encryptedContent);
-        int keyId = json.getInteger("key_id");
-        String encryptedPayload = json.getString("encrypted_payload");
+        JsonFactory factory = new JsonFactory();
+        JsonParser parser = factory.createParser(inputStream);
+        int keyId = -1;
+        byte[] encryptedPayload = null;
+        parser.nextToken();
+        while (parser.nextToken() != JsonToken.END_OBJECT) {
+                String fieldName = parser.getCurrentName();
+                if(fieldName.equals("key_id")) {
+                    parser.nextToken();
+                    keyId = parser.getIntValue();
+                }
+                if(fieldName.equals("encrypted_payload")) {
+                    parser.nextToken();
+                    encryptedPayload = parser.getBinaryValue();
+                }
+        }
+
+        if(keyId == -1 || encryptedPayload == null) {
+            throw new IllegalStateException("failed to parse json");
+        }
+
         CloudEncryptionKey decryptionKey = cloudEncryptionKeyProvider.getKey(keyId);
 
         if (decryptionKey == null) {
@@ -24,20 +45,9 @@ public class CloudEncryptionHelpers {
         }
 
         byte[] secret = Base64.getDecoder().decode(decryptionKey.getSecret());
-        byte[] encryptedBytes = Base64.getDecoder().decode(encryptedPayload);
+        byte[] encryptedBytes = encryptedPayload;
         byte[] decryptedBytes = AesGcm.decrypt(encryptedBytes, 0, secret);
 
         return new String(decryptedBytes, StandardCharsets.UTF_8);
-    }
-
-    public static String inputStreamToString(InputStream inputStream) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-            StringBuilder stringBuilder = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-            return stringBuilder.toString();
-        }
     }
 }

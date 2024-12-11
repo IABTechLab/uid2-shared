@@ -124,6 +124,57 @@ public class EncryptedRotatingSaltProviderTest {
     }
 
     @Test
+    public void loadSaltSingleVersion1mil() throws Exception {
+        final String FIRST_LEVEL_SALT = "first_level_salt_value";
+        final String ID_PREFIX = "a";
+        final String ID_SECRET = "m3yMIcbg9vCaFLJsn4m4PfruZnvAZ72OxmFG5QsGMOw=";
+
+        final Instant generatedTime = Instant.now().minus(1, ChronoUnit.DAYS);
+        final Instant expireTime = Instant.now().plus(365, ChronoUnit.DAYS);
+
+        final JsonObject metadataJson = new JsonObject();
+        {
+            metadataJson.put("version", 2);
+            metadataJson.put("generated", generatedTime.getEpochSecond() * 1000L);
+            metadataJson.put("first_level", FIRST_LEVEL_SALT);
+            metadataJson.put("id_prefix", ID_PREFIX);
+            metadataJson.put("id_secret", ID_SECRET);
+            final JsonArray saltsRefList = new JsonArray();
+            {
+                final JsonObject saltsRef = new JsonObject();
+                saltsRef.put("effective", generatedTime.getEpochSecond() * 1000L);
+                saltsRef.put("expires", expireTime.getEpochSecond() * 1000L);
+                saltsRef.put("location", "salts.txt");
+                saltsRef.put("size", 1000000);
+                saltsRefList.add(saltsRef);
+            }
+            metadataJson.put("salts", saltsRefList);
+        }
+
+        final String effectiveTimeString = String.valueOf(generatedTime.getEpochSecond() * 1000L);
+        StringBuilder salts = new StringBuilder();
+        for (int i = 0; i < 1000000; i++) {
+            salts.append(i).append(",").append(effectiveTimeString).append(",").append("salt-string").append("\n");
+        }
+
+        when(cloudStorage.download("metadata"))
+                .thenReturn(new ByteArrayInputStream(metadataJson.toString().getBytes(StandardCharsets.US_ASCII)));
+        when(cloudStorage.download("salts.txt"))
+                .thenReturn(getEncryptedStream(salts.toString()));
+
+        EncryptedRotatingSaltProvider saltsProvider = new EncryptedRotatingSaltProvider(
+                cloudStorage, "metadata", keyProvider);
+
+        final JsonObject loadedMetadata = saltsProvider.getMetadata();
+        saltsProvider.loadContent(loadedMetadata);
+        assertEquals(2, saltsProvider.getVersion(loadedMetadata));
+
+        final ISaltProvider.ISaltSnapshot snapshot = saltsProvider.getSnapshot(Instant.now());
+        assertEquals(FIRST_LEVEL_SALT, snapshot.getFirstLevelSalt());
+        assertTrue(snapshot.getModifiedSince(Instant.now().minus(1, ChronoUnit.HOURS)).isEmpty());
+    }
+
+    @Test
     public void loadSaltMultipleVersions() throws Exception {
         final String FIRST_LEVEL_SALT = "first_level_salt_value";
         final String ID_PREFIX = "a";
