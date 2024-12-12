@@ -4,6 +4,7 @@ import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.encryption.AesGcm;
 import com.uid2.shared.model.CloudEncryptionKey;
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
+import com.uid2.shared.store.scope.EncryptedScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
@@ -68,6 +69,14 @@ public class EncryptedRotatingSaltProviderTest {
     }
 
     @Test
+    public void metadataPath() {
+        EncryptedRotatingSaltProvider saltsProvider = new EncryptedRotatingSaltProvider(
+                cloudStorage, keyProvider, new EncryptedScope(new CloudPath("salts/metadata.json"), 1, true));
+
+        assertEquals("salts/encrypted/1_public/metadata.json", saltsProvider.getMetadataPath());
+    }
+
+    @Test
     public void loadSaltSingleVersion() throws Exception {
         final String FIRST_LEVEL_SALT = "first_level_salt_value";
         final String ID_PREFIX = "a";
@@ -106,13 +115,13 @@ public class EncryptedRotatingSaltProviderTest {
                 "1000006," + effectiveTimeString + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=\n" +
                 "1000007," + effectiveTimeString + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=";
 
-        when(cloudStorage.download("metadata"))
+        when(cloudStorage.download("sites/encrypted/1_public/metadata.json"))
                 .thenReturn(new ByteArrayInputStream(metadataJson.toString().getBytes(StandardCharsets.US_ASCII)));
         when(cloudStorage.download("salts.txt"))
                 .thenReturn(getEncryptedStream(salts));
 
         EncryptedRotatingSaltProvider saltsProvider = new EncryptedRotatingSaltProvider(
-                cloudStorage, "metadata", keyProvider);
+                cloudStorage, keyProvider, new EncryptedScope(new CloudPath("sites/metadata.json"), 1, true));
 
         final JsonObject loadedMetadata = saltsProvider.getMetadata();
         saltsProvider.loadContent(loadedMetadata);
@@ -157,13 +166,13 @@ public class EncryptedRotatingSaltProviderTest {
             salts.append(i).append(",").append(effectiveTimeString).append(",").append("salt-string").append("\n");
         }
 
-        when(cloudStorage.download("metadata"))
+        when(cloudStorage.download("sites/encrypted/1_public/metadata.json"))
                 .thenReturn(new ByteArrayInputStream(metadataJson.toString().getBytes(StandardCharsets.US_ASCII)));
         when(cloudStorage.download("salts.txt"))
                 .thenReturn(getEncryptedStream(salts.toString()));
 
         EncryptedRotatingSaltProvider saltsProvider = new EncryptedRotatingSaltProvider(
-                cloudStorage, "metadata", keyProvider);
+                cloudStorage, keyProvider, new EncryptedScope(new CloudPath("sites/metadata.json"), 1, true));
 
         final JsonObject loadedMetadata = saltsProvider.getMetadata();
         saltsProvider.loadContent(loadedMetadata);
@@ -235,7 +244,7 @@ public class EncryptedRotatingSaltProviderTest {
                 "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=\n" +
                 "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=";
 
-        when(cloudStorage.download("metadata"))
+        when(cloudStorage.download("sites/encrypted/1_public/metadata.json"))
                 .thenReturn(new ByteArrayInputStream(metadataJson.toString().getBytes(StandardCharsets.US_ASCII)));
         when(cloudStorage.download("saltsV1.txt"))
                 .thenReturn(getEncryptedStream(saltsV1));
@@ -243,7 +252,7 @@ public class EncryptedRotatingSaltProviderTest {
                 .thenReturn(getEncryptedStream(saltsV2));
 
         EncryptedRotatingSaltProvider saltsProvider = new EncryptedRotatingSaltProvider(
-                cloudStorage, "metadata", keyProvider);
+                cloudStorage, keyProvider, new EncryptedScope(new CloudPath("sites/metadata.json"), 1, true));
 
         final JsonObject loadedMetadata = saltsProvider.getMetadata();
         saltsProvider.loadContent(loadedMetadata);
@@ -317,7 +326,7 @@ public class EncryptedRotatingSaltProviderTest {
                         "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=\n" +
                         "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=";
 
-        when(cloudStorage.download("metadata"))
+        when(cloudStorage.download("sites/encrypted/1_public/metadata.json"))
                 .thenReturn(new ByteArrayInputStream(metadataJson.toString().getBytes(StandardCharsets.US_ASCII)));
         when(cloudStorage.download("saltsV1.txt"))
                 .thenReturn(getEncryptedStream(saltsV1));
@@ -325,7 +334,7 @@ public class EncryptedRotatingSaltProviderTest {
                 .thenReturn(getEncryptedStream(saltsV2));
 
         EncryptedRotatingSaltProvider saltsProvider = new EncryptedRotatingSaltProvider(
-                cloudStorage, "metadata", keyProvider);
+                cloudStorage, keyProvider, new EncryptedScope(new CloudPath("sites/metadata.json"), 1, true));
 
         final JsonObject loadedMetadata = saltsProvider.getMetadata();
         saltsProvider.loadContent(loadedMetadata);

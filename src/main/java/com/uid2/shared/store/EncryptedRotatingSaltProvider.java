@@ -1,8 +1,10 @@
 package com.uid2.shared.store;
 
+import com.uid2.shared.Const;
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.model.SaltEntry;
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
+import com.uid2.shared.store.scope.StoreScope;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,8 +15,8 @@ import static com.uid2.shared.util.CloudEncryptionHelpers.decryptInputStream;
 public class EncryptedRotatingSaltProvider extends RotatingSaltProvider {
     private final RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider;
 
-    public EncryptedRotatingSaltProvider(DownloadCloudStorage fileStreamProvider, String metadataPath, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider) {
-        super(fileStreamProvider, metadataPath);
+    public EncryptedRotatingSaltProvider(DownloadCloudStorage fileStreamProvider, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider, StoreScope scope) {
+        super(fileStreamProvider, scope.getMetadataPath().toString());
         this.cloudEncryptionKeyProvider = cloudEncryptionKeyProvider;
     }
 
