@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 import static com.uid2.shared.TestUtilites.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +54,7 @@ class EncryptedScopedStoreReaderTest {
         Map<Integer, CloudEncryptionKey> mockKeyMap = new HashMap<>();
         mockKeyMap.put(encryptionKey.getId(), encryptionKey);
         when(keyProvider.getAll()).thenReturn(mockKeyMap);
+        when(keyProvider.getKey(1)).thenReturn(mockKeyMap.get(1));
     }
 
     @Test
@@ -104,29 +107,10 @@ class EncryptedScopedStoreReaderTest {
     }
 
     @Test
-    void testDecryptionOfEncryptedContent() throws Exception {
-        // Simulate encrypted content
-        String secretKey = encryptionKey.getSecret();
-        byte[] secretKeyBytes = Base64.getDecoder().decode(secretKey);
-        byte[] encryptedPayload = AesGcm.encrypt("value1,value2".getBytes(StandardCharsets.UTF_8), secretKeyBytes);
-        String encryptedPayloadBase64 = Base64.getEncoder().encodeToString(encryptedPayload);
-
-        JsonObject encryptedJson = new JsonObject()
-                .put("key_id", encryptionKey.getId())
-                .put("encrypted_payload", encryptedPayloadBase64);
-
-        String encryptedContent = encryptedJson.encodePrettily();
-        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, keyProvider);
-
-        String decryptedContent = reader.getDecryptedContent(encryptedContent);
-
-        assertThat(decryptedContent).isEqualTo("value1,value2");
-    }
-
-    @Test
     void testHandlingInvalidEncryptionKey() throws Exception {
         // Set key provider to return an empty map
         when(keyProvider.getAll()).thenReturn(new HashMap<>());
+        when(keyProvider.getKey(anyInt())).thenReturn(null);
 
         String secretKey = encryptionKey.getSecret();
         byte[] secretKeyBytes = Base64.getDecoder().decode(secretKey);
@@ -159,6 +143,7 @@ class EncryptedScopedStoreReaderTest {
         mockKeyMap.put(encryptionKey.getId(), encryptionKey);
         mockKeyMap.put(newKey.getId(), newKey);
         when(keyProvider.getAll()).thenReturn(mockKeyMap);
+        when(keyProvider.getKey(2)).thenReturn(mockKeyMap.get(2));
 
         byte[] encryptedPayload = AesGcm.encrypt("value1,value2".getBytes(StandardCharsets.UTF_8), newKeyBytes);
         String encryptedPayloadBase64 = Base64.getEncoder().encodeToString(encryptedPayload);
