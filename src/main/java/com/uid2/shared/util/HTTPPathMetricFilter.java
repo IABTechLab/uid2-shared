@@ -11,7 +11,16 @@ public class HTTPPathMetricFilter {
                 normalized = normalized.substring(0, normalized.length() - 1);
             }
             normalized = normalized.toLowerCase();
-            return pathSet == null || pathSet.isEmpty() || pathSet.contains(normalized) ? normalized : "/unknown";
+
+            if (pathSet == null || pathSet.isEmpty()) { return normalized; }
+
+            for (String path : pathSet) {
+                String pathRegex = path.replaceAll(":[^/]+", "[^/]+");
+                if (normalized.matches(pathRegex)) {
+                    return path;
+                }
+            }
+            return "/unknown";
         } catch (IllegalArgumentException e) {
             return "/parsing_error";
         }
