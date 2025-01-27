@@ -46,6 +46,7 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
             log.debug("Validating policy...");
             var encodedPublicKey = Utils.toBase64String(publicKey);
 
+            log.info("Kat debug attestation...tokenPayload: ", tokenPayload);
             var enclaveId = policyValidator.validate(tokenPayload, encodedPublicKey);
 
             if (allowedEnclaveIds.contains(enclaveId)) {
