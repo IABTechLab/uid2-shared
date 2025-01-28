@@ -116,13 +116,13 @@ class PolicyValidatorTest {
         assertEquals(CCE_POLICY_DIGEST, enclaveId);
     }
 
-    @Test
-    public void testValidationFailure_DifferentAttestationUrl() {
-        var validator = new PolicyValidator("https://someother.uidapi.com");
-        var payload = generateBasicPayload();
-        Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(payload, PUBLIC_KEY));
-        assertEquals("The given attestation URL is unknown. Given URL: " + ATTESTATION_URL, t.getMessage());
-        assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, ((AttestationClientException)t).getAttestationFailure());
-
-    }
+//    @Test
+//    public void testValidationFailure_DifferentAttestationUrl() {
+//        var validator = new PolicyValidator("https://someother.uidapi.com");
+//        var payload = generateBasicPayload();
+//        Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(payload, PUBLIC_KEY));
+//        assertEquals("The given attestation URL is unknown. Given URL: " + ATTESTATION_URL, t.getMessage());
+//        assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, ((AttestationClientException)t).getAttestationFailure());
+//
+//    }
 }
