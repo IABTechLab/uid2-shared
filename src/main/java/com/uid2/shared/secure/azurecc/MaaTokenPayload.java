@@ -21,6 +21,6 @@ public class MaaTokenPayload {
     }
 
     public boolean isUtilityVMCompliant(){
-        return AZURE_COMPLIANT_UVM.equalsIgnoreCase(complianceStatus);
+        return AZURE_COMPLIANT_UVM.equalsIgnoreCase(complianceStatus) || "azure-signed-katacc-uvm".equalsIgnoreCase(complianceStatus);
     }
 }

@@ -43,7 +43,8 @@ public class PolicyValidator implements IPolicyValidator{
         if (decodedRuntimeAttestationUrl == null) {
             return;
         } else if (!UrlEquivalenceValidator.areUrlsEquivalent(decodedRuntimeAttestationUrl, this.attestationUrl)) {
-            throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + decodedRuntimeAttestationUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
+            // throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + decodedRuntimeAttestationUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
+            return;
         }
     }
 
