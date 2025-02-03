@@ -15,6 +15,11 @@ import java.util.Map;
 import static com.uid2.shared.secure.JwtUtils.tryGetField;
 
 public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
+    // the `x-ms-compliance-status` value for ACI CC
+    public static final String AZURE_COMPLIANT_UVM = "azure-compliant-uvm";
+
+    // the `x-ms-compliance-status` value for AKS CC
+    public static final String AZURE_COMPLIANT_UVM_AKS = "azure-signed-katacc-uvm";
 
     // set to true to facilitate local test.
     public static final boolean BYPASS_SIGNATURE_CHECK = false;
@@ -52,7 +57,7 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
     }
 
     @Override
-    public MaaTokenPayload validate(String tokenString) throws AttestationException {
+    public MaaTokenPayload validate(String tokenString, String protocol) throws AttestationException {
         if (Strings.isNullOrEmpty(tokenString)) {
             throw new IllegalArgumentException("tokenString can not be null or empty");
         }
@@ -76,6 +81,12 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
         var rawPayload = signature.getPayload();
 
         var tokenPayloadBuilder = MaaTokenPayload.builder();
+
+        if (protocol == "azure-cc") {
+            tokenPayloadBuilder.azure_compliant_uvm(AZURE_COMPLIANT_UVM);
+        } else if(protocol == "azure-cc-aks") {
+            tokenPayloadBuilder.azure_compliant_uvm(AZURE_COMPLIANT_UVM_AKS);
+        }
 
         tokenPayloadBuilder.attestationType(tryGetField(rawPayload, "x-ms-attestation-type", String.class));
         tokenPayloadBuilder.complianceStatus(tryGetField(rawPayload, "x-ms-compliance-status", String.class));

@@ -7,8 +7,8 @@ import lombok.Value;
 @Builder(toBuilder = true)
 public class MaaTokenPayload {
     public static final String SEV_SNP_VM_TYPE = "sevsnpvm";
-    public static final String AZURE_COMPLIANT_UVM = "azure-compliant-uvm";
 
+    private String azure_compliant_uvm;
     private String attestationType;
     private String complianceStatus;
     private boolean vmDebuggable;
@@ -21,6 +21,6 @@ public class MaaTokenPayload {
     }
 
     public boolean isUtilityVMCompliant(){
-        return AZURE_COMPLIANT_UVM.equalsIgnoreCase(complianceStatus);
+        return azure_compliant_uvm.equalsIgnoreCase(complianceStatus);
     }
 }

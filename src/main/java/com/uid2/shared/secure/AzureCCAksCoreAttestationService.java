@@ -17,15 +17,15 @@ import java.util.Set;
 
 // CC stands for Confidential Container
 @Slf4j
-public class AzureCCCoreAttestationService extends AzureCCCoreAttestationServiceBase {
-    private static final String AZURE_CC_PROTOCOL = "azure-cc";
+public class AzureCCAksCoreAttestationService extends AzureCCCoreAttestationServiceBase {
+    private static final String AZURE_CC_PROTOCOL = "azure-cc-aks";
 
-    public AzureCCCoreAttestationService(String maaServerBaseUrl, String attestationUrl) {
+    public AzureCCAksCoreAttestationService(String maaServerBaseUrl, String attestationUrl) {
         super(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(attestationUrl), AZURE_CC_PROTOCOL);
     }
 
     // used in UT
-    protected AzureCCCoreAttestationService(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator) {
+    protected AzureCCAksCoreAttestationService(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator) {
         super(tokenSignatureValidator, policyValidator, AZURE_CC_PROTOCOL);
     }
 }

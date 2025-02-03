@@ -10,5 +10,5 @@ public interface IMaaTokenSignatureValidator {
      * @return Parsed token payload.
      * @throws AttestationException
      */
-    MaaTokenPayload validate(String tokenString) throws AttestationException;
+    MaaTokenPayload validate(String tokenString, String protocol) throws AttestationException;
 }
