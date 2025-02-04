@@ -19,13 +19,13 @@ import java.util.Set;
 @Slf4j
 public class AzureCCCoreAttestationService implements ICoreAttestationService {
 
-    protected final Set<String> allowedEnclaveIds = new HashSet<>();
+    private final Set<String> allowedEnclaveIds = new HashSet<>();
 
-    protected final IMaaTokenSignatureValidator tokenSignatureValidator;
+    private final IMaaTokenSignatureValidator tokenSignatureValidator;
 
-    protected final IPolicyValidator policyValidator;
+    private final IPolicyValidator policyValidator;
 
-    protected final String azureCcProtocol;
+    private final String azureCcProtocol;
 
     public AzureCCCoreAttestationService(String maaServerBaseUrl, String attestationUrl, String azureCcProtocol) {
         this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(attestationUrl), azureCcProtocol);
@@ -43,6 +43,7 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
         try {
             var tokenString = new String(attestationRequest, StandardCharsets.US_ASCII);
 
+            log.debug("Attesting for " + azureCcProtocol + " operator...");
             log.debug("Validating signature...");
             var tokenPayload = tokenSignatureValidator.validate(tokenString, azureCcProtocol);
 
