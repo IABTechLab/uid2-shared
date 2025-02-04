@@ -126,4 +126,41 @@ class PolicyValidatorTest {
         assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, ((AttestationClientException)t).getAttestationFailure());
 
     }
+
+    @Test
+    public void testValidationFailure_AzureCcWithOtherUvm() {
+        var validator = new PolicyValidator(ATTESTATION_URL);
+        var aksPayload = generateBasicPayload()
+                .toBuilder()
+                .complianceStatus("fake-compliance")
+                .build();
+        Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(aksPayload, PUBLIC_KEY));
+        assertEquals("Not run in Azure Compliance Utility VM", t.getMessage());
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)t).getAttestationFailure());
+    }
+
+    @Test
+    public void testValidationSuccess_AksWithAzureSignedKataccUvm() throws AttestationClientException {
+        var validator = new PolicyValidator(ATTESTATION_URL);
+        var aksPayload = generateBasicPayload()
+                .toBuilder()
+                .complianceStatus("azure-signed-katacc-uvm")
+                .azureProtocol("azure-cc-aks")
+                .build();
+        var enclaveId = validator.validate(aksPayload, PUBLIC_KEY);
+        assertEquals(CCE_POLICY_DIGEST, enclaveId);
+    }
+
+    @Test
+    public void testValidationFailure_AksWithOtherUvm() {
+        var validator = new PolicyValidator(ATTESTATION_URL);
+        var aksPayload = generateBasicPayload()
+                .toBuilder()
+                .complianceStatus("fake-compliance")
+                .azureProtocol("azure-cc-aks")
+                .build();
+        Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(aksPayload, PUBLIC_KEY));
+        assertEquals("Not run in Azure Compliance Utility VM", t.getMessage());
+        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)t).getAttestationFailure());
+    }
 }
