@@ -7,8 +7,14 @@ import lombok.Value;
 @Builder(toBuilder = true)
 public class MaaTokenPayload {
     public static final String SEV_SNP_VM_TYPE = "sevsnpvm";
+    public static final String AZURE_CC_PROTOCOL = "azure-cc";
+    public static final String AZURE_CC_AKS_PROTOCOL = "azure-cc-aks";
+    // the `x-ms-compliance-status` value for ACI CC
+    public static final String AZURE_COMPLIANT_UVM = "azure-compliant-uvm";
+    // the `x-ms-compliance-status` value for AKS CC
+    public static final String AZURE_COMPLIANT_UVM_AKS = "azure-signed-katacc-uvm";
 
-    private String azure_compliant_uvm;
+    private String azureProtocol;
     private String attestationType;
     private String complianceStatus;
     private boolean vmDebuggable;
@@ -21,6 +27,11 @@ public class MaaTokenPayload {
     }
 
     public boolean isUtilityVMCompliant(){
-        return azure_compliant_uvm.equalsIgnoreCase(complianceStatus);
+        if (azureProtocol == AZURE_CC_PROTOCOL) {
+            return AZURE_COMPLIANT_UVM.equalsIgnoreCase(complianceStatus);
+        } else if (azureProtocol == AZURE_CC_AKS_PROTOCOL) {
+            return AZURE_COMPLIANT_UVM_AKS.equalsIgnoreCase(complianceStatus);
+        }
+        return false;
     }
 }

@@ -97,6 +97,7 @@ class PolicyValidatorTest {
                 .vmDebuggable(false)
                 .runtimeData(generateBasicRuntimeData())
                 .ccePolicyDigest(CCE_POLICY_DIGEST)
+                .azureProtocol("azure-cc")
                 .build();
     }
 

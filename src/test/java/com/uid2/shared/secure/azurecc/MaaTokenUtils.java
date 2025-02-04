@@ -14,7 +14,7 @@ import static com.uid2.shared.secure.TestUtils.generateJwt;
 public class MaaTokenUtils {
     public static final String MAA_BASE_URL = "https://sharedeus.eus.attest.azure.net";
 
-    public static MaaTokenPayload validateAndParseToken(JsonObject payload, Clock clock) throws Exception{
+    public static MaaTokenPayload validateAndParseToken(JsonObject payload, Clock clock, String protocol) throws Exception{
         var gen = KeyPairGenerator.getInstance(Const.Name.AsymetricEncryptionKeyClass);
         gen.initialize(2048, new SecureRandom());
         var keyPair = gen.generateKeyPair();
@@ -30,7 +30,7 @@ public class MaaTokenUtils {
         var tokenVerifier = new MaaTokenSignatureValidator(MAA_BASE_URL, keyProvider, clock);
 
         // validate token
-        return tokenVerifier.validate(token);
+        return tokenVerifier.validate(token, protocol);
     }
 
     private static class MockKeyProvider implements IPublicKeyProvider {
