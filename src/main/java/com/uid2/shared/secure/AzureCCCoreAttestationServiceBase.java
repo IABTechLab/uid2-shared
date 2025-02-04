@@ -27,7 +27,6 @@ public abstract class AzureCCCoreAttestationServiceBase implements ICoreAttestat
 
     protected final String azureCcProtocol;
 
-    // used in UT
     protected AzureCCCoreAttestationServiceBase(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator, String azureCcProtocol) {
         this.tokenSignatureValidator = tokenSignatureValidator;
         this.policyValidator = policyValidator;
