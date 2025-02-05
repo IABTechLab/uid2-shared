@@ -43,7 +43,7 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
         try {
             var tokenString = new String(attestationRequest, StandardCharsets.US_ASCII);
 
-            log.debug("Attesting for " + azureCcProtocol + " operator...");
+            log.debug("Attesting for {} operator...", azureCcProtocol);
             log.debug("Validating signature...");
             var tokenPayload = tokenSignatureValidator.validate(tokenString, azureCcProtocol);
 
@@ -53,10 +53,10 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
             var enclaveId = policyValidator.validate(tokenPayload, encodedPublicKey);
 
             if (allowedEnclaveIds.contains(enclaveId)) {
-                log.info(String.format("Successfully attested %s against registered enclaves, enclave id: %s", azureCcProtocol, enclaveId));
+                log.info("Successfully attested {} against registered enclaves, enclave id: {}", azureCcProtocol, enclaveId);
                 handler.handle(Future.succeededFuture(new AttestationResult(publicKey, enclaveId)));
             } else {
-                log.info(String.format("Got unsupported %s enclave id: %s", azureCcProtocol, enclaveId));
+                log.warn("Got unsupported {} enclave id: {}", azureCcProtocol, enclaveId);
                 handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.FORBIDDEN_ENCLAVE)));
             }
         }
@@ -67,7 +67,7 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
         } catch (Exception ex) {
             handler.handle(Future.failedFuture(new AttestationException(ex)));
         }
-    };
+    }
 
     @Override
     public void registerEnclave(String encodedIdentifier) throws AttestationException {
