@@ -4,7 +4,10 @@ import com.uid2.shared.secure.AttestationException;
 import com.uid2.shared.secure.TestClock;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static com.uid2.shared.secure.TestUtils.loadFromJson;
 import static com.uid2.shared.secure.azurecc.MaaTokenUtils.validateAndParseToken;
@@ -12,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MaaTokenSignatureValidatorTest {
     @ParameterizedTest
-    @ValueSource(strings = {"/com.uid2.shared/test/secure/azurecc/jwt_payload_aci.json", "/com.uid2.shared/test/secure/azurecc/jwt_payload_aks.json"})
-    public void testPayload(String payloadPath) throws Exception {
+    @MethodSource("argumentProvider")
+    public void testPayload(String payloadPath, String protocol) throws Exception {
         // expire at 1695313895
         var payload = loadFromJson(payloadPath);
         var clock = new TestClock();
@@ -23,7 +26,7 @@ public class MaaTokenSignatureValidatorTest {
         var expectedLocation = "East US";
         var expectedPublicKey = "abc";
 
-        var tokenPayload = validateAndParseToken(payload, clock, "azure-cc");
+        var tokenPayload = validateAndParseToken(payload, clock, protocol);
         assertEquals(true, tokenPayload.isSevSnpVM());
         assertEquals(true, tokenPayload.isUtilityVMCompliant());
         assertEquals(false, tokenPayload.isVmDebuggable());
@@ -39,5 +42,12 @@ public class MaaTokenSignatureValidatorTest {
         var maaServerUrl = "https://sharedeus.eus.attest.azure.net";
         var validator = new MaaTokenSignatureValidator(maaServerUrl);
         var token = validator.validate(maaToken, "azure-cc");
+    }
+
+    static Stream<Arguments> argumentProvider() {
+        return Stream.of(
+                Arguments.of("/com.uid2.shared/test/secure/azurecc/jwt_payload_aci.json", "azure-cc"),
+                Arguments.of("/com.uid2.shared/test/secure/azurecc/jwt_payload_aks.json", "azure-cc-aks")
+        );
     }
 }
