@@ -163,4 +163,16 @@ class PolicyValidatorTest {
         assertEquals("Not run in Azure Compliance Utility VM", t.getMessage());
         assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)t).getAttestationFailure());
     }
+
+    @Test
+    public void testValidationFailure_InvalidProtocol() {
+        var validator = new PolicyValidator(ATTESTATION_URL);
+        var aksPayload = generateBasicPayload()
+                .toBuilder()
+                .azureProtocol("fake-protocol")
+                .build();
+        Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(aksPayload, PUBLIC_KEY));
+        assertEquals("Azure protocol: fake-protocol not supported", t.getMessage());
+        assertEquals(AttestationFailure.INVALID_PROTOCOL, ((AttestationClientException)t).getAttestationFailure());
+    }
 }

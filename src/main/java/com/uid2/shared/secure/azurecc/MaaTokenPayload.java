@@ -1,5 +1,8 @@
 package com.uid2.shared.secure.azurecc;
 
+import com.uid2.shared.secure.AttestationClientException;
+import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.AttestationFailure;
 import lombok.Builder;
 import lombok.Value;
 
@@ -26,12 +29,13 @@ public class MaaTokenPayload {
         return SEV_SNP_VM_TYPE.equalsIgnoreCase(attestationType);
     }
 
-    public boolean isUtilityVMCompliant(){
+    public boolean isUtilityVMCompliant() throws AttestationClientException {
         if (azureProtocol == AZURE_CC_ACI_PROTOCOL) {
             return AZURE_COMPLIANT_UVM.equalsIgnoreCase(complianceStatus);
         } else if (azureProtocol == AZURE_CC_AKS_PROTOCOL) {
             return AZURE_COMPLIANT_UVM_AKS.equalsIgnoreCase(complianceStatus);
+        } else {
+            throw new AttestationClientException(String.format("Azure protocol: %s not supported", azureProtocol), AttestationFailure.INVALID_PROTOCOL);
         }
-        return false;
     }
 }
