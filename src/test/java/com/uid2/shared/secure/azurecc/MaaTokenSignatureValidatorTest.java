@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MaaTokenSignatureValidatorTest {
     @Test
-    public void testPayload() throws Exception {
+    public void testAciPayload() throws Exception {
         // expire at 1695313895
         var payloadPath = "/com.uid2.shared/test/secure/azurecc/jwt_payload_aci.json";
         var payload = loadFromJson(payloadPath);
