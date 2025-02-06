@@ -4,6 +4,7 @@ import com.google.api.client.util.Clock;
 import com.google.gson.JsonObject;
 import com.uid2.shared.Const;
 import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.Protocol;
 
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
@@ -14,7 +15,7 @@ import static com.uid2.shared.secure.TestUtils.generateJwt;
 public class MaaTokenUtils {
     public static final String MAA_BASE_URL = "https://sharedeus.eus.attest.azure.net";
 
-    public static MaaTokenPayload validateAndParseToken(JsonObject payload, Clock clock, String protocol) throws Exception{
+    public static MaaTokenPayload validateAndParseToken(JsonObject payload, Clock clock, Protocol protocol) throws Exception{
         var gen = KeyPairGenerator.getInstance(Const.Name.AsymetricEncryptionKeyClass);
         gen.initialize(2048, new SecureRandom());
         var keyPair = gen.generateKeyPair();

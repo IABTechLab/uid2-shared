@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
@@ -65,8 +66,8 @@ class AzureCCCoreAttestationServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testHappyPath(String azureProtocol) throws AttestationException {
+    @EnumSource(value = Protocol.class, names = {"AZURE_CC_ACI", "AZURE_CC_AKS"})
+    public void testHappyPath(Protocol azureProtocol) throws AttestationException {
         var provider = new AzureCCCoreAttestationService(alwaysPassTokenValidator, alwaysPassPolicyValidator, azureProtocol);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
@@ -76,8 +77,8 @@ class AzureCCCoreAttestationServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testSignatureCheckFailed_ClientError(String azureProtocol) throws AttestationException {
+    @EnumSource(value = Protocol.class, names = {"AZURE_CC_ACI", "AZURE_CC_AKS"})
+    public void testSignatureCheckFailed_ClientError(Protocol azureProtocol) throws AttestationException {
         var errorStr = "token signature validation failed";
         when(alwaysFailTokenValidator.validate(any(), any())).thenThrow(new AttestationClientException(errorStr, AttestationFailure.BAD_PAYLOAD));
         var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, azureProtocol);
@@ -90,8 +91,8 @@ class AzureCCCoreAttestationServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testSignatureCheckFailed_ServerError(String azureProtocol) throws AttestationException {
+    @EnumSource(value = Protocol.class, names = {"AZURE_CC_ACI", "AZURE_CC_AKS"})
+    public void testSignatureCheckFailed_ServerError(Protocol azureProtocol) throws AttestationException {
         when(alwaysFailTokenValidator.validate(any(), any())).thenThrow(new AttestationException("unknown server error"));
         var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, azureProtocol);
         provider.registerEnclave(ENCLAVE_ID);
@@ -102,8 +103,8 @@ class AzureCCCoreAttestationServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testPolicyCheckSuccess_ClientError(String azureProtocol) throws AttestationException {
+    @EnumSource(value = Protocol.class, names = {"AZURE_CC_ACI", "AZURE_CC_AKS"})
+    public void testPolicyCheckSuccess_ClientError(Protocol azureProtocol) throws AttestationException {
         var errorStr = "policy validation failed";
         when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationClientException(errorStr, AttestationFailure.BAD_PAYLOAD));
         var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator, azureProtocol);
@@ -116,8 +117,8 @@ class AzureCCCoreAttestationServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testPolicyCheckFailed_ServerError(String azureProtocol) throws AttestationException {
+    @EnumSource(value = Protocol.class, names = {"AZURE_CC_ACI", "AZURE_CC_AKS"})
+    public void testPolicyCheckFailed_ServerError(Protocol azureProtocol) throws AttestationException {
         when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationException("unknown server error"));
         var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator, azureProtocol);
         provider.registerEnclave(ENCLAVE_ID);
@@ -128,8 +129,8 @@ class AzureCCCoreAttestationServiceTest {
     }
 
     @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testEnclaveNotRegistered(String azureProtocol) throws AttestationException {
+    @EnumSource(value = Protocol.class, names = {"AZURE_CC_ACI", "AZURE_CC_AKS"})
+    public void testEnclaveNotRegistered(Protocol azureProtocol) throws AttestationException {
         var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, azureProtocol);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
@@ -143,12 +144,5 @@ class AzureCCCoreAttestationServiceTest {
                 ATTESTATION_REQUEST.getBytes(StandardCharsets.UTF_8),
                 PUBLIC_KEY.getBytes(StandardCharsets.UTF_8),
                 handler);
-    }
-
-    static Stream<Arguments> argumentProvider() {
-        return Stream.of(
-                Arguments.of(MaaTokenPayload.AZURE_CC_ACI_PROTOCOL),
-                Arguments.of(MaaTokenPayload.AZURE_CC_AKS_PROTOCOL)
-        );
     }
 }
