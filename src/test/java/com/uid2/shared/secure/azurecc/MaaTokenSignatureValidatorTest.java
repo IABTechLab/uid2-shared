@@ -3,17 +3,21 @@ package com.uid2.shared.secure.azurecc;
 import com.uid2.shared.secure.AttestationException;
 import com.uid2.shared.secure.TestClock;
 import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static com.uid2.shared.secure.TestUtils.loadFromJson;
 import static com.uid2.shared.secure.azurecc.MaaTokenUtils.validateAndParseToken;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class MaaTokenSignatureValidatorTest {
-    @Test
-    public void testPayload() throws Exception {
+    @ParameterizedTest
+    @MethodSource("argumentProvider")
+    public void testPayload(String payloadPath, String protocol) throws Exception {
         // expire at 1695313895
-        var payloadPath = "/com.uid2.shared/test/secure/azurecc/jwt_payload.json";
         var payload = loadFromJson(payloadPath);
         var clock = new TestClock();
         clock.setCurrentTimeMs(1695313893000L);
@@ -22,7 +26,7 @@ public class MaaTokenSignatureValidatorTest {
         var expectedLocation = "East US";
         var expectedPublicKey = "abc";
 
-        var tokenPayload = validateAndParseToken(payload, clock);
+        var tokenPayload = validateAndParseToken(payload, clock, protocol);
         assertEquals(true, tokenPayload.isSevSnpVM());
         assertEquals(true, tokenPayload.isUtilityVMCompliant());
         assertEquals(false, tokenPayload.isVmDebuggable());
@@ -37,6 +41,13 @@ public class MaaTokenSignatureValidatorTest {
         var maaToken = "<Placeholder>";
         var maaServerUrl = "https://sharedeus.eus.attest.azure.net";
         var validator = new MaaTokenSignatureValidator(maaServerUrl);
-        var token = validator.validate(maaToken);
+        var token = validator.validate(maaToken, MaaTokenPayload.AZURE_CC_ACI_PROTOCOL);
+    }
+
+    static Stream<Arguments> argumentProvider() {
+        return Stream.of(
+                Arguments.of("/com.uid2.shared/test/secure/azurecc/jwt_payload_aci.json", MaaTokenPayload.AZURE_CC_ACI_PROTOCOL),
+                Arguments.of("/com.uid2.shared/test/secure/azurecc/jwt_payload_aks.json", MaaTokenPayload.AZURE_CC_AKS_PROTOCOL)
+        );
     }
 }
