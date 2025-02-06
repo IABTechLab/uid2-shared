@@ -41,13 +41,13 @@ public class MaaTokenSignatureValidatorTest {
         var maaToken = "<Placeholder>";
         var maaServerUrl = "https://sharedeus.eus.attest.azure.net";
         var validator = new MaaTokenSignatureValidator(maaServerUrl);
-        var token = validator.validate(maaToken, "azure-cc");
+        var token = validator.validate(maaToken, MaaTokenPayload.AZURE_CC_ACI_PROTOCOL);
     }
 
     static Stream<Arguments> argumentProvider() {
         return Stream.of(
-                Arguments.of("/com.uid2.shared/test/secure/azurecc/jwt_payload_aci.json", "azure-cc"),
-                Arguments.of("/com.uid2.shared/test/secure/azurecc/jwt_payload_aks.json", "azure-cc-aks")
+                Arguments.of("/com.uid2.shared/test/secure/azurecc/jwt_payload_aci.json", MaaTokenPayload.AZURE_CC_ACI_PROTOCOL),
+                Arguments.of("/com.uid2.shared/test/secure/azurecc/jwt_payload_aks.json", MaaTokenPayload.AZURE_CC_AKS_PROTOCOL)
         );
     }
 }

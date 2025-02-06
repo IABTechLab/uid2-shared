@@ -97,7 +97,7 @@ class PolicyValidatorTest {
                 .vmDebuggable(false)
                 .runtimeData(generateBasicRuntimeData())
                 .ccePolicyDigest(CCE_POLICY_DIGEST)
-                .azureProtocol("azure-cc")
+                .azureProtocol(MaaTokenPayload.AZURE_CC_ACI_PROTOCOL)
                 .build();
     }
 
@@ -145,7 +145,7 @@ class PolicyValidatorTest {
         var aksPayload = generateBasicPayload()
                 .toBuilder()
                 .complianceStatus("azure-signed-katacc-uvm")
-                .azureProtocol("azure-cc-aks")
+                .azureProtocol(MaaTokenPayload.AZURE_CC_AKS_PROTOCOL)
                 .build();
         var enclaveId = validator.validate(aksPayload, PUBLIC_KEY);
         assertEquals(CCE_POLICY_DIGEST, enclaveId);
@@ -157,7 +157,7 @@ class PolicyValidatorTest {
         var aksPayload = generateBasicPayload()
                 .toBuilder()
                 .complianceStatus("fake-compliance")
-                .azureProtocol("azure-cc-aks")
+                .azureProtocol(MaaTokenPayload.AZURE_CC_AKS_PROTOCOL)
                 .build();
         Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(aksPayload, PUBLIC_KEY));
         assertEquals("Not run in Azure Compliance Utility VM", t.getMessage());
