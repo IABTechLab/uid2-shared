@@ -147,7 +147,7 @@ class AzureCCCoreAttestationServiceTest {
 
     static Stream<Arguments> argumentProvider() {
         return Stream.of(
-                Arguments.of(MaaTokenPayload.AZURE_CC_AKS_PROTOCOL),
+                Arguments.of(MaaTokenPayload.AZURE_CC_ACI_PROTOCOL),
                 Arguments.of(MaaTokenPayload.AZURE_CC_AKS_PROTOCOL)
         );
     }
