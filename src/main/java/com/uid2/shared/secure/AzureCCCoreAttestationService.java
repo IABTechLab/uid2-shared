@@ -31,6 +31,10 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
         this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(attestationUrl), azureCcProtocol);
     }
 
+    public AzureCCCoreAttestationService(String maaServerBaseUrl, String attestationUrl) {
+        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(attestationUrl), Protocol.AZURE_CC_ACI);
+    }
+
     // used in UT
     protected AzureCCCoreAttestationService(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator, Protocol azureCcProtocol) {
         this.tokenSignatureValidator = tokenSignatureValidator;
