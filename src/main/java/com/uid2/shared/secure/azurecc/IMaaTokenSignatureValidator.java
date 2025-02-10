@@ -1,6 +1,7 @@
 package com.uid2.shared.secure.azurecc;
 
 import com.uid2.shared.secure.AttestationException;
+import com.uid2.shared.secure.Protocol;
 
 public interface IMaaTokenSignatureValidator {
     /**
@@ -10,5 +11,5 @@ public interface IMaaTokenSignatureValidator {
      * @return Parsed token payload.
      * @throws AttestationException
      */
-    MaaTokenPayload validate(String tokenString, String protocol) throws AttestationException;
+    MaaTokenPayload validate(String tokenString, Protocol protocol) throws AttestationException;
 }

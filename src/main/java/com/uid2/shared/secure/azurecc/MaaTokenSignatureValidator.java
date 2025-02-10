@@ -8,6 +8,7 @@ import com.google.common.base.Strings;
 import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
 import com.uid2.shared.secure.AttestationFailure;
+import com.uid2.shared.secure.Protocol;
 
 import java.io.IOException;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
     }
 
     @Override
-    public MaaTokenPayload validate(String tokenString, String protocol) throws AttestationException {
+    public MaaTokenPayload validate(String tokenString, Protocol protocol) throws AttestationException {
         if (Strings.isNullOrEmpty(tokenString)) {
             throw new IllegalArgumentException("tokenString can not be null or empty");
         }

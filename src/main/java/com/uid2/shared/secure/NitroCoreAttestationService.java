@@ -69,7 +69,7 @@ public class NitroCoreAttestationService implements ICoreAttestationService {
             return new AttestationResult(AttestationFailure.FORBIDDEN_ENCLAVE);
         }
 
-        LOGGER.info("Successfully attested aws-nitro against registered enclaves, enclave id: " + id.toString());
+        LOGGER.info("Successfully attested {} against registered enclaves, enclave id: {}", Protocol.AWS_NITRO, id);
         return new AttestationResult(aDoc.getPublicKey(), id.toString());
     }
 
