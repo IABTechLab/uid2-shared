@@ -84,13 +84,13 @@ public class JwtService {
 
                 // return the first verified response
                 return response;
-            } catch (TokenVerifier.VerificationException e) {
-                LOGGER.info("Error validating JWT. Error message: {}", e.getMessage());
-                lastException = e;
             } catch (Exception e) {
-                LOGGER.warn("Error thrown verifying token", e);
                 lastException = e;
             }
+        }
+
+        if (!response.getIsValid()) {
+            LOGGER.error("Error validating JWT", lastException);
         }
 
         response.setValidationException(lastException);
