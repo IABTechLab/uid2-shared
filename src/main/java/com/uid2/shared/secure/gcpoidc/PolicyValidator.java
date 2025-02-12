@@ -27,6 +27,8 @@ public class PolicyValidator implements IPolicyValidator {
     public static final String ENV_OPERATOR_API_KEY_SECRET_NAME = "API_TOKEN_SECRET_NAME";
     public static final String ENV_CORE_ENDPOINT = "CORE_BASE_URL";
     public static final String ENV_OPT_OUT_ENDPOINT = "OPTOUT_BASE_URL";
+    public static final String ENV_DEBUG_MODE = "DEBUG_MODE";
+    public static final String ENV_SKIP_VALIDATIONS = "SKIP_VALIDATIONS";
 
     public static final String EU_REGION_PREFIX = "europe";
 
@@ -42,7 +44,9 @@ public class PolicyValidator implements IPolicyValidator {
             ),
             Environment.Integration, ImmutableList.of(
                     ENV_CORE_ENDPOINT,
-                    ENV_OPT_OUT_ENDPOINT
+                    ENV_OPT_OUT_ENDPOINT,
+                    ENV_DEBUG_MODE,
+                    ENV_SKIP_VALIDATIONS
             )
     );
     private final String attestationUrl;
