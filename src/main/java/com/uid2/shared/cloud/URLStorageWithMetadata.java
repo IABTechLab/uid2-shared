@@ -1,6 +1,7 @@
 package com.uid2.shared.cloud;
 
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
@@ -35,15 +36,25 @@ public abstract class URLStorageWithMetadata implements ICloudStorage {
     public InputStream download(String cloudPath) throws CloudStorageException {
         try {
             URL url = new URL(cloudPath);
-
+            HttpURLConnection httpConn;
+            
             if (this.proxy != null) {
-                return url.openConnection(proxy).getInputStream();
+                httpConn = (HttpURLConnection) url.openConnection(proxy);
             } else {
-                return url.openStream();
+                httpConn = (HttpURLConnection) url.openConnection();
+            }
+            
+            int responseCode = httpConn.getResponseCode();
+            if (responseCode >= 200 && responseCode < 300) {
+                return httpConn.getInputStream();
+            } else {
+                throw new CloudStorageException("Url download error: HTTP response code " + responseCode 
+                + " Visit UID2 docs for more details");
             }
         } catch (Throwable t) {
-            // Do not log the message or the original exception as that may contain the pre-signed url
-            throw new CloudStorageException("url download error: " + t.getClass().getSimpleName());
+            // Do not log the original exception as it may contain sensitive information such as the pre-signed URL
+            throw new CloudStorageException("Url download error: " + t.getClass().getSimpleName() +
+                " Visit UID2 docs for more details");
         }
     }
 
