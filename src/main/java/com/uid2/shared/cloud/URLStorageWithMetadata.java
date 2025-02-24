@@ -48,13 +48,18 @@ public abstract class URLStorageWithMetadata implements ICloudStorage {
             if (responseCode >= 200 && responseCode < 300) {
                 return httpConn.getInputStream();
             } else {
-                throw new CloudStorageException("Url download error: HTTP response code " + responseCode 
-                + " Visit UID2 docs for more details");
+                throw new CloudStorageException("Cannot download required files, HTTP response code " + responseCode 
+                + ", please visit UID2 guides for more details");
             }
-        } catch (Throwable t) {
+        }
+        catch (CloudStorageException e) {
+            // Directly rethrow without wrapping again
+            throw e;
+        } 
+        catch (Throwable t) {
             // Do not log the original exception as it may contain sensitive information such as the pre-signed URL
-            throw new CloudStorageException("Url download error: " + t.getClass().getSimpleName() +
-                " Visit UID2 docs for more details");
+            throw new CloudStorageException("Cannot download required files: " + t.getClass().getSimpleName() +
+                ", please visit UID2 guides for more details");
         }
     }
 
