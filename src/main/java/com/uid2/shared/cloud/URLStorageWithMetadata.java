@@ -58,7 +58,7 @@ public abstract class URLStorageWithMetadata implements ICloudStorage {
         } 
         catch (Throwable t) {
             // Do not log the original exception as it may contain sensitive information such as the pre-signed URL
-            throw new CloudStorageException("Cannot download required files: " + t.getClass().getSimpleName() +
+            throw new CloudStorageException("Cannot download required files, exception: " + t.getClass().getSimpleName() +
                 ", please visit UID2 guides for more details");
         }
     }
