@@ -65,6 +65,7 @@ public class AttestationMiddleware {
 
         public void handle(RoutingContext rc) {
             boolean success = false;
+            boolean isJwtValid = false;
 
             final IAuthorizable profile = AuthMiddleware.getAuthClient(rc);
             if (profile instanceof OperatorKey) {
@@ -85,30 +86,35 @@ public class AttestationMiddleware {
                     if (jwt != null && !jwt.isBlank()) {
                         try {
                             JwtValidationResponse response = jwtService.validateJwt(jwt, this.jwtAudience, this.jwtIssuer);
-                            success = response.getIsValid();
-                            if (success) {
+                            isJwtValid = response.getIsValid();
+                            if (isJwtValid) {
                                 if (!this.roleBasedJwtClaimValidator.hasRequiredRoles(response)) {
-                                    success = false;
+                                    isJwtValid = false;
                                     LOGGER.info("JWT missing required role. Required roles: {}, JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}", this.roleBasedJwtClaimValidator.getRequiredRoles(), response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
                                 }
 
                                 String subject = calculateSubject(operatorKey);
                                 if (!validateSubject(response, subject)) {
-                                    success = false;
+                                    isJwtValid = false;
                                     LOGGER.info("JWT failed validation of Subject. JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}, JWT Subject: {}, Operator Subject: {}", response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), response.getSubject(), subject);
                                 }
                             }
                         } catch (JwtService.ValidationException e) {
                             LOGGER.info("Error validating JWT. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}. Error: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), e);
-                            success = false;
                         }
                     } else {
                         if (this.enforceJwt) {
                             LOGGER.info("JWT is required, but was not received. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
-                            success = false;
                         }
                     }
                 }
+            }
+
+            if (!isJwtValid && this.enforceJwt) {
+                LOGGER.info("JWT validation has failed.");
+                success = false;
+            } else if (!isJwtValid && !this.enforceJwt) {
+                LOGGER.info("JWT validation has failed, but JWTs are not being enforced.");
             }
 
             if (success) {
