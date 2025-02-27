@@ -10,13 +10,16 @@ import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.RequestOptions;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.AllowForwardHeaders;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import org.assertj.core.condition.AnyOf;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,15 +27,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.time.Instant;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
@@ -134,6 +134,32 @@ public class RequestCapturingHandlerTest {
         vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
             client.get(Port, "localhost", "/randomPath").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
+                Assertions.assertDoesNotThrow(() ->
+                        Metrics.globalRegistry
+                                .get("uid2.http_requests")
+                                .tag("status", "404")
+                                .tag("method", "GET")
+                                .tag("path", "unknown")
+                                .counter()
+                );
+                testContext.completeNow();
+            })));
+        }));
+    }
+
+    @Test
+    public void handleIncorrectRemoteAddress(Vertx vertx, VertxTestContext testContext) {
+        Router router = Router.router(vertx);
+        router.allowForward(AllowForwardHeaders.X_FORWARD);
+        router.route().handler(new RequestCapturingHandler(siteStore));
+
+        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
+            WebClient client = WebClient.create(vertx);
+            RequestOptions requestOptions  = new RequestOptions();
+            requestOptions.setHost("localhost");
+            requestOptions.setPort(Integer.valueOf(Port));
+            requestOptions.addHeader(HttpHeaders.createOptimized("X-Forwarded-Host"), "[2001:db8::1"); // Incorrect IPV6
+            client.request(HttpMethod.GET, requestOptions).sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
                         Metrics.globalRegistry
                                 .get("uid2.http_requests")
