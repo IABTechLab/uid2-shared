@@ -62,6 +62,17 @@ public class JwtService {
 
         Exception lastException = null;
 
+        try {
+            var testVerifier = TokenVerifier.newBuilder().build();
+            var testSignature = testVerifier.verify(jwt);
+
+            if (testSignature.getPayload().getIssuer() != issuer) {
+                LOGGER.error("Unexpected JWT issuer, received JWT issuer: {}, expected JWT issuer: {}", testSignature.getPayload().getIssuer(), issuer);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Test JWT logging failed", e);
+        }
+
         for (PublicKey key : this.publicKeys) {
             var tokenVerifier = TokenVerifier.newBuilder()
                     .setPublicKey(key)
