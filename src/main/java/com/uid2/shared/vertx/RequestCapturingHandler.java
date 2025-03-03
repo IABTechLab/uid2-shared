@@ -62,11 +62,19 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         }
 
         long timestamp = System.currentTimeMillis();
-        String remoteClient = getClientAddress(context.request().remoteAddress());
+        String remoteClient = null;
+        try {
+            SocketAddress remoteAddress = context.request().remoteAddress();
+            remoteClient = getClientAddress(remoteAddress);
+        } catch (NullPointerException ex) {
+            LOGGER.warn("remoteAddress() throws NullPointerException");
+        }
+
         HttpMethod method = context.request().method();
         String uri = context.request().uri();
         HttpVersion version = context.request().version();
-        context.addBodyEndHandler(v -> captureNoThrow(context, timestamp, remoteClient, version, method, uri));
+        String finalRemoteClient = remoteClient;
+        context.addBodyEndHandler(v -> captureNoThrow(context, timestamp, finalRemoteClient, version, method, uri));
         context.next();
     }
 
@@ -80,8 +88,8 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
     private void captureNoThrow(RoutingContext context, long timestamp, String remoteClient, HttpVersion version, HttpMethod method, String uri) {
         try {
             capture(context, timestamp, remoteClient, version, method, uri);
-        } catch (Throwable t) {
-            LOGGER.error("capture() throws", t);
+        } catch (RuntimeException e) {
+            LOGGER.error("capture() throws", e);
         }
     }
 
