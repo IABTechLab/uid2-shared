@@ -52,6 +52,7 @@ public class Const {
         public static final String CloudDownloadThreadsProp = "cloud_download_threads";
         public static final String CloudUploadThreadsProp = "cloud_upload_threads";
         public static final String CoreS3BucketProp = "core_s3_bucket";
+        public static final String CoreS3RegionProp = "core_s3_aws_region";
         public static final String OptOutS3BucketProp = "optout_s3_bucket";
         public static final String ClientsMetadataPathProp = "clients_metadata_path";
         public static final String KeysMetadataPathProp = "keys_metadata_path";
