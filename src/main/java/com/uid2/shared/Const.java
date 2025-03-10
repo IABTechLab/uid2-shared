@@ -73,6 +73,7 @@ public class Const {
         public static final String EnforceJwtProp = "enforceJwt";
 
         // Optout
+        public static final String OptOutS3FolderProp = "optout_s3_folder";
         public static final String OptOutDataDirProp = "optout_data_dir";
         public static final String OptOutReplicaUris = "optout_replica_uris";
         public static final String OptOutSyntheticLogsEnabledProp = "optout_synthetic_logs_enabled";
@@ -84,7 +85,6 @@ public class Const {
         public static final String OptOutDeltaBacktrackInDaysProp = "optout_delta_backtrack_in_days";
         public static final String OptOutPartitionIntervalProp = "optout_partition_interval";
         public static final String OptOutMaxPartitionsProp = "optout_max_partitions";
-        public static final String OptOutS3FolderProp = "optout_s3_folder";
 
         // Others
         public static final String SaltsExpiredShutdownHours = "salts_expired_shutdown_hours";
