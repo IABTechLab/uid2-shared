@@ -27,15 +27,10 @@ public class CloudUtils {
     public static Proxy defaultProxy = getDefaultProxy();
 
     public static TaggableCloudStorage createStorage(String cloudBucket, JsonObject jsonConfig) {
+        var region = jsonConfig.getString(Const.Config.AwsRegionProp);
         var accessKeyId = jsonConfig.getString(Const.Config.AccessKeyIdProp);
         var secretAccessKey = jsonConfig.getString(Const.Config.SecretAccessKeyProp);
         var s3Endpoint = jsonConfig.getString(Const.Config.S3EndpointProp, "");
-
-        var region = jsonConfig.getString(Const.Config.AwsRegionProp);
-        var regionOverride = jsonConfig.getString(Const.Config.CoreS3RegionProp);
-        if (regionOverride != null && !regionOverride.isBlank()) {
-            region = regionOverride;
-        }
 
         if (accessKeyId == null || secretAccessKey == null) {
             // IAM authentication

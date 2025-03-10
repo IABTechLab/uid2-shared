@@ -37,13 +37,12 @@ public class Const {
         // Azure
         public static final String MaaServerBaseUrlProp = "maa_server_base_url";
 
-        // AWS
+        // AWS S3
         public static final String AwsRegionProp = "aws_region";
         public static final String AccessKeyIdProp = "aws_access_key_id";
         public static final String SecretAccessKeyProp = "aws_secret_access_key";
         public static final String S3EndpointProp = "aws_s3_endpoint";
         public static final String CoreS3BucketProp = "core_s3_bucket";
-        public static final String CoreS3RegionProp = "core_s3_region";
         public static final String OptOutS3BucketProp = "optout_s3_bucket";
 
         // Config stores
