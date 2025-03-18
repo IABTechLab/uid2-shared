@@ -39,10 +39,10 @@ public class GcpOidcCoreAttestationService implements ICoreAttestationService {
 
             var enclaveId = this.validate(tokenPayload);
             if (enclaveId != null) {
-                LOGGER.info("Successfully attested gcp-oidc against registered enclaves, enclave id: " + enclaveId);
+                LOGGER.info("Successfully attested {} against registered enclaves, enclave id: {}", Protocol.GCP_OIDC, enclaveId);
                 handler.handle(Future.succeededFuture(new AttestationResult(publicKey, enclaveId)));
             } else {
-                LOGGER.warn("Can not find registered gcp-oidc enclave id.");
+                LOGGER.warn("Can not find registered {} enclave id.", Protocol.GCP_OIDC);
                 handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.FORBIDDEN_ENCLAVE)));
             }
         }
@@ -93,10 +93,10 @@ public class GcpOidcCoreAttestationService implements ICoreAttestationService {
                 LOGGER.info("Validator version: " + policyValidator.getVersion() + ", result: " + enclaveId);
 
                 if (allowedEnclaveIds.contains(enclaveId)) {
-                    LOGGER.info("Successfully attested gcp-oidc against registered enclaves");
+                    LOGGER.info("Successfully attested {} against registered enclaves", Protocol.GCP_OIDC);
                     return enclaveId;
                 } else {
-                    LOGGER.warn("Got unsupported gcp-oidc enclave id: " + enclaveId);
+                    LOGGER.warn("Got unsupported {} enclave id: {}", Protocol.GCP_OIDC, enclaveId);
                 }
             } catch (Exception ex) {
                 lastException = ex;

@@ -19,6 +19,7 @@ import com.google.cloud.logging.LoggingOptions;
 import com.google.protobuf.Any;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.uid2.shared.Utils;
+import com.uid2.shared.secure.Protocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,14 +117,14 @@ public class VmConfigVerifier {
                     String templatizedConfig = templatizeVmConfig(cloudInitConfig);
                     str.append(getSha256Base64Encoded(templatizedConfig));
                 } else if (forbiddenMetadataKeys.contains(metadataItem.getKey())) {
-                    LOGGER.debug("gcp-vmid attestation got forbidden metadata key: " + metadataItem.getKey());
+                    LOGGER.debug("{} attestation got forbidden metadata key: {}", Protocol.GCP_VMID, metadataItem.getKey());
                     return VmConfigId.failure("forbidden metadata key: " + metadataItem.getKey(), id.getProjectId());
                 }
             }
 
             String badAuditLog = findUnauthorizedAuditLog(id);
             if (badAuditLog != null) {
-                LOGGER.debug("attestation failed because of audit log: " + badAuditLog);
+                LOGGER.debug("attestation failed because of audit log: {}", badAuditLog);
                 return VmConfigId.failure("bad audit log: " + badAuditLog, id.getProjectId());
             }
 
@@ -205,7 +206,7 @@ public class VmConfigVerifier {
         if (allowedMethodsFromInstanceAuditLogs.contains(auditLog.getMethodName())) {
             return true;
         } else {
-            LOGGER.warn("gcp-vmid attestation receives unauthorized method: " + auditLog.getMethodName());
+            LOGGER.warn("{} attestation receives unauthorized method: {}", Protocol.GCP_VMID, auditLog.getMethodName());
             return false;
         }
     }

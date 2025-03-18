@@ -3,6 +3,7 @@ package com.uid2.shared.secure.azurecc;
 import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
 import com.uid2.shared.secure.AttestationFailure;
+import com.uid2.shared.secure.Protocol;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -97,7 +98,7 @@ class PolicyValidatorTest {
                 .vmDebuggable(false)
                 .runtimeData(generateBasicRuntimeData())
                 .ccePolicyDigest(CCE_POLICY_DIGEST)
-                .azureProtocol(MaaTokenPayload.AZURE_CC_ACI_PROTOCOL)
+                .azureProtocol(Protocol.AZURE_CC_ACI)
                 .build();
     }
 
@@ -145,7 +146,7 @@ class PolicyValidatorTest {
         var aksPayload = generateBasicPayload()
                 .toBuilder()
                 .complianceStatus("azure-signed-katacc-uvm")
-                .azureProtocol(MaaTokenPayload.AZURE_CC_AKS_PROTOCOL)
+                .azureProtocol(Protocol.AZURE_CC_AKS)
                 .build();
         var enclaveId = validator.validate(aksPayload, PUBLIC_KEY);
         assertEquals(CCE_POLICY_DIGEST, enclaveId);
@@ -157,22 +158,11 @@ class PolicyValidatorTest {
         var aksPayload = generateBasicPayload()
                 .toBuilder()
                 .complianceStatus("fake-compliance")
-                .azureProtocol(MaaTokenPayload.AZURE_CC_AKS_PROTOCOL)
+                .azureProtocol(Protocol.AZURE_CC_AKS)
                 .build();
         Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(aksPayload, PUBLIC_KEY));
         assertEquals("Not run in Azure Compliance Utility VM", t.getMessage());
         assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)t).getAttestationFailure());
     }
 
-    @Test
-    public void testValidationFailure_InvalidProtocol() {
-        var validator = new PolicyValidator(ATTESTATION_URL);
-        var aksPayload = generateBasicPayload()
-                .toBuilder()
-                .azureProtocol("fake-protocol")
-                .build();
-        Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(aksPayload, PUBLIC_KEY));
-        assertEquals("Azure protocol: fake-protocol not supported", t.getMessage());
-        assertEquals(AttestationFailure.INVALID_PROTOCOL, ((AttestationClientException)t).getAttestationFailure());
-    }
 }
