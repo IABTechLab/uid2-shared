@@ -33,7 +33,7 @@ public class UidCoreClientTest {
         when(mockAttestationResponseHandler.getAppVersionHeader()).thenReturn("testAppVersionHeader");
         uidCoreClient = new UidCoreClient(
                 "userToken", proxy,
-                mockAttestationResponseHandler, mockHttpClient);
+                mockAttestationResponseHandler, mockHttpClient, false);
     }
 
     @Test

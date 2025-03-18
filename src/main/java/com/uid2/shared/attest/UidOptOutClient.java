@@ -17,7 +17,7 @@ public class UidOptOutClient extends UidCoreClient {
     public UidOptOutClient(String userToken,
                            Proxy proxy,
                            AttestationResponseHandler attestationResponseHandler) {
-        super(userToken, proxy, attestationResponseHandler, null);
+        super(userToken, proxy, attestationResponseHandler, null, false);
         this.attestationResponseHandler = attestationResponseHandler;
     }
 
@@ -25,7 +25,7 @@ public class UidOptOutClient extends UidCoreClient {
                            Proxy proxy,
                            AttestationResponseHandler attestationResponseHandler,
                            URLConnectionHttpClient httpClient) {
-        super(userToken, proxy, attestationResponseHandler, httpClient);
+        super(userToken, proxy, attestationResponseHandler, httpClient, false);
         this.attestationResponseHandler = attestationResponseHandler;
     }
 

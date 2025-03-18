@@ -21,7 +21,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private String userToken;
     private final String appVersionHeader;
     private boolean allowContentFromLocalFileSystem = false;
-    private boolean encryptionEnabled = false;
+    private boolean encryptionEnabled;
     private final AttestationResponseHandler attestationResponseHandler;
 
 
