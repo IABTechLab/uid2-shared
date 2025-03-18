@@ -25,9 +25,10 @@ public class CloudStorageS3 implements TaggableCloudStorage {
 
     private final AmazonS3 s3;
     private final String bucket;
+    private final boolean verbose;
     private long preSignedUrlExpiryInSeconds = 3600;
 
-    public CloudStorageS3(String accessKeyId, String secretAccessKey, String region, String bucket, String s3Endpoint) {
+    public CloudStorageS3(String accessKeyId, String secretAccessKey, String region, String bucket, String s3Endpoint, boolean verbose) {
         // Reading https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html
         AWSCredentials creds = new BasicAWSCredentials(
                 accessKeyId,
@@ -45,11 +46,14 @@ public class CloudStorageS3 implements TaggableCloudStorage {
                     .build();
         }
         this.bucket = bucket;
+        this.verbose = verbose;
+    }
+
+    public CloudStorageS3(String accessKeyId, String secretAccessKey, String region, String bucket, String s3Endpoint) {
+        this(accessKeyId, secretAccessKey, region, bucket, s3Endpoint, false);
     }
 
     public CloudStorageS3(String region, String bucket, String s3Endpoint) {
-        this.bucket = bucket;
-
         // In theory `new InstanceProfileCredentialsProvider()` or even omitting credentials provider should work,
         // but for some unknown reason it doesn't. The credential it provides look realistic, but are not valid.
         // After a lot of experimentation and help of Abu Abraham and Isaac Wilson the only working solution we've
@@ -71,8 +75,9 @@ public class CloudStorageS3 implements TaggableCloudStorage {
                     .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint, region))
                     .enablePathStyleAccess()
                     .build();
-
         }
+        this.bucket = bucket;
+        this.verbose = false;
     }
 
     @Override
@@ -132,7 +137,7 @@ public class CloudStorageS3 implements TaggableCloudStorage {
             return obj.getObjectContent();
         } catch (AmazonS3Exception e) {
             if (e.getErrorCode().equals("NoSuchKey")) {
-                throw new CloudStorageException("The specified key does not exist: " + e.getClass().getSimpleName() + ": " + bucket);
+                throw new CloudStorageException("The specified key does not exist: " + e.getClass().getSimpleName() + ": " + bucket + (verbose ? " - " + e.getMessage() : ""));
             } else {
                 throw new CloudStorageException("s3 get error: " + e.getClass().getSimpleName() + ": " + bucket);
             }

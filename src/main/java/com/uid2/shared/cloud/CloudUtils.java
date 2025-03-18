@@ -7,20 +7,11 @@ import com.uid2.shared.Utils;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.kms.KmsClient;
-import software.amazon.awssdk.services.kms.KmsClientBuilder;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.net.*;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 public class CloudUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudUtils.class);
@@ -31,6 +22,7 @@ public class CloudUtils {
         var accessKeyId = jsonConfig.getString(Const.Config.AccessKeyIdProp);
         var secretAccessKey = jsonConfig.getString(Const.Config.SecretAccessKeyProp);
         var s3Endpoint = jsonConfig.getString(Const.Config.S3EndpointProp, "");
+        var verboseLogging = jsonConfig.getBoolean(Const.Config.S3VerboseLoggingProp, false);
 
         if (accessKeyId == null || secretAccessKey == null) {
             // IAM authentication
@@ -38,8 +30,7 @@ public class CloudUtils {
         }
 
         // User access key authentication
-        return new CloudStorageS3(accessKeyId, secretAccessKey, region, cloudBucket, s3Endpoint);
-
+        return new CloudStorageS3(accessKeyId, secretAccessKey, region, cloudBucket, s3Endpoint, verboseLogging);
     }
 
     // I think this is not used, Aleksandrs Ulme 26/07/2023
@@ -50,7 +41,8 @@ public class CloudUtils {
                 System.getProperty(Const.Config.SecretAccessKeyProp),
                 System.getProperty(Const.Config.AwsRegionProp),
                 cloudBucket,
-                System.getProperty(Const.Config.S3EndpointProp, "")
+                System.getProperty(Const.Config.S3EndpointProp, ""),
+                Boolean.parseBoolean(System.getProperty(Const.Config.S3VerboseLoggingProp, "false"))
         );
     }
 
