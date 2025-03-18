@@ -97,7 +97,6 @@ class PolicyValidatorTest {
                 .vmDebuggable(false)
                 .runtimeData(generateBasicRuntimeData())
                 .ccePolicyDigest(CCE_POLICY_DIGEST)
-                .azureProtocol(MaaTokenPayload.AZURE_CC_ACI_PROTOCOL)
                 .build();
     }
 
@@ -125,54 +124,5 @@ class PolicyValidatorTest {
         assertEquals("The given attestation URL is unknown. Given URL: " + ATTESTATION_URL, t.getMessage());
         assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, ((AttestationClientException)t).getAttestationFailure());
 
-    }
-
-    @Test
-    public void testValidationFailure_AzureCcWithOtherUvm() {
-        var validator = new PolicyValidator(ATTESTATION_URL);
-        var aksPayload = generateBasicPayload()
-                .toBuilder()
-                .complianceStatus("fake-compliance")
-                .build();
-        Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(aksPayload, PUBLIC_KEY));
-        assertEquals("Not run in Azure Compliance Utility VM", t.getMessage());
-        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)t).getAttestationFailure());
-    }
-
-    @Test
-    public void testValidationSuccess_AksWithAzureSignedKataccUvm() throws AttestationClientException {
-        var validator = new PolicyValidator(ATTESTATION_URL);
-        var aksPayload = generateBasicPayload()
-                .toBuilder()
-                .complianceStatus("azure-signed-katacc-uvm")
-                .azureProtocol(MaaTokenPayload.AZURE_CC_AKS_PROTOCOL)
-                .build();
-        var enclaveId = validator.validate(aksPayload, PUBLIC_KEY);
-        assertEquals(CCE_POLICY_DIGEST, enclaveId);
-    }
-
-    @Test
-    public void testValidationFailure_AksWithOtherUvm() {
-        var validator = new PolicyValidator(ATTESTATION_URL);
-        var aksPayload = generateBasicPayload()
-                .toBuilder()
-                .complianceStatus("fake-compliance")
-                .azureProtocol(MaaTokenPayload.AZURE_CC_AKS_PROTOCOL)
-                .build();
-        Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(aksPayload, PUBLIC_KEY));
-        assertEquals("Not run in Azure Compliance Utility VM", t.getMessage());
-        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException)t).getAttestationFailure());
-    }
-
-    @Test
-    public void testValidationFailure_InvalidProtocol() {
-        var validator = new PolicyValidator(ATTESTATION_URL);
-        var aksPayload = generateBasicPayload()
-                .toBuilder()
-                .azureProtocol("fake-protocol")
-                .build();
-        Throwable t = assertThrows(AttestationException.class, ()-> validator.validate(aksPayload, PUBLIC_KEY));
-        assertEquals("Azure protocol: fake-protocol not supported", t.getMessage());
-        assertEquals(AttestationFailure.INVALID_PROTOCOL, ((AttestationClientException)t).getAttestationFailure());
     }
 }
