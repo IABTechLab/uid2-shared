@@ -44,6 +44,7 @@ public class Const {
         public static final String S3EndpointProp = "aws_s3_endpoint";
         public static final String CoreS3BucketProp = "core_s3_bucket";
         public static final String OptOutS3BucketProp = "optout_s3_bucket";
+        public static final String S3VerboseLoggingProp = "aws_s3_verbose_logging";
 
         // Config stores
         public static final String CloudRefreshIntervalProp = "cloud_refresh_interval";
