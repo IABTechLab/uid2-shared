@@ -49,10 +49,10 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
             var enclaveId = policyValidator.validate(tokenPayload, encodedPublicKey);
 
             if (allowedEnclaveIds.contains(enclaveId)) {
-                log.info("Successfully attested azure-cc against registered enclaves, enclave id: " + enclaveId);
+                log.info("Successfully attested azure-cc against registered enclaves, enclave id: {}", enclaveId);
                 handler.handle(Future.succeededFuture(new AttestationResult(publicKey, enclaveId)));
             } else {
-                log.warn("Got unsupported azure-cc enclave id: " + enclaveId);
+                log.warn("Got unsupported azure-cc enclave id: {}", enclaveId);
                 handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.FORBIDDEN_ENCLAVE)));
             }
         }
