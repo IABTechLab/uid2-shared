@@ -9,10 +9,6 @@ import io.vertx.core.Handler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -22,7 +18,6 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,14 +55,13 @@ class AzureCCCoreAttestationServiceTest {
 
     @BeforeEach
     public void setup() throws AttestationException {
-        when(alwaysPassTokenValidator.validate(any(), any())).thenReturn(VALID_TOKEN_PAYLOAD);
+        when(alwaysPassTokenValidator.validate(any())).thenReturn(VALID_TOKEN_PAYLOAD);
         when(alwaysPassPolicyValidator.validate(any(), any())).thenReturn(ENCLAVE_ID);
     }
 
-    @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testHappyPath(String azureProtocol) throws AttestationException {
-        var provider = new AzureCCCoreAttestationService(alwaysPassTokenValidator, alwaysPassPolicyValidator, azureProtocol);
+    @Test
+    public void testHappyPath() throws AttestationException {
+        var provider = new AzureCCCoreAttestationService(alwaysPassTokenValidator, alwaysPassPolicyValidator);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
@@ -75,12 +69,11 @@ class AzureCCCoreAttestationServiceTest {
         });
     }
 
-    @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testSignatureCheckFailed_ClientError(String azureProtocol) throws AttestationException {
+    @Test
+    public void testSignatureCheckFailed_ClientError() throws AttestationException {
         var errorStr = "token signature validation failed";
-        when(alwaysFailTokenValidator.validate(any(), any())).thenThrow(new AttestationClientException(errorStr, AttestationFailure.BAD_PAYLOAD));
-        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, azureProtocol);
+        when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationClientException(errorStr, AttestationFailure.BAD_PAYLOAD));
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
@@ -89,11 +82,10 @@ class AzureCCCoreAttestationServiceTest {
         });
     }
 
-    @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testSignatureCheckFailed_ServerError(String azureProtocol) throws AttestationException {
-        when(alwaysFailTokenValidator.validate(any(), any())).thenThrow(new AttestationException("unknown server error"));
-        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, azureProtocol);
+    @Test
+    public void testSignatureCheckFailed_ServerError() throws AttestationException {
+        when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationException("unknown server error"));
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertFalse(ar.succeeded());
@@ -101,12 +93,11 @@ class AzureCCCoreAttestationServiceTest {
         });
     }
 
-    @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testPolicyCheckSuccess_ClientError(String azureProtocol) throws AttestationException {
+    @Test
+    public void testPolicyCheckSuccess_ClientError() throws AttestationException {
         var errorStr = "policy validation failed";
         when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationClientException(errorStr, AttestationFailure.BAD_PAYLOAD));
-        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator, azureProtocol);
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
@@ -115,11 +106,10 @@ class AzureCCCoreAttestationServiceTest {
         });
     }
 
-    @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testPolicyCheckFailed_ServerError(String azureProtocol) throws AttestationException {
+    @Test
+    public void testPolicyCheckFailed_ServerError() throws AttestationException {
         when(alwaysFailPolicyValidator.validate(any(), any())).thenThrow(new AttestationException("unknown server error"));
-        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator, azureProtocol);
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysFailPolicyValidator);
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertFalse(ar.succeeded());
@@ -127,10 +117,9 @@ class AzureCCCoreAttestationServiceTest {
         });
     }
 
-    @ParameterizedTest
-    @MethodSource("argumentProvider")
-    public void testEnclaveNotRegistered(String azureProtocol) throws AttestationException {
-        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator, azureProtocol);
+    @Test
+    public void testEnclaveNotRegistered() throws AttestationException {
+        var provider = new AzureCCCoreAttestationService(alwaysFailTokenValidator, alwaysPassPolicyValidator);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
             assertFalse(ar.result().isSuccess());
@@ -143,12 +132,5 @@ class AzureCCCoreAttestationServiceTest {
                 ATTESTATION_REQUEST.getBytes(StandardCharsets.UTF_8),
                 PUBLIC_KEY.getBytes(StandardCharsets.UTF_8),
                 handler);
-    }
-
-    static Stream<Arguments> argumentProvider() {
-        return Stream.of(
-                Arguments.of(MaaTokenPayload.AZURE_CC_ACI_PROTOCOL),
-                Arguments.of(MaaTokenPayload.AZURE_CC_AKS_PROTOCOL)
-        );
     }
 }
