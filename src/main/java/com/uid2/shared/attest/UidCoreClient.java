@@ -21,23 +21,32 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private String userToken;
     private final String appVersionHeader;
     private boolean allowContentFromLocalFileSystem = false;
+    private boolean encryptionEnabled;
     private final AttestationResponseHandler attestationResponseHandler;
 
 
     public static UidCoreClient createNoAttest(String userToken, AttestationResponseHandler attestationResponseHandler) {
-        return new UidCoreClient(userToken, CloudUtils.defaultProxy, attestationResponseHandler, null);
+        return new UidCoreClient(userToken, CloudUtils.defaultProxy, attestationResponseHandler, null, false);
     }
 
     public UidCoreClient(String userToken,
                          Proxy proxy,
                          AttestationResponseHandler attestationResponseHandler) {
-        this(userToken, proxy, attestationResponseHandler, null);
+        this(userToken, proxy, attestationResponseHandler, null, false);
+    }
+
+    public UidCoreClient(String userToken,
+            Proxy proxy,
+            AttestationResponseHandler attestationResponseHandler, boolean encryptionEnabled) {
+        this(userToken, proxy, attestationResponseHandler, null, encryptionEnabled);
     }
 
     public UidCoreClient(String userToken,
                          Proxy proxy,
                          AttestationResponseHandler attestationResponseHandler,
-                         URLConnectionHttpClient httpClient) {
+            URLConnectionHttpClient httpClient,
+            boolean encryptionEnabled) {
+        this.encryptionEnabled = encryptionEnabled;
         this.proxy = proxy;
         this.userToken = userToken;
         this.contentStorage = new PreSignedURLStorage(proxy);
@@ -106,6 +115,8 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
         HashMap<String, String> headers = new HashMap<>();
         headers.put(Const.Http.AppVersionHeader, this.appVersionHeader);
+        if (this.encryptionEnabled)
+            headers.put("Encrypted", String.valueOf(this.encryptionEnabled));
         if (this.userToken != null && !this.userToken.isBlank()) {
             headers.put("Authorization", "Bearer " + this.userToken);
         }
