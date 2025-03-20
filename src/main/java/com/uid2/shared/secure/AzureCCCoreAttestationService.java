@@ -25,17 +25,14 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
 
     private final IPolicyValidator policyValidator;
 
-    private final String azureCcProtocol;
-
-    public AzureCCCoreAttestationService(String maaServerBaseUrl, String attestationUrl, String azureCcProtocol) {
-        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(attestationUrl), azureCcProtocol);
+    public AzureCCCoreAttestationService(String maaServerBaseUrl, String attestationUrl) {
+        this(new MaaTokenSignatureValidator(maaServerBaseUrl), new PolicyValidator(attestationUrl));
     }
 
     // used in UT
-    protected AzureCCCoreAttestationService(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator, String azureCcProtocol) {
+    protected AzureCCCoreAttestationService(IMaaTokenSignatureValidator tokenSignatureValidator, IPolicyValidator policyValidator) {
         this.tokenSignatureValidator = tokenSignatureValidator;
         this.policyValidator = policyValidator;
-        this.azureCcProtocol = azureCcProtocol;
     }
 
     @Override
@@ -43,9 +40,8 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
         try {
             var tokenString = new String(attestationRequest, StandardCharsets.US_ASCII);
 
-            log.debug("Attesting for {} operator...", azureCcProtocol);
             log.debug("Validating signature...");
-            var tokenPayload = tokenSignatureValidator.validate(tokenString, azureCcProtocol);
+            var tokenPayload = tokenSignatureValidator.validate(tokenString);
 
             log.debug("Validating policy...");
             var encodedPublicKey = Utils.toBase64String(publicKey);
@@ -53,10 +49,10 @@ public class AzureCCCoreAttestationService implements ICoreAttestationService {
             var enclaveId = policyValidator.validate(tokenPayload, encodedPublicKey);
 
             if (allowedEnclaveIds.contains(enclaveId)) {
-                log.info("Successfully attested {} against registered enclaves, enclave id: {}", azureCcProtocol, enclaveId);
+                log.info("Successfully attested azure-cc against registered enclaves, enclave id: {}", enclaveId);
                 handler.handle(Future.succeededFuture(new AttestationResult(publicKey, enclaveId)));
             } else {
-                log.warn("Got unsupported {} enclave id: {}", azureCcProtocol, enclaveId);
+                log.warn("Got unsupported azure-cc enclave id: {}", enclaveId);
                 handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.FORBIDDEN_ENCLAVE)));
             }
         }

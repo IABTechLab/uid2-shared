@@ -15,6 +15,7 @@ import java.util.Map;
 import static com.uid2.shared.secure.JwtUtils.tryGetField;
 
 public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
+
     // set to true to facilitate local test.
     public static final boolean BYPASS_SIGNATURE_CHECK = false;
 
@@ -51,7 +52,7 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
     }
 
     @Override
-    public MaaTokenPayload validate(String tokenString, String protocol) throws AttestationException {
+    public MaaTokenPayload validate(String tokenString) throws AttestationException {
         if (Strings.isNullOrEmpty(tokenString)) {
             throw new IllegalArgumentException("tokenString can not be null or empty");
         }
@@ -76,7 +77,6 @@ public class MaaTokenSignatureValidator implements IMaaTokenSignatureValidator {
 
         var tokenPayloadBuilder = MaaTokenPayload.builder();
 
-        tokenPayloadBuilder.azureProtocol(protocol);
         tokenPayloadBuilder.attestationType(tryGetField(rawPayload, "x-ms-attestation-type", String.class));
         tokenPayloadBuilder.complianceStatus(tryGetField(rawPayload, "x-ms-compliance-status", String.class));
         tokenPayloadBuilder.vmDebuggable(tryGetField(rawPayload, "x-ms-sevsnpvm-is-debuggable", Boolean.class));
