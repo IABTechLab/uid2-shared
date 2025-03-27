@@ -2,5 +2,3 @@
 # See https://aquasecurity.github.io/trivy/v0.35/docs/vulnerability/examples/filter/ 
 # for more details
 
-# https://thetradedesk.atlassian.net/browse/UID2-4874
-CVE-2025-24970 exp:2025-03-27
