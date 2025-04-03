@@ -3,11 +3,11 @@ package com.uid2.shared.store;
 import com.uid2.shared.Utils;
 import com.uid2.shared.attest.UidCoreClient;
 import com.uid2.shared.cloud.DownloadCloudStorage;
-import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.model.SaltEntry;
 import com.uid2.shared.store.reader.IMetadataVersionedStore;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hashids.Hashids;
@@ -22,7 +22,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /*
   1. metadata.json format
@@ -48,10 +47,10 @@ import java.util.stream.Stream;
  */
 public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingSaltProvider.class);
-    private static final int HashingSeed = 122054;
-    public static RotatingSaltProvider INSTANCE;
+
     private final DownloadCloudStorage metadataStreamProvider;
     private final DownloadCloudStorage contentStreamProvider;
+    @Getter
     private final String metadataPath;
     private final AtomicReference<List<SaltSnapshot>> snapshotsByEffectiveTime = new AtomicReference<>();
 
@@ -64,8 +63,6 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         }
         this.metadataPath = metadataPath;
     }
-
-    public String getMetadataPath() { return this.metadataPath; }
 
     @Override
     public JsonObject getMetadata() throws Exception {
@@ -81,17 +78,16 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
 
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
-        final JsonArray salts = metadata.getJsonArray("salts");
-        final String firstLevelSalt = metadata.getString("first_level");
-        final SaltEntryBuilder entryBuilder = new SaltEntryBuilder(
+        JsonArray salts = metadata.getJsonArray("salts");
+        String firstLevelSalt = metadata.getString("first_level");
+        SaltEntryBuilder entryBuilder = new SaltEntryBuilder(
                 new IdHashingScheme(metadata.getString("id_prefix"), metadata.getString("id_secret")));
-        final Instant now = Instant.now();
-        final List<SaltSnapshot> snapshots = new ArrayList<>();
+        Instant now = Instant.now();
+        List<SaltSnapshot> snapshots = new ArrayList<>();
 
         int saltCount = 0;
         for (int i = 0; i < salts.size(); ++i) {
-            final SaltSnapshot snapshot = this.loadSnapshot(salts.getJsonObject(i), firstLevelSalt, entryBuilder, now);
-            if (snapshot == null) continue;
+            SaltSnapshot snapshot = this.loadSnapshot(salts.getJsonObject(i), firstLevelSalt, entryBuilder, now);
             snapshots.add(snapshot);
 
             // don't sum up the salts from snapshots to avoid screwing up metrics
@@ -116,26 +112,28 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
 
     @Override
     public ISaltSnapshot getSnapshot(Instant asOf) {
-        final List<SaltSnapshot> snapshots = this.snapshotsByEffectiveTime.get();
+        List<SaltSnapshot> snapshots = this.snapshotsByEffectiveTime.get();
+
         // Last snapshot past its effective timestamp
         ISaltSnapshot current = null;
         for (SaltSnapshot snapshot : snapshots) {
             if (!snapshot.isEffective(asOf)) break;
             current = snapshot;
         }
-        return current != null ? current : snapshots.get(snapshots.size() - 1);
+
+        return current != null ? current : snapshots.getLast();
     }
 
     private SaltSnapshot loadSnapshot(JsonObject spec, String firstLevelSalt, SaltEntryBuilder entryBuilder, Instant now) throws Exception {
-        final Instant defaultExpires = now.plus(365, ChronoUnit.DAYS);
-        final Instant effective = Instant.ofEpochMilli(spec.getLong("effective"));
-        final Instant expires = Instant.ofEpochMilli(spec.getLong("expires", defaultExpires.toEpochMilli()));
+        Instant defaultExpires = now.plus(365, ChronoUnit.DAYS);
+        Instant effective = Instant.ofEpochMilli(spec.getLong("effective"));
+        Instant expires = Instant.ofEpochMilli(spec.getLong("expires", defaultExpires.toEpochMilli()));
 
-        final String path = spec.getString("location");
-        Integer size = spec.getInteger("size");
+        String path = spec.getString("location");
+        int size = spec.getInteger("size");
         SaltEntry[] entries = readInputStream(this.contentStreamProvider.download(path), entryBuilder, size);
 
-        LOGGER.info("Loaded " + size + " salts");
+        LOGGER.info("Loaded {} salts", size);
         return new SaltSnapshot(effective, expires, entries, firstLevelSalt);
     }
 
@@ -143,24 +141,28 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             String line;
             SaltEntry[] entries = new SaltEntry[size];
+
             int idx = 0;
             while ((line = reader.readLine()) != null) {
-                final SaltEntry entry = entryBuilder.toEntry(line);
+                SaltEntry entry = entryBuilder.toEntry(line);
                 entries[idx] = entry;
                 idx++;
             }
+
             return entries;
         }
     }
 
     public static class SaltSnapshot implements ISaltSnapshot {
+        private static final ISaltEntryIndexer STATIC_MILLION_ENTRY_INDEXER = new OneMillionSaltEntryIndexer();
+        private static final ISaltEntryIndexer STATIC_MOD_BASED_INDEXER = new ModBasedSaltEntryIndexer();
+
+        @Getter
         private final Instant effective;
         private final Instant expires;
         private final SaltEntry[] entries;
         private final String firstLevelSalt;
         private final ISaltEntryIndexer saltEntryIndexer;
-        private static final ISaltEntryIndexer staticMillionEntryIndexer = new OneMillionSaltEntryIndexer();
-        private static final ISaltEntryIndexer staticModBasedIndexer = new ModBasedSaltEntryIndexer();
 
         public SaltSnapshot(Instant effective, Instant expires, SaltEntry[] entries, String firstLevelSalt) {
             this.effective = effective;
@@ -168,16 +170,12 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
             this.entries = entries;
             this.firstLevelSalt = firstLevelSalt;
             if (entries.length == 1_048_576) {
-                LOGGER.info("Total salt entries 1 million, " + entries.length +", special production salt entry indexer");
-                this.saltEntryIndexer = staticMillionEntryIndexer;
+                LOGGER.info("Total salt entries 1 million, {}, special production salt entry indexer", entries.length);
+                this.saltEntryIndexer = STATIC_MILLION_ENTRY_INDEXER;
             } else {
-                LOGGER.warn("Total salt entries " + entries.length +", using slower mod-based indexer");
-                this.saltEntryIndexer = staticModBasedIndexer;
+                LOGGER.warn("Total salt entries {}, using slower mod-based indexer", entries.length);
+                this.saltEntryIndexer = STATIC_MOD_BASED_INDEXER;
             }
-        }
-
-        public Instant getEffective() {
-            return this.effective;
         }
 
         @Override
@@ -190,24 +188,29 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         }
 
         @Override
-        public String getFirstLevelSalt() { return firstLevelSalt; }
+        public String getFirstLevelSalt() {
+            return firstLevelSalt;
+        }
+
         @Override
-        public SaltEntry[] getAllRotatingSalts() { return this.entries; }
+        public SaltEntry[] getAllRotatingSalts() {
+            return this.entries;
+        }
 
         @Override
         public SaltEntry getRotatingSalt(byte[] identity) {
-            final int idx = saltEntryIndexer.getIndex(identity, entries.length);
+            int idx = saltEntryIndexer.getIndex(identity, entries.length);
             return this.entries[idx];
         }
 
         @Override
         public List<SaltEntry> getModifiedSince(Instant timestamp) {
-            final long timestampMillis = timestamp.toEpochMilli();
+            long timestampMillis = timestamp.toEpochMilli();
             return Arrays.stream(this.entries).filter(e -> e.getLastUpdated() >= timestampMillis).collect(Collectors.toList());
         }
     }
 
-    static final class IdHashingScheme {
+    protected static final class IdHashingScheme {
         private final String prefix;
         private final Hashids hasher;
 
@@ -230,12 +233,15 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
 
         public SaltEntry toEntry(String line) {
             try {
-                final String[] fields = line.split(",");
-                final long id = Integer.parseInt(fields[0]);
-                final String hashedId = this.idHashingScheme.encode(id);
-                final long lastUpdated = Long.parseLong(fields[1]);
-                final String salt = fields[2];
-                return new SaltEntry(id, hashedId, lastUpdated, salt);
+                String[] fields = line.split(",");
+                long id = Integer.parseInt(fields[0]);
+                String hashedId = this.idHashingScheme.encode(id);
+                long lastUpdated = Long.parseLong(fields[1]);
+                String salt = fields[2];
+                String previousSalt = fields.length >= 4 ? fields[3] : null;
+                Long refreshFrom = fields.length >= 5 ? Long.parseLong(fields[4]) : null;
+
+                return new SaltEntry(id, hashedId, lastUpdated, salt, previousSalt, refreshFrom);
             } catch (Exception e) {
                 throw new RuntimeException("Trouble parsing Salt Entry " + line, e);
             }
