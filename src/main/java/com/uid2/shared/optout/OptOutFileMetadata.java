@@ -3,9 +3,10 @@ package com.uid2.shared.optout;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.uid2.shared.util.Mapper;
 
 public class OptOutFileMetadata {
-    private static ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
 
     @JsonProperty("type")
     public String type;
@@ -21,7 +22,7 @@ public class OptOutFileMetadata {
 
     public static OptOutFileMetadata fromJsonString(String str) {
         try {
-            return OptOutFileMetadata.mapper.readValue(str, OptOutFileMetadata.class);
+            return OptOutFileMetadata.OBJECT_MAPPER.readValue(str, OptOutFileMetadata.class);
         } catch (JsonProcessingException ex) {
             // OptOutFileMetadata is an internal message, any serialization and deserialization exception is logic error
             // return null here
@@ -31,12 +32,11 @@ public class OptOutFileMetadata {
 
     public String toJsonString() {
         try {
-            return OptOutFileMetadata.mapper.writeValueAsString(this);
+            return OptOutFileMetadata.OBJECT_MAPPER.writeValueAsString(this);
         } catch (JsonProcessingException ex) {
             // OptOutFileMetadata is an internal message, any serialization and deserialization exception is logic error
             // return null here
             return null;
         }
     }
-
 }
