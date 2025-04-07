@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.util.*;
 
 public class ServiceParser implements Parser<Map<Integer, Service>> {
-
     @Override
     public ParsingResult<Map<Integer, Service>> deserialize(InputStream inputStream) throws IOException {
         JsonArray spec = Utils.toJsonArray(inputStream);

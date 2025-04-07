@@ -15,8 +15,8 @@ public class CloudEncryptionKeyParser implements Parser<Map<Integer, CloudEncryp
 
     @Override
     public ParsingResult<Map<Integer, CloudEncryptionKey>> deserialize(InputStream inputStream) throws IOException {
-        CloudEncryptionKey[] cloudEncryptionKeys = OBJECT_MAPPER.readValue(inputStream, CloudEncryptionKey[].class);
-        Map<Integer, CloudEncryptionKey> cloudEncryptionKeysMap = Arrays.stream(cloudEncryptionKeys)
+        final CloudEncryptionKey[] cloudEncryptionKeys = OBJECT_MAPPER.readValue(inputStream, CloudEncryptionKey[].class);
+        final Map<Integer, CloudEncryptionKey> cloudEncryptionKeysMap = Arrays.stream(cloudEncryptionKeys)
                 .collect(Collectors.toMap(CloudEncryptionKey::getId, s -> s));
         return new ParsingResult<>(cloudEncryptionKeysMap, cloudEncryptionKeysMap.size());
     }

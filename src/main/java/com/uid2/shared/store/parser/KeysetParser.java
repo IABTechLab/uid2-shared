@@ -16,7 +16,9 @@ public class KeysetParser implements Parser<KeysetSnapshot> {
     @Override
     public ParsingResult<KeysetSnapshot> deserialize(InputStream inputStream) throws IOException {
         final JsonArray keysetsSpec = Utils.toJsonArray(inputStream);
+
         final HashMap<Integer, Keyset> keysetMap = new HashMap<>();
+
         for(int i = 0; i < keysetsSpec.size(); i++) {
             final JsonObject keysetSpec = keysetsSpec.getJsonObject(i);
             final Integer keysetId = keysetSpec.getInteger("keyset_id");
@@ -33,12 +35,13 @@ public class KeysetParser implements Parser<KeysetSnapshot> {
                 }
             }
 
-            long created = keysetSpec.getLong("created");
+            final long created = keysetSpec.getLong("created");
             final boolean enabled = keysetSpec.getBoolean("enabled");
             final boolean isDefault = keysetSpec.getBoolean("default");
 
             keysetMap.put(keysetId, new Keyset(keysetId, siteId, name, allowedSites, created, enabled, isDefault));
         }
+
         return new ParsingResult<>(new KeysetSnapshot(keysetMap), keysetsSpec.size());
     }
 }

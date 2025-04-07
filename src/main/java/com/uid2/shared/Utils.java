@@ -34,7 +34,7 @@ public class Utils {
     public static int getPortOffset() {
         // read port_offset from env, the reason this can't be read from vertx-config
         // is Prometheus port needs to be specified before vertx creation
-        String val = System.getenv("port_offset");
+        final String val = System.getenv("port_offset");
         return val != null ? Integer.parseInt(val) : 0;
     }
 
@@ -69,9 +69,9 @@ public class Utils {
     }
 
     public static String readToEnd(InputStream stream) throws IOException {
-        InputStreamReader reader = new InputStreamReader(stream);
-        char[] buff = new char[1024];
-        StringBuilder sb = new StringBuilder();
+        final InputStreamReader reader = new InputStreamReader(stream);
+        final char[] buff = new char[1024];
+        final StringBuilder sb = new StringBuilder();
         for (int count; (count = reader.read(buff, 0, buff.length)) > 0;) {
             sb.append(buff, 0, count);
         }
@@ -85,7 +85,6 @@ public class Utils {
         while ((nRead = stream.read(data, 0, data.length)) != -1) {
             buffer.write(data, 0, nRead);
         }
-
         buffer.flush();
         return buffer.toByteArray();
     }
@@ -180,10 +179,8 @@ public class Utils {
     }
 
     public static InputStream convertHttpResponseToInputStream(HttpResponse<String> httpResponse) {
-        String responseBody = httpResponse.body();
-
-        byte[] responseBytes = responseBody.getBytes();
-
+        final String responseBody = httpResponse.body();
+        final byte[] responseBytes = responseBody.getBytes();
         return new ByteArrayInputStream(responseBytes);
     }
     public static MessageDigest createMessageDigestSHA512() {

@@ -15,8 +15,8 @@ public class SiteParser implements Parser<Map<Integer, Site>> {
 
     @Override
     public ParsingResult<Map<Integer, Site>> deserialize(InputStream inputStream) throws IOException {
-        Site[] sites = OBJECT_MAPPER.readValue(inputStream, Site[].class);
-        Map<Integer, Site> sitesMap = Arrays.stream(sites)
+        final Site[] sites = OBJECT_MAPPER.readValue(inputStream, Site[].class);
+        final Map<Integer, Site> sitesMap = Arrays.stream(sites)
                 .collect(Collectors.toMap(Site::getId, s -> s));
         return new ParsingResult<>(sitesMap, sitesMap.size());
     }

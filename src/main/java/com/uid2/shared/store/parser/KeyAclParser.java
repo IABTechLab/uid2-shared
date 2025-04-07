@@ -15,16 +15,19 @@ public class KeyAclParser implements Parser<AclSnapshot> {
     @Override
     public ParsingResult<AclSnapshot> deserialize(InputStream inputStream) throws IOException {
         final JsonArray aclsSpec = Utils.toJsonArray(inputStream);
+
         final HashMap<Integer, EncryptionKeyAcl> aclMap = new HashMap<>();
+
         for(int i = 0; i < aclsSpec.size(); ++i) {
             final JsonObject aclSpec = aclsSpec.getJsonObject(i);
+
             final Integer siteId = aclSpec.getInteger("site_id");
             final JsonArray blacklistSpec = aclSpec.getJsonArray("blacklist");
             final JsonArray whitelistSpec = aclSpec.getJsonArray("whitelist");
             if(blacklistSpec == null && whitelistSpec == null) {
                 continue;
             } else if (blacklistSpec != null && whitelistSpec != null) {
-                throw new IllegalStateException(String.format("Site %d has both blacklist and whitelist specified, this is not allowed"));
+                throw new IllegalStateException(String.format("Site %d has both blacklist and whitelist specified, this is not allowed", siteId));
             }
             final boolean isWhitelist = blacklistSpec == null;
             final JsonArray accessListSpec = isWhitelist ? whitelistSpec : blacklistSpec;
