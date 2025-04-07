@@ -28,20 +28,14 @@ public class Utils {
 
     public static boolean isProductionEnvironment() {
         // detect if it is running in KUBERNETES_SERVICE_HOST
-        if (System.getenv("KUBERNETES_SERVICE_HOST") == null) {
-            return false;
-        } else {
-            return true;
-        }
+        return System.getenv("KUBERNETES_SERVICE_HOST") != null;
     }
 
     public static int getPortOffset() {
         // read port_offset from env, the reason this can't be read from vertx-config
         // is Prometheus port needs to be specified before vertx creation
         String val = System.getenv("port_offset");
-        int portOffset = 0;
-        if (val != null) portOffset = Integer.valueOf(val);
-        return portOffset;
+        return val != null ? Integer.parseInt(val) : 0;
     }
 
     public static boolean ensureDirectoryExists(String dir) {
@@ -75,10 +69,10 @@ public class Utils {
     }
 
     public static String readToEnd(InputStream stream) throws IOException {
-        final InputStreamReader reader = new InputStreamReader(stream);
-        final char[] buff = new char[1024];
-        final StringBuilder sb = new StringBuilder();
-        for (int count; (count = reader.read(buff, 0, buff.length)) > 0; ) {
+        InputStreamReader reader = new InputStreamReader(stream);
+        char[] buff = new char[1024];
+        StringBuilder sb = new StringBuilder();
+        for (int count; (count = reader.read(buff, 0, buff.length)) > 0;) {
             sb.append(buff, 0, count);
         }
         return sb.toString();
