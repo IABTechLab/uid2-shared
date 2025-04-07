@@ -9,11 +9,9 @@ import com.uid2.shared.store.scope.GlobalScope;
 import com.uid2.shared.util.Mapper;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -28,20 +26,13 @@ import static org.mockito.Mockito.when;
 public class RotatingSiteStoreTest {
     private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
 
-    private AutoCloseable mocks;
     @Mock
     private ICloudStorage cloudStorage;
     private RotatingSiteStore siteStore;
 
     @BeforeEach
     public void setup() {
-        mocks = MockitoAnnotations.openMocks(this);
         siteStore = new RotatingSiteStore(cloudStorage, new GlobalScope(new CloudPath("metadata")));
-    }
-
-    @AfterEach
-    public void teardown() throws Exception {
-        mocks.close();
     }
 
     private JsonObject makeMetadata(String location) {
