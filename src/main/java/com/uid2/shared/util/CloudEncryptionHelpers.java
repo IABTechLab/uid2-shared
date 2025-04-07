@@ -9,6 +9,9 @@ import com.uid2.shared.encryption.AesGcm;
 import com.uid2.shared.model.CloudEncryptionKey;
 
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Metrics;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
@@ -40,6 +43,13 @@ public class CloudEncryptionHelpers {
         CloudEncryptionKey decryptionKey = cloudEncryptionKeyProvider.getKey(keyId);
 
         if (decryptionKey == null) {
+            Counter.builder("uid2.decryption.missing_total")
+                    .description("counter for failed decryptions due to missing key")
+                    .tag("key_id", String.valueOf(keyId))
+                    .tag("store", storeName)
+                    .register(Metrics.globalRegistry)
+                    .increment();
+
             throw new IllegalStateException(String.format("No matching S3 key found for decryption - key_id=%d store=%s", keyId, storeName));
         }
 
@@ -48,8 +58,23 @@ public class CloudEncryptionHelpers {
 
         try {
             byte[] decryptedBytes = AesGcm.decrypt(encryptedBytes, 0, secret);
+
+            Counter.builder("uid2.decryption.success_total")
+                    .description("counter for successful decryptions")
+                    .tag("key_id", String.valueOf(keyId))
+                    .tag("store", storeName)
+                    .register(Metrics.globalRegistry)
+                    .increment();
+
             return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
+            Counter.builder("uid2.decryption.failure_total")
+                    .description("counter for failed decryptions")
+                    .tag("key_id", String.valueOf(keyId))
+                    .tag("store", storeName)
+                    .register(Metrics.globalRegistry)
+                    .increment();
+
             throw new RuntimeException(String.format("Unable to Decrypt - key_id=%d store=%s", keyId, storeName), e);
         }
     }
