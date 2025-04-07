@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +28,7 @@ public class RotatingCloudEncryptionKeyProvider implements StoreReader<Map<Integ
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingCloudEncryptionKeyProvider.class);
 
     private final ScopedStoreReader<Map<Integer, CloudEncryptionKey>> reader;
+    @Getter
     private final Map<Integer, List<CloudEncryptionKey>> siteToKeysMap = new HashMap<>();
 
     public RotatingCloudEncryptionKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
