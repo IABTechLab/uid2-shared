@@ -1,6 +1,7 @@
 package com.uid2.shared.store.parser;
 
 import com.uid2.shared.model.CloudEncryptionKey;
+import com.uid2.shared.util.Mapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,24 +15,43 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class CloudEncryptionKeyParserTest {
+public class CloudEncryptionKeyParserTest {
+    private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
 
     private CloudEncryptionKeyParser parser;
 
     @BeforeEach
-    void setUp() {
+    public void setup() {
         parser = new CloudEncryptionKeyParser();
     }
 
     @Test
     void testDeserialize() throws IOException {
-        String json = "[{" +
-                "\"id\": 1, \"site_id\": 123, \"activates\": 1687635529, \"created\": 1687808329, \"secret\": \"S3keySecretByteHere1\"" +
-                "},{" +
-                "\"id\": 2, \"site_id\": 123, \"activates\": 1687808429, \"created\": 1687808329, \"secret\": \"S3keySecretByteHere2\"" +
-                "},{" +
-                "\"id\": 3, \"site_id\": 456, \"activates\": 1687635529, \"created\": 1687808329, \"secret\": \"S3keySecretByteHere3\"" +
-                "}]";
+        String json = """
+                [
+                    {
+                        "id": 1,
+                        "site_id": 123,
+                        "activates": 1687635529,
+                        "created": 1687808329,
+                        "secret": "S3keySecretByteHere1"
+                    },
+                    {
+                        "id": 2,
+                        "site_id": 123,
+                        "activates": 1687808429,
+                        "created": 1687808329,
+                        "secret": "S3keySecretByteHere2"
+                    },
+                    {
+                        "id": 3,
+                        "site_id": 456,
+                        "activates": 1687635529,
+                        "created": 1687808329,
+                        "secret": "S3keySecretByteHere3"
+                    }
+                ]
+            """;
         InputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
 
         ParsingResult<Map<Integer, CloudEncryptionKey>> result = parser.deserialize(inputStream);
@@ -78,7 +98,16 @@ class CloudEncryptionKeyParserTest {
 
     @Test
     void testDeserializeInvalidJson() {
-        String json = "[{\"id\": 1, \"site_id\": 123, \"activates\": 1687635529, \"created\": 1687808329, \"secret\": \"S3keySecretByteHere1\",]";
+        String json = """
+                [
+                    {
+                        "id": 1,
+                        "site_id": 123,
+                        "activates": 1687635529,
+                        "created": 1687808329,
+                        "secret": "S3keySecretByteHere1",
+                ]
+            """;
         InputStream inputStream = new ByteArrayInputStream(json.getBytes());
 
         assertThrows(IOException.class, () -> parser.deserialize(inputStream));
@@ -87,8 +116,7 @@ class CloudEncryptionKeyParserTest {
     @Test
     void testCloudEncryptionKeySerialization() throws Exception {
         CloudEncryptionKey cloudEncryptionKey = new CloudEncryptionKey(1, 999, 1718689091L, 1718689091L, "64bNHMpU/mjaywjOpVacFOvEIFZmbYYUsNVNVu1jJZs=");
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonString = mapper.writeValueAsString(cloudEncryptionKey);
+        String jsonString = OBJECT_MAPPER.writeValueAsString(cloudEncryptionKey);
 
         String expectedJson = "{\"id\":1,\"siteId\":999,\"activates\":1718689091,\"created\":1718689091,\"secret\":\"64bNHMpU/mjaywjOpVacFOvEIFZmbYYUsNVNVu1jJZs=\"}";
         assertEquals(expectedJson, jsonString);
@@ -96,29 +124,31 @@ class CloudEncryptionKeyParserTest {
 
     @Test
     void testDeserializeEndpointResults() throws IOException {
-        String json = "[\n" +
-                "        {\n" +
-                "            \"id\": 1,\n" +
-                "            \"siteId\": 999,\n" +
-                "            \"activates\": 1720641670,\n" +
-                "            \"created\": 1720641670,\n" +
-                "            \"secret\": \"mydrCudb2PZOm01Qn0SpthltmexHUAA11Hy1m+uxjVw=\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"id\": 2,\n" +
-                "            \"siteId\": 999,\n" +
-                "            \"activates\": 1720728070,\n" +
-                "            \"created\": 1720641670,\n" +
-                "            \"secret\": \"FtdslrFSsvVXOuhOWGwEI+0QTkCvM8SGZAP3k2u3PgY=\"\n" +
-                "        },\n" +
-                "        {\n" +
-                "            \"id\": 3,\n" +
-                "            \"siteId\": 999,\n" +
-                "            \"activates\": 1720814470,\n" +
-                "            \"created\": 1720641670,\n" +
-                "            \"secret\": \"/7zO6QbKrhZKIV36G+cU9UR4hZUVg5bD+KjbczICjHw=\"\n" +
-                "        }\n" +
-                "    ]";
+        String json = """
+                [
+                    {
+                        "id": 1,
+                        "siteId": 999,
+                        "activates": 1720641670,
+                        "created": 1720641670,
+                        "secret": "mydrCudb2PZOm01Qn0SpthltmexHUAA11Hy1m+uxjVw="
+                    },
+                    {
+                        "id": 2,
+                        "siteId": 999,
+                        "activates": 1720728070,
+                        "created": 1720641670,
+                        "secret": "FtdslrFSsvVXOuhOWGwEI+0QTkCvM8SGZAP3k2u3PgY="
+                    },
+                    {
+                        "id": 3,
+                        "siteId": 999,
+                        "activates": 1720814470,
+                        "created": 1720641670,
+                        "secret": "/7zO6QbKrhZKIV36G+cU9UR4hZUVg5bD+KjbczICjHw="
+                    }
+                ]
+            """;
         InputStream inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
 
         ParsingResult<Map<Integer, CloudEncryptionKey>> result = parser.deserialize(inputStream);
