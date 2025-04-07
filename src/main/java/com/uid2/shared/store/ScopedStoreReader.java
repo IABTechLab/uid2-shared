@@ -67,12 +67,12 @@ public class ScopedStoreReader<T> {
 
             final int count = parsed.getCount();
             latestEntryCount.set(count);
-            LOGGER.info(String.format("Loaded %d %s", count, dataTypeName));
+            LOGGER.info("Loaded {} {}", count, dataTypeName);
             return count;
         }
         catch (Exception e) {
             // Do not log the message or the original exception as that may contain the pre-signed url
-            LOGGER.error(String.format("Unable to load %s", dataTypeName));
+            LOGGER.error("Unable to load {}", dataTypeName);
             throw e;
         }
     }

@@ -6,6 +6,7 @@ import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -16,14 +17,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class CloudEncryptionHelperTest {
+public class CloudEncryptionHelpersTest {
+    @Mock
     private RotatingCloudEncryptionKeyProvider keyProvider;
     private CloudEncryptionKey encryptionKey;
 
     @BeforeEach
-    void setUp() {
-        keyProvider = mock(RotatingCloudEncryptionKeyProvider.class);
-
+    public void setup() {
         // Generate a valid 32-byte AES key
         byte[] keyBytes = new byte[32];
         new Random().nextBytes(keyBytes);
@@ -37,7 +37,7 @@ public class CloudEncryptionHelperTest {
     }
 
     @Test
-    void testDecryptionOfEncryptedContent() throws Exception {
+    public void testDecryptionOfEncryptedContent() throws Exception {
         // Simulate encrypted content
         String secretKey = encryptionKey.getSecret();
         byte[] secretKeyBytes = Base64.getDecoder().decode(secretKey);
@@ -49,10 +49,8 @@ public class CloudEncryptionHelperTest {
                 .put("encrypted_payload", encryptedPayloadBase64);
 
         String encryptedContent = encryptedJson.encodePrettily();
-
         InputStream encryptedInputStream = new ByteArrayInputStream(encryptedContent.getBytes(StandardCharsets.UTF_8));
-
-        String decryptedContent = decryptInputStream(encryptedInputStream, keyProvider);
+        String decryptedContent = decryptInputStream(encryptedInputStream, keyProvider, "test");
 
         assertThat(decryptedContent).isEqualTo("value1,value2");
     }

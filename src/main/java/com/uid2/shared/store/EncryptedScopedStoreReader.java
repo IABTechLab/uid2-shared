@@ -27,16 +27,16 @@ public class EncryptedScopedStoreReader<T> extends ScopedStoreReader<T> {
     @Override
     protected long loadContent(String path) throws Exception {
         try (InputStream inputStream = this.contentStreamProvider.download(path)) {
-            String decryptedContent = decryptInputStream(inputStream, cloudEncryptionKeyProvider);
+            String decryptedContent = decryptInputStream(inputStream, cloudEncryptionKeyProvider, dataTypeName);
             ParsingResult<T> parsed = this.parser.deserialize(new ByteArrayInputStream(decryptedContent.getBytes(StandardCharsets.UTF_8)));
             latestSnapshot.set(parsed.getData());
 
             final int count = parsed.getCount();
             latestEntryCount.set(count);
-            LOGGER.info(String.format("Loaded %d %s", count, dataTypeName));
+            LOGGER.info("Loaded {} {}", count, dataTypeName);
             return count;
         } catch (Exception e) {
-            LOGGER.error(String.format("Unable to load %s", dataTypeName));
+            LOGGER.error("Unable to load {}", dataTypeName);
             throw e;
         }
     }

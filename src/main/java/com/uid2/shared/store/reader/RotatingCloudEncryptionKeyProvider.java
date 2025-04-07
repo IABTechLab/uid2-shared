@@ -24,17 +24,16 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 
 public class RotatingCloudEncryptionKeyProvider implements StoreReader<Map<Integer, CloudEncryptionKey>> {
-    protected ScopedStoreReader<Map<Integer, CloudEncryptionKey>> reader;
-
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingCloudEncryptionKeyProvider.class);
-    public Map<Integer, List<CloudEncryptionKey>> siteToKeysMap = new HashMap<>();
+
+    private final ScopedStoreReader<Map<Integer, CloudEncryptionKey>> reader;
+    private final Map<Integer, List<CloudEncryptionKey>> siteToKeysMap = new HashMap<>();
 
     public RotatingCloudEncryptionKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new CloudEncryptionKeyParser(), "cloud_encryption_keys");
     }
 
-
-    public RotatingCloudEncryptionKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope, ScopedStoreReader<Map<Integer, CloudEncryptionKey>> reader) {
+    public RotatingCloudEncryptionKeyProvider(ScopedStoreReader<Map<Integer, CloudEncryptionKey>> reader) {
         this.reader = reader;
     }
 
@@ -112,7 +111,7 @@ public class RotatingCloudEncryptionKeyProvider implements StoreReader<Map<Integ
     }
 
     public CloudEncryptionKey getEncryptionKeyForSite(Integer siteId) {
-        //get the youngest activated key
+        // Get the youngest activated key
         Collection<CloudEncryptionKey> keys = getKeysForSite(siteId);
         long now = Instant.now().getEpochSecond();
         if (keys.isEmpty()) {

@@ -15,38 +15,42 @@ import java.util.Base64;
 import java.io.*;
 
 public class CloudEncryptionHelpers {
-    public static String decryptInputStream(InputStream inputStream, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider) throws IOException {
+    public static String decryptInputStream(InputStream inputStream, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider, String storeName) throws IOException {
         JsonFactory factory = new JsonFactory();
         JsonParser parser = factory.createParser(inputStream);
         int keyId = -1;
         byte[] encryptedPayload = null;
         parser.nextToken();
         while (parser.nextToken() != JsonToken.END_OBJECT) {
-                String fieldName = parser.getCurrentName();
-                if(fieldName.equals("key_id")) {
-                    parser.nextToken();
-                    keyId = parser.getIntValue();
-                }
-                if(fieldName.equals("encrypted_payload")) {
-                    parser.nextToken();
-                    encryptedPayload = parser.getBinaryValue();
-                }
+            String fieldName = parser.getCurrentName();
+            if(fieldName.equals("key_id")) {
+                parser.nextToken();
+                keyId = parser.getIntValue();
+            }
+            if(fieldName.equals("encrypted_payload")) {
+                parser.nextToken();
+                encryptedPayload = parser.getBinaryValue();
+            }
         }
 
         if(keyId == -1 || encryptedPayload == null) {
-            throw new IllegalStateException("failed to parse json");
+            throw new IllegalStateException("Failed to parse JSON");
         }
 
         CloudEncryptionKey decryptionKey = cloudEncryptionKeyProvider.getKey(keyId);
 
         if (decryptionKey == null) {
-            throw new IllegalStateException("No matching S3 key found for decryption for key ID: " + keyId);
+            throw new IllegalStateException(String.format("No matching S3 key found for decryption - key_id=%d store=%s", keyId, storeName));
         }
 
         byte[] secret = Base64.getDecoder().decode(decryptionKey.getSecret());
         byte[] encryptedBytes = encryptedPayload;
-        byte[] decryptedBytes = AesGcm.decrypt(encryptedBytes, 0, secret);
 
-        return new String(decryptedBytes, StandardCharsets.UTF_8);
+        try {
+            byte[] decryptedBytes = AesGcm.decrypt(encryptedBytes, 0, secret);
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Unable to Decrypt - key_id=%d store=%s", keyId, storeName), e);
+        }
     }
 }
