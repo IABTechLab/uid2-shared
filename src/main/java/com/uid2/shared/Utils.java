@@ -179,8 +179,8 @@ public class Utils {
     }
 
     public static InputStream convertHttpResponseToInputStream(HttpResponse<String> httpResponse) {
-        final String responseBody = httpResponse.body();
-        final byte[] responseBytes = responseBody.getBytes();
+        String responseBody = httpResponse.body();
+        byte[] responseBytes = responseBody.getBytes();
         return new ByteArrayInputStream(responseBytes);
     }
     public static MessageDigest createMessageDigestSHA512() {

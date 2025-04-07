@@ -17,19 +17,19 @@ import java.util.List;
 public class KeysetKeyParser implements Parser<KeysetKeyStoreSnapshot> {
     @Override
     public ParsingResult<KeysetKeyStoreSnapshot> deserialize(InputStream inputStream) throws IOException {
-        final JsonArray keysSpec = Utils.toJsonArray(inputStream);
+        JsonArray keysSpec = Utils.toJsonArray(inputStream);
 
         final HashMap<Integer, KeysetKey> keyIdToKeysetKey = new HashMap<>();
         final HashMap<Integer, List<KeysetKey>> keysetIdToKeysetKeyList = new HashMap<>();
 
         for (int i = 0; i < keysSpec.size(); i++) {
             JsonObject keySpec = keysSpec.getJsonObject(i);
-            final int keysetId = keySpec.getInteger("keyset_id");
-            final Instant created = Instant.ofEpochSecond(keySpec.getLong("created"));
-            final Instant activates = Instant.ofEpochSecond(keySpec.getLong("activates"));
-            final Instant expires = Instant.ofEpochSecond(keySpec.getLong("expires"));
+            int keysetId = keySpec.getInteger("keyset_id");
+            Instant created = Instant.ofEpochSecond(keySpec.getLong("created"));
+            Instant activates = Instant.ofEpochSecond(keySpec.getLong("activates"));
+            Instant expires = Instant.ofEpochSecond(keySpec.getLong("expires"));
 
-            final KeysetKey keysetKey = new KeysetKey(
+            KeysetKey keysetKey = new KeysetKey(
                     keySpec.getInteger("id"),
                     Base64.getDecoder().decode(keySpec.getString("secret")),
                     created, activates, expires, keysetId
