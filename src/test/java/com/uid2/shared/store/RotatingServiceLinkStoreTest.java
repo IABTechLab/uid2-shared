@@ -7,15 +7,14 @@ import com.uid2.shared.store.reader.RotatingServiceLinkStore;
 import com.uid2.shared.store.scope.GlobalScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -23,22 +22,15 @@ import static com.uid2.shared.TestUtilites.makeInputStream;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class RotatingServiceLinkStoreTest {
-
-    private AutoCloseable mocks;
     @Mock
     ICloudStorage cloudStorage;
     private RotatingServiceLinkStore serviceLinkStore;
 
     @BeforeEach
     public void setup() {
-        mocks = MockitoAnnotations.openMocks(this);
         serviceLinkStore = new RotatingServiceLinkStore(cloudStorage, new GlobalScope(new CloudPath("metadata")));
-    }
-
-    @AfterEach
-    public void teardown() throws Exception {
-        mocks.close();
     }
 
     private JsonObject makeMetadata(String location) {
@@ -60,7 +52,9 @@ public class RotatingServiceLinkStoreTest {
     public void loadContent_emptyArray_loadsZeroServiceLinks() throws Exception {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
-        final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
+
+        long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
+
         assertEquals(0, count);
         assertEquals(0, serviceLinkStore.getAllServiceLinks().size());
     }
@@ -74,7 +68,8 @@ public class RotatingServiceLinkStoreTest {
         ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2", null);
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
+        long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
+
         assertEquals(4, count);
         assertTrue(serviceLinkStore.getAllServiceLinks().containsAll(Arrays.asList(l1, l2, l3, l4)));
     }
@@ -88,7 +83,7 @@ public class RotatingServiceLinkStoreTest {
 
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
+        long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
 
         List<ServiceLink> expected = List.of(l1, l2, l3);
         List<ServiceLink> actual = List.of(

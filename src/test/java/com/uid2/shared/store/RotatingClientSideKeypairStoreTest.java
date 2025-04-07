@@ -6,11 +6,11 @@ import com.uid2.shared.store.reader.RotatingClientSideKeypairStore;
 import com.uid2.shared.store.scope.GlobalScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 
@@ -18,21 +18,15 @@ import static com.uid2.shared.TestUtilites.makeInputStream;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class RotatingClientSideKeypairStoreTest {
-    private AutoCloseable mocks;
     @Mock
-    ICloudStorage cloudStorage;
+    private ICloudStorage cloudStorage;
     private RotatingClientSideKeypairStore keypairStore;
 
     @BeforeEach
     public void setup() {
-        mocks = MockitoAnnotations.openMocks(this);
         keypairStore = new RotatingClientSideKeypairStore(cloudStorage, new GlobalScope(new CloudPath("metadata")));
-    }
-
-    @AfterEach
-    public void teardown() throws Exception {
-        mocks.close();
     }
 
     private JsonObject makeMetadata(String location) {
@@ -65,7 +59,9 @@ public class RotatingClientSideKeypairStoreTest {
     public void loadContentEmptyArray() throws Exception {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
-        final long count = keypairStore.loadContent(makeMetadata("locationPath"));
+
+        long count = keypairStore.loadContent(makeMetadata("locationPath"));
+
         assertEquals(0, count);
         assertNull(keypairStore.getSnapshot().getKeypair("test-subscription-id"));
         assertTrue(keypairStore.getSnapshot().getAll().isEmpty());
@@ -83,13 +79,13 @@ public class RotatingClientSideKeypairStoreTest {
         ClientSideKeypair keypair4 = addKeypair(content, "id-4", "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEP5F7PslSFDWcTgasIc1x6183/JqI8WGOqXYxV2n7F6fAdZe8jLVvYtNhub2R+ZfXIDwdDepEZkuNSxfgwM27GA==", "MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCDe6TIHd+Eyoczq1a8xeNGw17OWjeJHZwSLXtuMcqCXZQ==", 3, "email3@email.com", Instant.now(), true, "name 4");
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        final long count = keypairStore.loadContent(makeMetadata("locationPath"));
-        assertEquals(4, count);
+        long count = keypairStore.loadContent(makeMetadata("locationPath"));
 
-        assertTrue(keypairStore.getSnapshot().getKeypair("id-1").equals(keypair1));
-        assertTrue(keypairStore.getSnapshot().getKeypair("id-2").equals(keypair2));
-        assertTrue(keypairStore.getSnapshot().getKeypair("id-3").equals(keypair3));
-        assertTrue(keypairStore.getSnapshot().getKeypair("id-4").equals(keypair4));
+        assertEquals(4, count);
+        assertEquals(keypair1, keypairStore.getSnapshot().getKeypair("id-1"));
+        assertEquals(keypair2, keypairStore.getSnapshot().getKeypair("id-2"));
+        assertEquals(keypair3, keypairStore.getSnapshot().getKeypair("id-3"));
+        assertEquals(keypair4, keypairStore.getSnapshot().getKeypair("id-4"));
 
         assertEquals(1, keypairStore.getSnapshot().getSiteKeypairs(1).size());
         assertEquals(1, keypairStore.getSnapshot().getSiteKeypairs(2).size());
@@ -104,5 +100,4 @@ public class RotatingClientSideKeypairStoreTest {
         assertTrue(keypairStore.getSnapshot().getEnabledKeypairs().contains(keypair1));
         assertTrue(keypairStore.getSnapshot().getEnabledKeypairs().contains(keypair2));
     }
-
 }

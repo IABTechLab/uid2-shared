@@ -7,11 +7,11 @@ import com.uid2.shared.store.reader.RotatingServiceStore;
 import com.uid2.shared.store.scope.GlobalScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -21,22 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class RotatingServiceStoreTest {
-
-    private AutoCloseable mocks;
     @Mock
     ICloudStorage cloudStorage;
     private RotatingServiceStore serviceStore;
 
     @BeforeEach
     public void setup() {
-        mocks = MockitoAnnotations.openMocks(this);
         serviceStore = new RotatingServiceStore(cloudStorage, new GlobalScope(new CloudPath("metadata")));
-    }
-
-    @AfterEach
-    public void teardown() throws Exception {
-        mocks.close();
     }
 
     private JsonObject makeMetadata(String location) {

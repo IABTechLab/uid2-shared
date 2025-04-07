@@ -9,7 +9,6 @@ import com.uid2.shared.encryption.AesGcm;
 import com.uid2.shared.model.CloudEncryptionKey;
 
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
-import io.vertx.core.json.JsonObject;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
