@@ -62,7 +62,7 @@ public class RotatingKeysetKeyStoreTest {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        long count = keysetKeyStore.loadContent(makeMetadata("locationPath"));
+        final long count = keysetKeyStore.loadContent(makeMetadata("locationPath"));
 
         assertEquals(0, count);
         assertNull(keysetKeyStore.getSnapshot().getKey(1));
@@ -79,7 +79,7 @@ public class RotatingKeysetKeyStoreTest {
         KeysetKey key3 = addKey(content, 103, 3, "testsecret3", now);
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        long count = keysetKeyStore.loadContent(makeMetadata("locationPath"));
+        final long count = keysetKeyStore.loadContent(makeMetadata("locationPath"));
 
         assertEquals(3, count);
         assertEquals(key1, keysetKeyStore.getSnapshot().getKey(101));
@@ -96,7 +96,7 @@ public class RotatingKeysetKeyStoreTest {
         KeysetKey key4 = addKey(content, 104, 200, "key104set200", now.minusSeconds(5), now.minusSeconds(1)); // expired
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        long count = keysetKeyStore.loadContent(makeMetadata("locationPath"));
+        final long count = keysetKeyStore.loadContent(makeMetadata("locationPath"));
 
         assertEquals(4, count);
         assertEquals(key1, keysetKeyStore.getSnapshot().getKey(101));

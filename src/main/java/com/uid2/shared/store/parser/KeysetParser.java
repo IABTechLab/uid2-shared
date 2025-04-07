@@ -39,7 +39,9 @@ public class KeysetParser implements Parser<KeysetSnapshot> {
             final boolean enabled = keysetSpec.getBoolean("enabled");
             final boolean isDefault = keysetSpec.getBoolean("default");
 
-            keysetMap.put(keysetId, new Keyset(keysetId, siteId, name, allowedSites, created, enabled, isDefault));
+            Keyset keyset = new Keyset(keysetId, siteId, name, allowedSites, created, enabled, isDefault);
+
+            keysetMap.put(keysetId, keyset);
         }
 
         return new ParsingResult<>(new KeysetSnapshot(keysetMap), keysetsSpec.size());

@@ -15,10 +15,9 @@ public class ServiceLinkParser implements Parser<Map<String, ServiceLink>> {
 
     @Override
     public ParsingResult<Map<String, ServiceLink>> deserialize(InputStream inputStream) throws IOException {
-        final ServiceLink[] serviceLinks = OBJECT_MAPPER.readValue(inputStream, ServiceLink[].class);
-        final Map<String, ServiceLink> serviceLinkList = Arrays.stream(serviceLinks)
+        ServiceLink[] serviceLinks = OBJECT_MAPPER.readValue(inputStream, ServiceLink[].class);
+        Map<String, ServiceLink> serviceLinkList = Arrays.stream(serviceLinks)
                 .collect(Collectors.toMap(s -> (s.getServiceId() + "_" + s.getLinkId()), s -> s));
         return new ParsingResult<>(serviceLinkList, serviceLinkList.size());
     }
 }
-

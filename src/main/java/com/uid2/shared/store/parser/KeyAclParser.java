@@ -20,7 +20,6 @@ public class KeyAclParser implements Parser<AclSnapshot> {
 
         for(int i = 0; i < aclsSpec.size(); ++i) {
             final JsonObject aclSpec = aclsSpec.getJsonObject(i);
-
             final Integer siteId = aclSpec.getInteger("site_id");
             final JsonArray blacklistSpec = aclSpec.getJsonArray("blacklist");
             final JsonArray whitelistSpec = aclSpec.getJsonArray("whitelist");
@@ -36,7 +35,9 @@ public class KeyAclParser implements Parser<AclSnapshot> {
                 accessList.add(accessListSpec.getInteger(j));
             }
 
-            aclMap.put(siteId, new EncryptionKeyAcl(isWhitelist, accessList));
+            EncryptionKeyAcl acl = new EncryptionKeyAcl(isWhitelist, accessList);
+
+            aclMap.put(siteId, acl);
         }
 
         return new ParsingResult<>(new AclSnapshot(aclMap), aclsSpec.size());

@@ -14,7 +14,7 @@ public class ClientParser implements Parser<Collection<ClientKey>> {
 
     @Override
     public ParsingResult<Collection<ClientKey>> deserialize(InputStream inputStream) throws IOException {
-        final ClientKey[] clientKeys = OBJECT_MAPPER.readValue(inputStream, ClientKey[].class);
+        ClientKey[] clientKeys = OBJECT_MAPPER.readValue(inputStream, ClientKey[].class);
         return new ParsingResult<>(Arrays.asList(clientKeys), clientKeys.length);
     }
 }

@@ -26,12 +26,12 @@ public class KeyParser implements Parser<IKeyStoreSnapshot> {
 
         for (int i = 0; i < keysSpec.size(); ++i) {
             JsonObject keySpec = keysSpec.getJsonObject(i);
+            int siteId = keySpec.getInteger("site_id");
+            Instant created = Instant.ofEpochSecond(keySpec.getLong("created"));
+            Instant activates = Instant.ofEpochSecond(keySpec.getLong("activates"));
+            Instant expires = Instant.ofEpochSecond(keySpec.getLong("expires"));
 
-            final int siteId = keySpec.getInteger("site_id");
-            final Instant created = Instant.ofEpochSecond(keySpec.getLong("created"));
-            final Instant activates = Instant.ofEpochSecond(keySpec.getLong("activates"));
-            final Instant expires = Instant.ofEpochSecond(keySpec.getLong("expires"));
-            final EncryptionKey key = new EncryptionKey(
+            EncryptionKey key = new EncryptionKey(
                     keySpec.getInteger("id"),
                     Base64.getDecoder().decode(keySpec.getString("secret")),
                     created, activates, expires, siteId);

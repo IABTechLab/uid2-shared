@@ -60,7 +60,7 @@ public class RotatingClientSideKeypairStoreTest {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        long count = keypairStore.loadContent(makeMetadata("locationPath"));
+        final long count = keypairStore.loadContent(makeMetadata("locationPath"));
 
         assertEquals(0, count);
         assertNull(keypairStore.getSnapshot().getKeypair("test-subscription-id"));
@@ -79,7 +79,7 @@ public class RotatingClientSideKeypairStoreTest {
         ClientSideKeypair keypair4 = addKeypair(content, "id-4", "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEP5F7PslSFDWcTgasIc1x6183/JqI8WGOqXYxV2n7F6fAdZe8jLVvYtNhub2R+ZfXIDwdDepEZkuNSxfgwM27GA==", "MEECAQAwEwYHKoZIzj0CAQYIKoZIzj0DAQcEJzAlAgEBBCDe6TIHd+Eyoczq1a8xeNGw17OWjeJHZwSLXtuMcqCXZQ==", 3, "email3@email.com", Instant.now(), true, "name 4");
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        long count = keypairStore.loadContent(makeMetadata("locationPath"));
+        final long count = keypairStore.loadContent(makeMetadata("locationPath"));
 
         assertEquals(4, count);
         assertEquals(keypair1, keypairStore.getSnapshot().getKeypair("id-1"));

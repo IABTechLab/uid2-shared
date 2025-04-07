@@ -59,7 +59,7 @@ public class RotatingSiteStoreTest {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        long count = siteStore.loadContent(makeMetadata("locationPath"));
+        final long count = siteStore.loadContent(makeMetadata("locationPath"));
 
         assertEquals(0, count);
         assertEquals(0, siteStore.getAllSites().size());
@@ -74,7 +74,8 @@ public class RotatingSiteStoreTest {
         Site s4 = addSite(content, 126, "test-4", "test-4-desc", false, false, Instant.now().getEpochSecond(), new HashSet<>(List.of("testdomain1.com", "testdomain2.net")), new HashSet<>(List.of("testAppName1", "testAppName2")));
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        long count = siteStore.loadContent(makeMetadata("locationPath"));
+        final long count = siteStore.loadContent(makeMetadata("locationPath"));
+
         assertEquals(4, count);
 
         assertEquals(s1, siteStore.getSite(123));

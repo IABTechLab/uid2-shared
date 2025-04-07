@@ -53,7 +53,7 @@ public class RotatingServiceLinkStoreTest {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
+        final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
 
         assertEquals(0, count);
         assertEquals(0, serviceLinkStore.getAllServiceLinks().size());
@@ -68,7 +68,7 @@ public class RotatingServiceLinkStoreTest {
         ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2", null);
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
+        final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
 
         assertEquals(4, count);
         assertTrue(serviceLinkStore.getAllServiceLinks().containsAll(Arrays.asList(l1, l2, l3, l4)));
@@ -83,7 +83,7 @@ public class RotatingServiceLinkStoreTest {
 
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
-        long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
+        final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
 
         List<ServiceLink> expected = List.of(l1, l2, l3);
         List<ServiceLink> actual = List.of(
@@ -103,6 +103,7 @@ public class RotatingServiceLinkStoreTest {
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
+
         assertEquals(1, count);
         assertEquals(serviceLinkStore.getServiceLink(3, "jkl1011"), new ServiceLink("jkl1011", 3, 124, "Test Service", Set.of()));
     }

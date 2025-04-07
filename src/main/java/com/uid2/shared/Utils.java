@@ -34,7 +34,7 @@ public class Utils {
     public static int getPortOffset() {
         // read port_offset from env, the reason this can't be read from vertx-config
         // is Prometheus port needs to be specified before vertx creation
-        final String val = System.getenv("port_offset");
+        String val = System.getenv("port_offset");
         return val != null ? Integer.parseInt(val) : 0;
     }
 

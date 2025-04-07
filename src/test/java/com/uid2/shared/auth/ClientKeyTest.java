@@ -12,7 +12,7 @@ public class ClientKeyTest {
 
     @Test
     public void verifyDisabledPropIsOptional() throws Exception {
-        String testJson = """
+        final String testJson = """
                     {
                         "key": "test-admin-key",
                         "secret": "",
@@ -34,7 +34,7 @@ public class ClientKeyTest {
 
     @Test
     public void verifyDisabledPropSetTrue() throws Exception {
-        String testJson = """
+        final String testJson = """
                     {
                         "key": "test-admin-key",
                         "secret": "",
@@ -54,7 +54,7 @@ public class ClientKeyTest {
 
     @Test
     public void verifyDisabledPropSetFalse() throws Exception {
-        String testJson = """
+        final String testJson = """
                     {
                         "key": "test-admin-key",
                         "secret": "",

@@ -24,11 +24,11 @@ public class KeysetKeyParser implements Parser<KeysetKeyStoreSnapshot> {
 
         for (int i = 0; i < keysSpec.size(); i++) {
             JsonObject keySpec = keysSpec.getJsonObject(i);
-
             final int keysetId = keySpec.getInteger("keyset_id");
             final Instant created = Instant.ofEpochSecond(keySpec.getLong("created"));
             final Instant activates = Instant.ofEpochSecond(keySpec.getLong("activates"));
             final Instant expires = Instant.ofEpochSecond(keySpec.getLong("expires"));
+
             final KeysetKey keysetKey = new KeysetKey(
                     keySpec.getInteger("id"),
                     Base64.getDecoder().decode(keySpec.getString("secret")),
