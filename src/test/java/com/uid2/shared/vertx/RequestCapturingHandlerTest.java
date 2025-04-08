@@ -37,8 +37,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(VertxExtension.class)
 public class RequestCapturingHandlerTest {
-    private static final int Port = 8080;
-    private static final Handler<RoutingContext> dummyResponseHandler = routingContext -> {
+    private static final int PORT = 8080;
+    private static final Handler<RoutingContext> DUMMY_RESPONSE_HANDLER = routingContext -> {
         routingContext.response().setStatusCode(200).end();
     };
 
@@ -60,11 +60,11 @@ public class RequestCapturingHandlerTest {
     public void captureSimplePath(Vertx vertx, VertxTestContext testContext) {
         Router router = Router.router(vertx);
         router.route().handler(new RequestCapturingHandler(siteStore));
-        router.get("/v1/token/generate").handler(dummyResponseHandler);
+        router.get("/v1/token/generate").handler(DUMMY_RESPONSE_HANDLER);
 
-        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
+        vertx.createHttpServer().requestHandler(router).listen(PORT, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
-            client.get(Port, "localhost", "/v1/token/generate?email=someemail").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
+            client.get(PORT, "localhost", "/v1/token/generate?email=someemail").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
                         Metrics.globalRegistry
                                 .get("uid2.http_requests")
@@ -84,12 +84,12 @@ public class RequestCapturingHandlerTest {
         router.route().handler(new RequestCapturingHandler());
 
         Router v2Router = Router.router(vertx);
-        v2Router.post("/token/generate").handler(dummyResponseHandler);
+        v2Router.post("/token/generate").handler(DUMMY_RESPONSE_HANDLER);
         router.route("/v2/*").subRouter(v2Router);
 
-        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
+        vertx.createHttpServer().requestHandler(router).listen(PORT, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
-            client.post(Port, "localhost", "/v2/token/generate").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
+            client.post(PORT, "localhost", "/v2/token/generate").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertEquals(1,
                         Metrics.globalRegistry
                                 .get("uid2.http_requests")
@@ -108,11 +108,11 @@ public class RequestCapturingHandlerTest {
     public void captureStaticPath(Vertx vertx, VertxTestContext testContext) {
         Router router = Router.router(vertx);
         router.route().handler(new RequestCapturingHandler());
-        router.get("/static/*").handler(dummyResponseHandler);
+        router.get("/static/*").handler(DUMMY_RESPONSE_HANDLER);
 
-        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
+        vertx.createHttpServer().requestHandler(router).listen(PORT, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
-            client.get(Port, "localhost", "/static/content").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
+            client.get(PORT, "localhost", "/static/content").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
                         Metrics.globalRegistry
                                 .get("uid2.http_requests")
@@ -131,9 +131,9 @@ public class RequestCapturingHandlerTest {
         Router router = Router.router(vertx);
         router.route().handler(new RequestCapturingHandler(siteStore));
 
-        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
+        vertx.createHttpServer().requestHandler(router).listen(PORT, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
-            client.get(Port, "localhost", "/randomPath").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
+            client.get(PORT, "localhost", "/randomPath").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
                         Metrics.globalRegistry
                                 .get("uid2.http_requests")
@@ -153,11 +153,11 @@ public class RequestCapturingHandlerTest {
         router.allowForward(AllowForwardHeaders.X_FORWARD);
         router.route().handler(new RequestCapturingHandler(siteStore));
 
-        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
+        vertx.createHttpServer().requestHandler(router).listen(PORT, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
             RequestOptions requestOptions  = new RequestOptions();
             requestOptions.setHost("localhost");
-            requestOptions.setPort(Integer.valueOf(Port));
+            requestOptions.setPort(Integer.valueOf(PORT));
             requestOptions.addHeader(HttpHeaders.createOptimized("X-Forwarded-Host"), "[2001:db8::1"); // Incorrect IPV6
             client.request(HttpMethod.GET, requestOptions).sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
@@ -185,9 +185,9 @@ public class RequestCapturingHandlerTest {
             ctx.response().end();
         });
 
-        vertx.createHttpServer().requestHandler(router).listen(Port, testContext.succeeding(id -> {
+        vertx.createHttpServer().requestHandler(router).listen(PORT, testContext.succeeding(id -> {
             WebClient client = WebClient.create(vertx);
-            client.get(Port, "localhost", "/test")
+            client.get(PORT, "localhost", "/test")
                     .send(testContext.succeeding(response -> testContext.verify(() -> {
                         double actual = Metrics.globalRegistry
                                 .get("uid2.http_requests")

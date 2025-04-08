@@ -14,7 +14,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -56,7 +56,7 @@ public class GcpOidcCoreAttestationServiceTest {
 
     @Test
     public void testHappyPath() throws AttestationException {
-        var provider = new GcpOidcCoreAttestationService(alwaysPassTokenValidator, Arrays.asList(alwaysPassPolicyValidator1));
+        var provider = new GcpOidcCoreAttestationService(alwaysPassTokenValidator, List.of(alwaysPassPolicyValidator1));
         provider.registerEnclave(ENCLAVE_ID_1);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
@@ -68,7 +68,7 @@ public class GcpOidcCoreAttestationServiceTest {
     public void testSignatureCheckFailed_ClientError() throws AttestationException {
         var errorStr = "signature validation failed";
         when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationClientException(errorStr, AttestationFailure.BAD_PAYLOAD));
-        var provider = new GcpOidcCoreAttestationService(alwaysFailTokenValidator, Arrays.asList(alwaysPassPolicyValidator1));
+        var provider = new GcpOidcCoreAttestationService(alwaysFailTokenValidator, List.of(alwaysPassPolicyValidator1));
         provider.registerEnclave(ENCLAVE_ID_1);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
@@ -80,11 +80,11 @@ public class GcpOidcCoreAttestationServiceTest {
     @Test
     public void testSignatureCheckFailed_ServerError() throws AttestationException {
         when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationException("unknown server error"));
-        var provider = new GcpOidcCoreAttestationService(alwaysFailTokenValidator, Arrays.asList(alwaysPassPolicyValidator1));
+        var provider = new GcpOidcCoreAttestationService(alwaysFailTokenValidator, List.of(alwaysPassPolicyValidator1));
         provider.registerEnclave(ENCLAVE_ID_1);
         attest(provider, ar -> {
             assertFalse(ar.succeeded());
-            assertTrue(ar.cause() instanceof AttestationException);
+            assertInstanceOf(AttestationException.class, ar.cause());
         });
     }
 
@@ -92,7 +92,7 @@ public class GcpOidcCoreAttestationServiceTest {
     public void testPolicyCheckFailed_ClientError() throws AttestationException {
         var errorStr = "policy validation failed";
         when(alwaysFailPolicyValidator.validate(any())).thenThrow(new AttestationClientException(errorStr, AttestationFailure.BAD_PAYLOAD));
-        var provider = new GcpOidcCoreAttestationService(alwaysPassTokenValidator, Arrays.asList(alwaysFailPolicyValidator));
+        var provider = new GcpOidcCoreAttestationService(alwaysPassTokenValidator, List.of(alwaysFailPolicyValidator));
         provider.registerEnclave(ENCLAVE_ID_1);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
@@ -104,17 +104,17 @@ public class GcpOidcCoreAttestationServiceTest {
     @Test
     public void testPolicyCheckFailed_ServerError() throws AttestationException {
         when(alwaysFailPolicyValidator.validate(any())).thenThrow(new AttestationException("unknown server error"));
-        var provider = new GcpOidcCoreAttestationService(alwaysPassTokenValidator, Arrays.asList(alwaysFailPolicyValidator));
+        var provider = new GcpOidcCoreAttestationService(alwaysPassTokenValidator, List.of(alwaysFailPolicyValidator));
         provider.registerEnclave(ENCLAVE_ID_1);
         attest(provider, ar -> {
             assertFalse(ar.succeeded());
-            assertTrue(ar.cause() instanceof AttestationException);
+            assertInstanceOf(AttestationException.class, ar.cause());
         });
     }
 
     @Test
     public void testNoPolicyConfigured() throws AttestationException {
-        var provider = new GcpOidcCoreAttestationService(alwaysPassTokenValidator, Arrays.asList());
+        var provider = new GcpOidcCoreAttestationService(alwaysPassTokenValidator, List.of());
         provider.registerEnclave(ENCLAVE_ID_1);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());
@@ -125,7 +125,7 @@ public class GcpOidcCoreAttestationServiceTest {
 
     @Test
     public void testMultiplePolicyValidators() throws AttestationException {
-        var provider = new GcpOidcCoreAttestationService(alwaysPassTokenValidator, Arrays.asList(alwaysPassPolicyValidator1, alwaysFailPolicyValidator, alwaysPassPolicyValidator2));
+        var provider = new GcpOidcCoreAttestationService(alwaysPassTokenValidator, List.of(alwaysPassPolicyValidator1, alwaysFailPolicyValidator, alwaysPassPolicyValidator2));
         provider.registerEnclave(ENCLAVE_ID_2);
         attest(provider, ar -> {
             assertTrue(ar.succeeded());

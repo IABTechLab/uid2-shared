@@ -3,11 +3,11 @@ package com.uid2.shared.store;
 import com.uid2.shared.Utils;
 import com.uid2.shared.attest.UidCoreClient;
 import com.uid2.shared.cloud.DownloadCloudStorage;
-import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.model.SaltEntry;
 import com.uid2.shared.store.reader.IMetadataVersionedStore;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.hashids.Hashids;
@@ -22,7 +22,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /*
   1. metadata.json format
@@ -48,10 +47,10 @@ import java.util.stream.Stream;
  */
 public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingSaltProvider.class);
-    private static final int HashingSeed = 122054;
-    public static RotatingSaltProvider INSTANCE;
+
     private final DownloadCloudStorage metadataStreamProvider;
     private final DownloadCloudStorage contentStreamProvider;
+    @Getter
     private final String metadataPath;
     private final AtomicReference<List<SaltSnapshot>> snapshotsByEffectiveTime = new AtomicReference<>();
 
@@ -64,8 +63,6 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         }
         this.metadataPath = metadataPath;
     }
-
-    public String getMetadataPath() { return this.metadataPath; }
 
     @Override
     public JsonObject getMetadata() throws Exception {
@@ -135,7 +132,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         Integer size = spec.getInteger("size");
         SaltEntry[] entries = readInputStream(this.contentStreamProvider.download(path), entryBuilder, size);
 
-        LOGGER.info("Loaded " + size + " salts");
+        LOGGER.info("Loaded {} salts", size);
         return new SaltSnapshot(effective, expires, entries, firstLevelSalt);
     }
 
@@ -154,13 +151,15 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
     }
 
     public static class SaltSnapshot implements ISaltSnapshot {
+        private static final ISaltEntryIndexer MILLION_ENTRY_INDEXER = new OneMillionSaltEntryIndexer();
+        private static final ISaltEntryIndexer MOD_BASED_INDEXER = new ModBasedSaltEntryIndexer();
+
+        @Getter
         private final Instant effective;
         private final Instant expires;
         private final SaltEntry[] entries;
         private final String firstLevelSalt;
         private final ISaltEntryIndexer saltEntryIndexer;
-        private static final ISaltEntryIndexer staticMillionEntryIndexer = new OneMillionSaltEntryIndexer();
-        private static final ISaltEntryIndexer staticModBasedIndexer = new ModBasedSaltEntryIndexer();
 
         public SaltSnapshot(Instant effective, Instant expires, SaltEntry[] entries, String firstLevelSalt) {
             this.effective = effective;
@@ -168,16 +167,12 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
             this.entries = entries;
             this.firstLevelSalt = firstLevelSalt;
             if (entries.length == 1_048_576) {
-                LOGGER.info("Total salt entries 1 million, " + entries.length +", special production salt entry indexer");
-                this.saltEntryIndexer = staticMillionEntryIndexer;
+                LOGGER.info("Total salt entries 1 million, {}, special production salt entry indexer", entries.length);
+                this.saltEntryIndexer = MILLION_ENTRY_INDEXER;
             } else {
-                LOGGER.warn("Total salt entries " + entries.length +", using slower mod-based indexer");
-                this.saltEntryIndexer = staticModBasedIndexer;
+                LOGGER.warn("Total salt entries {}, using slower mod-based indexer", entries.length);
+                this.saltEntryIndexer = MOD_BASED_INDEXER;
             }
-        }
-
-        public Instant getEffective() {
-            return this.effective;
         }
 
         @Override
@@ -190,9 +185,14 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         }
 
         @Override
-        public String getFirstLevelSalt() { return firstLevelSalt; }
+        public String getFirstLevelSalt() {
+            return firstLevelSalt;
+        }
+
         @Override
-        public SaltEntry[] getAllRotatingSalts() { return this.entries; }
+        public SaltEntry[] getAllRotatingSalts() {
+            return this.entries;
+        }
 
         @Override
         public SaltEntry getRotatingSalt(byte[] identity) {
@@ -207,7 +207,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         }
     }
 
-    static final class IdHashingScheme {
+    protected static final class IdHashingScheme {
         private final String prefix;
         private final Hashids hasher;
 

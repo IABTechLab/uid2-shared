@@ -10,7 +10,6 @@ import com.uid2.shared.store.parser.KeysetParser;
 import com.uid2.shared.store.scope.StoreScope;
 import io.vertx.core.json.JsonObject;
 
-import java.time.Instant;
 import java.util.Map;
 
 public class RotatingKeysetProvider implements StoreReader<Map<Integer, Keyset>> {
@@ -21,15 +20,11 @@ public class RotatingKeysetProvider implements StoreReader<Map<Integer, Keyset>>
     }
 
     public RotatingKeysetProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider) {
-        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider,scope,new KeysetParser(),"keysets",cloudEncryptionKeyProvider);
-    }
-
-    public KeysetSnapshot getSnapshot(Instant asOf) {
-        return reader.getSnapshot();
+        this.reader = new EncryptedScopedStoreReader<>(fileStreamProvider, scope, new KeysetParser(), "keysets", cloudEncryptionKeyProvider);
     }
 
     public KeysetSnapshot getSnapshot() {
-        return this.getSnapshot(Instant.now());
+        return reader.getSnapshot();
     }
 
     @Override

@@ -9,44 +9,70 @@ import com.uid2.shared.encryption.AesGcm;
 import com.uid2.shared.model.CloudEncryptionKey;
 
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Metrics;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 import java.io.*;
 
 public class CloudEncryptionHelpers {
-    public static String decryptInputStream(InputStream inputStream, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider) throws IOException {
+    public enum DecryptionStatus {
+        SUCCESS,
+        KEY_NOT_FOUND,
+        INTERNAL_DECRYPTION_FAILURE
+    }
+
+    public static String decryptInputStream(InputStream inputStream, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider, String storeName) throws IOException {
         JsonFactory factory = new JsonFactory();
         JsonParser parser = factory.createParser(inputStream);
         int keyId = -1;
         byte[] encryptedPayload = null;
         parser.nextToken();
         while (parser.nextToken() != JsonToken.END_OBJECT) {
-                String fieldName = parser.getCurrentName();
-                if(fieldName.equals("key_id")) {
-                    parser.nextToken();
-                    keyId = parser.getIntValue();
-                }
-                if(fieldName.equals("encrypted_payload")) {
-                    parser.nextToken();
-                    encryptedPayload = parser.getBinaryValue();
-                }
+            String fieldName = parser.getCurrentName();
+            if(fieldName.equals("key_id")) {
+                parser.nextToken();
+                keyId = parser.getIntValue();
+            }
+            if(fieldName.equals("encrypted_payload")) {
+                parser.nextToken();
+                encryptedPayload = parser.getBinaryValue();
+            }
         }
 
         if(keyId == -1 || encryptedPayload == null) {
-            throw new IllegalStateException("failed to parse json");
+            throw new IllegalStateException("Failed to parse JSON");
         }
 
         CloudEncryptionKey decryptionKey = cloudEncryptionKeyProvider.getKey(keyId);
 
         if (decryptionKey == null) {
-            throw new IllegalStateException("No matching S3 key found for decryption for key ID: " + keyId);
+            incrementCounter(DecryptionStatus.KEY_NOT_FOUND, keyId, storeName);
+            throw new IllegalStateException(String.format("No matching key found for S3 file decryption - key_id=%d store=%s", keyId, storeName));
         }
 
-        byte[] secret = Base64.getDecoder().decode(decryptionKey.getSecret());
-        byte[] encryptedBytes = encryptedPayload;
-        byte[] decryptedBytes = AesGcm.decrypt(encryptedBytes, 0, secret);
+        try {
+            byte[] secret = Base64.getDecoder().decode(decryptionKey.getSecret());
+            byte[] decryptedBytes = AesGcm.decrypt(encryptedPayload, 0, secret);
 
-        return new String(decryptedBytes, StandardCharsets.UTF_8);
+            incrementCounter(DecryptionStatus.SUCCESS, keyId, storeName);
+
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            incrementCounter(DecryptionStatus.INTERNAL_DECRYPTION_FAILURE, keyId, storeName);
+            throw new RuntimeException(String.format("Internal decryption failure - key_id=%d store=%s", keyId, storeName), e);
+        }
+    }
+
+    private static void incrementCounter(DecryptionStatus status, int keyId, String storeName) {
+        Counter.builder("uid2.cloud_decryption.runs_total")
+                .description("counter for S3 file decryptions")
+                .tag("key_id", String.valueOf(keyId))
+                .tag("store", storeName)
+                .tag("status", status.toString())
+                .register(Metrics.globalRegistry)
+                .increment();
     }
 }

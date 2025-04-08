@@ -19,11 +19,16 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class AuthMiddlewareTest {
-    @Mock private IAuthorizableProvider authProvider;
-    @Mock private RoutingContext routingContext;
-    @Mock private HttpServerRequest request;
-    @Mock private Handler<RoutingContext> nextHandler;
-    @Mock private IRoleAuthorizable<Role> profile;
+    @Mock
+    private IAuthorizableProvider authProvider;
+    @Mock
+    private RoutingContext routingContext;
+    @Mock
+    private HttpServerRequest request;
+    @Mock
+    private Handler<RoutingContext> nextHandler;
+    @Mock
+    private IRoleAuthorizable<Role> profile;
     private AuthMiddleware auth;
 
     @BeforeEach
