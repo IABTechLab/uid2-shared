@@ -11,11 +11,14 @@ import com.uid2.shared.model.CloudEncryptionKey;
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Tag;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 
 import java.io.*;
+import java.util.List;
 
 public class CloudEncryptionHelpers {
     public static String decryptInputStream(InputStream inputStream, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider, String storeName) throws IOException {
@@ -43,39 +46,43 @@ public class CloudEncryptionHelpers {
         CloudEncryptionKey decryptionKey = cloudEncryptionKeyProvider.getKey(keyId);
 
         if (decryptionKey == null) {
-            Counter.builder("uid2.decryption.missing_total")
-                    .description("counter for failed decryptions due to missing key")
-                    .tag("key_id", String.valueOf(keyId))
-                    .tag("store", storeName)
-                    .register(Metrics.globalRegistry)
-                    .increment();
-
-            throw new IllegalStateException(String.format("No matching S3 key found for decryption - key_id=%d store=%s", keyId, storeName));
+            incrementFailureCounter("Key not found", keyId, storeName);
+            throw new IllegalStateException(String.format("No matching key found for decryption - key_id=%d store=%s", keyId, storeName));
         }
 
-        byte[] secret = Base64.getDecoder().decode(decryptionKey.getSecret());
-        byte[] encryptedBytes = encryptedPayload;
-
         try {
-            byte[] decryptedBytes = AesGcm.decrypt(encryptedBytes, 0, secret);
+            byte[] secret = Base64.getDecoder().decode(decryptionKey.getSecret());
+            byte[] decryptedBytes = AesGcm.decrypt(encryptedPayload, 0, secret);
 
-            Counter.builder("uid2.decryption.success_total")
-                    .description("counter for successful decryptions")
-                    .tag("key_id", String.valueOf(keyId))
-                    .tag("store", storeName)
-                    .register(Metrics.globalRegistry)
-                    .increment();
+            incrementSuccessCounter(keyId, storeName);
 
             return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            Counter.builder("uid2.decryption.failure_total")
-                    .description("counter for failed decryptions")
-                    .tag("key_id", String.valueOf(keyId))
-                    .tag("store", storeName)
-                    .register(Metrics.globalRegistry)
-                    .increment();
-
-            throw new RuntimeException(String.format("Unable to Decrypt - key_id=%d store=%s", keyId, storeName), e);
+            incrementFailureCounter("Internal decryption failure", keyId, storeName);
+            throw new RuntimeException(String.format("Internal decryption failure - key_id=%d store=%s", keyId, storeName), e);
         }
+    }
+
+    private static void incrementSuccessCounter(int keyId, String storeName) {
+        incrementCounter(true, null, keyId, storeName);
+    }
+
+    private static void incrementFailureCounter(String reason, int keyId, String storeName) {
+        incrementCounter(false, reason, keyId, storeName);
+    }
+
+    private static void incrementCounter(boolean success, String reason, int keyId, String storeName) {
+        List<Tag> tags = new ArrayList<>();
+        tags.add(Tag.of("key_id", String.valueOf(keyId)));
+        tags.add(Tag.of("store", storeName));
+        if (!success) {
+            tags.add(Tag.of("reason", reason));
+        }
+
+        Counter.builder(String.format("uid2.cloud_decryption.%s_total", success ? "success" : "failure"))
+                .description(String.format("counter for %s decryptions", success ? "successful" : "failed"))
+                .tags(tags)
+                .register(Metrics.globalRegistry)
+                .increment();
     }
 }
