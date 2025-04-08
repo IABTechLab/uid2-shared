@@ -124,11 +124,11 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
     }
 
     private SaltSnapshot loadSnapshot(JsonObject spec, String firstLevelSalt, SaltEntryBuilder entryBuilder, Instant now) throws Exception {
-        Instant defaultExpires = now.plus(365, ChronoUnit.DAYS);
-        Instant effective = Instant.ofEpochMilli(spec.getLong("effective"));
-        Instant expires = Instant.ofEpochMilli(spec.getLong("expires", defaultExpires.toEpochMilli()));
+        final Instant defaultExpires = now.plus(365, ChronoUnit.DAYS);
+        final Instant effective = Instant.ofEpochMilli(spec.getLong("effective"));
+        final Instant expires = Instant.ofEpochMilli(spec.getLong("expires", defaultExpires.toEpochMilli()));
 
-        String path = spec.getString("location");
+        final String path = spec.getString("location");
         Integer size = spec.getInteger("size");
         SaltEntry[] entries = readInputStream(this.contentStreamProvider.download(path), entryBuilder, size);
 
@@ -230,11 +230,11 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
 
         public SaltEntry toEntry(String line) {
             try {
-                String[] fields = line.split(",");
-                long id = Integer.parseInt(fields[0]);
-                String hashedId = this.idHashingScheme.encode(id);
-                long lastUpdated = Long.parseLong(fields[1]);
-                String salt = fields[2];
+                final String[] fields = line.split(",");
+                final long id = Integer.parseInt(fields[0]);
+                final String hashedId = this.idHashingScheme.encode(id);
+                final long lastUpdated = Long.parseLong(fields[1]);
+                final String salt = fields[2];
                 return new SaltEntry(id, hashedId, lastUpdated, salt);
             } catch (Exception e) {
                 throw new RuntimeException("Trouble parsing Salt Entry " + line, e);
