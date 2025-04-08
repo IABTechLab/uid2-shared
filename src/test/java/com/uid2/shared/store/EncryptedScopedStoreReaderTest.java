@@ -58,7 +58,7 @@ public class EncryptedScopedStoreReaderTest {
     }
 
     @Test
-    void loadsAndDecryptsContentSuccessfully() throws Exception {
+    public void loadsAndDecryptsContentSuccessfully() throws Exception {
         // Simulate encrypted content
         String secretKey = encryptionKey.getSecret();
         byte[] secretKeyBytes = Base64.getDecoder().decode(secretKey);
@@ -85,7 +85,7 @@ public class EncryptedScopedStoreReaderTest {
     }
 
     @Test
-    void raisesExceptionWhenNoDecryptionKeyFound() throws Exception {
+    public void raisesExceptionWhenNoDecryptionKeyFound() throws Exception {
         // Simulate encrypted content with an invalid key ID
         String secretKey = encryptionKey.getSecret();
         byte[] secretKeyBytes = Base64.getDecoder().decode(secretKey);
@@ -107,7 +107,7 @@ public class EncryptedScopedStoreReaderTest {
     }
 
     @Test
-    void testHandlingInvalidEncryptionKey() throws Exception {
+    public void testHandlingInvalidEncryptionKey() throws Exception {
         // Set key provider to return an empty map
         when(keyProvider.getAll()).thenReturn(new HashMap<>());
         when(keyProvider.getKey(anyInt())).thenReturn(null);
@@ -132,7 +132,7 @@ public class EncryptedScopedStoreReaderTest {
     }
 
     @Test
-    void testLoadWithMultipleEncryptionKeys() throws Exception {
+    public void testLoadWithMultipleEncryptionKeys() throws Exception {
         // Generate a new key and add it to the key provider
         byte[] newKeyBytes = new byte[32];
         new Random().nextBytes(newKeyBytes);
