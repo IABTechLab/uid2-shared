@@ -11,16 +11,19 @@ import com.uid2.shared.model.CloudEncryptionKey;
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Metrics;
-import io.micrometer.core.instrument.Tag;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Base64;
 
 import java.io.*;
-import java.util.List;
 
 public class CloudEncryptionHelpers {
+    public enum DecryptionStatus {
+        SUCCESS,
+        KEY_NOT_FOUND,
+        INTERNAL_DECRYPTION_FAILURE
+    }
+
     public static String decryptInputStream(InputStream inputStream, RotatingCloudEncryptionKeyProvider cloudEncryptionKeyProvider, String storeName) throws IOException {
         JsonFactory factory = new JsonFactory();
         JsonParser parser = factory.createParser(inputStream);
@@ -46,7 +49,7 @@ public class CloudEncryptionHelpers {
         CloudEncryptionKey decryptionKey = cloudEncryptionKeyProvider.getKey(keyId);
 
         if (decryptionKey == null) {
-            incrementFailureCounter("Key not found", keyId, storeName);
+            incrementCounter(DecryptionStatus.KEY_NOT_FOUND, keyId, storeName);
             throw new IllegalStateException(String.format("No matching key found for S3 file decryption - key_id=%d store=%s", keyId, storeName));
         }
 
@@ -54,34 +57,21 @@ public class CloudEncryptionHelpers {
             byte[] secret = Base64.getDecoder().decode(decryptionKey.getSecret());
             byte[] decryptedBytes = AesGcm.decrypt(encryptedPayload, 0, secret);
 
-            incrementSuccessCounter(keyId, storeName);
+            incrementCounter(DecryptionStatus.SUCCESS, keyId, storeName);
 
             return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
-            incrementFailureCounter("Internal decryption failure", keyId, storeName);
+            incrementCounter(DecryptionStatus.INTERNAL_DECRYPTION_FAILURE, keyId, storeName);
             throw new RuntimeException(String.format("Internal decryption failure - key_id=%d store=%s", keyId, storeName), e);
         }
     }
 
-    private static void incrementSuccessCounter(int keyId, String storeName) {
-        incrementCounter(true, null, keyId, storeName);
-    }
-
-    private static void incrementFailureCounter(String reason, int keyId, String storeName) {
-        incrementCounter(false, reason, keyId, storeName);
-    }
-
-    private static void incrementCounter(boolean success, String reason, int keyId, String storeName) {
-        List<Tag> tags = new ArrayList<>();
-        tags.add(Tag.of("key_id", String.valueOf(keyId)));
-        tags.add(Tag.of("store", storeName));
-        if (!success) {
-            tags.add(Tag.of("reason", reason));
-        }
-
-        Counter.builder(String.format("uid2.cloud_decryption.%s_total", success ? "success" : "failure"))
-                .description(String.format("counter for %s decryptions", success ? "successful" : "failed"))
-                .tags(tags)
+    private static void incrementCounter(DecryptionStatus status, int keyId, String storeName) {
+        Counter.builder("uid2.cloud_decryption.runs_total")
+                .description("counter for S3 file decryptions")
+                .tag("key_id", String.valueOf(keyId))
+                .tag("store", storeName)
+                .tag("status", status.toString())
                 .register(Metrics.globalRegistry)
                 .increment();
     }
