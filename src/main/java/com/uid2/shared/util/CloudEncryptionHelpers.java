@@ -47,7 +47,7 @@ public class CloudEncryptionHelpers {
 
         if (decryptionKey == null) {
             incrementFailureCounter("Key not found", keyId, storeName);
-            throw new IllegalStateException(String.format("No matching key found for decryption - key_id=%d store=%s", keyId, storeName));
+            throw new IllegalStateException(String.format("No matching key found for S3 file decryption - key_id=%d store=%s", keyId, storeName));
         }
 
         try {

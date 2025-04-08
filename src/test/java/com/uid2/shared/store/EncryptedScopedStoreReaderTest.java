@@ -20,28 +20,28 @@ import java.util.stream.Collectors;
 import static com.uid2.shared.TestUtilites.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class EncryptedScopedStoreReaderTest {
+public class EncryptedScopedStoreReaderTest {
     private final CloudPath metadataPath = new CloudPath("test/test-metadata.json");
     private final CloudPath dataPath = new CloudPath("test/data.json");
     private final String dataType = "test-data-type";
-    private final EncryptedScope scope = new EncryptedScope(metadataPath,123, false);
+    private final int testSiteId = 123;
+    private final EncryptedScope scope = new EncryptedScope(metadataPath,testSiteId, false);
     private final JsonObject metadata = new JsonObject()
             .put(dataType, new JsonObject().put(
                     "location", dataPath.toString()
             ));
-    private InMemoryStorageMock storage;
     private final TestDataParser parser = new TestDataParser();
+
+    private InMemoryStorageMock storage;
     private RotatingCloudEncryptionKeyProvider keyProvider;
-    private final int testSiteId = 123;
     private CloudEncryptionKey encryptionKey;
 
     @BeforeEach
-    void setUp() {
+    public void setup() {
         storage = new InMemoryStorageMock();
         keyProvider = mock(RotatingCloudEncryptionKeyProvider.class);
 
@@ -103,7 +103,7 @@ class EncryptedScopedStoreReaderTest {
 
         assertThatThrownBy(() -> reader.loadContent(metadata, dataType))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("No matching S3 key found for decryption");
+                .hasMessageContaining("No matching key found for S3 file decryption");
     }
 
     @Test
@@ -128,7 +128,7 @@ class EncryptedScopedStoreReaderTest {
 
         assertThatThrownBy(() -> reader.loadContent(metadata, dataType))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("No matching S3 key found for decryption");
+                .hasMessageContaining("No matching key found for S3 file decryption");
     }
 
     @Test
@@ -167,30 +167,12 @@ class EncryptedScopedStoreReaderTest {
         assertThat(actual).isEqualTo(expected);
     }
 
-    private static class TestData {
-        private final String field1;
-
-        public TestData(String field1) {
-            this.field1 = field1;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            TestData testData = (TestData) o;
-            return Objects.equals(field1, testData.field1);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(field1);
-        }
+    private record TestData(String field1) {
     }
 
     private static class TestDataParser implements Parser<Collection<TestData>> {
         @Override
-        public ParsingResult<Collection<TestData>> deserialize(InputStream inputStream) throws IOException {
+        public ParsingResult<Collection<TestData>> deserialize(InputStream inputStream) {
             List<TestData> result = Arrays.stream(readInputStream(inputStream)
                             .split(","))
                     .map(TestData::new)
@@ -204,4 +186,3 @@ class EncryptedScopedStoreReaderTest {
         }
     }
 }
-
