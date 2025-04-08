@@ -12,19 +12,21 @@ public class ClientKeyTest {
 
     @Test
     public void verifyDisabledPropIsOptional() throws Exception {
-        final String testJson = "{\n" +
-                "    \"key\": \"test-admin-key\",\n" +
-                "    \"secret\": \"\",\n" +
-                "    \"name\": \"admin@uid2.com\",\n" +
-                "    \"contact\": \"admin@uid2.com\",\n" +
-                "    \"created\": 1617149276,\n" +
-                "    \"roles\": [\n" +
-                "        \"MAPPER\",\n" +
-                "        \"GENERATOR\"\n" +
-                "    ],\n" +
-                "    \"site_id\": 3,\n" +
-                "    \"service_id\": 5\n" +
-                "}";
+        final String testJson = """
+                    {
+                        "key": "test-admin-key",
+                        "secret": "",
+                        "name": "admin@uid2.com",
+                        "contact": "admin@uid2.com",
+                        "created": 1617149276,
+                        "roles": [
+                            "MAPPER",
+                            "GENERATOR"
+                        ],
+                        "site_id": 3,
+                        "service_id": 5
+                    }
+                """;
         ClientKey c = OBJECT_MAPPER.readValue(testJson, ClientKey.class);
 
         assertFalse(c.isDisabled());
@@ -32,17 +34,19 @@ public class ClientKeyTest {
 
     @Test
     public void verifyDisabledPropSetTrue() throws Exception {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
-                "        \"secret\": \"\",\n" +
-                "        \"name\": \"admin@uid2.com\",\n" +
-                "        \"contact\": \"admin@uid2.com\",\n" +
-                "        \"created\": 1617149276,\n" +
-                "        \"disabled\": true,\n" +
-                "        \"roles\": [ \"MAPPER\", \"GENERATOR\" ],\n" +
-                "        \"site_id\": 3,\n" +
-                "        \"service_id\": 5\n" +
-                "    }";
+        final String testJson = """
+                    {
+                        "key": "test-admin-key",
+                        "secret": "",
+                        "name": "admin@uid2.com",
+                        "contact": "admin@uid2.com",
+                        "created": 1617149276,
+                        "disabled": true,
+                        "roles": [ "MAPPER", "GENERATOR" ],
+                        "site_id": 3,
+                        "service_id": 5
+                    }
+                """;
         ClientKey c = OBJECT_MAPPER.readValue(testJson, ClientKey.class);
 
         assertTrue(c.isDisabled());
@@ -50,17 +54,19 @@ public class ClientKeyTest {
 
     @Test
     public void verifyDisabledPropSetFalse() throws Exception {
-        final String testJson = "    {\n" +
-                "        \"key\": \"test-admin-key\",\n" +
-                "        \"secret\": \"\",\n" +
-                "        \"name\": \"admin@uid2.com\",\n" +
-                "        \"contact\": \"admin@uid2.com\",\n" +
-                "        \"created\": 1617149276,\n" +
-                "        \"disabled\": false,\n" +
-                "        \"roles\": [ \"MAPPER\", \"GENERATOR\" ],\n" +
-                "        \"site_id\": 3,\n" +
-                "        \"service_id\": 5\n" +
-                "    }";
+        final String testJson = """
+                    {
+                        "key": "test-admin-key",
+                        "secret": "",
+                        "name": "admin@uid2.com",
+                        "contact": "admin@uid2.com",
+                        "created": 1617149276,
+                        "disabled": false,
+                        "roles": [ "MAPPER", "GENERATOR" ],
+                        "site_id": 3,
+                        "service_id": 5
+                    }
+                """;
         ClientKey c = OBJECT_MAPPER.readValue(testJson, ClientKey.class);
 
         assertFalse(c.isDisabled());

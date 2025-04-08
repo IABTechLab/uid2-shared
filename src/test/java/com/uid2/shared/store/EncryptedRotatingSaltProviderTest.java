@@ -7,11 +7,13 @@ import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
 import com.uid2.shared.store.scope.EncryptedScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -24,20 +26,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class EncryptedRotatingSaltProviderTest {
-    private AutoCloseable mocks;
     @Mock
     private ICloudStorage cloudStorage;
-
     @Mock
     private RotatingCloudEncryptionKeyProvider keyProvider;
     private CloudEncryptionKey encryptionKey;
 
     @BeforeEach
     public void setup() {
-
-        mocks = MockitoAnnotations.openMocks(this);
-
         byte[] keyBytes = new byte[32];
         new Random().nextBytes(keyBytes);
         String base64Key = Base64.getEncoder().encodeToString(keyBytes);
@@ -47,11 +46,6 @@ public class EncryptedRotatingSaltProviderTest {
         mockKeyMap.put(encryptionKey.getId(), encryptionKey);
         when(keyProvider.getAll()).thenReturn(mockKeyMap);
         when(keyProvider.getKey(1)).thenReturn(mockKeyMap.get(1));
-    }
-
-    @AfterEach
-    public void teardown() throws Exception {
-        mocks.close();
     }
 
     private InputStream getEncryptedStream(String content) {

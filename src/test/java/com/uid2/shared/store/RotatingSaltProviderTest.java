@@ -3,11 +3,10 @@ package com.uid2.shared.store;
 import com.uid2.shared.cloud.ICloudStorage;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -18,20 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class RotatingSaltProviderTest {
-    private AutoCloseable mocks;
     @Mock
     private ICloudStorage cloudStorage;
-
-    @BeforeEach
-    public void setup() {
-        mocks = MockitoAnnotations.openMocks(this);
-    }
-
-    @AfterEach
-    public void teardown() throws Exception {
-        mocks.close();
-    }
 
     @Test
     public void loadSaltSingleVersion() throws Exception {
@@ -64,13 +53,13 @@ public class RotatingSaltProviderTest {
         final String effectiveTimeString = String.valueOf(generatedTime.getEpochSecond() * 1000L);
         final String salts =
                 "1000000," + effectiveTimeString + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=\n" +
-                "1000001," + effectiveTimeString + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=\n" +
-                "1000002," + effectiveTimeString + ",+a5LPajo7uPfNcc9HH0Tn25b3RnSNZwe8YaAKcyeHaA=\n" +
-                "1000003," + effectiveTimeString + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=\n" +
-                "1000004," + effectiveTimeString + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=\n" +
-                "1000005," + effectiveTimeString + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=\n" +
-                "1000006," + effectiveTimeString + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=\n" +
-                "1000007," + effectiveTimeString + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=";
+                        "1000001," + effectiveTimeString + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=\n" +
+                        "1000002," + effectiveTimeString + ",+a5LPajo7uPfNcc9HH0Tn25b3RnSNZwe8YaAKcyeHaA=\n" +
+                        "1000003," + effectiveTimeString + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=\n" +
+                        "1000004," + effectiveTimeString + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=\n" +
+                        "1000005," + effectiveTimeString + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=\n" +
+                        "1000006," + effectiveTimeString + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=\n" +
+                        "1000007," + effectiveTimeString + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=";
 
         when(cloudStorage.download("metadata"))
                 .thenReturn(new ByteArrayInputStream(metadataJson.toString().getBytes(StandardCharsets.US_ASCII)));
@@ -130,25 +119,25 @@ public class RotatingSaltProviderTest {
         final String effectiveTimeStringV1 = String.valueOf(generatedTimeV1.getEpochSecond() * 1000L);
         final String saltsV1 =
                 "1000000," + effectiveTimeStringV1 + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=\n" +
-                "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=\n" +
-                "1000002," + effectiveTimeStringV1 + ",+a5LPajo7uPfNcc9HH0Tn25b3RnSNZwe8YaAKcyeHaA=\n" +
-                "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=\n" +
-                "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=\n" +
-                "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=\n" +
-                "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=\n" +
-                "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=";
+                        "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=\n" +
+                        "1000002," + effectiveTimeStringV1 + ",+a5LPajo7uPfNcc9HH0Tn25b3RnSNZwe8YaAKcyeHaA=\n" +
+                        "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=\n" +
+                        "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=\n" +
+                        "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=\n" +
+                        "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=\n" +
+                        "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=";
 
         // update key 1000002
         final String effectiveTimeStringV2 = String.valueOf(generatedTimeV2.getEpochSecond() * 1000L);
         final String saltsV2 =
                 "1000000," + effectiveTimeStringV1 + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=\n" +
-                "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=\n" +
-                "1000002," + effectiveTimeStringV2 + ",AP73KwZscb1ltQQH/B7fdbHUnMmbJNlRULxzklXUqaA=\n" +
-                "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=\n" +
-                "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=\n" +
-                "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=\n" +
-                "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=\n" +
-                "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=";
+                        "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=\n" +
+                        "1000002," + effectiveTimeStringV2 + ",AP73KwZscb1ltQQH/B7fdbHUnMmbJNlRULxzklXUqaA=\n" +
+                        "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=\n" +
+                        "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=\n" +
+                        "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=\n" +
+                        "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=\n" +
+                        "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=";
 
         when(cloudStorage.download("metadata"))
                 .thenReturn(new ByteArrayInputStream(metadataJson.toString().getBytes(StandardCharsets.US_ASCII)));

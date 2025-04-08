@@ -27,7 +27,6 @@ public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetad
     private final StoreScope scope;
     private final AuthorizableStore<OperatorKey> operatorKeyStore;
 
-
     public RotatingOperatorKeyProvider(DownloadCloudStorage metadataStreamProvider, DownloadCloudStorage contentStreamProvider, StoreScope scope) {
         this.metadataStreamProvider = metadataStreamProvider;
         this.contentStreamProvider = contentStreamProvider;
@@ -65,7 +64,7 @@ public class RotatingOperatorKeyProvider implements IOperatorKeyProvider, IMetad
         String operatorKeysJson = CharStreams.toString(new InputStreamReader(contentStream, Charsets.UTF_8));
         List<OperatorKey> operatorKeys = Arrays.asList(OBJECT_MAPPER.readValue(operatorKeysJson, OperatorKey[].class));
         operatorKeyStore.refresh(operatorKeys);
-        LOGGER.info("Loaded " + operatorKeys.size() + " operator profiles");
+        LOGGER.info("Loaded {} operator profiles", operatorKeys.size());
         return operatorKeys.size();
     }
 

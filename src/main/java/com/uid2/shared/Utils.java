@@ -28,20 +28,14 @@ public class Utils {
 
     public static boolean isProductionEnvironment() {
         // detect if it is running in KUBERNETES_SERVICE_HOST
-        if (System.getenv("KUBERNETES_SERVICE_HOST") == null) {
-            return false;
-        } else {
-            return true;
-        }
+        return System.getenv("KUBERNETES_SERVICE_HOST") != null;
     }
 
     public static int getPortOffset() {
         // read port_offset from env, the reason this can't be read from vertx-config
         // is Prometheus port needs to be specified before vertx creation
         String val = System.getenv("port_offset");
-        int portOffset = 0;
-        if (val != null) portOffset = Integer.valueOf(val);
-        return portOffset;
+        return val != null ? Integer.parseInt(val) : 0;
     }
 
     public static boolean ensureDirectoryExists(String dir) {
@@ -78,7 +72,7 @@ public class Utils {
         final InputStreamReader reader = new InputStreamReader(stream);
         final char[] buff = new char[1024];
         final StringBuilder sb = new StringBuilder();
-        for (int count; (count = reader.read(buff, 0, buff.length)) > 0; ) {
+        for (int count; (count = reader.read(buff, 0, buff.length)) > 0;) {
             sb.append(buff, 0, count);
         }
         return sb.toString();
@@ -91,7 +85,6 @@ public class Utils {
         while ((nRead = stream.read(data, 0, data.length)) != -1) {
             buffer.write(data, 0, nRead);
         }
-
         buffer.flush();
         return buffer.toByteArray();
     }
@@ -187,9 +180,7 @@ public class Utils {
 
     public static InputStream convertHttpResponseToInputStream(HttpResponse<String> httpResponse) {
         String responseBody = httpResponse.body();
-
         byte[] responseBytes = responseBody.getBytes();
-
         return new ByteArrayInputStream(responseBytes);
     }
     public static MessageDigest createMessageDigestSHA512() {

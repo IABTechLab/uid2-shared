@@ -9,11 +9,11 @@ import com.uid2.shared.store.scope.GlobalScope;
 import com.uid2.shared.util.Mapper;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -25,22 +25,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class RotatingSiteStoreTest {
     private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
-    private AutoCloseable mocks;
+
     @Mock
-    ICloudStorage cloudStorage;
+    private ICloudStorage cloudStorage;
     private RotatingSiteStore siteStore;
 
     @BeforeEach
     public void setup() {
-        mocks = MockitoAnnotations.openMocks(this);
         siteStore = new RotatingSiteStore(cloudStorage, new GlobalScope(new CloudPath("metadata")));
-    }
-
-    @AfterEach
-    public void teardown() throws Exception {
-        mocks.close();
     }
 
     private JsonObject makeMetadata(String location) {
@@ -52,7 +47,6 @@ public class RotatingSiteStoreTest {
     }
 
     private Site addSite(JsonArray content, int siteId, String name, String description, boolean enabled, boolean visible, long created, Set<String> domains, Set<String> appNames) {
-
         Site s = new Site(siteId, name, description, enabled, new HashSet<>(), domains, appNames, visible, created);
         JsonNode jsonNode = OBJECT_MAPPER.convertValue(s, JsonNode.class);
         content.add(jsonNode);
@@ -64,7 +58,9 @@ public class RotatingSiteStoreTest {
     public void loadContentEmptyArray() throws Exception {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
+
         final long count = siteStore.loadContent(makeMetadata("locationPath"));
+
         assertEquals(0, count);
         assertEquals(0, siteStore.getAllSites().size());
     }
@@ -79,6 +75,7 @@ public class RotatingSiteStoreTest {
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = siteStore.loadContent(makeMetadata("locationPath"));
+
         assertEquals(4, count);
 
         assertEquals(s1, siteStore.getSite(123));

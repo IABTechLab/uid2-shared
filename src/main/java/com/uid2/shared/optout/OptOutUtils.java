@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uid2.shared.Const;
 import com.uid2.shared.Utils;
 import com.uid2.shared.cloud.CloudUtils;
+import com.uid2.shared.util.Mapper;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -28,14 +29,15 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class OptOutUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(OptOutUtils.class);
+    private static final ObjectMapper OBJECT_MAPPER = Mapper.getInstance();
+
     // delta file name pattern: optout-delta-<replica_id>_yyyy-MM-ddTHH:mm:ssZ.dat
     public static final String prefixDeltaFile = "optout-delta-";
     // partition file name pattern: optout-partition-<replica_id>_yyyy-MM-ddTHH:MM:SSZ.dat
     public static final String prefixPartitionFile = "optout-partition-";
-    private static final Logger LOGGER = LoggerFactory.getLogger(OptOutUtils.class);
 
     public static Random rand = new Random();
-    public static ObjectMapper mapper = new ObjectMapper();
     public static String tmpDir = System.getProperty("java.io.tmpdir");
 
     public static Base64.Encoder base64Encoder = Base64.getEncoder();
@@ -93,7 +95,7 @@ public class OptOutUtils {
         byte[] data = new byte[len / 2];
         for (int i = 0; i < len; i += 2) {
             data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                + Character.digit(s.charAt(i + 1), 16));
+                    + Character.digit(s.charAt(i + 1), 16));
         }
         return data;
     }
@@ -130,7 +132,7 @@ public class OptOutUtils {
 
     public static String[] jsonArrayToStringArray(String json) {
         try {
-            return mapper.readValue(json, String[].class);
+            return OBJECT_MAPPER.readValue(json, String[].class);
         } catch (Exception ex) {
             // this is internal message and not expected to be invalid, returning null
             return null;
@@ -143,7 +145,7 @@ public class OptOutUtils {
 
     public static String toJson(Collection<String> strs) {
         try {
-            return mapper.writeValueAsString(strs);
+            return OBJECT_MAPPER.writeValueAsString(strs);
         } catch (Exception ex) {
             // this is internal message and not expected to be invalid, returning null
             return null;
@@ -520,9 +522,9 @@ public class OptOutUtils {
     // last partition file timestamp
     public static Instant lastPartitionTimestamp(Collection<String> collection) {
         Optional<Instant> tsOfLast = collection.stream()
-            .filter(p -> OptOutUtils.isPartitionFile(p))
-            .map(OptOutUtils::getFileTimestamp)
-            .sorted(Comparator.reverseOrder()).findFirst();
+                .filter(p -> OptOutUtils.isPartitionFile(p))
+                .map(OptOutUtils::getFileTimestamp)
+                .sorted(Comparator.reverseOrder()).findFirst();
 
         return tsOfLast.isPresent() ? tsOfLast.get() : Instant.EPOCH;
     }
@@ -543,11 +545,11 @@ public class OptOutUtils {
 
     public static String getDeltaConsumerDir(JsonObject config) {
         return String.format("%sconsumer/delta",
-            CloudUtils.normalizDirPath(config.getString(Const.Config.OptOutDataDirProp)));
+                CloudUtils.normalizDirPath(config.getString(Const.Config.OptOutDataDirProp)));
     }
 
     public static String getPartitionConsumerDir(JsonObject config) {
         return String.format("%sconsumer/partition",
-            CloudUtils.normalizDirPath(config.getString(Const.Config.OptOutDataDirProp)));
+                CloudUtils.normalizDirPath(config.getString(Const.Config.OptOutDataDirProp)));
     }
 }
