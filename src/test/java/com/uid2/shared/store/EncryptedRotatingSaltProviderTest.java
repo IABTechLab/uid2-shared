@@ -256,7 +256,7 @@ public class EncryptedRotatingSaltProviderTest {
         assertEquals(FIRST_LEVEL_SALT, snapshot.getFirstLevelSalt());
         assertTrue(snapshot.getModifiedSince(Instant.now().minus(1, ChronoUnit.HOURS)).isEmpty());
         assertEquals(1, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).size());
-        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).get(0).getId());
+        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).getFirst().getId());
     }
 
     @Test
@@ -338,8 +338,6 @@ public class EncryptedRotatingSaltProviderTest {
         assertEquals(FIRST_LEVEL_SALT, snapshot.getFirstLevelSalt());
         assertTrue(snapshot.getModifiedSince(Instant.now().minus(1, ChronoUnit.HOURS)).isEmpty());
         assertEquals(1, snapshot.getModifiedSince(Instant.now().minus(49, ChronoUnit.HOURS)).size());
-        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(49, ChronoUnit.HOURS)).get(0).getId());
+        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(49, ChronoUnit.HOURS)).getFirst().getId());
     }
-
-
 }

@@ -89,7 +89,7 @@ class AzureCCCoreAttestationServiceTest {
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertFalse(ar.succeeded());
-            assertTrue(ar.cause() instanceof AttestationException);
+            assertInstanceOf(AttestationException.class, ar.cause());
         });
     }
 
@@ -113,7 +113,7 @@ class AzureCCCoreAttestationServiceTest {
         provider.registerEnclave(ENCLAVE_ID);
         attest(provider, ar -> {
             assertFalse(ar.succeeded());
-            assertTrue(ar.cause() instanceof AttestationException);
+            assertInstanceOf(AttestationException.class, ar.cause());
         });
     }
 

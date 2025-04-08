@@ -11,6 +11,11 @@ import com.uid2.shared.store.scope.EncryptedScope;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -21,35 +26,36 @@ import static com.uid2.shared.TestUtilites.toInputStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class EncryptedScopedStoreReaderTest {
-    private final CloudPath metadataPath = new CloudPath("test/test-metadata.json");
-    private final CloudPath dataPath = new CloudPath("test/data.json");
-    private final String dataType = "test-data-type";
-    private final int testSiteId = 123;
-    private final EncryptedScope scope = new EncryptedScope(metadataPath,testSiteId, false);
-    private final JsonObject metadata = new JsonObject()
-            .put(dataType, new JsonObject().put(
-                    "location", dataPath.toString()
+    private static final CloudPath METADATA_PATH = new CloudPath("test/test-metadata.json");
+    private static final CloudPath DATA_PATH = new CloudPath("test/data.json");
+    private static final String DATA_TYPE = "test-data-type";
+    private static final int TEST_SITE_ID = 123;
+    private static final EncryptedScope SCOPE = new EncryptedScope(METADATA_PATH, TEST_SITE_ID, false);
+    private static final JsonObject METADATA = new JsonObject()
+            .put(DATA_TYPE, new JsonObject().put(
+                    "location", DATA_PATH.toString()
             ));
-    private final TestDataParser parser = new TestDataParser();
+    private static final TestDataParser PARSER = new TestDataParser();
 
-    private InMemoryStorageMock storage;
+    @Mock
     private RotatingCloudEncryptionKeyProvider keyProvider;
+    private InMemoryStorageMock storage;
     private CloudEncryptionKey encryptionKey;
 
     @BeforeEach
     public void setup() {
         storage = new InMemoryStorageMock();
-        keyProvider = mock(RotatingCloudEncryptionKeyProvider.class);
 
         // Generate a valid 32-byte AES key
         byte[] keyBytes = new byte[32];
         new Random().nextBytes(keyBytes);
         String base64Key = Base64.getEncoder().encodeToString(keyBytes);
-        encryptionKey = new CloudEncryptionKey(1, testSiteId, 0, 0, base64Key);
+        encryptionKey = new CloudEncryptionKey(1, TEST_SITE_ID, 0, 0, base64Key);
 
         Map<Integer, CloudEncryptionKey> mockKeyMap = new HashMap<>();
         mockKeyMap.put(encryptionKey.getId(), encryptionKey);
@@ -69,12 +75,12 @@ public class EncryptedScopedStoreReaderTest {
                 .put("key_id", encryptionKey.getId())
                 .put("encrypted_payload", encryptedPayloadBase64);
 
-        storage.upload(toInputStream(encryptedJson.encodePrettily()), dataPath.toString());
-        storage.upload(toInputStream(metadata.encodePrettily()), metadataPath.toString());
+        storage.upload(toInputStream(encryptedJson.encodePrettily()), DATA_PATH.toString());
+        storage.upload(toInputStream(METADATA.encodePrettily()), METADATA_PATH.toString());
 
-        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, keyProvider);
+        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, SCOPE, PARSER, DATA_TYPE, keyProvider);
 
-        reader.loadContent(metadata, dataType);
+        reader.loadContent(METADATA, DATA_TYPE);
         Collection<TestData> actual = reader.getSnapshot();
 
         Collection<TestData> expected = ImmutableList.of(
@@ -96,12 +102,12 @@ public class EncryptedScopedStoreReaderTest {
                 .put("key_id", 999) // Invalid key ID
                 .put("encrypted_payload", encryptedPayloadBase64);
 
-        storage.upload(toInputStream(encryptedJson.encodePrettily()), dataPath.toString());
-        storage.upload(toInputStream(metadata.encodePrettily()), metadataPath.toString());
+        storage.upload(toInputStream(encryptedJson.encodePrettily()), DATA_PATH.toString());
+        storage.upload(toInputStream(METADATA.encodePrettily()), METADATA_PATH.toString());
 
-        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, keyProvider);
+        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, SCOPE, PARSER, DATA_TYPE, keyProvider);
 
-        assertThatThrownBy(() -> reader.loadContent(metadata, dataType))
+        assertThatThrownBy(() -> reader.loadContent(METADATA, DATA_TYPE))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("No matching key found for S3 file decryption");
     }
@@ -121,12 +127,12 @@ public class EncryptedScopedStoreReaderTest {
                 .put("key_id", encryptionKey.getId())
                 .put("encrypted_payload", encryptedPayloadBase64);
 
-        storage.upload(toInputStream(encryptedJson.encodePrettily()), dataPath.toString());
-        storage.upload(toInputStream(metadata.encodePrettily()), metadataPath.toString());
+        storage.upload(toInputStream(encryptedJson.encodePrettily()), DATA_PATH.toString());
+        storage.upload(toInputStream(METADATA.encodePrettily()), METADATA_PATH.toString());
 
-        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, keyProvider);
+        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, SCOPE, PARSER, DATA_TYPE, keyProvider);
 
-        assertThatThrownBy(() -> reader.loadContent(metadata, dataType))
+        assertThatThrownBy(() -> reader.loadContent(METADATA, DATA_TYPE))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("No matching key found for S3 file decryption");
     }
@@ -137,7 +143,7 @@ public class EncryptedScopedStoreReaderTest {
         byte[] newKeyBytes = new byte[32];
         new Random().nextBytes(newKeyBytes);
         String base64NewKey = Base64.getEncoder().encodeToString(newKeyBytes);
-        CloudEncryptionKey newKey = new CloudEncryptionKey(2, testSiteId, 0, 0, base64NewKey);
+        CloudEncryptionKey newKey = new CloudEncryptionKey(2, TEST_SITE_ID, 0, 0, base64NewKey);
 
         Map<Integer, CloudEncryptionKey> mockKeyMap = new HashMap<>();
         mockKeyMap.put(encryptionKey.getId(), encryptionKey);
@@ -152,12 +158,12 @@ public class EncryptedScopedStoreReaderTest {
                 .put("key_id", newKey.getId())
                 .put("encrypted_payload", encryptedPayloadBase64);
 
-        storage.upload(toInputStream(encryptedJson.encodePrettily()), dataPath.toString());
-        storage.upload(toInputStream(metadata.encodePrettily()), metadataPath.toString());
+        storage.upload(toInputStream(encryptedJson.encodePrettily()), DATA_PATH.toString());
+        storage.upload(toInputStream(METADATA.encodePrettily()), METADATA_PATH.toString());
 
-        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, scope, parser, dataType, keyProvider);
+        EncryptedScopedStoreReader<Collection<TestData>> reader = new EncryptedScopedStoreReader<>(storage, SCOPE, PARSER, DATA_TYPE, keyProvider);
 
-        reader.loadContent(metadata, dataType);
+        reader.loadContent(METADATA, DATA_TYPE);
         Collection<TestData> actual = reader.getSnapshot();
 
         Collection<TestData> expected = ImmutableList.of(
