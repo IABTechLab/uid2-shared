@@ -106,9 +106,9 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
         HttpResponse<String> httpResponse;
         httpResponse = sendHttpRequest(path, attestationToken);
-//        if (httpResponse.statusCode() != 200) {
-//            throw new IOException(String.format("Non-success response from core on request to %s. Status code: %d, Response: %s", path, httpResponse.statusCode(), httpResponse.body()));
-//        }
+        if (httpResponse.statusCode() != 200) {
+            throw new CloudStorageException(String.format("Non-success response from core on request to %s. Status code: %d, Response: %s", path, httpResponse.statusCode(), httpResponse.body()));
+        }
         return Utils.convertHttpResponseToInputStream(httpResponse);
     }
 
