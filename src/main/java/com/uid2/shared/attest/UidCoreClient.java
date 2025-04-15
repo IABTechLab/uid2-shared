@@ -97,7 +97,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         return (proxy == null ? new URL(path).openConnection() : new URL(path).openConnection(proxy)).getInputStream();
     }
 
-    private InputStream getWithAttest(String path) throws IOException, AttestationResponseHandlerException {
+    private InputStream getWithAttest(String path) throws IOException, AttestationResponseHandlerException, CloudStorageException {
         if (!attestationResponseHandler.attested()) {
             attestationResponseHandler.attest();
         }
@@ -106,7 +106,9 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
 
         HttpResponse<String> httpResponse;
         httpResponse = sendHttpRequest(path, attestationToken);
-
+        if (httpResponse.statusCode() != 200) {
+            throw new CloudStorageException(String.format("Non-success response from core on request to %s. Status code: %d. Response: %s", path, httpResponse.statusCode(), httpResponse.body()));
+        }
         return Utils.convertHttpResponseToInputStream(httpResponse);
     }
 

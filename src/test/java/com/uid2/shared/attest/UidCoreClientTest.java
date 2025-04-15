@@ -47,6 +47,7 @@ public class UidCoreClientTest {
 
         String expectedResponseBody = "Hello, world!";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
+        when(mockHttpResponse.statusCode()).thenReturn(200);
 
         HashMap<String, String> expectedHeaders = new HashMap<>();
         expectedHeaders.put(Const.Http.AppVersionHeader, "testAppVersionHeader");
@@ -73,7 +74,7 @@ public class UidCoreClientTest {
     }
 
     @Test
-    public void Download_Attest401_getOptOut_NotCalled() throws CloudStorageException, IOException, AttestationResponseHandlerException {
+    public void Download_Attest401_getOptOut_NotCalled() throws IOException, AttestationResponseHandlerException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.statusCode()).thenReturn(401);
 
@@ -82,7 +83,10 @@ public class UidCoreClientTest {
 
         when(mockHttpClient.get(eq("https://download"), any(HashMap.class))).thenReturn(mockHttpResponse);
 
-        uidCoreClient.download("https://download");
+        assertThrows(CloudStorageException.class, () -> {
+            uidCoreClient.download("https://download");
+        });
+
         verify(mockAttestationResponseHandler, times(1)).attest();
         verify(mockAttestationResponseHandler, never()).getOptOutUrl();
     }
