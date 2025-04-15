@@ -7,6 +7,8 @@ import com.uid2.shared.util.URLConnectionHttpClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.Proxy;
@@ -18,6 +20,7 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UidCoreClientTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(UidCoreClientTest.class);
     private Proxy proxy = CloudUtils.defaultProxy;
     private AttestationResponseHandler mockAttestationResponseHandler = mock(AttestationResponseHandler.class);
 
@@ -73,7 +76,7 @@ public class UidCoreClientTest {
     }
 
     @Test
-    public void Download_Attest401_getOptOut_NotCalled() throws CloudStorageException, IOException, AttestationResponseHandlerException {
+    public void Download_Attest401_getOptOut_NotCalled() throws IOException, AttestationResponseHandlerException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.statusCode()).thenReturn(401);
 
@@ -82,7 +85,10 @@ public class UidCoreClientTest {
 
         when(mockHttpClient.get(eq("https://download"), any(HashMap.class))).thenReturn(mockHttpResponse);
 
-        uidCoreClient.download("https://download");
+        assertThrows(CloudStorageException.class, () -> {
+            uidCoreClient.download("https://download");
+        });
+
         verify(mockAttestationResponseHandler, times(1)).attest();
         verify(mockAttestationResponseHandler, never()).getOptOutUrl();
     }
