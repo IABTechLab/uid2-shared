@@ -7,8 +7,6 @@ import com.uid2.shared.util.URLConnectionHttpClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.Proxy;
@@ -20,7 +18,6 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UidCoreClientTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UidCoreClientTest.class);
     private Proxy proxy = CloudUtils.defaultProxy;
     private AttestationResponseHandler mockAttestationResponseHandler = mock(AttestationResponseHandler.class);
 
@@ -50,6 +47,7 @@ public class UidCoreClientTest {
 
         String expectedResponseBody = "Hello, world!";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
+        when(mockHttpResponse.statusCode()).thenReturn(200);
 
         HashMap<String, String> expectedHeaders = new HashMap<>();
         expectedHeaders.put(Const.Http.AppVersionHeader, "testAppVersionHeader");
