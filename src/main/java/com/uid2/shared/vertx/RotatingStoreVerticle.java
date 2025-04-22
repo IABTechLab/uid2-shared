@@ -24,6 +24,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     private final Gauge gaugeStoreVersion;
     private final Gauge gaugeStoreEntryCount;
     private final Gauge gaugeConsecutiveRefreshFailures;
+    private final Counter counterStoreRefreshFailures;
     private final IMetadataVersionedStore versionedStore;
     private final AtomicLong latestVersion = new AtomicLong(-1L);
     private final AtomicLong latestEntryCount = new AtomicLong(-1L);
@@ -45,6 +46,11 @@ public class RotatingStoreVerticle extends AbstractVerticle {
             .builder("uid2.config_store.refreshtime_ms")
             .tag("store", storeName)
             .description("counter for total time (ms) " + storeName + " store spend in refreshing")
+            .register(Metrics.globalRegistry);
+        this.counterStoreRefreshFailures = Counter
+            .builder("uid2.config_store.refresh_failures")
+            .tag("store", storeName)
+            .description("counter for number of " + storeName + " store refresh failures")
             .register(Metrics.globalRegistry);
         this.gaugeStoreVersion = Gauge
             .builder("uid2.config_store.version", () -> this.latestVersion.get())
@@ -111,6 +117,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                     final long elapsed = ((end - start) / 1000000);
                     this.counterStoreRefreshTimeMs.increment(elapsed);
                     if (asyncResult.failed()) {
+                        this.counterStoreRefreshFailures.increment();
                         this.storeRefreshIsFailing.set(1);
                         LOGGER.error("Failed to load " + this.storeName + ", " + elapsed + " ms", asyncResult.cause());
                     } else {
