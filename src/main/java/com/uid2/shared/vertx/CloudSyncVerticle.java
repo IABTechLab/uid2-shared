@@ -38,6 +38,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
 
     private final Counter counterRefreshed;
     private final Counter counterRefreshSkipped;
+    private final Counter counterRefreshFailures;
     private final Counter counterDownloaded;
     private final Counter counterUploaded;
     private final Counter counterDownloadFailures;
@@ -110,6 +111,12 @@ public class CloudSyncVerticle extends AbstractVerticle {
             .builder("uid2.cloud_refresh_skipped")
             .tag("store", name)
             .description("counter for how many times cloud storage refresh events are skipped due to in-progress refreshing")
+            .register(Metrics.globalRegistry);
+
+        this.counterRefreshFailures = Counter
+            .builder("uid2.cloud_refresh_failures")
+            .tag("store", name)
+            .description("counter for number of " + name + " store refresh failures")
             .register(Metrics.globalRegistry);
 
         this.counterDownloaded = Counter
@@ -203,6 +210,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
         cloudRefresh()
             .onSuccess(t -> this.storeRefreshIsFailing.set(0))
             .onFailure(t -> {
+                this.counterRefreshFailures.increment();
                 this.storeRefreshIsFailing.set(1);
                 LOGGER.error("handleRefresh error: " + t.getMessage(), new Exception(t));
             });
