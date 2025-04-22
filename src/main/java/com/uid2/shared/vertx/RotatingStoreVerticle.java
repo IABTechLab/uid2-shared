@@ -27,7 +27,6 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     private final IMetadataVersionedStore versionedStore;
     private final AtomicLong latestVersion = new AtomicLong(-1L);
     private final AtomicLong latestEntryCount = new AtomicLong(-1L);
-    private final AtomicInteger storeRefreshIsFailing = new AtomicInteger(0);
 
     private final long refreshIntervalMs;
 
