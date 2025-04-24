@@ -59,42 +59,42 @@ public class JwtServiceTest {
     }
 
     @Test
-    void validateTokenSucceeds() throws JwtService.ValidationException {
+    void validateTokenSucceeds() {
         this.addPublicKeysToConfig(PUBLIC_KEY_STRING, COMPACT_PUBLIC_KEY);
         JwtService service = new JwtService(config);
-        var validationResponse = service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
-
-        assertNotNull(validationResponse);
-        assertTrue(validationResponse.getIsValid());
-        assertEquals(AUDIENCE, validationResponse.getAudience());
-        assertEquals("Trusted", validationResponse.getEnclaveId());
-        assertEquals("trusted", validationResponse.getEnclaveType());
-        assertEquals(999, validationResponse.getSiteId());
-        assertEquals("Special|uid2-operator|2.7.16-SNAPSHOT", validationResponse.getOperatorVersion());
-        assertNull(validationResponse.getValidationException());
+        assertDoesNotThrow(() -> {
+            var validationResponse = service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
+            assertNotNull(validationResponse);
+            assertTrue(validationResponse.getIsValid());
+            assertEquals(AUDIENCE, validationResponse.getAudience());
+            assertEquals("Trusted", validationResponse.getEnclaveId());
+            assertEquals("trusted", validationResponse.getEnclaveType());
+            assertEquals(999, validationResponse.getSiteId());
+            assertEquals("Special|uid2-operator|2.7.16-SNAPSHOT", validationResponse.getOperatorVersion());
+        });
     }
 
     @Test
-    void validationFailsInvalidToken() throws JwtService.ValidationException {
+    void validationFailsInvalidToken() {
         this.addPublicKeysToConfig(PUBLIC_KEY_STRING, COMPACT_PUBLIC_KEY);
         JwtService service = new JwtService(config);
-        var validationResponse = service.validateJwt("eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjcyNTgxMTg0MDAsImlhdCI6MTY5MDM0ODk5OSwic3ViIjoiVGVzdCIsImF1ZCI6Imh0dHBzOi8vb3B0b3V0LWludGVnLnVpZGFwaS5jb20iLCJvcGVyYXRvclZlcnNpb24iOiJWZXJzaW9uIDEuMiIsImVuY2xhdmVUeXBlIjoidGVzdCBlbmNsYXZlIHR5cGUiLCJyb2xlcyI6Ik9QRVJBVE9SLE9QVE9VVCIsImlzcyI6Imh0dHBzOi8vY29yZS1pbnRlZy51aWRhcGkuY29tIiwic2l0ZUlkIjoiOTk5IiwiZW5jbGF2ZUlkIjoidGVzdCBlbmNsYXZlIGlkIn0.N9xYROMx2hnMIhtyyBLF-J13uWXpIU6jj_Tgufww6O8JBhrHHFliOF2xsPUcZ1sK6lGsmbHACwlPTRz8zhpKWKM0CMNjfiWHwBGykK32hDC321QEta0aX6utBAWIb1crb2JwZhPH1K0_4X-mxdiuxibgW3YNpQxm2kZDnQaR40py5JykVkPxzwhgzUCceDN5kL1kNEjnO", AUDIENCE, ISSUER);
-
-        assertNotNull(validationResponse);
-        assertFalse(validationResponse.getIsValid());
-        assertNotNull(validationResponse.getValidationException());
+        assertThrows(JwtService.ValidationException.class, () -> {
+            var validationResponse = service.validateJwt("eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJleHAiOjcyNTgxMTg0MDAsImlhdCI6MTY5MDM0ODk5OSwic3ViIjoiVGVzdCIsImF1ZCI6Imh0dHBzOi8vb3B0b3V0LWludGVnLnVpZGFwaS5jb20iLCJvcGVyYXRvclZlcnNpb24iOiJWZXJzaW9uIDEuMiIsImVuY2xhdmVUeXBlIjoidGVzdCBlbmNsYXZlIHR5cGUiLCJyb2xlcyI6Ik9QRVJBVE9SLE9QVE9VVCIsImlzcyI6Imh0dHBzOi8vY29yZS1pbnRlZy51aWRhcGkuY29tIiwic2l0ZUlkIjoiOTk5IiwiZW5jbGF2ZUlkIjoidGVzdCBlbmNsYXZlIGlkIn0.N9xYROMx2hnMIhtyyBLF-J13uWXpIU6jj_Tgufww6O8JBhrHHFliOF2xsPUcZ1sK6lGsmbHACwlPTRz8zhpKWKM0CMNjfiWHwBGykK32hDC321QEta0aX6utBAWIb1crb2JwZhPH1K0_4X-mxdiuxibgW3YNpQxm2kZDnQaR40py5JykVkPxzwhgzUCceDN5kL1kNEjnO", AUDIENCE, ISSUER);
+            assertNotNull(validationResponse);
+            assertFalse(validationResponse.getIsValid());
+        });
     }
 
     @Test
-    void validationFailsExpiredToken() throws JwtService.ValidationException {
+    void validationFailsExpiredToken() {
         this.addPublicKeysToConfig(PUBLIC_KEY_STRING, COMPACT_PUBLIC_KEY);
         JwtService service = new JwtService(config);
-        var validationResponse = service.validateJwt(EXPIRED_TOKEN, AUDIENCE, ISSUER);
-
-        assertNotNull(validationResponse);
-        assertFalse(validationResponse.getIsValid());
-        assertNotNull(validationResponse.getValidationException());
-        assertEquals("Token is expired", validationResponse.getValidationException().getMessage());
+        var ex = assertThrows(JwtService.ValidationException.class, () -> {
+            var validationResponse = service.validateJwt(EXPIRED_TOKEN, AUDIENCE, ISSUER);
+            assertNotNull(validationResponse);
+            assertFalse(validationResponse.getIsValid());
+        }).getMessage();
+        assertEquals("Token is expired", ex);
     }
 
     @Test
@@ -105,7 +105,7 @@ public class JwtServiceTest {
     }
 
     @Test
-    void throwsErrorIfInvalidPublicKey() throws JwtService.ValidationException {
+    void throwsErrorIfInvalidPublicKey() {
         this.addPublicKeysToConfig("Invalid key");
         JwtService service = new JwtService(config);
         var ex = assertThrows(JwtService.ValidationException.class, () -> service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER));
@@ -113,14 +113,15 @@ public class JwtServiceTest {
     }
 
     @Test
-    void validateTokenSucceedsSecondPublicKeyValid() throws JwtService.ValidationException {
+    void validateTokenSucceedsSecondPublicKeyValid() {
         this.addPublicKeysToConfig("Invalid key", COMPACT_PUBLIC_KEY);
         JwtService service = new JwtService(config);
-        var validationResponse = service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
 
-        assertNotNull(validationResponse);
-        assertTrue(validationResponse.getIsValid());
-        assertNull(validationResponse.getValidationException());
+        assertDoesNotThrow(() -> {
+            var validationResponse = service.validateJwt(VALID_TOKEN, AUDIENCE, ISSUER);
+            assertNotNull(validationResponse);
+            assertTrue(validationResponse.getIsValid());
+        });
     }
 
     @Test

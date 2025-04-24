@@ -60,8 +60,6 @@ public class JwtService {
             throw new ValidationException(Optional.of("Unable to get public keys. Validation can not continue"));
         }
 
-        Exception lastException = null;
-
         for (PublicKey key : this.publicKeys) {
             var tokenVerifier = TokenVerifier.newBuilder()
                     .setPublicKey(key)
@@ -85,15 +83,10 @@ public class JwtService {
                 // return the first verified response
                 return response;
             } catch (Exception e) {
-                lastException = e;
+                LOGGER.error("Error validating JWT", e);
+                throw new ValidationException(Optional.ofNullable(e.getMessage()));
             }
         }
-
-        if (!response.getIsValid()) {
-            LOGGER.error("Error validating JWT", lastException);
-        }
-
-        response.setValidationException(lastException);
         return response;
     }
 

@@ -15,7 +15,6 @@ public class JwtValidationResponse {
     private String enclaveId;
     private String enclaveType;
     private String operatorVersion;
-    private Exception validationException;
 
     private String audience;
     private String subject;
@@ -95,14 +94,6 @@ public class JwtValidationResponse {
 
     public String getOperatorVersion() {
         return operatorVersion;
-    }
-
-    public Exception getValidationException() {
-        return validationException;
-    }
-
-    public void setValidationException(Exception validationException) {
-        this.validationException = validationException;
     }
 
     public String getAudience() {
