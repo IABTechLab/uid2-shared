@@ -1,4 +1,4 @@
-package com.uid2.shared.store;
+package com.uid2.shared.store.salt;
 
 import com.uid2.shared.Utils;
 import com.uid2.shared.attest.UidCoreClient;
@@ -10,7 +10,6 @@ import io.vertx.core.json.JsonObject;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.hashids.Hashids;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -80,14 +79,14 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
     public long loadContent(JsonObject metadata) throws Exception {
         final JsonArray salts = metadata.getJsonArray("salts");
         final String firstLevelSalt = metadata.getString("first_level");
-        final SaltEntryBuilder entryBuilder = new SaltEntryBuilder(
+        final SaltFileParser saltFileParser = new SaltFileParser(
                 new IdHashingScheme(metadata.getString("id_prefix"), metadata.getString("id_secret")));
         final Instant now = Instant.now();
         final List<SaltSnapshot> snapshots = new ArrayList<>();
 
         int saltCount = 0;
         for (int i = 0; i < salts.size(); ++i) {
-            final SaltSnapshot snapshot = this.loadSnapshot(salts.getJsonObject(i), firstLevelSalt, entryBuilder, now);
+            final SaltSnapshot snapshot = this.loadSnapshot(salts.getJsonObject(i), firstLevelSalt, saltFileParser, now);
             if (snapshot == null) continue;
             snapshots.add(snapshot);
 
@@ -120,33 +119,26 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
             if (!snapshot.isEffective(asOf)) break;
             current = snapshot;
         }
-        return current != null ? current : snapshots.get(snapshots.size() - 1);
+        return current != null ? current : snapshots.getLast();
     }
 
-    private SaltSnapshot loadSnapshot(JsonObject spec, String firstLevelSalt, SaltEntryBuilder entryBuilder, Instant now) throws Exception {
+    private SaltSnapshot loadSnapshot(JsonObject spec, String firstLevelSalt, SaltFileParser saltFileParser, Instant now) throws Exception {
         final Instant defaultExpires = now.plus(365, ChronoUnit.DAYS);
         final Instant effective = Instant.ofEpochMilli(spec.getLong("effective"));
         final Instant expires = Instant.ofEpochMilli(spec.getLong("expires", defaultExpires.toEpochMilli()));
 
         final String path = spec.getString("location");
         Integer size = spec.getInteger("size");
-        SaltEntry[] entries = readInputStream(this.contentStreamProvider.download(path), entryBuilder, size);
+        SaltEntry[] entries = readInputStream(this.contentStreamProvider.download(path), saltFileParser, size);
 
         LOGGER.info("Loaded {} salts", size);
         return new SaltSnapshot(effective, expires, entries, firstLevelSalt);
     }
 
-    protected SaltEntry[] readInputStream(InputStream inputStream, SaltEntryBuilder entryBuilder, Integer size) throws IOException {
+    protected SaltEntry[] readInputStream(InputStream inputStream, SaltFileParser saltFileParser, Integer size) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-            String line;
-            SaltEntry[] entries = new SaltEntry[size];
-            int idx = 0;
-            while ((line = reader.readLine()) != null) {
-                final SaltEntry entry = entryBuilder.toEntry(line);
-                entries[idx] = entry;
-                idx++;
-            }
-            return entries;
+            var saltFileContent = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+            return saltFileParser.parseFile(saltFileContent, size);
         }
     }
 
@@ -207,38 +199,4 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         }
     }
 
-    protected static final class IdHashingScheme {
-        private final String prefix;
-        private final Hashids hasher;
-
-        public IdHashingScheme(final String prefix, final String secret) {
-            this.prefix = prefix;
-            this.hasher = new Hashids(secret, 9);
-        }
-
-        public String encode(long id) {
-            return prefix + this.hasher.encode(id);
-        }
-    }
-
-    protected static final class SaltEntryBuilder {
-        private final IdHashingScheme idHashingScheme;
-
-        public SaltEntryBuilder(IdHashingScheme idHashingScheme) {
-            this.idHashingScheme = idHashingScheme;
-        }
-
-        public SaltEntry toEntry(String line) {
-            try {
-                final String[] fields = line.split(",");
-                final long id = Integer.parseInt(fields[0]);
-                final String hashedId = this.idHashingScheme.encode(id);
-                final long lastUpdated = Long.parseLong(fields[1]);
-                final String salt = fields[2];
-                return new SaltEntry(id, hashedId, lastUpdated, salt, null, null, null, null);
-            } catch (Exception e) {
-                throw new RuntimeException("Trouble parsing Salt Entry " + line, e);
-            }
-        }
-    }
 }

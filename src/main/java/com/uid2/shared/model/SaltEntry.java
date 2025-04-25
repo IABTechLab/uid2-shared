@@ -18,7 +18,9 @@ public record SaltEntry(
                 "id=" + id +
                 ", hashedId='" + hashedId + '\'' +
                 ", lastUpdated=" + lastUpdated +
+                ", salt=<REDACTED>" +
                 ", refreshFrom=" + refreshFrom +
+                ", previousSalt=<REDACTED>" +
                 ", currentKey=" + currentKey +
                 ", previousKey=" + previousKey +
                 '}';
@@ -31,7 +33,11 @@ public record SaltEntry(
     ){
         @Override
         public String toString() {
-            return "KeyMaterial{id=%d}".formatted(id);
+            return "KeyMaterial{" +
+                    "id=" + id +
+                    ", key=<REDACTED>" +
+                    ", salt=<REDACTED>" +
+                    '}';
         }
     }
 }

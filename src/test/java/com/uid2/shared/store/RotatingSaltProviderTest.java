@@ -1,6 +1,8 @@
 package com.uid2.shared.store;
 
 import com.uid2.shared.cloud.ICloudStorage;
+import com.uid2.shared.store.salt.ISaltProvider;
+import com.uid2.shared.store.salt.RotatingSaltProvider;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;

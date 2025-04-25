@@ -1,4 +1,4 @@
-package com.uid2.shared.store;
+package com.uid2.shared.store.salt;
 
 import com.uid2.shared.cloud.DownloadCloudStorage;
 import com.uid2.shared.model.SaltEntry;
@@ -19,15 +19,8 @@ public class EncryptedRotatingSaltProvider extends RotatingSaltProvider {
     }
 
     @Override
-    protected SaltEntry[] readInputStream(InputStream inputStream, SaltEntryBuilder entryBuilder, Integer size) throws IOException {
+    protected SaltEntry[] readInputStream(InputStream inputStream, SaltFileParser saltFileParser, Integer size) throws IOException {
         String decrypted = decryptInputStream(inputStream, cloudEncryptionKeyProvider, "salts");
-        SaltEntry[] entries = new SaltEntry[size];
-        int idx = 0;
-        for (String line : decrypted.split("\n")) {
-            final SaltEntry entry = entryBuilder.toEntry(line);
-            entries[idx] = entry;
-            idx++;
-        }
-        return entries;
+        return saltFileParser.parseFile(decrypted, size);
     }
 }

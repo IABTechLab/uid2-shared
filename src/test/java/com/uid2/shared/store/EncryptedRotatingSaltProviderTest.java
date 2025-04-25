@@ -4,6 +4,8 @@ import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.encryption.AesGcm;
 import com.uid2.shared.model.CloudEncryptionKey;
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
+import com.uid2.shared.store.salt.EncryptedRotatingSaltProvider;
+import com.uid2.shared.store.salt.ISaltProvider;
 import com.uid2.shared.store.scope.EncryptedScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
