@@ -11,10 +11,10 @@ public class SaltFileParser {
 
     public SaltEntry[] parseFile(String saltFileContent, Integer size) {
         var lines = saltFileContent.split("\n");
-        return parseFile(lines, size);
+        return parseFileLines(lines, size);
     }
 
-    public SaltEntry[] parseFile(String[] saltFileLines, Integer size) {
+    public SaltEntry[] parseFileLines(String[] saltFileLines, Integer size) {
         var entries = new SaltEntry[size];
         int idx = 0;
         for (String line : saltFileLines) {

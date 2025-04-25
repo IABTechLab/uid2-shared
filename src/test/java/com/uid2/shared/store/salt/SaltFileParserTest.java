@@ -53,6 +53,36 @@ class SaltFileParserTest {
     }
 
     @Test
+    void parsesSaltFileWithNullValuesForNewFields() {
+        var file = """
+1,100,salt1,,,,,,,,
+2,200,salt2,,,,,,,,
+""";
+        SaltEntry[] actual = parser.parseFile(file, 2);
+
+        SaltEntry[] expected = new SaltEntry[]{
+                new SaltEntry(1, hashed1, 100, "salt1", null, null,null, null),
+                new SaltEntry(2, hashed2, 200, "salt2", null, null,null, null)
+        };
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    void parsesSaltFileWithNullValuesForKeyFields() {
+        var file = """
+1,100,salt1,1000,old_salt1,,,,,,
+2,200,salt2,2000,old_salt2,,,,,,
+""";
+        SaltEntry[] actual = parser.parseFile(file, 2);
+
+        SaltEntry[] expected = new SaltEntry[]{
+                new SaltEntry(1, hashed1, 100, "salt1", 1000L, "old_salt1",null, null),
+                new SaltEntry(2, hashed2, 200, "salt2", 2000L, "old_salt2",null, null)
+        };
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
     void parsesSaltFileWithoutEncryptionKeyFields() {
         var file = """
 1,100,salt1,1000,old_salt1,10
