@@ -203,7 +203,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         @Override
         public List<SaltEntry> getModifiedSince(Instant timestamp) {
             final long timestampMillis = timestamp.toEpochMilli();
-            return Arrays.stream(this.entries).filter(e -> e.getLastUpdated() >= timestampMillis).collect(Collectors.toList());
+            return Arrays.stream(this.entries).filter(e -> e.lastUpdated() >= timestampMillis).collect(Collectors.toList());
         }
     }
 
@@ -235,7 +235,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
                 final String hashedId = this.idHashingScheme.encode(id);
                 final long lastUpdated = Long.parseLong(fields[1]);
                 final String salt = fields[2];
-                return new SaltEntry(id, hashedId, lastUpdated, salt);
+                return new SaltEntry(id, hashedId, lastUpdated, salt, null, null, null, null);
             } catch (Exception e) {
                 throw new RuntimeException("Trouble parsing Salt Entry " + line, e);
             }

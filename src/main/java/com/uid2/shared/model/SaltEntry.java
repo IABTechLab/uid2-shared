@@ -1,31 +1,37 @@
 package com.uid2.shared.model;
 
-public class SaltEntry {
-    private final long id;
-    private final String hashedId;
-    private final long lastUpdated;
-    private final String salt;
+public record SaltEntry(
+        long id,
+        String hashedId,
+        long lastUpdated,
+        String salt,
 
-    public SaltEntry(long id, String hashedId, long lastUpdated, String salt) {
-        this.id = id;
-        this.lastUpdated = lastUpdated;
-        this.hashedId = hashedId;
-        this.salt = salt;
+        Long refreshFrom, // needs to be nullable until V3 Identity Map is fully rolled out
+        String previousSalt,
+
+        KeyMaterial currentKey,
+        KeyMaterial previousKey
+) {
+    @Override
+    public String toString() {
+        return "SaltEntry{" +
+                "id=" + id +
+                ", hashedId='" + hashedId + '\'' +
+                ", lastUpdated=" + lastUpdated +
+                ", refreshFrom=" + refreshFrom +
+                ", currentKey=" + currentKey +
+                ", previousKey=" + previousKey +
+                '}';
     }
 
-    public long getId() {
-        return id;
-    }
-
-    public String getHashedId() {
-        return hashedId;
-    }
-
-    public long getLastUpdated() {
-        return lastUpdated;
-    }
-
-    public String getSalt() {
-        return salt;
+    public record KeyMaterial(
+            int id,
+            String key,
+            String salt
+    ){
+        @Override
+        public String toString() {
+            return "KeyMaterial{id=%d}".formatted(id);
+        }
     }
 }
