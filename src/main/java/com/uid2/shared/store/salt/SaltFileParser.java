@@ -10,9 +10,14 @@ public class SaltFileParser {
     }
 
     public SaltEntry[] parseFile(String saltFileContent, Integer size) {
+        var lines = saltFileContent.split("\n");
+        return parseFile(lines, size);
+    }
+
+    public SaltEntry[] parseFile(String[] saltFileLines, Integer size) {
         var entries = new SaltEntry[size];
         int idx = 0;
-        for (String line : saltFileContent.split("\n")) {
+        for (String line : saltFileLines) {
             final SaltEntry entry = parseLine(line);
             entries[idx] = entry;
             idx++;
