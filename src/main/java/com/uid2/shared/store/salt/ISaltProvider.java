@@ -1,4 +1,4 @@
-package com.uid2.shared.store;
+package com.uid2.shared.store.salt;
 
 import com.uid2.shared.model.SaltEntry;
 import org.slf4j.Logger;

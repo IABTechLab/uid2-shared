@@ -1,6 +1,8 @@
 package com.uid2.shared.store;
 
 import com.uid2.shared.cloud.ICloudStorage;
+import com.uid2.shared.store.salt.ISaltProvider;
+import com.uid2.shared.store.salt.RotatingSaltProvider;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
@@ -157,7 +159,7 @@ public class RotatingSaltProviderTest {
         assertEquals(FIRST_LEVEL_SALT, snapshot.getFirstLevelSalt());
         assertTrue(snapshot.getModifiedSince(Instant.now().minus(1, ChronoUnit.HOURS)).isEmpty());
         assertEquals(1, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).size());
-        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).get(0).getId());
+        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).get(0).id());
     }
 
     @Test
@@ -239,7 +241,7 @@ public class RotatingSaltProviderTest {
         assertEquals(FIRST_LEVEL_SALT, snapshot.getFirstLevelSalt());
         assertTrue(snapshot.getModifiedSince(Instant.now().minus(1, ChronoUnit.HOURS)).isEmpty());
         assertEquals(1, snapshot.getModifiedSince(Instant.now().minus(49, ChronoUnit.HOURS)).size());
-        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(49, ChronoUnit.HOURS)).get(0).getId());
+        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(49, ChronoUnit.HOURS)).get(0).id());
     }
 
 
