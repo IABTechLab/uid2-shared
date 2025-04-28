@@ -84,7 +84,7 @@ public class JwtService {
                 return response;
             } catch (Exception e) {
                 LOGGER.error("Error validating JWT", e);
-                throw new ValidationException(Optional.ofNullable(e.toString()));
+                throw new ValidationException(Optional.ofNullable(e.getMessage()));
             }
         }
         return response;
