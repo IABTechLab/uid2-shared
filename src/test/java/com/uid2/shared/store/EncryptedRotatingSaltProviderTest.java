@@ -159,7 +159,7 @@ public class EncryptedRotatingSaltProviderTest {
         final String effectiveTimeString = String.valueOf(generatedTime.getEpochSecond() * 1000L);
         StringBuilder salts = new StringBuilder();
         for (int i = 0; i < 1000000; i++) {
-            salts.append(i).append(",").append(effectiveTimeString).append(",").append("salt-string").append("\n");
+            salts.append(i).append(",").append(effectiveTimeString).append(",").append("currentSalt-string").append("\n");
         }
 
         when(cloudStorage.download("sites/encrypted/1_public/metadata.json"))

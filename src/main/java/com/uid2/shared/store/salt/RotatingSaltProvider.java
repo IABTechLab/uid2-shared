@@ -40,9 +40,9 @@ import java.util.stream.Collectors;
        ]
     }
 
-  2. salt file format
-        <id>,   <hash_id>,    <salt>
-        9000099,1614556800000,salt
+  2. currentSalt file format
+        <id>,   <hash_id>,    <currentSalt>
+        9000099,1614556800000,currentSalt
  */
 public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingSaltProvider.class);
@@ -159,10 +159,10 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
             this.entries = entries;
             this.firstLevelSalt = firstLevelSalt;
             if (entries.length == 1_048_576) {
-                LOGGER.info("Total salt entries 1 million, {}, special production salt entry indexer", entries.length);
+                LOGGER.info("Total currentSalt entries 1 million, {}, special production currentSalt entry indexer", entries.length);
                 this.saltEntryIndexer = MILLION_ENTRY_INDEXER;
             } else {
-                LOGGER.warn("Total salt entries {}, using slower mod-based indexer", entries.length);
+                LOGGER.warn("Total currentSalt entries {}, using slower mod-based indexer", entries.length);
                 this.saltEntryIndexer = MOD_BASED_INDEXER;
             }
         }

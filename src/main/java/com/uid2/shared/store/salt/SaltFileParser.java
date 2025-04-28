@@ -38,6 +38,9 @@ public class SaltFileParser {
             SaltEntry.KeyMaterial currentKey = null;
             SaltEntry.KeyMaterial previousKey = null;
 
+            // TODO: The fields below should stop being optional once the refresh from, previous salt
+            // and refreshable UIDs features get rolled out in production. We can remove them one by one as necessary.
+            // AU, 2025/04/28
             if (fields.length > 3) {
                 refreshFrom = Long.parseLong(fields[3]);
             }
