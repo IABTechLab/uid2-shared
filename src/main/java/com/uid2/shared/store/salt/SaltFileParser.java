@@ -16,16 +16,16 @@ public class SaltFileParser {
 
     public SaltEntry[] parseFileLines(String[] saltFileLines, Integer size) {
         var entries = new SaltEntry[size];
-        int idx = 0;
+        int lineNumber = 0;
         for (String line : saltFileLines) {
-            final SaltEntry entry = parseLine(line);
-            entries[idx] = entry;
-            idx++;
+            final SaltEntry entry = parseLine(line, lineNumber);
+            entries[lineNumber] = entry;
+            lineNumber++;
         }
         return entries;
     }
 
-    private SaltEntry parseLine(String line) {
+    private SaltEntry parseLine(String line, int lineNumber) {
         try {
             final String[] fields = line.split(",");
             final long id = Integer.parseInt(fields[0]);
@@ -56,7 +56,7 @@ public class SaltFileParser {
 
             return new SaltEntry(id, hashedId, lastUpdated, salt, refreshFrom, previousSalt, currentKey, previousKey);
         } catch (Exception e) {
-            throw new RuntimeException("Trouble parsing Salt Entry " + line, e);
+            throw new RuntimeException("Trouble parsing Salt Entry, line number: " + lineNumber, e);
         }
     }
 

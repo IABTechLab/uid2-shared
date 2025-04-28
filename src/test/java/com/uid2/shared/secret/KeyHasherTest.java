@@ -11,7 +11,7 @@ public class KeyHasherTest {
     @Test
     public void hashKey_returnsKnownHash_withGivenSalt() {
         KeyHasher hasher = new KeyHasher();
-        byte[] hashedBytes = hasher.hashKey("test-key", "test-currentSalt".getBytes(StandardCharsets.UTF_8));
+        byte[] hashedBytes = hasher.hashKey("test-key", "test-salt".getBytes(StandardCharsets.UTF_8));
         assertEquals("hzXFALLdI9ji4ajnzhWdbEQNci+kAoA40Ie6X7bEyjIvMFbhQfYZC1sTPeK+14QM+Ox2a6wJ0U2fLzqnoUgCbQ==", Base64.getEncoder().encodeToString(hashedBytes));
     }
 
