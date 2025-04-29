@@ -100,7 +100,7 @@ public class AttestationMiddleware {
                                 }
                             }
                         } catch (JwtService.ValidationException e) {
-                            LOGGER.info("Error validating JWT. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}. Error: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), e);
+                            LOGGER.info("Error validating JWT. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}. Error: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), e.toString());
                         }
                     } else {
                         if (this.enforceJwt) {
