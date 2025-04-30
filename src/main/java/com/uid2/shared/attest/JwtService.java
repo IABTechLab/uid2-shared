@@ -88,9 +88,10 @@ public class JwtService {
                 lastException = e;
             }
         }
+
         if (!response.getIsValid()) {
             LOGGER.error("Error validating JWT", lastException);
-            throw new ValidationException(Optional.ofNullable(lastException.getMessage()));
+            throw new ValidationException(Optional.of(lastException.getMessage()), lastException);
         }
 
         return response;
