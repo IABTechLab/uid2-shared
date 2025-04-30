@@ -110,10 +110,10 @@ public class AttestationMiddleware {
                 }
             }
 
-            if (!isJwtValid && this.enforceJwt) {
+            if (success && !isJwtValid && this.enforceJwt) {
                 LOGGER.info("JWT validation has failed.");
                 success = false;
-            } else if (!isJwtValid && !this.enforceJwt) {
+            } else if (success && !isJwtValid && !this.enforceJwt) {
                 LOGGER.info("JWT validation has failed, but JWTs are not being enforced.");
             }
 
