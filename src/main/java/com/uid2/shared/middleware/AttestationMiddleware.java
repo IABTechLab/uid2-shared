@@ -105,21 +105,15 @@ public class AttestationMiddleware {
                     } else {
                         if (this.enforceJwt) {
                             LOGGER.info("JWT is required, but was not received. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
-                        } else {
-                            LOGGER.info("JWT is blank but is not required. SiteId: {}, Name: {}, Contact: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
                         }
                     }
-                } else {
-                    LOGGER.info("Attestation was not successful. JWT validation failed. SiteId: {}, Name: {}, Contact: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
                 }
-            } else {
-                LOGGER.info("Profile is not an OperatorKey. JWT validation failed. SiteId: {}, Contact: {}", profile.getSiteId(), profile.getContact());
             }
 
-            if (!isJwtValid && this.enforceJwt) {
+            if (success && !isJwtValid && this.enforceJwt) {
                 LOGGER.info("JWT validation has failed.");
                 success = false;
-            } else if (!isJwtValid && !this.enforceJwt) {
+            } else if (success && !isJwtValid && !this.enforceJwt) {
                 LOGGER.info("JWT validation has failed, but JWTs are not being enforced.");
             }
 

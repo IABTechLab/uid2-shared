@@ -4,6 +4,8 @@ import com.uid2.shared.cloud.ICloudStorage;
 import com.uid2.shared.encryption.AesGcm;
 import com.uid2.shared.model.CloudEncryptionKey;
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
+import com.uid2.shared.store.salt.EncryptedRotatingSaltProvider;
+import com.uid2.shared.store.salt.ISaltProvider;
 import com.uid2.shared.store.scope.EncryptedScope;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -157,7 +159,7 @@ public class EncryptedRotatingSaltProviderTest {
         final String effectiveTimeString = String.valueOf(generatedTime.getEpochSecond() * 1000L);
         StringBuilder salts = new StringBuilder();
         for (int i = 0; i < 1000000; i++) {
-            salts.append(i).append(",").append(effectiveTimeString).append(",").append("salt-string").append("\n");
+            salts.append(i).append(",").append(effectiveTimeString).append(",").append("currentSalt-string").append("\n");
         }
 
         when(cloudStorage.download("sites/encrypted/1_public/metadata.json"))
@@ -256,7 +258,7 @@ public class EncryptedRotatingSaltProviderTest {
         assertEquals(FIRST_LEVEL_SALT, snapshot.getFirstLevelSalt());
         assertTrue(snapshot.getModifiedSince(Instant.now().minus(1, ChronoUnit.HOURS)).isEmpty());
         assertEquals(1, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).size());
-        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).getFirst().getId());
+        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(30, ChronoUnit.HOURS)).getFirst().id());
     }
 
     @Test
@@ -338,6 +340,6 @@ public class EncryptedRotatingSaltProviderTest {
         assertEquals(FIRST_LEVEL_SALT, snapshot.getFirstLevelSalt());
         assertTrue(snapshot.getModifiedSince(Instant.now().minus(1, ChronoUnit.HOURS)).isEmpty());
         assertEquals(1, snapshot.getModifiedSince(Instant.now().minus(49, ChronoUnit.HOURS)).size());
-        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(49, ChronoUnit.HOURS)).getFirst().getId());
+        assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(49, ChronoUnit.HOURS)).getFirst().id());
     }
 }

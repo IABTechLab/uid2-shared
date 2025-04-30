@@ -22,7 +22,7 @@ public class KeyHasherTest {
         KeyHashResult result2 = hasher.hashKey("test-key");
 
         assertAll(
-                "hashKey returns new hash every time with random salt",
+                "hashKey returns new hash every time with random currentSalt",
                 () -> assertNotEquals(result1.getHash(), result2.getHash()),
                 () -> assertNotEquals(result1.getSalt(), result2.getSalt())
         );

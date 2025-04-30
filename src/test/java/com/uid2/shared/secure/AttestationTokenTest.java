@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 
 public class AttestationTokenTest {
     private static final String ENCRYPTION_KEY = "attestation-token-secret";
-    private static final String SALT = "attestation-token-salt";
+    private static final String SALT = "attestation-token-currentSalt";
 
     private final Clock clock = mock(Clock.class);
 
