@@ -13,7 +13,6 @@ public class HealthManagerTest {
     public void setUp() {
         File file = new File(File.separator + "app" + File.separator + "pod_terminating");
         file.delete();
-        HealthManager.instance.setPodTerminatingCheckInterval(0);
     }
 
     @Test
@@ -64,8 +63,8 @@ public class HealthManagerTest {
 
     @Test
     public void singleComponent_checkPodTerminating() throws IOException {
-        HealthManager.instance.setPodTerminatingCheckInterval(3000);
         HealthManager.instance.clearComponents();
+        HealthManager.instance.registerGenericComponent(new PodTerminationMonitor());
         HealthComponent component = HealthManager.instance.registerComponent("test-component");
         assertEquals(true, HealthManager.instance.isHealthy());
         assertEquals(true, component.isHealthy());
@@ -92,15 +91,14 @@ public class HealthManagerTest {
 
     @Test
     public void singleComponent_checkPodTerminatingDifferentInterval() throws IOException {
-        File file = new File(File.separator + "app" + File.separator + "pod_terminating");
-        file.delete();
         HealthManager.instance.clearComponents();
-        HealthManager.instance.setPodTerminatingCheckInterval(1000);
+        HealthManager.instance.registerGenericComponent(new PodTerminationMonitor(1000));
         HealthComponent component = HealthManager.instance.registerComponent("test-component");
         assertEquals(true, HealthManager.instance.isHealthy());
         assertEquals(true, component.isHealthy());
 
         try {
+            File file = new File(File.separator + "app" + File.separator + "pod_terminating");
             file.getParentFile().mkdirs();
             file.createNewFile();
         } catch (IOException e) {
