@@ -9,6 +9,9 @@ import java.util.stream.Collectors;
 public class HealthManager {
     public static HealthManager instance = new HealthManager();
     private AtomicReference<List<IHealthComponent>> componentList = new AtomicReference(new ArrayList<IHealthComponent>());
+    private AtomicReference<Boolean> cachedPodTerminating = new AtomicReference<>(false);
+    private long lastPodCheckTime = 0;
+    private static final long FILE_CHECK_INTERVAL_MS = 3000;
 
     public synchronized HealthComponent registerComponent(String name) {
         // default healthy if initial status not specified
@@ -27,9 +30,19 @@ public class HealthManager {
         // simple composite logic: service is healthy if none child component is unhealthy
         List<IHealthComponent> list = this.componentList.get();
         boolean componentsHealthy = list.stream().filter(c -> !c.isHealthy()).count() == 0;
-        File file = new File("/app/pod_terminating");
-        boolean podTerminating = file.exists();
+        boolean podTerminating = checkPodTerminating();
         return componentsHealthy && !podTerminating;
+    }
+
+    private boolean checkPodTerminating() {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastPodCheckTime >= FILE_CHECK_INTERVAL_MS) {
+            File file = new File("pod_terminating");
+            boolean newStatus = file.exists();
+            cachedPodTerminating.set(newStatus);
+            lastPodCheckTime = currentTime;
+        }
+        return cachedPodTerminating.get();
     }
 
     public String reason() {
