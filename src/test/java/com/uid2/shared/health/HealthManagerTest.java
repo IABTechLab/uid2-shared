@@ -64,7 +64,7 @@ public class HealthManagerTest {
 
     @Test
     public void singleComponent_checkPodTerminating() throws IOException {
-        HealthManager.instance.setPodTerminatingCheckInterval(0);
+        HealthManager.instance.setPodTerminatingCheckInterval(3000);
         HealthManager.instance.clearComponents();
         HealthComponent component = HealthManager.instance.registerComponent("test-component");
         assertEquals(true, HealthManager.instance.isHealthy());
