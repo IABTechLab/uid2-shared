@@ -1,5 +1,6 @@
 package com.uid2.shared.health;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -25,7 +26,10 @@ public class HealthManager {
     public boolean isHealthy() {
         // simple composite logic: service is healthy if none child component is unhealthy
         List<IHealthComponent> list = this.componentList.get();
-        return list.stream().filter(c -> !c.isHealthy()).count() == 0;
+        boolean componentsHealthy = list.stream().filter(c -> !c.isHealthy()).count() == 0;
+        File file = new File("/app/pod_terminating");
+        boolean podTerminating = file.exists();
+        return componentsHealthy && !podTerminating;
     }
 
     public String reason() {
