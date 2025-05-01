@@ -11,10 +11,8 @@ public class HealthManagerTest {
 
     @BeforeEach
     public void setUp() {
-        File fileA = new File("C:/app/pod_terminating");
-        File fileB = new File("/app/pod_terminating");
-        fileA.delete();
-        fileB.delete();
+        File file = new File(File.separator + "app" + File.separator + "pod_terminating");
+        file.delete();
         HealthManager.instance.setPodTerminatingCheckInterval(0);
     }
 
@@ -73,17 +71,11 @@ public class HealthManagerTest {
         assertEquals(true, component.isHealthy());
 
         try {
-            File fileA = new File("C:/app/pod_terminating");
-            fileA.getParentFile().mkdirs();
-            fileA.createNewFile();
+            File file = new File(File.separator + "app" + File.separator + "pod_terminating");
+            file.getParentFile().mkdirs();
+            file.createNewFile();
         } catch (IOException e) {
-            try {
-                File fileB = new File("/app/pod_terminating");
-                fileB.getParentFile().mkdirs();
-                fileB.createNewFile();
-            } catch (IOException f) {
-                throw new RuntimeException(f);
-            }
+            throw new RuntimeException(e);
         }
 
         // Wait for the file check interval to pass
@@ -100,10 +92,8 @@ public class HealthManagerTest {
 
     @Test
     public void singleComponent_checkPodTerminatingDifferentInterval() throws IOException {
-        File fileA = new File("C:/app/pod_terminating");
-        File fileB = new File("/app/pod_terminating");
-        fileA.delete();
-        fileB.delete();
+        File file = new File(File.separator + "app" + File.separator + "pod_terminating");
+        file.delete();
         HealthManager.instance.clearComponents();
         HealthManager.instance.setPodTerminatingCheckInterval(1000);
         HealthComponent component = HealthManager.instance.registerComponent("test-component");
@@ -111,16 +101,10 @@ public class HealthManagerTest {
         assertEquals(true, component.isHealthy());
 
         try {
-            fileA.getParentFile().mkdirs();
-            fileA.createNewFile();
+            file.getParentFile().mkdirs();
+            file.createNewFile();
         } catch (IOException e) {
-            try {
-                
-                fileB.getParentFile().mkdirs();
-                fileB.createNewFile();
-            } catch (IOException f) {
-                throw new RuntimeException(f);
-            }
+            throw new RuntimeException(e);
         }
 
         // Wait for the file check interval to pass

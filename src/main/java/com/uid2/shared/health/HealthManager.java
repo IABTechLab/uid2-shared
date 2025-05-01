@@ -40,9 +40,8 @@ public class HealthManager {
     private boolean checkPodTerminating() {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastPodCheckTime >= fileCheckIntervalMs) {
-            File fileA = new File("/app/pod_terminating");
-            File fileB = new File("C:/app/pod_terminating");
-            boolean newStatus = fileA.exists() || fileB.exists();
+            File file = new File(File.separator + "app" + File.separator + "pod_terminating");
+            boolean newStatus = file.exists();
             cachedPodTerminating.set(newStatus);
             lastPodCheckTime = currentTime;
         }
