@@ -11,11 +11,15 @@ public class HealthManager {
     private AtomicReference<List<IHealthComponent>> componentList = new AtomicReference(new ArrayList<IHealthComponent>());
     private AtomicReference<Boolean> cachedPodTerminating = new AtomicReference<>(false);
     private long lastPodCheckTime = 0;
-    private static final long FILE_CHECK_INTERVAL_MS = 3000;
+    private long fileCheckIntervalMs = 3000;
 
     public synchronized HealthComponent registerComponent(String name) {
         // default healthy if initial status not specified
         return registerComponent(name, true);
+    }
+
+    public void setPodTerminatingCheckInterval(long interval) {
+        this.fileCheckIntervalMs = interval;
     }
 
     public synchronized HealthComponent registerComponent(String name, boolean initialHealthStatus) {
@@ -29,16 +33,19 @@ public class HealthManager {
     public boolean isHealthy() {
         // simple composite logic: service is healthy if none child component is unhealthy
         List<IHealthComponent> list = this.componentList.get();
-        boolean componentsHealthy = list.stream().filter(c -> !c.isHealthy()).count() == 0;
-        boolean podTerminating = checkPodTerminating();
-        return componentsHealthy && !podTerminating;
+        boolean componentsHealthy = list.stream().filter(c -> !c.isHealthy()).count() == 0;;
+        return componentsHealthy && !checkPodTerminating();
     }
 
     private boolean checkPodTerminating() {
         long currentTime = System.currentTimeMillis();
-        if (currentTime - lastPodCheckTime >= FILE_CHECK_INTERVAL_MS) {
-            File file = new File("pod_terminating");
-            boolean newStatus = file.exists();
+        System.out.println("CHECKING POD TERMINATING");
+        if (currentTime - lastPodCheckTime >= fileCheckIntervalMs) {
+            File fileA = new File("/app/pod_terminating");
+            File fileB = new File("C:/app/pod_terminating");
+            System.out.println("DOES FILE B EXIST?");
+            System.out.println(fileB.exists());
+            boolean newStatus = fileA.exists() || fileB.exists();
             cachedPodTerminating.set(newStatus);
             lastPodCheckTime = currentTime;
         }
@@ -52,7 +59,11 @@ public class HealthManager {
             .filter(c -> !c.isHealthy())
             .map(c -> String.format("%s: %s", c.name(), c.reason()))
             .collect(Collectors.toList());
+        if (checkPodTerminating()) {
+            reasons.add("Pod is terminating");
+        }
         return String.join("\n", reasons);
+
     }
 
     public void clearComponents() {

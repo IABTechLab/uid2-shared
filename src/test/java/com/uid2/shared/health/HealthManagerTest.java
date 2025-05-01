@@ -1,11 +1,22 @@
 package com.uid2.shared.health;
 
-
+import java.io.File;
+import java.io.IOException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HealthManagerTest {
+
+    @BeforeEach
+    public void setUp() {
+        File fileA = new File("C:/app/pod_terminating");
+        File fileB = new File("/app/pod_terminating");
+        fileA.delete();
+        fileB.delete();
+        HealthManager.instance.setPodTerminatingCheckInterval(0);
+    }
 
     @Test
     public void createComponent_isHealthy() {
@@ -51,6 +62,77 @@ public class HealthManagerTest {
         assertEquals("reason1", component.reason());
         assertEquals(false, HealthManager.instance.isHealthy());
         assertEquals("test-component: reason1", HealthManager.instance.reason());
+    }
+
+    @Test
+    public void singleComponent_checkPodTerminating() throws IOException {
+        HealthManager.instance.setPodTerminatingCheckInterval(0);
+        HealthManager.instance.clearComponents();
+        HealthComponent component = HealthManager.instance.registerComponent("test-component");
+        assertEquals(true, HealthManager.instance.isHealthy());
+        assertEquals(true, component.isHealthy());
+
+        try {
+            File fileA = new File("C:/app/pod_terminating");
+            fileA.getParentFile().mkdirs();
+            fileA.createNewFile();
+        } catch (IOException e) {
+            try {
+                File fileB = new File("/app/pod_terminating");
+                fileB.getParentFile().mkdirs();
+                fileB.createNewFile();
+            } catch (IOException f) {
+                throw new RuntimeException(f);
+            }
+        }
+
+        // Wait for the file check interval to pass
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime < 3000) {
+            // Busy wait until the interval has passed
+        }
+        
+        assertEquals(true, component.isHealthy());
+        assertEquals(null, component.reason());
+        assertEquals(false, HealthManager.instance.isHealthy());
+        assertEquals("Pod is terminating", HealthManager.instance.reason());
+    }
+
+    @Test
+    public void singleComponent_checkPodTerminatingDifferentInterval() throws IOException {
+        File fileA = new File("C:/app/pod_terminating");
+        File fileB = new File("/app/pod_terminating");
+        fileA.delete();
+        fileB.delete();
+        HealthManager.instance.clearComponents();
+        HealthManager.instance.setPodTerminatingCheckInterval(1000);
+        HealthComponent component = HealthManager.instance.registerComponent("test-component");
+        assertEquals(true, HealthManager.instance.isHealthy());
+        assertEquals(true, component.isHealthy());
+
+        try {
+            fileA.getParentFile().mkdirs();
+            fileA.createNewFile();
+        } catch (IOException e) {
+            try {
+                
+                fileB.getParentFile().mkdirs();
+                fileB.createNewFile();
+            } catch (IOException f) {
+                throw new RuntimeException(f);
+            }
+        }
+
+        // Wait for the file check interval to pass
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime < 1000) {
+            // Busy wait until the interval has passed
+        }
+        
+        assertEquals(true, component.isHealthy());
+        assertEquals(null, component.reason());
+        assertEquals(false, HealthManager.instance.isHealthy());
+        assertEquals("Pod is terminating", HealthManager.instance.reason());
     }
 
     @Test
