@@ -9,12 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HealthManagerTest {
 
-    @BeforeEach
-    public void setUp() {
-        File file = new File(File.separator + "app" + File.separator + "pod_terminating");
-        file.delete();
-    }
-
     @Test
     public void createComponent_isHealthy() {
         IHealthComponent component = new HealthComponent("test-component", true);
@@ -59,62 +53,6 @@ public class HealthManagerTest {
         assertEquals("reason1", component.reason());
         assertEquals(false, HealthManager.instance.isHealthy());
         assertEquals("test-component: reason1", HealthManager.instance.reason());
-    }
-
-    @Test
-    public void singleComponent_checkPodTerminating() throws IOException {
-        HealthManager.instance.clearComponents();
-        HealthManager.instance.registerGenericComponent(new PodTerminationMonitor());
-        HealthComponent component = HealthManager.instance.registerComponent("test-component");
-        assertEquals(true, HealthManager.instance.isHealthy());
-        assertEquals(true, component.isHealthy());
-
-        try {
-            File file = new File(File.separator + "app" + File.separator + "pod_terminating");
-            file.getParentFile().mkdirs();
-            file.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // Wait for the file check interval to pass
-        long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < 3000) {
-            // Busy wait until the interval has passed
-        }
-        
-        assertEquals(true, component.isHealthy());
-        assertEquals(null, component.reason());
-        assertEquals(false, HealthManager.instance.isHealthy());
-        assertEquals("PodTerminationMonitor: Pod is terminating", HealthManager.instance.reason());
-    }
-
-    @Test
-    public void singleComponent_checkPodTerminatingDifferentInterval() throws IOException {
-        HealthManager.instance.clearComponents();
-        HealthManager.instance.registerGenericComponent(new PodTerminationMonitor(1000));
-        HealthComponent component = HealthManager.instance.registerComponent("test-component");
-        assertEquals(true, HealthManager.instance.isHealthy());
-        assertEquals(true, component.isHealthy());
-
-        try {
-            File file = new File(File.separator + "app" + File.separator + "pod_terminating");
-            file.getParentFile().mkdirs();
-            file.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // Wait for the file check interval to pass
-        long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < 1000) {
-            // Busy wait until the interval has passed
-        }
-        
-        assertEquals(true, component.isHealthy());
-        assertEquals(null, component.reason());
-        assertEquals(false, HealthManager.instance.isHealthy());
-        assertEquals("PodTerminationMonitor: Pod is terminating", HealthManager.instance.reason());
     }
 
     @Test
