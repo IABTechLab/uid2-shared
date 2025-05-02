@@ -86,7 +86,7 @@ public class HealthManagerTest {
         assertEquals(true, component.isHealthy());
         assertEquals(null, component.reason());
         assertEquals(false, HealthManager.instance.isHealthy());
-        assertEquals("Pod is terminating", HealthManager.instance.reason());
+        assertEquals("PodTerminationMonitor: Pod is terminating", HealthManager.instance.reason());
     }
 
     @Test
@@ -114,7 +114,7 @@ public class HealthManagerTest {
         assertEquals(true, component.isHealthy());
         assertEquals(null, component.reason());
         assertEquals(false, HealthManager.instance.isHealthy());
-        assertEquals("Pod is terminating", HealthManager.instance.reason());
+        assertEquals("PodTerminationMonitor: Pod is terminating", HealthManager.instance.reason());
     }
 
     @Test
