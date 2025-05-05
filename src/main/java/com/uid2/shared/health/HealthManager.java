@@ -1,5 +1,6 @@
 package com.uid2.shared.health;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -20,6 +21,12 @@ public class HealthManager {
         newList.add(component);
         this.componentList.set(newList);
         return component;
+    }
+
+    public synchronized void registerGenericComponent(IHealthComponent component) {
+        List<IHealthComponent> newList = new ArrayList<IHealthComponent>(this.componentList.get());
+        newList.add(component);
+        this.componentList.set(newList);
     }
 
     public boolean isHealthy() {
