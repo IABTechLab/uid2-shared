@@ -39,7 +39,7 @@ public class PodTerminationMonitor implements IHealthComponent{
             File file = new File(File.separator + "app" + File.separator + "pod_terminating");
             boolean newStatus = file.exists();
             if (newStatus) {
-                LOGGER.info("pod will terminate soon")
+                LOGGER.info("pod will terminate soon");
             }
             cachedPodTerminating.set(newStatus);
             lastPodCheckTime = currentTime;
