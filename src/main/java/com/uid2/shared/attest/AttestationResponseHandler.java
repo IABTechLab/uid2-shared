@@ -257,9 +257,12 @@ public class AttestationResponseHandler {
 
     private void setOptoutJWTFromResponse(JsonObject responseBody) {
         String jwt = responseBody.getString("attestation_jwt_optout");
-        if (jwt == null || jwt.isBlank()) {
-            LOGGER.info("Optout JWT not received. App version: {}", this.appVersion.getAppVersion());
+        if (jwt == null) {
+            LOGGER.info("Optout JWT not received");
         } else {
+            if (jwt.isBlank()) {
+                LOGGER.info("Optout JWT is blank. App version: {}", this.appVersion.getAppVersion());
+            }
             LOGGER.info("Optout JWT received");
             this.optOutJwt.set(jwt);
         }
@@ -267,9 +270,12 @@ public class AttestationResponseHandler {
 
     private void setCoreJWTFromResponse(JsonObject responseBody) {
         String jwt = responseBody.getString("attestation_jwt_core");
-        if (jwt == null || jwt.isBlank()) {
-            LOGGER.info("Core JWT not received. App version: {}", this.appVersion.getAppVersion());
+        if (jwt == null) {
+            LOGGER.info("Core JWT not received");
         } else {
+            if (jwt.isBlank()) {
+                LOGGER.info("Core JWT is blank. App version: {}", this.appVersion.getAppVersion());
+            }
             LOGGER.info("Core JWT received");
             this.coreJwt.set(jwt);
         }

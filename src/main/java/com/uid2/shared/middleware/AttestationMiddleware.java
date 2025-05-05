@@ -106,7 +106,7 @@ public class AttestationMiddleware {
                         if (this.enforceJwt) {
                             LOGGER.info("JWT is required, but was not received. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
                         } else {
-                            LOGGER.info("JWT is {} but is not required. SiteId: {}, Name: {}", jwt == null ? "null" : "blank", operatorKey.getSiteId(), operatorKey.getName());
+                            LOGGER.info("JWT is {} but is not required. SiteId: {}, Name: {}, Url: {}", jwt == null ? "null" : "blank", operatorKey.getSiteId(), operatorKey.getName(), rc.request().uri());
                         }
                     }
                 }
