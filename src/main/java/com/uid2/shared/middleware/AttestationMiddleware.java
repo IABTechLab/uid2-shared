@@ -105,13 +105,15 @@ public class AttestationMiddleware {
                     } else {
                         if (this.enforceJwt) {
                             LOGGER.info("JWT is required, but was not received. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
+                        } else {
+                            LOGGER.info("JWT is {} but is not required. SiteId: {}, Name: {}", jwt == null ? "null" : "blank", operatorKey.getSiteId(), operatorKey.getName());
                         }
                     }
                 }
             }
 
             if (success && !isJwtValid && this.enforceJwt) {
-                LOGGER.info("JWT validation has failed.");
+                LOGGER.error("JWT validation has failed.");
                 success = false;
             } else if (success && !isJwtValid && !this.enforceJwt) {
                 LOGGER.info("JWT validation has failed, but JWTs are not being enforced.");
