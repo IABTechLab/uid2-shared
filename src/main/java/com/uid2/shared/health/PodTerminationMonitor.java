@@ -36,7 +36,7 @@ public class PodTerminationMonitor implements IHealthComponent{
     private boolean checkPodTerminating() {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastPodCheckTime >= fileCheckIntervalMs) {
-            File file = new File(File.separator + "app" + File.separator + "pod_terminating" + File.seperator +"pod_terminating");
+            File file = new File(File.separator + "app" + File.separator + "pod_terminating" + File.separator +"pod_terminating");
             boolean newStatus = file.exists();
             if (newStatus) {
                 LOGGER.info("pod will terminate soon");
