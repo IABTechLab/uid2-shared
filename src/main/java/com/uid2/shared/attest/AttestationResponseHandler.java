@@ -260,6 +260,9 @@ public class AttestationResponseHandler {
         if (jwt == null) {
             LOGGER.info("Optout JWT not received");
         } else {
+            if (jwt.isBlank()) {
+                LOGGER.info("Optout JWT is blank. App version: {}", this.appVersion.getAppVersion());
+            }
             LOGGER.info("Optout JWT received");
             this.optOutJwt.set(jwt);
         }
@@ -270,6 +273,9 @@ public class AttestationResponseHandler {
         if (jwt == null) {
             LOGGER.info("Core JWT not received");
         } else {
+            if (jwt.isBlank()) {
+                LOGGER.info("Core JWT is blank. App version: {}", this.appVersion.getAppVersion());
+            }
             LOGGER.info("Core JWT received");
             this.coreJwt.set(jwt);
         }
