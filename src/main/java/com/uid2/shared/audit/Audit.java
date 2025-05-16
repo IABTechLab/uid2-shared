@@ -142,6 +142,7 @@ public class Audit {
 
     private JsonObject filterQueryParams(MultiMap queryParamsMap, List<String> queryParams) {
         JsonObject queryParamsJson = new JsonObject();
+        if (queryParamsMap == null) return queryParamsJson;
         queryParamsMap.forEach(entry -> {
             if ( queryParams.contains(entry.getKey())) {
                 queryParamsJson.put(entry.getKey(), entry.getValue());
