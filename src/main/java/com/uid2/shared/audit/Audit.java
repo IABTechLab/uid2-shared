@@ -5,7 +5,8 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.http.HttpServerResponse;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -163,41 +164,60 @@ public class Audit {
         return bodyJson;
     }
 
+    private String defaultIfNull(String s) {
+        return s != null ? s : "unknown";
+    }
+
     public void log(RoutingContext ctx, AuditParams params) {
 
         JsonObject userDetails = ctx.get("userDetails");
+
         if (userDetails == null) {
             userDetails = new JsonObject();
         }
-        userDetails.put("User-Agent",ctx.request().getHeader("User-Agent") );
-        userDetails.put("IP", ctx.request().remoteAddress().host() );
 
-        AuditRecord.Builder builder = new AuditRecord.Builder(
-                ctx.response().getStatusCode(),
-                ctx.request().method().name(),
-                ctx.request().path(),
-                ctx.request().getHeader("X-Amzn-Trace-Id"),
-                userDetails
-        );
+        try {
+            HttpServerRequest request = ctx.request();
+            HttpServerResponse response = ctx.response();
 
-        if (params != null) {
-            JsonObject bodyJson = filterBody(ctx.body().asJsonObject(), params.bodyParams());
-            JsonObject queryParamsJson = filterQueryParams(ctx.request().params(), params.queryParams());
-            if (!queryParamsJson.isEmpty()) {
-                builder.queryParams(queryParamsJson);
+            userDetails.put("User-Agent", defaultIfNull(request.getHeader("User-Agent")));
+            userDetails.put("IP", request.remoteAddress() != null ? request.remoteAddress().host() : "unknown");
+
+
+            int status = response != null ? response.getStatusCode() : -1;
+            String method = request.method() != null ? request.method().name() : "UNKNOWN";
+            String path = defaultIfNull(request.path());
+            String traceId = defaultIfNull(request.getHeader("X-Amzn-Trace-Id"));
+
+
+            AuditRecord.Builder builder = new AuditRecord.Builder(
+                    status,
+                    method,
+                    path,
+                    traceId,
+                    userDetails
+            );
+            if (params != null) {
+                JsonObject bodyJson = filterBody(ctx.body().asJsonObject(), params.bodyParams());
+                JsonObject queryParamsJson = filterQueryParams(ctx.request().params(), params.queryParams());
+                if (!queryParamsJson.isEmpty()) {
+                    builder.queryParams(queryParamsJson);
+                }
+
+                if (bodyJson != null && !bodyJson.isEmpty()) {
+                    builder.requestBody(bodyJson);
+                }
             }
 
-            if (bodyJson != null && !bodyJson.isEmpty()) {
-                builder.requestBody(bodyJson);
+            if (ctx.request().getHeader("UID2-Forwarded-Trace-Id") != null) {
+                builder.forwardedRequestId(ctx.request().getHeader("UID2-Forwarded-Trace-Id"));
             }
-        }
 
-        if (ctx.request().getHeader("UID2-Forwarded-Trace-Id") != null) {
-            builder.forwardedRequestId(ctx.request().getHeader("UID2-Forwarded-Trace-Id"));
+            AuditRecord auditRecord = builder.build();
+            LOGGER.info(auditRecord.toString());
+        } catch (Exception e) {
+            LOGGER.warn("Failed to log audit record", e);
         }
-
-        AuditRecord auditRecord = builder.build();
-        LOGGER.info(auditRecord.toString());
     }
 
 }
