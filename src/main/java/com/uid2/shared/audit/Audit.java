@@ -163,7 +163,6 @@ public class Audit {
         return bodyJson;
     }
 
-    //move to shared
     public void log(RoutingContext ctx, AuditParams params) {
 
         JsonObject userDetails = ctx.get("userDetails");
