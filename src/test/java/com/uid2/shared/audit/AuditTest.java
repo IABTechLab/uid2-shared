@@ -4,6 +4,9 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.MultiMap;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RequestBody;
@@ -20,6 +23,8 @@ import io.vertx.core.http.HttpMethod;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+
 public class AuditTest {
 
     private RoutingContext mockCtx;
@@ -40,7 +45,7 @@ public class AuditTest {
         Mockito.when(mockCtx.response()).thenReturn(mockResponse);
         Mockito.when(mockRequest.getHeader("User-Agent")).thenReturn("JUnit-Test-Agent");
         Mockito.when(mockRequest.remoteAddress()).thenReturn(mockAddress);
-        Mockito.when(mockAddress.toString()).thenReturn("127.0.0.1");
+        Mockito.when(mockAddress.host()).thenReturn("127.0.0.1");
         Mockito.when(mockResponse.getStatusCode()).thenReturn(200);
 
         logger = (Logger) LoggerFactory.getLogger(Audit.class);
@@ -50,20 +55,33 @@ public class AuditTest {
     }
 
     @Test
-    public void testAudit() {
+    public void testAudit() throws JsonProcessingException {
         Mockito.when(mockRequest.method()).thenReturn(HttpMethod.GET);
         AuditParams params = new AuditParams("admin");
 
         new Audit().log(mockCtx, params);
 
-        boolean found = listAppender.list.stream()
-                .anyMatch(event -> event.getFormattedMessage().contains("GET"));
+        Optional<ILoggingEvent> maybeEvent = listAppender.list.stream()
+                .filter(event -> event.getFormattedMessage().contains("GET"))
+                .findFirst();
+        String jsonLog = maybeEvent.get().getFormattedMessage();
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = mapper.readTree(jsonLog);
 
-        assertThat(found).isTrue();
+        assertThat(jsonNode.get("method").asText()).isEqualTo("GET");
+        assertThat(jsonNode.get("status").asInt()).isEqualTo(200);
+        assertThat(jsonNode.get("source").asText()).isEqualTo("admin");
+
+        JsonNode actor = jsonNode.get("actor");
+        assertThat(actor).isNotNull();
+        assertThat(actor.get("User-Agent").asText()).isEqualTo("JUnit-Test-Agent");
+        assertThat(actor.get("IP").asText()).isEqualTo("127.0.0.1");
+
     }
 
     @Test
     public void testAuditFailSilently() {
+        Mockito.when(mockCtx.request()).thenReturn(null);
         new Audit().log(mockCtx, new AuditParams("admin"));
 
         boolean warnLogged = listAppender.list.stream()
