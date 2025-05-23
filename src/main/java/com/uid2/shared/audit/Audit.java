@@ -12,6 +12,7 @@ import java.util.*;
 
 public class Audit {
 
+    private final String source;
 
     static class AuditRecord {
         private final Instant timestamp;
@@ -167,6 +168,10 @@ public class Audit {
         return s != null ? s : "unknown";
     }
 
+    public Audit(String source) {
+        this.source = source;
+    }
+
     public void log(RoutingContext ctx, AuditParams params) {
         Objects.requireNonNull(ctx, "RoutingContext must not be null");
         Objects.requireNonNull(params, "AuditParams must not be null");
@@ -192,7 +197,7 @@ public class Audit {
 
             AuditRecord.Builder builder = new AuditRecord.Builder(
                     status,
-                    params.source(),
+                    source,
                     method,
                     path,
                     traceId,
