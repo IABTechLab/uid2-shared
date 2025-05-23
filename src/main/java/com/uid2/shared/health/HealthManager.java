@@ -1,6 +1,8 @@
 package com.uid2.shared.health;
 
-import java.io.File;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Metrics;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -8,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class HealthManager {
     public static HealthManager instance = new HealthManager();
-    private AtomicReference<List<IHealthComponent>> componentList = new AtomicReference(new ArrayList<IHealthComponent>());
+    private final AtomicReference<List<IHealthComponent>> components = new AtomicReference<>(new ArrayList<>());
 
     public synchronized HealthComponent registerComponent(String name) {
         // default healthy if initial status not specified
@@ -17,35 +19,42 @@ public class HealthManager {
 
     public synchronized HealthComponent registerComponent(String name, boolean initialHealthStatus) {
         HealthComponent component = new HealthComponent(name, initialHealthStatus);
-        List<IHealthComponent> newList = new ArrayList<IHealthComponent>(this.componentList.get());
+
+        return registerGenericComponent(component);
+    }
+
+    public synchronized <T extends IHealthComponent> T registerGenericComponent(T component) {
+        var newList = new ArrayList<>(this.components.get());
         newList.add(component);
-        this.componentList.set(newList);
+        this.components.set(newList);
+
+        registerForHealthMetric(component);
+
         return component;
     }
 
-    public synchronized void registerGenericComponent(IHealthComponent component) {
-        List<IHealthComponent> newList = new ArrayList<IHealthComponent>(this.componentList.get());
-        newList.add(component);
-        this.componentList.set(newList);
+    public boolean isHealthy() {
+        return this.components.get().stream().allMatch(IHealthComponent::isHealthy);
     }
 
-    public boolean isHealthy() {
-        // simple composite logic: service is healthy if none child component is unhealthy
-        List<IHealthComponent> list = this.componentList.get();
-        return list.stream().filter(c -> !c.isHealthy()).count() == 0;
+    private void registerForHealthMetric(IHealthComponent component) {
+        Gauge
+                .builder("uid2_component_health", () -> component.isHealthy() ? 1 : 0)
+                .description("Health status of components within a service")
+                .tag("component", component.name())
+                .register(Metrics.globalRegistry);
     }
 
     public String reason() {
-        List<IHealthComponent> list = this.componentList.get();
         // aggregate underlying unhealthy reasons for components that are not healthy
-        List<String> reasons = list.stream()
-            .filter(c -> !c.isHealthy())
-            .map(c -> String.format("%s: %s", c.name(), c.reason()))
-            .collect(Collectors.toList());
+        List<String> reasons = this.components.get().stream()
+                .filter(c -> !c.isHealthy())
+                .map(c -> String.format("%s: %s", c.name(), c.reason()))
+                .collect(Collectors.toList());
         return String.join("\n", reasons);
     }
 
-    public void clearComponents() {
-        this.componentList.set(new ArrayList<IHealthComponent>());
+    public void reset() {
+        this.components.set(new ArrayList<>());
     }
 }
