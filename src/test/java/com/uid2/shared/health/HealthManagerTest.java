@@ -1,7 +1,9 @@
 package com.uid2.shared.health;
 
 
+import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -9,9 +11,22 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class HealthManagerTest {
+
+    private SimpleMeterRegistry registry;
+
     @BeforeEach
     void setUp() {
         HealthManager.instance.reset();
+
+        registry = new SimpleMeterRegistry();
+        Metrics.addRegistry(registry);
+    }
+
+    @AfterEach
+    void tearDown() {
+        Metrics.globalRegistry.clear();
+        Metrics.globalRegistry.remove(registry);
+        registry.close();
     }
 
     @Test
@@ -91,9 +106,6 @@ public class HealthManagerTest {
 
     @Test
     public void recordsMetrics_unhealthy() {
-        var registry = new SimpleMeterRegistry();
-        HealthManager.instance.setMeterRegistry(registry);
-
         HealthComponent component = HealthManager.instance.registerComponent("test-component");
         component.setHealthStatus(false, "reason");
 
@@ -102,9 +114,6 @@ public class HealthManagerTest {
 
     @Test
     public void recordsMetrics_healthy() {
-        var registry = new SimpleMeterRegistry();
-        HealthManager.instance.setMeterRegistry(registry);
-
         HealthComponent component = HealthManager.instance.registerComponent("test-component");
         component.setHealthStatus(true, "reason");
 
@@ -113,9 +122,6 @@ public class HealthManagerTest {
 
     @Test
     public void recordsMetrics_healthChanges() {
-        var registry = new SimpleMeterRegistry();
-        HealthManager.instance.setMeterRegistry(registry);
-
         HealthComponent component = HealthManager.instance.registerComponent("test-component");
         component.setHealthStatus(true, "reason");
 
@@ -129,10 +135,6 @@ public class HealthManagerTest {
     public void recordsMetrics_forComponentsRegisteredBeforeRegistrySet() {
         HealthComponent component = HealthManager.instance.registerComponent("test-component");
         component.setHealthStatus(false, "reason");
-
-        // Setting the registry later should record metrics for already registered components
-        var registry = new SimpleMeterRegistry();
-        HealthManager.instance.setMeterRegistry(registry);
 
         assertThat(testComponentHealth(registry)).isEqualTo(0);
 

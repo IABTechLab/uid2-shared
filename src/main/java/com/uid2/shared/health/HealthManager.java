@@ -1,7 +1,7 @@
 package com.uid2.shared.health;
 
 import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Metrics;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,17 +11,6 @@ import java.util.stream.Collectors;
 public class HealthManager {
     public static HealthManager instance = new HealthManager();
     private final AtomicReference<List<IHealthComponent>> components = new AtomicReference<>(new ArrayList<>());
-    private MeterRegistry registry = null;
-
-    public synchronized void setMeterRegistry(MeterRegistry newRegistry) {
-        if (this.registry != null && newRegistry != null) {
-            throw new RuntimeException("MeterRegistry already set for HealthManager");
-        }
-
-        this.registry = newRegistry;
-
-        components.get().forEach(this::registerForHealthMetric);
-    }
 
     public synchronized HealthComponent registerComponent(String name) {
         // default healthy if initial status not specified
@@ -49,29 +38,23 @@ public class HealthManager {
     }
 
     private void registerForHealthMetric(IHealthComponent component) {
-        if (this.registry != null) {
-            Gauge
-                    .builder("uid2_component_health", () -> component.isHealthy() ? 1 : 0)
-                    .description("Health status of components within a service")
-                    .tag("component", component.name())
-                    .register(registry);
-        }
+        Gauge
+                .builder("uid2_component_health", () -> component.isHealthy() ? 1 : 0)
+                .description("Health status of components within a service")
+                .tag("component", component.name())
+                .register(Metrics.globalRegistry);
     }
 
     public String reason() {
         // aggregate underlying unhealthy reasons for components that are not healthy
         List<String> reasons = this.components.get().stream()
-            .filter(c -> !c.isHealthy())
-            .map(c -> String.format("%s: %s", c.name(), c.reason()))
-            .collect(Collectors.toList());
+                .filter(c -> !c.isHealthy())
+                .map(c -> String.format("%s: %s", c.name(), c.reason()))
+                .collect(Collectors.toList());
         return String.join("\n", reasons);
     }
 
     public void reset() {
         this.components.set(new ArrayList<>());
-        if (this.registry != null) {
-            this.registry.close();
-            this.setMeterRegistry(null);
-        }
     }
 }
