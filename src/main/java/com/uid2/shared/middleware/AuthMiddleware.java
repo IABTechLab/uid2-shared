@@ -1,6 +1,8 @@
 package com.uid2.shared.middleware;
 
 import com.uid2.shared.Const;
+import com.uid2.shared.audit.Audit;
+import com.uid2.shared.audit.AuditParams;
 import com.uid2.shared.auth.*;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;
@@ -21,11 +23,13 @@ public class AuthMiddleware {
     private static final String AuthorizationHeader = "Authorization";
     private static final String PrefixString = "bearer "; // The space at the end is intentional
     private IAuthorizableProvider authKeyStore;
+    private final Audit audit;
 
     private static final IAuthorizationProvider blankAuthorizationProvider = new BlankAuthorizationProvider();
 
-    public AuthMiddleware(IAuthorizableProvider authKeyStore) {
+    public AuthMiddleware(IAuthorizableProvider authKeyStore, String source) {
         this.authKeyStore = authKeyStore;
+        this.audit = new Audit(source);
     }
 
     public static String getAuthToken(RoutingContext rc) {
@@ -64,14 +68,27 @@ public class AuthMiddleware {
         return h::handle;
     }
 
+    private Handler<RoutingContext> logAndHandle(Handler<RoutingContext> handler, AuditParams params) {
+        return ctx -> {
+            ctx.addBodyEndHandler(v -> this.audit.log(ctx, params));
+            handler.handle(ctx);
+        };
+    }
+
     public <E> Handler<RoutingContext> handle(Handler<RoutingContext> handler, E... roles) {
+        return this.handle(handler, new AuditParams(), roles);
+    }
+
+    public <E> Handler<RoutingContext> handle(Handler<RoutingContext> handler, AuditParams params, E... roles) {
         if (roles == null || roles.length == 0) {
             throw new IllegalArgumentException("must specify at least one role");
         }
         final RoleBasedAuthorizationProvider<E> authorizationProvider = new RoleBasedAuthorizationProvider<>(Collections.unmodifiableSet(new HashSet<E>(Arrays.asList(roles))));
-        final AuthHandler h = new AuthHandler(handler, this.authKeyStore, authorizationProvider, false);
+        final Handler<RoutingContext> loggedHandler = logAndHandle(handler, params);
+        final AuthHandler h = new AuthHandler(loggedHandler, this.authKeyStore, authorizationProvider, false);
         return h::handle;
     }
+
 
     public Handler<RoutingContext> handleWithOptionalAuth(Handler<RoutingContext> handler) {
         final AuthHandler h = new AuthHandler(handler, this.authKeyStore, blankAuthorizationProvider, true);
