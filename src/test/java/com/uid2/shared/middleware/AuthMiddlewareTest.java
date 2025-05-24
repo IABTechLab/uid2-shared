@@ -33,7 +33,7 @@ public class AuthMiddlewareTest {
 
     @BeforeEach
     public void setup() {
-        auth = new AuthMiddleware(authProvider);
+        auth = new AuthMiddleware(authProvider, "app");
         when(routingContext.request()).thenReturn(request);
     }
 
