@@ -10,6 +10,7 @@ import com.uid2.shared.auth.*;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,7 +99,9 @@ public class AttestationMiddleware {
                                     isJwtValid = false;
                                     LOGGER.info("JWT missing required role. Required roles: {}, JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}", this.roleBasedJwtClaimValidator.getRequiredRoles(), response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
                                 }
-                                auditLogUserDetails.put("jwt_roles", new ArrayList<>(response.getRoles()));
+                                if (CollectionUtils.isNotEmpty(response.getRoles())) {
+                                    auditLogUserDetails.put("jwt_roles", new ArrayList<>(response.getRoles()));
+                                }
 
                                 String subject = calculateSubject(operatorKey);
                                 auditLogUserDetails.put("jwt_subject", subject);
