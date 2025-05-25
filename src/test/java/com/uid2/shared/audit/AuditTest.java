@@ -112,7 +112,7 @@ public class AuditTest {
         Mockito.when(mockCtx.body()).thenReturn(mockBody);
         Mockito.when(mockBody.asJsonObject()).thenReturn(json);
 
-        new Audit().log(mockCtx, params);
+        new Audit("admin").log(mockCtx, params);
 
         List<String> messages = listAppender.list.stream()
                 .map(ILoggingEvent::getFormattedMessage)
