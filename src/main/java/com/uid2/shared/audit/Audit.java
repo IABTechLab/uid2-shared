@@ -12,7 +12,6 @@ import java.util.*;
 
 public class Audit {
 
-    private final String source;
 
     static class AuditRecord {
         private final Instant timestamp;
@@ -106,6 +105,12 @@ public class Audit {
         }
     }
 
+    private final String source;
+
+    public Audit (String source) {
+        this.source = source;
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Audit.class);
 
     private static Set<String> flattenToDotNotation(JsonObject json, String parentKey) {
@@ -166,10 +171,6 @@ public class Audit {
 
     private String defaultIfNull(String s) {
         return s != null ? s : "unknown";
-    }
-
-    public Audit(String source) {
-        this.source = source;
     }
 
     public void log(RoutingContext ctx, AuditParams params) {
