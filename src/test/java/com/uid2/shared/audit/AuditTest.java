@@ -57,9 +57,9 @@ public class AuditTest {
     @Test
     public void testAudit() throws JsonProcessingException {
         Mockito.when(mockRequest.method()).thenReturn(HttpMethod.GET);
-        AuditParams params = new AuditParams("admin");
+        AuditParams params = new AuditParams();
 
-        new Audit().log(mockCtx, params);
+        new Audit("admin").log(mockCtx, params);
 
         Optional<ILoggingEvent> maybeEvent = listAppender.list.stream()
                 .filter(event -> event.getFormattedMessage().contains("GET"))
@@ -82,7 +82,7 @@ public class AuditTest {
     @Test
     public void testAuditFailSilently() {
         Mockito.when(mockCtx.request()).thenReturn(null);
-        new Audit().log(mockCtx, new AuditParams("admin"));
+        new Audit("admin").log(mockCtx, new AuditParams());
 
         boolean warnLogged = listAppender.list.stream()
                 .anyMatch(event -> event.getLevel() == Level.WARN && event.getFormattedMessage().contains("Failed"));
@@ -93,7 +93,7 @@ public class AuditTest {
     @Test
     public void testAuditThrowsExceptionWhenSourceIsNotSpecified() {
         try {
-            new Audit().log(mockCtx, null);
+            new Audit("admin").log(mockCtx, null);
         } catch (Exception e) {
             assertThat(e).isInstanceOf(NullPointerException.class);
         }
@@ -102,7 +102,7 @@ public class AuditTest {
     @Test
     public void testBodyParams() {
         Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
-        AuditParams params = new AuditParams("admin", null, Arrays.asList("name.first", "location"));
+        AuditParams params = new AuditParams(null, Arrays.asList("name.first", "location"));
 
         RequestBody mockBody = Mockito.mock(RequestBody.class);
         JsonObject json = new JsonObject()
@@ -112,7 +112,7 @@ public class AuditTest {
         Mockito.when(mockCtx.body()).thenReturn(mockBody);
         Mockito.when(mockBody.asJsonObject()).thenReturn(json);
 
-        new Audit().log(mockCtx, params);
+        new Audit("admin").log(mockCtx, params);
 
         List<String> messages = listAppender.list.stream()
                 .map(ILoggingEvent::getFormattedMessage)
@@ -125,13 +125,13 @@ public class AuditTest {
     @Test
     public void testQueryParams() {
         Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
-        AuditParams params = new AuditParams("admin", Arrays.asList("location"), null);
+        AuditParams params = new AuditParams(Arrays.asList("location"), null);
 
         MultiMap queryParams = MultiMap.caseInsensitiveMultiMap();
         queryParams.add("location", "seattle");
 
         Mockito.when(mockCtx.request().params()).thenReturn(queryParams);
-        new Audit().log(mockCtx, params);
+        new Audit("admin").log(mockCtx, params);
 
         List<String> messages = listAppender.list.stream()
                 .map(ILoggingEvent::getFormattedMessage)
