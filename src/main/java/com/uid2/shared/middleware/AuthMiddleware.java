@@ -15,7 +15,7 @@ public class AuthMiddleware {
     public static final String API_CONTACT_PROP = "api-contact";
     public static final String API_CLIENT_PROP = "api-client";
 
-    public static JsonObject UnauthorizedResponse = new JsonObject(new HashMap<String, Object>() {
+    public static final JsonObject UnauthorizedResponse = new JsonObject(new HashMap<String, Object>() {
         {
             put("status", Const.ResponseStatus.Unauthorized);
         }
@@ -55,10 +55,6 @@ public class AuthMiddleware {
         }
     }
 
-    private IAuthorizable getAuthClientByKey(String key) {
-        return this.authKeyStore.get(key);
-    }
-
     public <E> Handler<RoutingContext> handleV1(Handler<RoutingContext> handler, E... roles) {
         if (roles == null || roles.length == 0) {
             throw new IllegalArgumentException("must specify at least one role");
@@ -76,16 +72,22 @@ public class AuthMiddleware {
     }
 
     public <E> Handler<RoutingContext> handle(Handler<RoutingContext> handler, E... roles) {
-        return this.handle(handler, new AuditParams(), roles);
+        return this.handleWithAudit(handler, null, false, roles);
     }
 
-    public <E> Handler<RoutingContext> handle(Handler<RoutingContext> handler, AuditParams params, E... roles) {
+    public <E> Handler<RoutingContext> handleWithAudit(Handler<RoutingContext> handler, AuditParams params, boolean enableAuditLog, E... roles) {
         if (roles == null || roles.length == 0) {
             throw new IllegalArgumentException("must specify at least one role");
         }
         final RoleBasedAuthorizationProvider<E> authorizationProvider = new RoleBasedAuthorizationProvider<>(Collections.unmodifiableSet(new HashSet<E>(Arrays.asList(roles))));
-        final Handler<RoutingContext> loggedHandler = logAndHandle(handler, params);
-        final AuthHandler h = new AuthHandler(loggedHandler, this.authKeyStore, authorizationProvider, false);
+        AuthHandler h;
+        if (enableAuditLog) {
+            final Handler<RoutingContext> loggedHandler = logAndHandle(handler, params);
+            h = new AuthHandler(loggedHandler, this.authKeyStore, authorizationProvider, false);
+        } else {
+            h = new AuthHandler(handler, this.authKeyStore, authorizationProvider, false);
+        }
+
         return h::handle;
     }
 
