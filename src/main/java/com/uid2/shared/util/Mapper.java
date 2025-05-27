@@ -12,10 +12,15 @@ public final class Mapper {
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .build();
 
+    private static final ObjectMapper API_INSTANCE = JsonMapper.builder()
+            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
     private Mapper() {
     }
 
     public static ObjectMapper getInstance() {
         return INSTANCE;
     }
+
+    public static ObjectMapper getApiInstance() { return API_INSTANCE; }
 }
