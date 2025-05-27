@@ -1,6 +1,7 @@
 package com.uid2.shared.cloud;
 
 import com.amazonaws.HttpMethod;
+import com.amazonaws.SdkClientException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -141,6 +142,8 @@ public class CloudStorageS3 implements TaggableCloudStorage {
             } else {
                 throw new CloudStorageException("s3 get error: " + e.getClass().getSimpleName() + ": " + bucket + (verbose ? " - " + e.getMessage() : ""));
             }
+        } catch (SdkClientException e) {
+            throw new CloudStorageException("s3 get error: " + e.getClass().getSimpleName() + ": " + bucket + (verbose ? " - " + e.getMessage() : ""));
         } catch (Throwable t) {
             // Do not log the message or the original exception as that may contain the pre-signed url
             throw new CloudStorageException("s3 get error: " + t.getClass().getSimpleName() + ": " + bucket);
