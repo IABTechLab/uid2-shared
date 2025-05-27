@@ -106,12 +106,6 @@ public class Audit {
         }
     }
 
-    private final String source;
-
-    public Audit (String source) {
-        this.source = source;
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(Audit.class);
 
     private static Set<String> flattenToDotNotation(JsonObject json, String parentKey) {
