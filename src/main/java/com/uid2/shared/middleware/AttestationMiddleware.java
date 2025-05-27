@@ -72,11 +72,11 @@ public class AttestationMiddleware {
             boolean isJwtValid = false;
 
             final IAuthorizable profile = AuthMiddleware.getAuthClient(rc);
-            if (profile instanceof OperatorKey) {
-                OperatorKey operatorKey = (OperatorKey) profile;
+            if (profile instanceof OperatorKey operatorKey) {
                 JsonObject auditLogUserDetails = new JsonObject();
                 auditLogUserDetails.put("operatorKeyName", operatorKey.getName());
                 auditLogUserDetails.put("operatorKeyContact", operatorKey.getContact());
+                auditLogUserDetails.put("operatorKeySiteId", operatorKey.getSiteId());
                 final String protocol = operatorKey.getProtocol();
                 final String userToken = AuthMiddleware.getAuthToken(rc);
                 final String jwt = getAttestationJWT(rc);
