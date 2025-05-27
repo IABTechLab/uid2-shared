@@ -106,6 +106,12 @@ public class Audit {
         }
     }
 
+    private final String source;
+
+    public Audit (String source) {
+        this.source = source;
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(Audit.class);
 
     private static Set<String> flattenToDotNotation(JsonObject json, String parentKey) {
@@ -197,7 +203,7 @@ public class Audit {
 
             AuditRecord.Builder builder = new AuditRecord.Builder(
                     status,
-                    source,
+                    this.source,
                     method,
                     path,
                     traceId,
