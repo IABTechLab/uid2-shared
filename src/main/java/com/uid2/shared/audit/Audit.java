@@ -111,6 +111,7 @@ public class Audit {
         this.source = source;
     }
 
+    private static final String FORWARDED_TRACE_ID = "UID-Forwarded-Trace-Id";
     private static final Logger LOGGER = LoggerFactory.getLogger(Audit.class);
 
     private static Set<String> flattenToDotNotation(JsonObject json, String parentKey) {
@@ -120,8 +121,8 @@ public class Audit {
             String fullKey = parentKey.isEmpty() ? entry.getKey() : parentKey + "." + entry.getKey();
             Object value = entry.getValue();
 
-            if (value instanceof JsonObject) {
-                keys.addAll(flattenToDotNotation((JsonObject) value, fullKey));
+            if (value instanceof JsonObject jsonObject) {
+                keys.addAll(flattenToDotNotation(jsonObject, fullKey));
             } else {
                 keys.add(fullKey);
             }
@@ -223,8 +224,8 @@ public class Audit {
                 builder.requestBody(bodyJson);
             }
 
-            if (ctx.request().getHeader("UID-Forwarded-Trace-Id") != null && !ctx.request().getHeader("UID-Forwarded-Trace-Id").isEmpty()) {
-                builder.forwardedRequestId(ctx.request().getHeader("UID2-Forwarded-Trace-Id"));
+            if (ctx.request().getHeader(FORWARDED_TRACE_ID) != null && !ctx.request().getHeader(FORWARDED_TRACE_ID).isEmpty()) {
+                builder.forwardedRequestId(ctx.request().getHeader(FORWARDED_TRACE_ID));
             }
 
             AuditRecord auditRecord = builder.build();
