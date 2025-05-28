@@ -174,11 +174,13 @@ public class Audit {
         return s != null ? s : "unknown";
     }
 
+    public static final String USER_DETAILS = "userDetails";
+
     public void log(RoutingContext ctx, AuditParams params) {
         Objects.requireNonNull(ctx, "RoutingContext must not be null");
         Objects.requireNonNull(params, "AuditParams must not be null");
 
-        JsonObject userDetails = ctx.get("userDetails");
+        JsonObject userDetails = ctx.get(USER_DETAILS);
 
         if (userDetails == null) {
             userDetails = new JsonObject();

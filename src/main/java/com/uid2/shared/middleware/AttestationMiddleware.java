@@ -6,6 +6,7 @@ import com.uid2.shared.attest.IAttestationTokenService;
 import com.uid2.shared.attest.JwtService;
 import com.uid2.shared.attest.JwtValidationResponse;
 import com.uid2.shared.attest.RoleBasedJwtClaimValidator;
+import com.uid2.shared.audit.Audit;
 import com.uid2.shared.auth.*;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
@@ -19,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.stream.Collectors;
 
 import static com.uid2.shared.Utils.createMessageDigestSHA512;
 
@@ -119,7 +119,7 @@ public class AttestationMiddleware {
                         }
                     }
                 }
-                rc.put("userDetails", auditLogUserDetails);
+                rc.put(Audit.USER_DETAILS, auditLogUserDetails);
             }
 
             if (success && !isJwtValid && this.enforceJwt) {
