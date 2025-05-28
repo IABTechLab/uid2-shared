@@ -27,9 +27,13 @@ public class AuthMiddleware {
 
     private static final IAuthorizationProvider blankAuthorizationProvider = new BlankAuthorizationProvider();
 
-    public AuthMiddleware(IAuthorizableProvider authKeyStore, String source) {
+    public AuthMiddleware(IAuthorizableProvider authKeyStore) {
+        this(authKeyStore, "unknown");
+    }
+
+    public AuthMiddleware(IAuthorizableProvider authKeyStore, String auditSource) {
         this.authKeyStore = authKeyStore;
-        this.audit = new Audit(source);
+        this.audit = new Audit(auditSource);
     }
 
     public static String getAuthToken(RoutingContext rc) {
