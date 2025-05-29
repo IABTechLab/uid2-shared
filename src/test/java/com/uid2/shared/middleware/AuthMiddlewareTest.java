@@ -1,5 +1,6 @@
 package com.uid2.shared.middleware;
 
+import com.uid2.shared.audit.AuditParams;
 import com.uid2.shared.auth.IAuthorizableProvider;
 import com.uid2.shared.auth.IRoleAuthorizable;
 import com.uid2.shared.auth.Role;
@@ -9,6 +10,7 @@ import io.vertx.ext.web.RoutingContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -33,7 +35,7 @@ public class AuthMiddlewareTest {
 
     @BeforeEach
     public void setup() {
-        auth = new AuthMiddleware(authProvider);
+        auth = new AuthMiddleware(authProvider, "app");
         when(routingContext.request()).thenReturn(request);
     }
 
@@ -43,6 +45,7 @@ public class AuthMiddlewareTest {
         handler.handle(routingContext);
         verifyNoInteractions(nextHandler);
         verify(routingContext).fail(401);
+        verify(routingContext, times(0)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
     }
 
     @Test public void authHandlerInvalidAuthorizationHeader() {
@@ -51,6 +54,7 @@ public class AuthMiddlewareTest {
         handler.handle(routingContext);
         verifyNoInteractions(nextHandler);
         verify(routingContext).fail(401);
+        verify(routingContext, times(0)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
     }
 
     @Test public void authHandlerUnknownKey() {
@@ -59,6 +63,7 @@ public class AuthMiddlewareTest {
         handler.handle(routingContext);
         verifyNoInteractions(nextHandler);
         verify(routingContext).fail(401);
+        verify(routingContext, times(0)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
     }
 
     @Test public void authHandlerKeyWithoutRoles() {
@@ -68,6 +73,7 @@ public class AuthMiddlewareTest {
         handler.handle(routingContext);
         verifyNoInteractions(nextHandler);
         verify(routingContext).fail(401);
+        verify(routingContext, times(0)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
     }
 
     @Test public void authHandlerKeyWithFirstRole() {
@@ -78,6 +84,19 @@ public class AuthMiddlewareTest {
         handler.handle(routingContext);
         verify(nextHandler).handle(routingContext);
         verify(routingContext, times(0)).fail(any());
+        verify(routingContext, times(0)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
+    }
+
+    @Test
+    public void authHandlerKeyWithFirstRoleAudit() {
+        when(request.getHeader("Authorization")).thenReturn("Bearer some-key");
+        when(authProvider.get("some-key")).thenReturn(profile);
+        when(profile.hasRole(Role.MAPPER)).thenReturn(true);
+        Handler<RoutingContext> handler = auth.handleWithAudit(nextHandler, new AuditParams(), true, Role.MAPPER, Role.ID_READER);
+        handler.handle(routingContext);
+        verify(nextHandler).handle(routingContext);
+        verify(routingContext, times(0)).fail(any());
+        verify(routingContext, times(1)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
     }
 
     @Test public void authHandlerKeyWithSecondRole() {
@@ -88,6 +107,19 @@ public class AuthMiddlewareTest {
         handler.handle(routingContext);
         verify(nextHandler).handle(routingContext);
         verify(routingContext, times(0)).fail(any());
+        verify(routingContext, times(0)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
+    }
+
+    @Test
+    public void authHandlerKeyWithSecondRoleAudit() {
+        when(request.getHeader("Authorization")).thenReturn("Bearer some-key");
+        when(authProvider.get("some-key")).thenReturn(profile);
+        when(profile.hasRole(Role.ID_READER)).thenReturn(true);
+        Handler<RoutingContext> handler = auth.handleWithAudit(nextHandler, new AuditParams(), true, Role.MAPPER, Role.ID_READER);
+        handler.handle(routingContext);
+        verify(nextHandler).handle(routingContext);
+        verify(routingContext, times(0)).fail(any());
+        verify(routingContext, times(1)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
     }
 
     @Test public void authHandlerKeyDisabled() {
@@ -99,6 +131,7 @@ public class AuthMiddlewareTest {
         verify(profile, times(0)).hasRole(any());
         verifyNoInteractions(nextHandler);
         verify(routingContext).fail(401);
+        verify(routingContext, times(0)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
     }
 
     @Test public void noAuthHandlerNoAuthorizationHeader() {
@@ -106,6 +139,7 @@ public class AuthMiddlewareTest {
         handler.handle(routingContext);
         verify(nextHandler).handle(routingContext);
         verify(routingContext, times(0)).fail(any());
+        verify(routingContext, times(0)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
     }
 
     @Test public void noAuthHandlerInvalidAuthorizationHeader() {
@@ -114,6 +148,7 @@ public class AuthMiddlewareTest {
         handler.handle(routingContext);
         verify(nextHandler).handle(routingContext);
         verify(routingContext, times(0)).fail(any());
+        verify(routingContext, times(0)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
     }
 
     @Test public void noAuthHandlerUnknownKey() {
@@ -122,6 +157,7 @@ public class AuthMiddlewareTest {
         handler.handle(routingContext);
         verify(nextHandler).handle(routingContext);
         verify(routingContext, times(0)).fail(any());
+        verify(routingContext, times(0)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
     }
 
     @Test public void noAuthHandlerKnownKey() {
@@ -132,5 +168,6 @@ public class AuthMiddlewareTest {
         verify(profile, times(0)).isDisabled();
         verify(nextHandler).handle(routingContext);
         verify(routingContext, times(0)).fail(any());
+        verify(routingContext, times(0)).addBodyEndHandler(ArgumentMatchers.<Handler<Void>>any());
     }
 }
