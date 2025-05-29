@@ -68,9 +68,9 @@ public class AuthMiddleware {
         return h::handle;
     }
 
-    private Handler<RoutingContext> logAndHandle(Handler<RoutingContext> handler, AuditParams params) {
+    private Handler<RoutingContext> logAndHandle(Handler<RoutingContext> handler, AuditParams auditParams) {
         return ctx -> {
-            ctx.addBodyEndHandler(v -> this.audit.log(ctx, params));
+            ctx.addBodyEndHandler(v -> this.audit.log(ctx, auditParams));
             handler.handle(ctx);
         };
     }
@@ -146,6 +146,7 @@ public class AuthMiddleware {
             this.authorizationProvider = authorizationProvider;
             this.isV1Response = isV1Response;
         }
+
 
         public void handle(RoutingContext rc) {
             // add aws request id tracer to help validation
