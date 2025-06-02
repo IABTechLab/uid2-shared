@@ -73,10 +73,6 @@ public class AttestationMiddleware {
 
             final IAuthorizable profile = AuthMiddleware.getAuthClient(rc);
             if (profile instanceof OperatorKey operatorKey) {
-                JsonObject auditLogUserDetails = new JsonObject();
-                auditLogUserDetails.put("operatorKeyName", operatorKey.getName());
-                auditLogUserDetails.put("operatorKeyContact", operatorKey.getContact());
-                auditLogUserDetails.put("operatorKeySiteId", operatorKey.getSiteId());
                 final String protocol = operatorKey.getProtocol();
                 final String userToken = AuthMiddleware.getAuthToken(rc);
                 final String jwt = getAttestationJWT(rc);
@@ -99,6 +95,7 @@ public class AttestationMiddleware {
                                     isJwtValid = false;
                                     LOGGER.info("JWT missing required role. Required roles: {}, JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}", this.roleBasedJwtClaimValidator.getRequiredRoles(), response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
                                 }
+                                JsonObject auditLogUserDetails = rc.get(Audit.USER_DETAILS, new JsonObject());
                                 if (CollectionUtils.isNotEmpty(response.getRoles())) {
                                     auditLogUserDetails.put("jwt_roles", new ArrayList<>(response.getRoles()));
                                 }
@@ -109,6 +106,7 @@ public class AttestationMiddleware {
                                     isJwtValid = false;
                                     LOGGER.info("JWT failed validation of Subject. JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}, JWT Subject: {}, Operator Subject: {}", response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), response.getSubject(), subject);
                                 }
+                                rc.put(Audit.USER_DETAILS, auditLogUserDetails);
                             }
                         } catch (JwtService.ValidationException e) {
                             LOGGER.info("Error validating JWT. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}. Error: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), e.toString());
@@ -119,7 +117,6 @@ public class AttestationMiddleware {
                         }
                     }
                 }
-                rc.put(Audit.USER_DETAILS, auditLogUserDetails);
             }
 
             if (success && !isJwtValid && this.enforceJwt) {
