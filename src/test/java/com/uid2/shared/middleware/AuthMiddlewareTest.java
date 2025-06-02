@@ -1,6 +1,5 @@
 package com.uid2.shared.middleware;
 
-import com.uid2.shared.audit.AuditParams;
 import com.uid2.shared.auth.IAuthorizableProvider;
 import com.uid2.shared.auth.IRoleAuthorizable;
 import com.uid2.shared.auth.Role;
@@ -15,6 +14,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
+import java.util.Arrays;
 
 import static org.mockito.Mockito.*;
 
@@ -92,7 +93,7 @@ public class AuthMiddlewareTest {
         when(request.getHeader("Authorization")).thenReturn("Bearer some-key");
         when(authProvider.get("some-key")).thenReturn(profile);
         when(profile.hasRole(Role.MAPPER)).thenReturn(true);
-        Handler<RoutingContext> handler = auth.handleWithAudit(nextHandler, new AuditParams(), true, Role.MAPPER, Role.ID_READER);
+        Handler<RoutingContext> handler = auth.handleWithAudit(nextHandler, Arrays.asList(Role.MAPPER, Role.ID_READER));
         handler.handle(routingContext);
         verify(nextHandler).handle(routingContext);
         verify(routingContext, times(0)).fail(any());
@@ -115,7 +116,7 @@ public class AuthMiddlewareTest {
         when(request.getHeader("Authorization")).thenReturn("Bearer some-key");
         when(authProvider.get("some-key")).thenReturn(profile);
         when(profile.hasRole(Role.ID_READER)).thenReturn(true);
-        Handler<RoutingContext> handler = auth.handleWithAudit(nextHandler, new AuditParams(), true, Role.MAPPER, Role.ID_READER);
+        Handler<RoutingContext> handler = auth.handleWithAudit(nextHandler,  Arrays.asList(Role.MAPPER, Role.ID_READER));
         handler.handle(routingContext);
         verify(nextHandler).handle(routingContext);
         verify(routingContext, times(0)).fail(any());
