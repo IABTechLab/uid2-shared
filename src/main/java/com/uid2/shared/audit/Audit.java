@@ -190,8 +190,8 @@ public class Audit {
             HttpServerRequest request = ctx.request();
             HttpServerResponse response = ctx.response();
 
-            userDetails.put("User-Agent", defaultIfNull(request.getHeader("User-Agent")));
-            userDetails.put("IP", defaultIfNull(request.remoteAddress() != null ? request.remoteAddress().host() : null));
+            userDetails.put("user_agent", defaultIfNull(request.getHeader("User-Agent")));
+            userDetails.put("ip", defaultIfNull(request.remoteAddress() != null ? request.remoteAddress().host() : null));
 
             int status = response != null ? response.getStatusCode() : -1;
             String method = request.method() != null ? request.method().name() : "UNKNOWN";
