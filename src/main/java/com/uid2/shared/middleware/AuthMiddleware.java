@@ -8,6 +8,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
 
@@ -56,6 +57,13 @@ public class AuthMiddleware {
         rc.data().put(API_CLIENT_PROP, profile);
         if (profile != null) {
             rc.data().put(API_CONTACT_PROP, profile.getContact());
+            if (profile instanceof OperatorKey operatorKey) {
+                JsonObject auditLogUserDetails = new JsonObject();
+                auditLogUserDetails.put("operator_key_name", operatorKey.getName());
+                auditLogUserDetails.put("operator_key_contact", operatorKey.getContact());
+                auditLogUserDetails.put("operator_key_site_id", operatorKey.getSiteId());
+                rc.put(Audit.USER_DETAILS, auditLogUserDetails);
+            }
         }
     }
 
@@ -76,14 +84,21 @@ public class AuthMiddleware {
     }
 
     public <E> Handler<RoutingContext> handle(Handler<RoutingContext> handler, E... roles) {
-        return this.handleWithAudit(handler, null, false, roles);
-    }
-
-    public <E> Handler<RoutingContext> handleWithAudit(Handler<RoutingContext> handler, AuditParams params, boolean enableAuditLog, E... roles) {
         if (roles == null || roles.length == 0) {
             throw new IllegalArgumentException("must specify at least one role");
         }
-        final RoleBasedAuthorizationProvider<E> authorizationProvider = new RoleBasedAuthorizationProvider<>(Collections.unmodifiableSet(new HashSet<E>(Arrays.asList(roles))));
+        return this.handleWithAudit(handler, null, false, Arrays.asList(roles));
+    }
+
+    public final <E> Handler<RoutingContext> handleWithAudit(Handler<RoutingContext> handler, List<E> roles) {
+        return this.handleWithAudit(handler, new AuditParams(), true, roles);
+    }
+
+    public final <E> Handler<RoutingContext> handleWithAudit(Handler<RoutingContext> handler, AuditParams params, boolean enableAuditLog, List<E> roles) {
+        if (CollectionUtils.isEmpty(roles)) {
+            throw new IllegalArgumentException("must specify at least one role");
+        }
+        final RoleBasedAuthorizationProvider<E> authorizationProvider = new RoleBasedAuthorizationProvider<>(Collections.unmodifiableSet(new HashSet<E>(roles)));
         AuthHandler h;
         if (enableAuditLog) {
             final Handler<RoutingContext> loggedHandler = logAndHandle(handler, params);

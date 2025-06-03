@@ -74,8 +74,8 @@ public class AuditTest {
 
         JsonNode actor = jsonNode.get("actor");
         assertThat(actor).isNotNull();
-        assertThat(actor.get("User-Agent").asText()).isEqualTo("JUnit-Test-Agent");
-        assertThat(actor.get("IP").asText()).isEqualTo("127.0.0.1");
+        assertThat(actor.get("user_agent").asText()).isEqualTo("JUnit-Test-Agent");
+        assertThat(actor.get("ip").asText()).isEqualTo("127.0.0.1");
 
     }
 
