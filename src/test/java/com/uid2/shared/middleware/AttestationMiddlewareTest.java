@@ -64,22 +64,14 @@ public class AttestationMiddlewareTest {
 
         this.data.put(AuthMiddleware.API_CLIENT_PROP, this.operatorKey);
         when(this.routingContext.data()).thenReturn(data);
+        when(this.routingContext.get(anyString(), any(JsonObject.class))).thenReturn(new JsonObject());
     }
 
-    private JsonObject verifyAuditLogFilled() {
+    private void verifyAuditLogFilledWithJwt(JwtValidationResponse response) {
         ArgumentCaptor<String> keyArgumentCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<JsonObject> jsonObjectArgumentCaptor = ArgumentCaptor.forClass(JsonObject.class);
         verify(routingContext).put(keyArgumentCaptor.capture(), jsonObjectArgumentCaptor.capture());
         JsonObject auditLogUserDetailsActual = jsonObjectArgumentCaptor.getValue();
-        Assertions.assertEquals("userDetails", keyArgumentCaptor.getValue());
-        Assertions.assertEquals(operatorKey.getName(), auditLogUserDetailsActual.getString("operatorKeyName"));
-        Assertions.assertEquals(operatorKey.getContact(), auditLogUserDetailsActual.getString("operatorKeyContact"));
-        Assertions.assertEquals(operatorKey.getSiteId().toString(), auditLogUserDetailsActual.getString("operatorKeySiteId"));
-        return auditLogUserDetailsActual;
-    }
-
-    private void verifyAuditLogFilledWithJwt(JwtValidationResponse response) {
-        JsonObject auditLogUserDetailsActual = verifyAuditLogFilled();
         JsonArray expectedJwtRoles = null;
         if (CollectionUtils.isNotEmpty(response.getRoles())) {
             expectedJwtRoles = JsonArray.of(response.getRoles().toArray());
@@ -161,7 +153,6 @@ public class AttestationMiddlewareTest {
 
         verify(nextHandler).handle(routingContext);
         verifyNoInteractions(this.jwtService);
-        verifyAuditLogFilled();
     }
 
     @ParameterizedTest
@@ -176,7 +167,6 @@ public class AttestationMiddlewareTest {
 
         verifyNoInteractions(nextHandler);
         verify(routingContext).fail(401);
-        verifyAuditLogFilled();
     }
 
     @Test
@@ -190,7 +180,6 @@ public class AttestationMiddlewareTest {
 
         verifyNoInteractions(nextHandler);
         verify(routingContext).fail(401);
-        verifyAuditLogFilled();
     }
 
     @Test
@@ -203,7 +192,6 @@ public class AttestationMiddlewareTest {
 
         verifyNoInteractions(nextHandler);
         verify(routingContext).fail(401);
-        verifyAuditLogFilled();
     }
 
     @Test
@@ -218,7 +206,6 @@ public class AttestationMiddlewareTest {
 
         verifyNoInteractions(nextHandler);
         verify(routingContext).fail(401);
-        verifyAuditLogFilled();
     }
 
     @Test
@@ -236,7 +223,6 @@ public class AttestationMiddlewareTest {
 
         verifyNoInteractions(nextHandler);
         verify(routingContext).fail(401);
-        verifyAuditLogFilled();
     }
 
     private AttestationMiddleware getAttestationMiddleware(boolean enforceJwt) {

@@ -174,7 +174,7 @@ public class Audit {
         return s != null ? s : "unknown";
     }
 
-    public static final String USER_DETAILS = "userDetails";
+    public static final String USER_DETAILS = "user_details";
 
     public void log(RoutingContext ctx, AuditParams params) {
         Objects.requireNonNull(ctx, "RoutingContext must not be null");
