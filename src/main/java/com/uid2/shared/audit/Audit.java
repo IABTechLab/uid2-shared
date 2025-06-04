@@ -70,8 +70,8 @@ public class Audit {
             private final String traceId;
             private final JsonObject actor;
             private final String source;
+            private final String uidTraceId;
 
-            private String uidTraceId;
             private JsonObject queryParams;
             private JsonObject requestBody;
 
