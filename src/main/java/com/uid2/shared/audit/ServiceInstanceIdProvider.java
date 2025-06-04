@@ -30,7 +30,7 @@ public class ServiceInstanceIdProvider {
     }
 
     public ServiceInstanceIdProvider(String instanceIdPrefix, String instanceIdSuffix) {
-        if (instanceIdPrefix == null || instanceIdPrefix.isEmpty()) {
+        if (instanceIdPrefix == null || instanceIdPrefix.isEmpty() || instanceIdSuffix == null || instanceIdSuffix.isEmpty()) {
             throw new IllegalArgumentException("ServiceInstanceIdProvider requires a non-empty instance ID");
         }
 
