@@ -51,7 +51,7 @@ public class Audit {
                     .put("request_id", requestId)
                     .put("actor", actor);
             if (uid2RequestId != null) {
-                json.put("forwarded_request_id", uid2RequestId);
+                json.put("uid2|origin_request_id| other name in audit log", uid2RequestId);
             }
             if (queryParams != null) json.put("query_params", queryParams);
             if (requestBody != null) json.put("request_body", requestBody);
