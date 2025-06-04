@@ -181,11 +181,11 @@ public class Audit {
                 return filterBody((JsonObject) genericJsonValue, allowedKeys);
             } else if (genericJsonValue instanceof JsonArray) {
                 return filterJsonArrayBody((JsonArray) genericJsonValue, allowedKeys);
-            }
-            else {
+            } else {
                 return "";
             }
         } catch (Exception e) {
+            LOGGER.error("Failed to parse body param", e);
             return "";
         }
     }
@@ -205,6 +205,10 @@ public class Audit {
     }
 
     private String filterJsonArrayBody(JsonArray bodyJson, Set<String> allowedKeys) {
+        if (bodyJson == null) {
+            return "";
+        }
+
         JsonArray newJsonArray = new JsonArray();
         for (Object object : bodyJson) {
             if (object instanceof JsonObject) {
