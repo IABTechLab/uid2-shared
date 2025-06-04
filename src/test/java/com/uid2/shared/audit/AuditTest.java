@@ -120,8 +120,30 @@ public class AuditTest {
                 .map(ILoggingEvent::getFormattedMessage)
                 .toList();
 
-        assertThat(messages).anyMatch(msg -> msg.contains("uid2_user"));
-        assertThat(messages).anyMatch(msg -> msg.contains("seattle"));
+        assertThat(messages).allMatch(msg -> msg.contains("uid2_user") && msg.contains("seattle"));
+    }
+
+    @Test
+    public void testBodyParamsAsJsobObjectWithSelectedBodyParams() {
+        Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
+        AuditParams params = new AuditParams(null, Arrays.asList("name.first"));
+
+        RequestBody mockBody = Mockito.mock(RequestBody.class);
+        JsonObject json = new JsonObject()
+                .put("name", new JsonObject().put("first", "uid2_user"))
+                .put("location", "seattle");
+
+        Mockito.when(mockCtx.body()).thenReturn(mockBody);
+        Mockito.when(mockBody.buffer()).thenReturn(Buffer.buffer(json.toString()));
+
+        new Audit("admin").log(mockCtx, params);
+
+        List<String> messages = listAppender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .toList();
+
+        assertThat(messages).allMatch(msg -> msg.contains("uid2_user"));
+        assertThat(messages).noneMatch(msg -> msg.contains("seattle"));
     }
 
     @Test
@@ -143,8 +165,7 @@ public class AuditTest {
                 .map(ILoggingEvent::getFormattedMessage)
                 .toList();
 
-        assertThat(messages).anyMatch(msg -> msg.contains("partner_id"));
-        assertThat(messages).anyMatch(msg -> msg.contains("config"));
+        assertThat(messages).allMatch(msg -> msg.contains("partner_id") && msg.contains("config"));
     }
 
     @Test
@@ -167,7 +188,7 @@ public class AuditTest {
                 .toList();
 
         assertThat(messages).noneMatch(msg -> msg.contains("partner_id"));
-        assertThat(messages).anyMatch(msg -> msg.contains("config"));
+        assertThat(messages).allMatch(msg -> msg.contains("config"));
     }
 
     @Test
