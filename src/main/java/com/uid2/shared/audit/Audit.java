@@ -85,11 +85,6 @@ public class Audit {
                 this.actor = actor;
             }
 
-            public Builder uidTraceId(String uidTraceId) {
-                this.uidTraceId = uidTraceId;
-                return this;
-            }
-
             public Builder queryParams(JsonObject queryParams) {
                 this.queryParams = queryParams;
                 return this;
