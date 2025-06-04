@@ -8,6 +8,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RequestBody;
 import io.vertx.ext.web.RoutingContext;
@@ -100,7 +102,7 @@ public class AuditTest {
     }
 
     @Test
-    public void testBodyParams() {
+    public void testBodyParamsAsJsobObject() {
         Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
         AuditParams params = new AuditParams(null, Arrays.asList("name.first", "location"));
 
@@ -110,7 +112,7 @@ public class AuditTest {
                 .put("location", "seattle");
 
         Mockito.when(mockCtx.body()).thenReturn(mockBody);
-        Mockito.when(mockBody.asJsonObject()).thenReturn(json);
+        Mockito.when(mockBody.buffer()).thenReturn(Buffer.buffer(json.toString()));
 
         new Audit("admin").log(mockCtx, params);
 
@@ -120,6 +122,52 @@ public class AuditTest {
 
         assertThat(messages).anyMatch(msg -> msg.contains("uid2_user"));
         assertThat(messages).anyMatch(msg -> msg.contains("seattle"));
+    }
+
+    @Test
+    public void testBodyParamsAsJsonArray() {
+        Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
+        AuditParams params = new AuditParams(null, Arrays.asList("partner_id", "config"));
+
+        RequestBody mockBody = Mockito.mock(RequestBody.class);
+        JsonArray json = new JsonArray()
+                .add(new JsonObject().put("partner_id", "1").put("config", "config1"))
+                .add(new JsonObject().put("partner_id", "2").put("config", "config2"));
+
+        Mockito.when(mockCtx.body()).thenReturn(mockBody);
+        Mockito.when(mockBody.buffer()).thenReturn(Buffer.buffer(json.toString()));
+
+        new Audit("admin").log(mockCtx, params);
+
+        List<String> messages = listAppender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .toList();
+
+        assertThat(messages).anyMatch(msg -> msg.contains("partner_id"));
+        assertThat(messages).anyMatch(msg -> msg.contains("config"));
+    }
+
+    @Test
+    public void testBodyParamsAsJsonArrayWithSelectedBodyParams() {
+        Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
+        AuditParams params = new AuditParams(null, Arrays.asList("config"));
+
+        RequestBody mockBody = Mockito.mock(RequestBody.class);
+        JsonArray json = new JsonArray()
+                .add(new JsonObject().put("partner_id", "1").put("config", "config1"))
+                .add(new JsonObject().put("partner_id", "2").put("config", "config2"));
+
+        Mockito.when(mockCtx.body()).thenReturn(mockBody);
+        Mockito.when(mockBody.buffer()).thenReturn(Buffer.buffer(json.toString()));
+
+        new Audit("admin").log(mockCtx, params);
+
+        List<String> messages = listAppender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .toList();
+
+        assertThat(messages).noneMatch(msg -> msg.contains("partner_id"));
+        assertThat(messages).anyMatch(msg -> msg.contains("config"));
     }
 
     @Test
