@@ -22,7 +22,7 @@ public class Audit {
         private final String endpoint;
         private final String requestId;
         private final JsonObject actor;
-        private final String forwardedRequestId;
+        private final String uid2RequestId;
         private final JsonObject queryParams;
         private final JsonObject requestBody;
 
@@ -35,7 +35,7 @@ public class Audit {
             this.endpoint = builder.endpoint;
             this.requestId = builder.requestId;
             this.actor = builder.actor;
-            this.forwardedRequestId = builder.forwardedRequestId;
+            this.uid2RequestId = builder.uid2RequestId;
             this.queryParams = builder.queryParams;
             this.requestBody = builder.requestBody;
         }
@@ -50,8 +50,8 @@ public class Audit {
                     .put("endpoint", endpoint)
                     .put("request_id", requestId)
                     .put("actor", actor);
-            if (forwardedRequestId != null) {
-                json.put("forwarded_request_id", forwardedRequestId);
+            if (uid2RequestId != null) {
+                json.put("forwarded_request_id", uid2RequestId);
             }
             if (queryParams != null) json.put("query_params", queryParams);
             if (requestBody != null) json.put("request_body", requestBody);
@@ -71,7 +71,7 @@ public class Audit {
             private final JsonObject actor;
             private final String source;
 
-            private String forwardedRequestId;
+            private String uid2RequestId;
             private JsonObject queryParams;
             private JsonObject requestBody;
 
@@ -81,11 +81,12 @@ public class Audit {
                 this.method = method;
                 this.endpoint = endpoint;
                 this.requestId = requestId;
+                this.uid2RequestId = requestId;
                 this.actor = actor;
             }
 
-            public Builder forwardedRequestId(String forwardedRequestId) {
-                this.forwardedRequestId = forwardedRequestId;
+            public Builder uid2RequestId(String uid2RequestId) {
+                this.uid2RequestId = uid2RequestId;
                 return this;
             }
 
@@ -227,7 +228,7 @@ public class Audit {
             }
 
             if (ctx.request().getHeader(FORWARDED_TRACE_ID) != null && !ctx.request().getHeader(FORWARDED_TRACE_ID).isEmpty()) {
-                builder.forwardedRequestId(ctx.request().getHeader(FORWARDED_TRACE_ID));
+                builder.uid2RequestId(ctx.request().getHeader(FORWARDED_TRACE_ID));
             }
 
             AuditRecord auditRecord = builder.build();
