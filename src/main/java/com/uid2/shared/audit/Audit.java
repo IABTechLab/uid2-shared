@@ -169,12 +169,18 @@ public class Audit {
             return "";
         }
 
+        Set<String> allowedKeys = bodyParams != null
+                ? new HashSet<>(bodyParams): null;
+        if (allowedKeys == null) {
+            return "";
+        }
+
         try {
             Object genericJsonValue = Json.decodeValue(bodyBuffer);
             if (genericJsonValue instanceof JsonObject) {
-                return filterBody((JsonObject) genericJsonValue, bodyParams);
+                return filterBody((JsonObject) genericJsonValue, allowedKeys);
             } else if (genericJsonValue instanceof JsonArray) {
-                return filterJsonArrayBody((JsonArray) genericJsonValue, bodyParams);
+                return filterJsonArrayBody((JsonArray) genericJsonValue, allowedKeys);
             }
             else {
                 return "";
@@ -184,12 +190,11 @@ public class Audit {
         }
     }
 
-    private String filterBody(JsonObject bodyJson, List<String> bodyParams) {
-        Set<String> allowedKeys = bodyParams != null
-                ? new HashSet<>(bodyParams): null;
-        if (bodyJson == null || allowedKeys == null) {
+    private String filterBody(JsonObject bodyJson, Set<String> allowedKeys) {
+        if (bodyJson == null) {
             return "";
         }
+
         Set<String> dotKeys = flattenToDotNotation(bodyJson, "");
         for (String key : dotKeys) {
             if (!allowedKeys.contains(key)) {
@@ -199,12 +204,7 @@ public class Audit {
         return bodyJson.toString();
     }
 
-    private String filterJsonArrayBody(JsonArray bodyJson, List<String> bodyParams) {
-        Set<String> allowedKeys = bodyParams != null
-                ? new HashSet<>(bodyParams): null;
-        if (bodyJson == null || allowedKeys == null) {
-            return "";
-        }
+    private String filterJsonArrayBody(JsonArray bodyJson, Set<String> allowedKeys) {
         JsonArray newJsonArray = new JsonArray();
         for (Object object : bodyJson) {
             if (object instanceof JsonObject) {
