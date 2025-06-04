@@ -85,8 +85,8 @@ public class Audit {
                 this.actor = actor;
             }
 
-            public Builder uid2RequestId(String uid2RequestId) {
-                this.uidTraceId = uid2RequestId;
+            public Builder uidTraceId(String uidTraceId) {
+                this.uidTraceId = uidTraceId;
                 return this;
             }
 
