@@ -20,9 +20,9 @@ public class Audit {
         private final int status;
         private final String method;
         private final String endpoint;
-        private final String requestId;
+        private final String traceId;
         private final JsonObject actor;
-        private final String uid2RequestId;
+        private final String uidTraceId;
         private final JsonObject queryParams;
         private final JsonObject requestBody;
 
@@ -33,9 +33,9 @@ public class Audit {
             this.status = builder.status;
             this.method = builder.method;
             this.endpoint = builder.endpoint;
-            this.requestId = builder.requestId;
+            this.traceId = builder.traceId;
             this.actor = builder.actor;
-            this.uid2RequestId = builder.uid2RequestId;
+            this.uidTraceId = builder.uidTraceId;
             this.queryParams = builder.queryParams;
             this.requestBody = builder.requestBody;
         }
@@ -48,10 +48,10 @@ public class Audit {
                     .put("status", status)
                     .put("method", method)
                     .put("endpoint", endpoint)
-                    .put("request_id", requestId)
+                    .put("trace_id", traceId)
                     .put("actor", actor);
-            if (uid2RequestId != null) {
-                json.put("uid2|origin_request_id| other name in audit log", uid2RequestId);
+            if (uidTraceId != null) {
+                json.put("uid_trace_id", uidTraceId);
             }
             if (queryParams != null) json.put("query_params", queryParams);
             if (requestBody != null) json.put("request_body", requestBody);
@@ -67,26 +67,26 @@ public class Audit {
             private final int status;
             private final String method;
             private final String endpoint;
-            private final String requestId;
+            private final String traceId;
             private final JsonObject actor;
             private final String source;
 
-            private String uid2RequestId;
+            private String uidTraceId;
             private JsonObject queryParams;
             private JsonObject requestBody;
 
-            public Builder(int status, String source, String method, String endpoint, String requestId, JsonObject actor) {
+            public Builder(int status, String source, String method, String endpoint, String traceId, String uidTraceId, JsonObject actor) {
                 this.status = status;
                 this.source = source;
                 this.method = method;
                 this.endpoint = endpoint;
-                this.requestId = requestId;
-                this.uid2RequestId = requestId;
+                this.traceId = traceId;
+                this.uidTraceId = uidTraceId != null ? uidTraceId : traceId;
                 this.actor = actor;
             }
 
             public Builder uid2RequestId(String uid2RequestId) {
-                this.uid2RequestId = uid2RequestId;
+                this.uidTraceId = uid2RequestId;
                 return this;
             }
 
@@ -112,7 +112,8 @@ public class Audit {
         this.source = source;
     }
 
-    private static final String FORWARDED_TRACE_ID = "UID-Forwarded-Trace-Id";
+    public static final String UID_TRACE_ID_HEADER = "UID-Trace-Id";
+    public static final String UID_INSTANCE_ID_HEADER = "UID-Instance-Id";
     private static final Logger LOGGER = LoggerFactory.getLogger(Audit.class);
 
     private static Set<String> flattenToDotNotation(JsonObject json, String parentKey) {
@@ -198,6 +199,7 @@ public class Audit {
             String method = request.method() != null ? request.method().name() : "UNKNOWN";
             String path = defaultIfNull(request.path());
             String traceId = defaultIfNull(request.getHeader("X-Amzn-Trace-Id"));
+            String uidTraceId = defaultIfNull(request.getHeader(UID_TRACE_ID_HEADER));
 
 
             AuditRecord.Builder builder = new AuditRecord.Builder(
@@ -206,6 +208,7 @@ public class Audit {
                     method,
                     path,
                     traceId,
+                    uidTraceId,
                     userDetails
             );
 
@@ -225,10 +228,6 @@ public class Audit {
 
             if (bodyJson != null &&  !bodyJson.isEmpty()) {
                 builder.requestBody(bodyJson);
-            }
-
-            if (ctx.request().getHeader(FORWARDED_TRACE_ID) != null && !ctx.request().getHeader(FORWARDED_TRACE_ID).isEmpty()) {
-                builder.uid2RequestId(ctx.request().getHeader(FORWARDED_TRACE_ID));
             }
 
             AuditRecord auditRecord = builder.build();

@@ -1,5 +1,6 @@
 package com.uid2.shared.attest;
 
+import com.uid2.shared.audit.ServiceInstanceIdProvider;
 import com.uid2.shared.cloud.CloudStorageException;
 import com.uid2.shared.util.URLConnectionHttpClient;
 import org.slf4j.Logger;
@@ -16,16 +17,18 @@ public class UidOptOutClient extends UidCoreClient {
 
     public UidOptOutClient(String userToken,
                            Proxy proxy,
-                           AttestationResponseHandler attestationResponseHandler) {
-        super(userToken, proxy, attestationResponseHandler, null, false);
+                           AttestationResponseHandler attestationResponseHandler,
+                           ServiceInstanceIdProvider serviceInstanceIdProvider) {
+        super(userToken, proxy, attestationResponseHandler, null, false, serviceInstanceIdProvider);
         this.attestationResponseHandler = attestationResponseHandler;
     }
 
     public UidOptOutClient(String userToken,
                            Proxy proxy,
                            AttestationResponseHandler attestationResponseHandler,
-                           URLConnectionHttpClient httpClient) {
-        super(userToken, proxy, attestationResponseHandler, httpClient, false);
+                           URLConnectionHttpClient httpClient,
+                           ServiceInstanceIdProvider serviceInstanceIdProvider) {
+        super(userToken, proxy, attestationResponseHandler, httpClient, false, serviceInstanceIdProvider);
         this.attestationResponseHandler = attestationResponseHandler;
     }
 
