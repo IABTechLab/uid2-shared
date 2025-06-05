@@ -1,7 +1,11 @@
 package com.uid2.shared.audit;
 
 import io.vertx.core.MultiMap;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RequestBody;
 import io.vertx.ext.web.RoutingContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +28,7 @@ public class Audit {
         private final JsonObject actor;
         private final String forwardedRequestId;
         private final JsonObject queryParams;
-        private final JsonObject requestBody;
+        private final String requestBody;
 
         private AuditRecord(Builder builder) {
             this.timestamp = Instant.now();
@@ -73,7 +77,7 @@ public class Audit {
 
             private String forwardedRequestId;
             private JsonObject queryParams;
-            private JsonObject requestBody;
+            private String requestBody;
 
             public Builder(int status, String source, String method, String endpoint, String requestId, JsonObject actor) {
                 this.status = status;
@@ -94,7 +98,7 @@ public class Audit {
                 return this;
             }
 
-            public Builder requestBody(JsonObject requestBody) {
+            public Builder requestBody(String requestBody) {
                 this.requestBody = requestBody;
                 return this;
             }
@@ -155,19 +159,71 @@ public class Audit {
         return queryParamsJson;
     }
 
-    private JsonObject filterBody(JsonObject bodyJson, List<String> bodyParams) {
+    private String getBody(RequestBody requestBody, List<String> bodyParams) {
+        if (requestBody == null) {
+            return "";
+        }
+
+        Buffer bodyBuffer = requestBody.buffer();
+        if (bodyBuffer == null || bodyBuffer.length() == 0) {
+            return "";
+        }
+
         Set<String> allowedKeys = bodyParams != null
                 ? new HashSet<>(bodyParams): null;
-        if (bodyJson == null || allowedKeys == null) {
-            return new JsonObject();
+        if (allowedKeys == null) {
+            return "";
         }
+
+        try {
+            Object genericJsonValue = Json.decodeValue(bodyBuffer);
+            if (genericJsonValue instanceof JsonObject) {
+                return filterBody((JsonObject) genericJsonValue, allowedKeys);
+            } else if (genericJsonValue instanceof JsonArray) {
+                return filterJsonArrayBody((JsonArray) genericJsonValue, allowedKeys);
+            } else {
+                return "";
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to parse body param", e);
+            return "";
+        }
+    }
+
+    private String filterBody(JsonObject bodyJson, Set<String> allowedKeys) {
+        if (bodyJson == null) {
+            return "";
+        }
+
         Set<String> dotKeys = flattenToDotNotation(bodyJson, "");
         for (String key : dotKeys) {
             if (!allowedKeys.contains(key)) {
                 removeByDotKey(bodyJson, key);
             }
         }
-        return bodyJson;
+        return bodyJson.toString();
+    }
+
+    private String filterJsonArrayBody(JsonArray bodyJson, Set<String> allowedKeys) {
+        if (bodyJson == null) {
+            return "";
+        }
+
+        JsonArray newJsonArray = new JsonArray();
+        for (Object object : bodyJson) {
+            if (object instanceof JsonObject) {
+                JsonObject jsonObject = (JsonObject) object;
+
+                Set<String> dotKeys = flattenToDotNotation(jsonObject, "");
+                for (String key : dotKeys) {
+                    if (!allowedKeys.contains(key)) {
+                        removeByDotKey(jsonObject, key);
+                    }
+                }
+                newJsonArray.add(jsonObject);
+            }
+        }
+        return newJsonArray.toString();
     }
 
     private String defaultIfNull(String s) {
@@ -208,10 +264,7 @@ public class Audit {
                     userDetails
             );
 
-            JsonObject bodyJson = null;
-            if (ctx.body() != null && ctx.body().asJsonObject() != null && params.bodyParams() != null) {
-                bodyJson = filterBody(ctx.body().asJsonObject(), params.bodyParams());
-            }
+            String bodyJson = getBody(ctx.body(), params.bodyParams());
 
             JsonObject queryParamsJson = null;
             if (ctx.request() != null && ctx.request().params() != null && params.queryParams() != null) {
