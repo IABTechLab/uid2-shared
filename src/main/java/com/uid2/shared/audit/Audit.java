@@ -25,6 +25,7 @@ public class Audit {
         private final String uidTraceId;
         private final JsonObject queryParams;
         private final JsonObject requestBody;
+        private final String uidInstanceId;
 
         private AuditRecord(Builder builder) {
             this.timestamp = Instant.now();
@@ -36,6 +37,7 @@ public class Audit {
             this.traceId = builder.traceId;
             this.actor = builder.actor;
             this.uidTraceId = builder.uidTraceId;
+            this.uidInstanceId = builder.uidInstanceId;
             this.queryParams = builder.queryParams;
             this.requestBody = builder.requestBody;
         }
@@ -52,6 +54,9 @@ public class Audit {
                     .put("actor", actor);
             if (uidTraceId != null) {
                 json.put("uid_trace_id", uidTraceId);
+            }
+            if (uidInstanceId != null) {
+                json.put("uid_instance_id", uidInstanceId);
             }
             if (queryParams != null) json.put("query_params", queryParams);
             if (requestBody != null) json.put("request_body", requestBody);
@@ -71,11 +76,12 @@ public class Audit {
             private final JsonObject actor;
             private final String source;
             private final String uidTraceId;
+            private final String uidInstanceId;
 
             private JsonObject queryParams;
             private JsonObject requestBody;
 
-            public Builder(int status, String source, String method, String endpoint, String traceId, String uidTraceId, JsonObject actor) {
+            public Builder(int status, String source, String method, String endpoint, String traceId, String uidTraceId, JsonObject actor, String uidInstanceId) {
                 this.status = status;
                 this.source = source;
                 this.method = method;
@@ -83,6 +89,7 @@ public class Audit {
                 this.traceId = traceId;
                 this.uidTraceId = uidTraceId != null ? uidTraceId : traceId;
                 this.actor = actor;
+                this.uidInstanceId = uidInstanceId;
             }
 
             public Builder queryParams(JsonObject queryParams) {
@@ -195,6 +202,7 @@ public class Audit {
             String path = defaultIfNull(request.path());
             String traceId = defaultIfNull(request.getHeader("X-Amzn-Trace-Id"));
             String uidTraceId = defaultIfNull(request.getHeader(UID_TRACE_ID_HEADER));
+            String uidInstanceId = defaultIfNull(request.getHeader(UID_INSTANCE_ID_HEADER));
 
 
             AuditRecord.Builder builder = new AuditRecord.Builder(
@@ -204,7 +212,8 @@ public class Audit {
                     path,
                     traceId,
                     uidTraceId,
-                    userDetails
+                    userDetails,
+                    uidInstanceId
             );
 
             JsonObject bodyJson = null;
