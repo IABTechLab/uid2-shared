@@ -30,7 +30,7 @@ public class Const {
         // this file stores integration config values, e.g. it communicates with other uid2 services that runs locally.
         public static final String INTEG_CONFIG_PATH = "conf" + File.separator + "integ-config.json";
 
-        public static final String InstanceIdPrefixProp = "instance_id_prefix";
+        public static final String UidInstanceIdPrefixProp = "uid_instance_id_prefix";
 
         // GCP
         public static final String GoogleCredentialsProp = "google_credentials";
