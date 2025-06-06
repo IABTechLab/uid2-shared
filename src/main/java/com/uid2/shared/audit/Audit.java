@@ -24,10 +24,11 @@ public class Audit {
         private final int status;
         private final String method;
         private final String endpoint;
-        private final String requestId;
+        private final String traceId;
         private final JsonObject actor;
-        private final String forwardedRequestId;
+        private final String uidTraceId;
         private final JsonObject queryParams;
+        private final String uidInstanceId;
         private final String requestBody;
 
         private AuditRecord(Builder builder) {
@@ -37,9 +38,10 @@ public class Audit {
             this.status = builder.status;
             this.method = builder.method;
             this.endpoint = builder.endpoint;
-            this.requestId = builder.requestId;
+            this.traceId = builder.traceId;
             this.actor = builder.actor;
-            this.forwardedRequestId = builder.forwardedRequestId;
+            this.uidTraceId = builder.uidTraceId;
+            this.uidInstanceId = builder.uidInstanceId;
             this.queryParams = builder.queryParams;
             this.requestBody = builder.requestBody;
         }
@@ -52,10 +54,13 @@ public class Audit {
                     .put("status", status)
                     .put("method", method)
                     .put("endpoint", endpoint)
-                    .put("request_id", requestId)
+                    .put("trace_id", traceId)
                     .put("actor", actor);
-            if (forwardedRequestId != null) {
-                json.put("forwarded_request_id", forwardedRequestId);
+            if (uidTraceId != null) {
+                json.put("uid_trace_id", uidTraceId);
+            }
+            if (uidInstanceId != null) {
+                json.put("uid_instance_id", uidInstanceId);
             }
             if (queryParams != null) json.put("query_params", queryParams);
             if (requestBody != null) json.put("request_body", requestBody);
@@ -71,26 +76,24 @@ public class Audit {
             private final int status;
             private final String method;
             private final String endpoint;
-            private final String requestId;
+            private final String traceId;
             private final JsonObject actor;
             private final String source;
+            private final String uidTraceId;
+            private final String uidInstanceId;
 
-            private String forwardedRequestId;
             private JsonObject queryParams;
             private String requestBody;
 
-            public Builder(int status, String source, String method, String endpoint, String requestId, JsonObject actor) {
+            public Builder(int status, String source, String method, String endpoint, String traceId, String uidTraceId, JsonObject actor, String uidInstanceId) {
                 this.status = status;
                 this.source = source;
                 this.method = method;
                 this.endpoint = endpoint;
-                this.requestId = requestId;
+                this.traceId = traceId;
+                this.uidTraceId = uidTraceId != null ? uidTraceId : traceId;
                 this.actor = actor;
-            }
-
-            public Builder forwardedRequestId(String forwardedRequestId) {
-                this.forwardedRequestId = forwardedRequestId;
-                return this;
+                this.uidInstanceId = uidInstanceId;
             }
 
             public Builder queryParams(JsonObject queryParams) {
@@ -115,7 +118,8 @@ public class Audit {
         this.source = source;
     }
 
-    private static final String FORWARDED_TRACE_ID = "UID-Forwarded-Trace-Id";
+    public static final String UID_TRACE_ID_HEADER = "UID-Trace-Id";
+    public static final String UID_INSTANCE_ID_HEADER = "UID-Instance-Id";
     private static final Logger LOGGER = LoggerFactory.getLogger(Audit.class);
 
     private static Set<String> flattenToDotNotation(JsonObject json, String parentKey) {
@@ -253,6 +257,8 @@ public class Audit {
             String method = request.method() != null ? request.method().name() : "UNKNOWN";
             String path = defaultIfNull(request.path());
             String traceId = defaultIfNull(request.getHeader("X-Amzn-Trace-Id"));
+            String uidTraceId = defaultIfNull(request.getHeader(UID_TRACE_ID_HEADER));
+            String uidInstanceId = defaultIfNull(request.getHeader(UID_INSTANCE_ID_HEADER));
 
 
             AuditRecord.Builder builder = new AuditRecord.Builder(
@@ -261,7 +267,9 @@ public class Audit {
                     method,
                     path,
                     traceId,
-                    userDetails
+                    uidTraceId,
+                    userDetails,
+                    uidInstanceId
             );
 
             String bodyJson = getBody(ctx.body(), params.bodyParams());
@@ -277,10 +285,6 @@ public class Audit {
 
             if (bodyJson != null &&  !bodyJson.isEmpty()) {
                 builder.requestBody(bodyJson);
-            }
-
-            if (ctx.request().getHeader(FORWARDED_TRACE_ID) != null && !ctx.request().getHeader(FORWARDED_TRACE_ID).isEmpty()) {
-                builder.forwardedRequestId(ctx.request().getHeader(FORWARDED_TRACE_ID));
             }
 
             AuditRecord auditRecord = builder.build();

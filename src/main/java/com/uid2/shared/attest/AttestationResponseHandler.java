@@ -2,6 +2,8 @@ package com.uid2.shared.attest;
 
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.*;
+import com.uid2.shared.audit.Audit;
+import com.uid2.shared.audit.UidInstanceIdProvider;
 import com.uid2.shared.util.URLConnectionHttpClient;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -41,6 +43,7 @@ public class AttestationResponseHandler {
     private final IClock clock;
     private final Vertx vertx;
     private final URLConnectionHttpClient httpClient;
+    private final UidInstanceIdProvider uidInstanceIdProvider;
     private boolean isExpiryCheckScheduled;
     private AtomicBoolean isAttesting;
     // Set this to be Instant.MAX so that if it's not set it won't trigger the re-attest
@@ -59,8 +62,9 @@ public class AttestationResponseHandler {
                                       ApplicationVersion appVersion,
                                       IAttestationProvider attestationProvider,
                                       Handler<Pair<AttestationResponseCode, String>> responseWatcher,
-                                      Proxy proxy) {
-        this(vertx, attestationEndpoint, clientApiToken, operatorType, appVersion, attestationProvider, responseWatcher, proxy, new InstantClock(), null, null, 60000);
+                                      Proxy proxy,
+                                      UidInstanceIdProvider uidInstanceIdProvider) {
+        this(vertx, attestationEndpoint, clientApiToken, operatorType, appVersion, attestationProvider, responseWatcher, proxy, new InstantClock(), null, null, 60000, uidInstanceIdProvider);
     }
 
     public AttestationResponseHandler(Vertx vertx,
@@ -74,7 +78,8 @@ public class AttestationResponseHandler {
                                       IClock clock,
                                       URLConnectionHttpClient httpClient,
                                       AttestationTokenDecryptor attestationTokenDecryptor,
-                                      int attestCheckMilliseconds) {
+                                      int attestCheckMilliseconds,
+                                      UidInstanceIdProvider uidInstanceIdProvider) {
         this.vertx = vertx;
         this.attestationEndpoint = attestationEndpoint;
         this.encodedAttestationEndpoint = this.encodeStringUnicodeAttestationEndpoint(attestationEndpoint);
@@ -110,7 +115,7 @@ public class AttestationResponseHandler {
                     .append(kv.getValue());
         }
         this.appVersionHeader = builder.toString();
-
+        this.uidInstanceIdProvider = uidInstanceIdProvider;
     }
 
     private void attestationExpirationCheck(long timerId) {
@@ -174,6 +179,7 @@ public class AttestationResponseHandler {
             headers.put("Content-Type", "application/json");
             headers.put("Authorization", "Bearer " + this.clientApiToken);
             headers.put(Const.Http.AppVersionHeader, this.appVersionHeader);
+            headers.put(Audit.UID_INSTANCE_ID_HEADER, this.uidInstanceIdProvider.getInstanceId());
 
             HttpResponse<String> response = httpClient.post(attestationEndpoint, requestJson.toString(), headers);
 
