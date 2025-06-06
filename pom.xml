@@ -5,7 +5,7 @@
 
     <groupId>com.uid2</groupId>
     <artifactId>uid2-shared</artifactId>
-    <version>9.6.0-ccm-UID2-5546-migrate-maven-to-central-publisher-portal</version>
+    <version>9.5.3</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Library for all the shared uid2 operations</description>
     <url>https://github.com/IABTechLab/uid2docs</url>
@@ -31,6 +31,24 @@
         <developerConnection>scm:get:ssh://github.com:IABTechLab/uid2-shared.git</developerConnection>
         <url>https://github.com/IABTechLab/uid2-shared</url>
     </scm>
+
+    <repositories>
+        <repository>
+            <id>snapshots-repo</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>maven_central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <snapshotRepository>
