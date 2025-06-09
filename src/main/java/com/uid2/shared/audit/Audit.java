@@ -91,7 +91,7 @@ public class Audit {
                 this.method = method;
                 this.endpoint = endpoint;
                 this.traceId = traceId;
-                this.uidTraceId = uidTraceId != null ? uidTraceId : traceId;
+                this.uidTraceId = (uidTraceId != null && !"unknown".equals(uidTraceId)) ? uidTraceId : traceId;
                 this.actor = actor;
                 this.uidInstanceId = uidInstanceId;
             }
