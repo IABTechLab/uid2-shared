@@ -1,5 +1,6 @@
 package com.uid2.shared.audit;
 
+import com.uid2.shared.util.LogFmtLineBuilder;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
@@ -70,6 +71,29 @@ public class Audit {
         @Override
         public String toString() {
             return toJson().encode();
+        }
+
+        public String toLogFmtLine() {
+            LogFmtLineBuilder builder = new LogFmtLineBuilder();
+
+            builder.with("timestamp", timestamp.toString());
+            builder.with("log_type", logType);
+            builder.with("source", source);
+            builder.with("status", status);
+            builder.with("method", method);
+            builder.with("endpoint", endpoint);
+            builder.with("trace_id", traceId);
+            builder.with("actor", actor);
+            if (uidTraceId != null) {
+                builder.with("uid_trace_id", uidTraceId);
+            }
+            if (uidInstanceId != null) {
+                builder.with("uid_instance_id", uidInstanceId);
+            }
+            if (queryParams != null) builder.with("query_params", queryParams);
+            if (requestBody != null) builder.with("request_body", requestBody);
+
+            return builder.build();
         }
 
         public static class Builder {
@@ -288,7 +312,7 @@ public class Audit {
             }
 
             AuditRecord auditRecord = builder.build();
-            LOGGER.info(auditRecord.toString());
+            LOGGER.info(auditRecord.toLogFmtLine());
         } catch (Exception e) {
             LOGGER.warn("Failed to log audit record", e);
         }
