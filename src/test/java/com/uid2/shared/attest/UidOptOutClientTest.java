@@ -1,5 +1,6 @@
 package com.uid2.shared.attest;
 
+import com.uid2.shared.audit.UidInstanceIdProvider;
 import com.uid2.shared.cloud.CloudStorageException;
 import com.uid2.shared.cloud.CloudUtils;
 import com.uid2.shared.util.URLConnectionHttpClient;
@@ -43,7 +44,7 @@ public class UidOptOutClientTest {
 
         optOutClient = new UidOptOutClient(
                 "userToken", proxy,
-                mockAttestationResponseHandler, mockHttpClient);
+                mockAttestationResponseHandler, mockHttpClient, new UidInstanceIdProvider("test-instance", "id"));
     }
 
     @Test

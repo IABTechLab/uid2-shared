@@ -1,6 +1,8 @@
 package com.uid2.shared.attest;
 
 import com.uid2.shared.Const;
+import com.uid2.shared.audit.Audit;
+import com.uid2.shared.audit.UidInstanceIdProvider;
 import com.uid2.shared.cloud.CloudStorageException;
 import com.uid2.shared.cloud.CloudUtils;
 import com.uid2.shared.util.URLConnectionHttpClient;
@@ -33,7 +35,7 @@ public class UidCoreClientTest {
         when(mockAttestationResponseHandler.getAppVersionHeader()).thenReturn("testAppVersionHeader");
         uidCoreClient = new UidCoreClient(
                 "userToken", proxy,
-                mockAttestationResponseHandler, mockHttpClient, false);
+                mockAttestationResponseHandler, mockHttpClient, false, new UidInstanceIdProvider("test-instance", "id"));
     }
 
     @Test
@@ -54,6 +56,7 @@ public class UidCoreClientTest {
         expectedHeaders.put("Authorization", "Bearer testUserToken");
         expectedHeaders.put("Attestation-Token", "testAttestationToken");
         expectedHeaders.put("Attestation-JWT", "testCoreJWT");
+        expectedHeaders.put(Audit.UID_INSTANCE_ID_HEADER, "test-instance-id");
         when(mockHttpClient.get("https://download", expectedHeaders)).thenReturn(mockHttpResponse);
 
         uidCoreClient.download("https://download");
