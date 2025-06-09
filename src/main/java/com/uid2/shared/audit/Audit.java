@@ -91,7 +91,7 @@ public class Audit {
                 this.method = method;
                 this.endpoint = endpoint;
                 this.traceId = traceId;
-                this.uidTraceId = (uidTraceId != null && !"unknown".equals(uidTraceId)) ? uidTraceId : traceId;
+                this.uidTraceId = uidTraceId;
                 this.actor = actor;
                 this.uidInstanceId = uidInstanceId;
             }
@@ -234,6 +234,10 @@ public class Audit {
         return s != null ? s : "unknown";
     }
 
+    private String defaultIfNull(String s, String defaultValue) {
+        return s != null ? s : defaultValue;
+    }
+
     public static final String USER_DETAILS = "user_details";
 
     public void log(RoutingContext ctx, AuditParams params) {
@@ -257,7 +261,7 @@ public class Audit {
             String method = request.method() != null ? request.method().name() : "UNKNOWN";
             String path = defaultIfNull(request.path());
             String traceId = defaultIfNull(request.getHeader("X-Amzn-Trace-Id"));
-            String uidTraceId = defaultIfNull(request.getHeader(UID_TRACE_ID_HEADER));
+            String uidTraceId = defaultIfNull(request.getHeader(UID_TRACE_ID_HEADER), traceId);
             String uidInstanceId = defaultIfNull(request.getHeader(UID_INSTANCE_ID_HEADER));
 
 
