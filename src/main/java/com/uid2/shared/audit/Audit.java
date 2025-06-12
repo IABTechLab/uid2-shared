@@ -55,16 +55,25 @@ public class Audit {
                     .put("method", method)
                     .put("endpoint", endpoint)
                     .put("trace_id", traceId)
+                    .put("uid_instance_id", uidInstanceId)
                     .put("actor", actor);
             if (uidTraceId != null) {
                 json.put("uid_trace_id", uidTraceId);
             }
-            if (uidInstanceId != null) {
-                json.put("uid_instance_id", uidInstanceId);
-            }
+            actor.put("id", this.getLogIdentifier(json));
+            json.put("actor", actor);
             if (queryParams != null) json.put("query_params", queryParams);
             if (requestBody != null) json.put("request_body", requestBody);
             return json;
+        }
+
+        private String getLogIdentifier(JsonObject logObject) {
+            JsonObject actor = logObject.getJsonObject("actor");
+            String email = (actor != null) ? actor.getString("email") : null;
+            if (email != null && !email.isEmpty()) {
+                return email;
+            }
+            return logObject.getString("uid_instance_id");
         }
 
         @Override
