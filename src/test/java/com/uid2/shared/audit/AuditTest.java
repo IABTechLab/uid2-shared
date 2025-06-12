@@ -66,18 +66,13 @@ public class AuditTest {
         Optional<ILoggingEvent> maybeEvent = listAppender.list.stream()
                 .filter(event -> event.getFormattedMessage().contains("GET"))
                 .findFirst();
-        String jsonLog = maybeEvent.get().getFormattedMessage();
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode jsonNode = mapper.readTree(jsonLog);
+        String auditLog = maybeEvent.get().getFormattedMessage();
 
-        assertThat(jsonNode.get("method").asText()).isEqualTo("GET");
-        assertThat(jsonNode.get("status").asInt()).isEqualTo(200);
-        assertThat(jsonNode.get("source").asText()).isEqualTo("admin");
-
-        JsonNode actor = jsonNode.get("actor");
-        assertThat(actor).isNotNull();
-        assertThat(actor.get("user_agent").asText()).isEqualTo("JUnit-Test-Agent");
-        assertThat(actor.get("ip").asText()).isEqualTo("127.0.0.1");
+        assertThat(auditLog.contains("method=GET")).isTrue();
+        assertThat(auditLog.contains("status=200")).isTrue();
+        assertThat(auditLog.contains("source=admin")).isTrue();
+        assertThat(auditLog.contains("actor.user_agent=JUnit-Test-Agent")).isTrue();
+        assertThat(auditLog.contains("actor.ip=127.0.0.1")).isTrue();
 
     }
 
