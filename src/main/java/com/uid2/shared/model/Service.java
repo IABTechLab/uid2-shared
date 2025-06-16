@@ -12,14 +12,21 @@ public class Service {
     private final int serviceId;
     @JsonProperty("site_id")
     private int siteId;
+    @JsonProperty("link_id_regex")
+    private String linkIdRegex;
     private String name;
     private Set<Role> roles;
 
     public Service(int serviceId, int siteId, String name, Set<Role> roles) {
+        this(serviceId, siteId, name, roles, null);
+    }
+
+    public Service(int serviceId, int siteId, String name, Set<Role> roles, String linkIdRegex) {
         this.serviceId = serviceId;
         this.siteId = siteId;
         this.name = name;
         this.roles = Objects.requireNonNullElseGet(roles, HashSet::new);
+        this.linkIdRegex = linkIdRegex;
     }
 
     public int getServiceId() {
@@ -28,6 +35,14 @@ public class Service {
 
     public int getSiteId() {
         return siteId;
+    }
+
+    public String getLinkIdRegex() {
+        return linkIdRegex;
+    }
+
+    public void setLinkIdRegex(String linkIdRegex) {
+        this.linkIdRegex = linkIdRegex;
     }
 
     public void setSiteId(int siteId) {
@@ -57,6 +72,7 @@ public class Service {
                 ", siteId=" + siteId +
                 ", name='" + name + '\'' +
                 ", roles=" + roles +
+                ", linkIdRegex=" + linkIdRegex +
                 '}';
     }
 
@@ -65,11 +81,16 @@ public class Service {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Service service = (Service) o;
-        return serviceId == service.serviceId && siteId == service.siteId && name.equals(service.name) && roles.equals(service.roles);
+        boolean compare = serviceId == service.serviceId && siteId == service.siteId && name.equals(service.name) && roles.equals(service.roles);
+        if (linkIdRegex == null || service.linkIdRegex == null) {
+            return compare && linkIdRegex == service.linkIdRegex;
+        }
+
+        return compare && linkIdRegex.equals(service.linkIdRegex);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(serviceId, siteId, name, roles.hashCode());
+        return Objects.hash(serviceId, siteId, name, roles.hashCode(), linkIdRegex);
     }
 }
