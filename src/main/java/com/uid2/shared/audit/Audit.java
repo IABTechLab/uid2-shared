@@ -38,6 +38,9 @@ public class Audit {
         private static final Pattern SQL_INJECTION_PATTERN = Pattern.compile(
                 "(select\\s+.+\\s+from|union\\s+select|insert\\s+into|drop\\s+table|--|#|\\bor\\b|\\band\\b|\\blike\\b|\\bin\\b\\s*\\(|;)"
         );
+        private static final Pattern X_Amzn_Trace_Id_PATTERN = Pattern.compile(
+                "(?:Root|Self)=1-[0-9a-fA-F]{8}-[0-9a-fA-F]{24}\n"
+        ); // https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html
         private static final Pattern UID_INSTANCE_ID_PATTERN = Pattern.compile(
                 "i-[a-f0-9]+-ami-[a-f0-9]+|" + // AWS
                         "gcp-\\d+-project/[a-z0-9-]+/images/operator:\\d+\\.\\d+|" + // GCP
@@ -74,11 +77,11 @@ public class Audit {
                     .put("endpoint", endpoint)
                     .put("trace_id", traceId);
 
-            if (traceId != null || validateTraceId(traceId)) {
+            if (traceId != null || validateAmazonTraceId(traceId, "trace_id")) {
                 json.put("trace_id", traceId);
             }
 
-            if (uidTraceId != null || validateUIDTraceId(uidTraceId)) {
+            if (uidTraceId != null || validateAmazonTraceId(uidTraceId, "uid_trace_id")) {
                 json.put("uid_trace_id", uidTraceId);
             }
 
@@ -150,21 +153,20 @@ public class Audit {
 
         private boolean validateUIDInstanceId(String uidInstanceId) {
             if(UID_INSTANCE_ID_PATTERN.matcher(uidInstanceId).find()) {
-                errorMessageBuilder.append("Malformed uid_instance_id found in the audit log: %s. ");
+                errorMessageBuilder.append("Malformed uid_instance_id found in the audit log. ");
                 return false;
             } else {
                 return true;
             }
         }
 
-        private boolean validateTraceId(String traceId) {
-            // in progress
-            return true;
-        }
-
-        private boolean validateUIDTraceId(String uidTraceId) {
-            // in progress
-            return true;
+        private boolean validateAmazonTraceId(String traceId, String propertyName) {
+            if(UID_INSTANCE_ID_PATTERN.matcher(traceId).find()) {
+                errorMessageBuilder.append(String.format("Malformed %s found in the audit log. ", propertyName));
+                return false;
+            } else {
+                return true;
+            }
         }
 
         private String getLogIdentifier(JsonObject logObject) {
