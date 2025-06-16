@@ -231,14 +231,20 @@ public class OptOutHeap extends OptOutCollection {
     private int compareToEntryInHeap(byte[] entryAsBytes, int heapPos) {
         int heapBufPos = heapPos * OptOutConst.EntrySize;
         // comparing only identity hash (length == Sha256Bytes)
-        return OptOutUtils.compareByteRange(entryAsBytes, 0, store, heapBufPos, OptOutConst.Sha256Bytes);
+        return Arrays.compareUnsigned(
+                entryAsBytes, 0, OptOutConst.Sha256Bytes,
+                store, heapBufPos, heapBufPos+OptOutConst.Sha256Bytes
+        );
     }
 
     private int compareEntriesInHeap(int i, int j) {
         int p1 = i * OptOutConst.EntrySize;
         int p2 = j * OptOutConst.EntrySize;
         // comparing only identity hash (length == Sha256Bytes)
-        return OptOutUtils.compareByteRange(store, p1, store, p2, OptOutConst.Sha256Bytes);
+        return Arrays.compareUnsigned(
+                store, p1, p1+OptOutConst.Sha256Bytes,
+                store, p2, p2+OptOutConst.Sha256Bytes
+        );
     }
 
     private void swapEntriesInHeap(int srcPos, int dstPos) {

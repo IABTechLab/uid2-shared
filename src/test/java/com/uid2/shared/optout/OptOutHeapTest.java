@@ -4,6 +4,7 @@ package com.uid2.shared.optout;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -118,14 +119,14 @@ public class OptOutHeapTest {
         if (leftChild >= heap.size()) return;
         OptOutEntry left = heap.get(leftChild);
         // System.out.format("self vs left: %x %x\n", self.idHashAsLong(), left.idHashAsLong());
-        assertTrue(OptOutUtils.compareBytes(self.identityHash, left.identityHash) > 0);
+        assertTrue(Arrays.compareUnsigned(self.identityHash, left.identityHash) >0 );
         checkHeapProperty(heap, leftChild);
 
         int rightChild = OptOutHeap.rightChild(i);
         if (rightChild >= heap.size()) return;
         OptOutEntry right = heap.get(rightChild);
         // System.out.format("self vs right: %x %x\n", self.idHashAsLong(), right.idHashAsLong());
-        assertTrue(OptOutUtils.compareBytes(self.identityHash, right.identityHash) > 0);
+        assertTrue(Arrays.compareUnsigned(self.identityHash, left.identityHash) >0 );
         checkHeapProperty(heap, rightChild);
     }
 }
