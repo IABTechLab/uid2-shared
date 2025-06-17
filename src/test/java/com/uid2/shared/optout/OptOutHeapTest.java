@@ -126,7 +126,7 @@ public class OptOutHeapTest {
         if (rightChild >= heap.size()) return;
         OptOutEntry right = heap.get(rightChild);
         // System.out.format("self vs right: %x %x\n", self.idHashAsLong(), right.idHashAsLong());
-        assertTrue(Arrays.compareUnsigned(self.identityHash, left.identityHash) >0 );
+        assertTrue(Arrays.compareUnsigned(self.identityHash, right.identityHash) >0 );
         checkHeapProperty(heap, rightChild);
     }
 }

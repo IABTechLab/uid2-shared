@@ -214,10 +214,6 @@ public class OptOutUtils {
         return ByteBuffer.wrap(bytes, 0, Long.BYTES).order(ByteOrder.BIG_ENDIAN).getLong();
     }
 
-    public static int compareByte(byte a, byte b) {
-        return Byte.toUnsignedInt(a) - Byte.toUnsignedInt(b);
-    }
-
     public static boolean isDeltaFile(String fn) {
         return fn.contains(OptOutUtils.prefixDeltaFile);
     }
