@@ -37,16 +37,16 @@ public class Service {
         return siteId;
     }
 
+    public void setSiteId(int siteId) {
+        this.siteId = siteId;
+    }
+
     public String getLinkIdRegex() {
         return linkIdRegex;
     }
 
     public void setLinkIdRegex(String linkIdRegex) {
         this.linkIdRegex = linkIdRegex;
-    }
-
-    public void setSiteId(int siteId) {
-        this.siteId = siteId;
     }
 
     public String getName() {
@@ -79,14 +79,14 @@ public class Service {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Service service = (Service) o;
-        boolean compare = serviceId == service.serviceId && siteId == service.siteId && name.equals(service.name) && roles.equals(service.roles);
-        if (linkIdRegex == null || service.linkIdRegex == null) {
-            return compare && linkIdRegex == service.linkIdRegex;
-        }
+        if (!(o instanceof Service)) return false;
+        Service other = (Service) o;
 
-        return compare && linkIdRegex.equals(service.linkIdRegex);
+        return serviceId == other.serviceId
+            && siteId == other.siteId
+            && Objects.equals(name,       other.name)
+            && Objects.equals(roles,      other.roles)
+            && Objects.equals(linkIdRegex, other.linkIdRegex);
     }
 
     @Override
