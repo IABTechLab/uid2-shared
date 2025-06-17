@@ -45,7 +45,9 @@ public class AuditTest {
     private String UID_TRACE_ID = "Root=1-6825017b-2321f2302b5ea904340c1cfa";
     private String MALFORMED_TRACE_ID = "Root=1-6825017b-2321f2302b5ea904df340c1ckgg";
     private String AMZN_TRACE_ID_HEADER = "X-Amzn-Trace-Id";
-    private String UID_INSTANCE_ID = "uid2-prod-use2-operator-6bb87b7fd-n4smk-90527e73fbffa91c";
+    private String UID_INSTANCE_ID_FROM_INTEG = "uid2-integ-use2-operator-dfb4bd68d-v9p6t-a2cf5882f000d7b2";
+    private String UID_INSTANCE_ID_FROM_PROD = "uid2-prod-use2-operator-6bb87b7fd-n4smk-90527e73fbffa91c";
+    private String UID_INSTANCE_ID_FROM_AWS = "aws-aasdadada-ami-12312311321-v9p6t-a2cf5882f000d7b2";
     private String MALFORMED_UID_INSTANCE_ID = "uid2-prod-use2-operator-6bb87b7fd-n4smk-90527e73fbffa91c-u";
 
 
@@ -563,8 +565,8 @@ public class AuditTest {
     }
 
     @Test
-    public void testUIDInstanceIdWithKubernetes() throws JsonProcessingException {
-        Mockito.when(mockRequest.getHeader(UID_INSTANCE_ID_HEADER)).thenReturn(UID_INSTANCE_ID);
+    public void testUIDInstanceIdFromInteg() throws JsonProcessingException {
+        Mockito.when(mockRequest.getHeader(UID_INSTANCE_ID_HEADER)).thenReturn(UID_INSTANCE_ID_FROM_INTEG);
         AuditParams params = new AuditParams();
 
         new Audit("admin").log(mockCtx, params);
@@ -577,6 +579,42 @@ public class AuditTest {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode jsonNode = mapper.readTree(jsonLog);
 
-        assertThat(jsonNode.get("uid_instance_id").asText()).isEqualTo(UID_INSTANCE_ID);
+        assertThat(jsonNode.get("uid_instance_id").asText()).isEqualTo(UID_INSTANCE_ID_FROM_INTEG);
+    }
+
+    @Test
+    public void testUIDInstanceIdFromProd() throws JsonProcessingException {
+        Mockito.when(mockRequest.getHeader(UID_INSTANCE_ID_HEADER)).thenReturn(UID_INSTANCE_ID_FROM_PROD);
+        AuditParams params = new AuditParams();
+
+        new Audit("admin").log(mockCtx, params);
+
+
+        Optional<ILoggingEvent> maybeEvent = listAppender.list.stream()
+                .filter(event -> event.getFormattedMessage().contains("uid_instance_id"))
+                .findFirst();
+        String jsonLog = maybeEvent.get().getFormattedMessage();
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = mapper.readTree(jsonLog);
+
+        assertThat(jsonNode.get("uid_instance_id").asText()).isEqualTo(UID_INSTANCE_ID_FROM_PROD);
+    }
+
+    @Test
+    public void testUIDInstanceIdFromAWS() throws JsonProcessingException {
+        Mockito.when(mockRequest.getHeader(UID_INSTANCE_ID_HEADER)).thenReturn(UID_INSTANCE_ID_FROM_AWS);
+        AuditParams params = new AuditParams();
+
+        new Audit("admin").log(mockCtx, params);
+
+
+        Optional<ILoggingEvent> maybeEvent = listAppender.list.stream()
+                .filter(event -> event.getFormattedMessage().contains("uid_instance_id"))
+                .findFirst();
+        String jsonLog = maybeEvent.get().getFormattedMessage();
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode jsonNode = mapper.readTree(jsonLog);
+
+        assertThat(jsonNode.get("uid_instance_id").asText()).isEqualTo(UID_INSTANCE_ID_FROM_AWS);
     }
 }

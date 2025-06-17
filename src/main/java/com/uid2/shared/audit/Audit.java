@@ -38,13 +38,7 @@ public class Audit {
         private static final Pattern UID2_KEY_PATTERN = Pattern.compile("(UID2|EUID)-[A-Za-z]-[A-Za-z]-[A-Za-z0-9_-]+");
         private static final int PARAMETER_MAX_LENGTH = 1000;
         private static final int REQUEST_BODY_MAX_LENGTH = 10000;
-        private static final Pattern SQL_INJECTION_PATTERN = Pattern.compile(
-                "(?i)(\\bselect\\b\\s+.+\\s+\\bfrom\\b|\\bunion\\b\\s+\\bselect\\b|\\binsert\\b\\s+\\binto\\b|\\bdrop\\b\\s+\\btable\\b|--|#|\\bor\\b|\\band\\b|\\blike\\b|\\bin\\b\\s*\\(|;)"
-        );
 
-        private static final Pattern X_Amzn_Trace_Id_PATTERN = Pattern.compile(
-                "(?:Root|Self)=1-[0-9a-fA-F]{8}-[0-9a-fA-F]{24}"
-        ); // https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html
         private static final Pattern UID_INSTANCE_ID_SUFFIX_PATTERN = Pattern.compile("^[A-Za-z0-9\\-]+-[0-9a-f]{1,16}$");
 
         private final StringBuilder toJsonValidationErrorMessageBuilder = new StringBuilder();
@@ -195,7 +189,10 @@ public class Audit {
             if (fieldValue == null || fieldValue.isEmpty()) {
                 return true;
             }
-            if(SQL_INJECTION_PATTERN.matcher(fieldValue).find()) {
+            Pattern sql_injection_pattern = Pattern.compile(
+                    "(?i)(\\bselect\\b\\s+.+\\s+\\bfrom\\b|\\bunion\\b\\s+\\bselect\\b|\\binsert\\b\\s+\\binto\\b|\\bdrop\\b\\s+\\btable\\b|--|#|\\bor\\b|\\band\\b|\\blike\\b|\\bin\\b\\s*\\(|;)"
+            );
+            if(sql_injection_pattern.matcher(fieldValue).find()) {
                 toJsonValidationErrorMessageBuilder.append(String.format("SQL injection found in the audit log: %s. ", propertyName));
                 return false;
             } else {
@@ -204,7 +201,7 @@ public class Audit {
         }
 
         private boolean validateUIDInstanceId(String uidInstanceId) {
-            if(!UID_INSTANCE_ID_SUFFIX_PATTERN.matcher(uidInstanceId).matches() && !uidInstanceId.equals("unknown")) {
+            if(!UID_INSTANCE_ID_SUFFIX_PATTERN.matcher(uidInstanceId).matches() && !uidInstanceId.equals(UNKNOWN_ID)) {
                 toJsonValidationErrorMessageBuilder.append("Malformed uid_instance_id found in the audit log. ");
                 return false;
             } else {
@@ -213,7 +210,11 @@ public class Audit {
         }
 
         private boolean validateAmazonTraceId(String traceId, String propertyName) {
-            if(!X_Amzn_Trace_Id_PATTERN.matcher(traceId).matches() && !traceId.equals("unknown")) {
+            Pattern x_amzn_trace_id_pattern = Pattern.compile(
+                    "(?:Root|Self)=1-[0-9a-fA-F]{8}-[0-9a-fA-F]{24}"
+            ); // https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html
+
+            if(!x_amzn_trace_id_pattern.matcher(traceId).matches() && !traceId.equals(UNKNOWN_ID)) {
                 toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log. ", propertyName));
                 return false;
             } else {
@@ -284,6 +285,7 @@ public class Audit {
     public static final String UID_TRACE_ID_HEADER = "UID-Trace-Id";
     public static final String UID_INSTANCE_ID_HEADER = "UID-Instance-Id";
     private static final Logger LOGGER = LoggerFactory.getLogger(Audit.class);
+    private static final String UNKNOWN_ID = "unknown";
 
     private static Set<String> flattenToDotNotation(JsonObject json, String parentKey) {
         Set<String> keys = new HashSet<>();
@@ -394,7 +396,7 @@ public class Audit {
     }
 
     private String defaultIfNull(String s) {
-        return s != null ? s : "unknown";
+        return s != null ? s : UNKNOWN_ID;
     }
 
     private String defaultIfNull(String s, String defaultValue) {
