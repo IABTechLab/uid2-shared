@@ -84,8 +84,8 @@ public class Service {
 
         return serviceId == other.serviceId
             && siteId == other.siteId
-            && Objects.equals(name,       other.name)
-            && Objects.equals(roles,      other.roles)
+            && Objects.equals(name,        other.name)
+            && Objects.equals(roles,       other.roles)
             && Objects.equals(linkIdRegex, other.linkIdRegex);
     }
 
