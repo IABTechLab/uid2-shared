@@ -115,6 +115,7 @@ public class AuthMiddlewareTest {
         verify(routingContext).put(keyArgumentCaptor.capture(), jsonObjectArgumentCaptor.capture());
         JsonObject auditLogUserDetailsActual = jsonObjectArgumentCaptor.getValue();
         Assertions.assertEquals(Audit.USER_DETAILS, keyArgumentCaptor.getValue());
+        Assertions.assertEquals(operatorKey.getKeyId(), auditLogUserDetailsActual.getString("key_id"));
         Assertions.assertEquals(operatorKey.getName(), auditLogUserDetailsActual.getString("key_name"));
         Assertions.assertEquals(operatorKey.getSiteId().toString(), auditLogUserDetailsActual.getString("participant_id"));
     }

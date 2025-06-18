@@ -59,6 +59,7 @@ public class AuthMiddleware {
             rc.data().put(API_CONTACT_PROP, profile.getContact());
             if (profile instanceof OperatorKey operatorKey) {
                 JsonObject auditLogUserDetails = new JsonObject();
+                auditLogUserDetails.put("key_id", operatorKey.getKeyId());
                 auditLogUserDetails.put("key_name", operatorKey.getName());
                 auditLogUserDetails.put("participant_id", operatorKey.getSiteId());
                 rc.put(Audit.USER_DETAILS, auditLogUserDetails);
