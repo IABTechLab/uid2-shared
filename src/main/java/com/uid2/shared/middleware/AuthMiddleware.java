@@ -60,7 +60,7 @@ public class AuthMiddleware {
             if (profile instanceof OperatorKey operatorKey) {
                 JsonObject auditLogUserDetails = new JsonObject();
                 auditLogUserDetails.put("key_name", operatorKey.getName());
-                auditLogUserDetails.put("key_site_id", operatorKey.getSiteId());
+                auditLogUserDetails.put("participant_id", operatorKey.getSiteId());
                 rc.put(Audit.USER_DETAILS, auditLogUserDetails);
             }
         }
