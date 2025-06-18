@@ -79,7 +79,7 @@ public class Service {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Service)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         Service other = (Service) o;
 
         return serviceId == other.serviceId
