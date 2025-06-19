@@ -83,6 +83,21 @@ public class AttestationMiddlewareTest {
     }
 
     @Test
+    void trustedValidJwtNoJtiReturnsSuccess() throws JwtService.ValidationException {
+        var attestationMiddleware = getAttestationMiddleware(true);
+        JwtValidationResponse response = new JwtValidationResponse(true)
+                .withRoles(Role.OPERATOR, Role.SUPER_USER, Role.OPTOUT)
+                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST);
+        when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
+
+        var handler = attestationMiddleware.handle(nextHandler);
+        handler.handle(this.routingContext);
+
+        verify(nextHandler).handle(routingContext);
+        verifyAuditLogFilledWithJwt(response);
+    }
+
+    @Test
     void trustedValidJwtNoRolesReturnsSuccess() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)

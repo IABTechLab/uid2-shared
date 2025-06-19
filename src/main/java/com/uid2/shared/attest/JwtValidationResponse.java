@@ -68,11 +68,7 @@ public class JwtValidationResponse {
     }
 
     public JwtValidationResponse withJti(String jti) {
-        if (jti == null) {
-            this.jti = "";
-        } else {
-            this.jti = jti;
-        }
+        this.jti = jti;
         return this;
     }
 
