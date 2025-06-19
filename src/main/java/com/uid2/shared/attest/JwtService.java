@@ -73,6 +73,10 @@ public class JwtService {
                 // verify checks that the token has not expired
                 JsonWebSignature signature = tokenVerifier.verify(jwt);
                 JsonWebToken.Payload webToken = signature.getPayload();
+                String jti = webToken.get("jti").toString();
+                if (jti == null) {
+                    jti = "unknown";
+                }
                 response = new JwtValidationResponse(true)
                         .withSubject(webToken.get("sub").toString())
                         .withRoles(webToken.get("roles").toString())
@@ -81,7 +85,7 @@ public class JwtService {
                         .withSiteId(Integer.valueOf(webToken.get("siteId").toString()))
                         .withOperatorVersion(webToken.get("operatorVersion").toString())
                         .withAudience(webToken.get("aud").toString())
-                        .withJti(webToken.get("jti").toString());
+                        .withJti(jti);
 
                 // return the first verified response
                 return response;
