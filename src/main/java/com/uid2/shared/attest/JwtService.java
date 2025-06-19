@@ -80,7 +80,8 @@ public class JwtService {
                         .withEnclaveType(webToken.get("enclaveType").toString())
                         .withSiteId(Integer.valueOf(webToken.get("siteId").toString()))
                         .withOperatorVersion(webToken.get("operatorVersion").toString())
-                        .withAudience(webToken.get("aud").toString());
+                        .withAudience(webToken.get("aud").toString())
+                        .withJti(webToken.get("jti").toString());
 
                 // return the first verified response
                 return response;

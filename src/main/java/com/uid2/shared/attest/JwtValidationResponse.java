@@ -18,6 +18,7 @@ public class JwtValidationResponse {
 
     private String audience;
     private String subject;
+    private String jti;
 
     public JwtValidationResponse(boolean isValid) {
         this.isValid = isValid;
@@ -66,6 +67,15 @@ public class JwtValidationResponse {
         return this;
     }
 
+    public JwtValidationResponse withJti(String jti) {
+        if (jti == null) {
+            this.jti = "";
+        } else {
+            this.jti = jti;
+        }
+        return this;
+    }
+
     public Set<Role> getRoles() {
         return this.roles;
     }
@@ -103,4 +113,6 @@ public class JwtValidationResponse {
     public String getSubject() {
         return subject;
     }
+
+    public String getJti() { return jti; }
 }
