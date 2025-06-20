@@ -61,8 +61,7 @@ public class Audit {
                     .put("source", source)
                     .put("status", status)
                     .put("method", method)
-                    .put("endpoint", endpoint)
-                    .put("trace_id", traceId);
+                    .put("endpoint", endpoint);
 
             if (traceId != null && validateId(traceId, "trace_id")) {
                 json.put("trace_id", traceId);
@@ -201,7 +200,7 @@ public class Audit {
             if(uidInstanceId.length() < 100 && validateNoSecrets(uidInstanceId, propertyName) && validateNoSQL(uidInstanceId, propertyName) ) {
                 return true;
             } else {
-                toJsonValidationErrorMessageBuilder.append("Malformed uid_instance_id found in the audit log. ");
+                toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log. ", propertyName));
                 return false;
             }
         }

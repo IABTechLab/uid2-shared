@@ -459,10 +459,10 @@ public class AuditTest {
                 .map(ILoggingEvent::getFormattedMessage)
                 .toList();
 
-        assertThat(messages).anyMatch(msg -> msg.contains(MALFORMED_ID));
+        assertThat(messages).noneMatch(msg -> msg.contains(MALFORMED_ID));
 
         boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Malformed trace_id found in the audit log. Malformed uid_trace_id found in the audit log."));
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Malformed trace_id found in the audit log.") && event.getFormattedMessage().contains("Malformed uid_trace_id found in the audit log."));
 
         assertThat(errorLogged).isTrue();
     }
