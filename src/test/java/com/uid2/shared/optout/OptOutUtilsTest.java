@@ -82,48 +82,6 @@ public class OptOutUtilsTest {
     }
 
     @Test
-    public void compareBytes_tests() {
-        for (int i = 0; i < 1000; ++i) {
-            long a = OptOutUtils.rand.nextLong();
-            long b = OptOutUtils.rand.nextLong();
-            int cmp1 = Long.compareUnsigned(a, b);
-            // System.out.format("a vs b: %x vs %x (cmp %d)\n", a, b, cmp1);
-            byte[] x = OptOutUtils.toByteArray(a);
-            byte[] y = OptOutUtils.toByteArray(b);
-            int cmp2 = OptOutUtils.compareBytes(x, y);
-            if (cmp1 == 0) {
-                assertTrue(cmp2 == 0);
-            } else if (cmp1 > 0) {
-                // little endian doesn't guarantee byte array comparison yields the same consistent result
-                // assertTrue(cmp2 > 0);
-            } else /* cmp1 < 0 */ {
-                // little endian doesn't guarantee byte array comparison yields the same consistent result
-                // assertTrue(cmp2 < 0);
-            }
-        }
-    }
-
-    @Test
-    public void compareBytesBE_tests() {
-        for (int i = 0; i < 1000; ++i) {
-            long a = OptOutUtils.rand.nextLong();
-            long b = OptOutUtils.rand.nextLong();
-            int cmp1 = Long.compareUnsigned(a, b);
-            // System.out.format("a vs b: %x vs %x (cmp %d)\n", a, b, cmp1);
-            byte[] x = OptOutUtils.toByteArrayBE(a);
-            byte[] y = OptOutUtils.toByteArrayBE(b);
-            int cmp2 = OptOutUtils.compareBytes(x, y);
-            if (cmp1 == 0) {
-                assertTrue(cmp2 == 0);
-            } else if (cmp1 > 0) {
-                assertTrue(cmp2 > 0);
-            } else /* cmp1 < 0 */ {
-                assertTrue(cmp2 < 0);
-            }
-        }
-    }
-
-    @Test
     public void nullHash_tests() {
         assertTrue(OptOutUtils.isValidSha256Hex(OptOutUtils.nullHash));
         for (byte b : OptOutUtils.hexToByteArray(OptOutUtils.nullHash)) {

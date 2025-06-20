@@ -214,31 +214,6 @@ public class OptOutUtils {
         return ByteBuffer.wrap(bytes, 0, Long.BYTES).order(ByteOrder.BIG_ENDIAN).getLong();
     }
 
-    // positive if arr1 > arr2
-    // negative if arr1 < arr2
-    // 0 if arr1 == arr2
-    public static int compareBytes(byte[] arr1, byte[] arr2) {
-        assert arr1.length == arr2.length;
-        return OptOutUtils.compareByteRange(arr1, 0, arr2, 0, arr1.length);
-    }
-
-    // positive if arr1 > arr2
-    // negative if arr1 < arr2
-    // 0 if arr1 == arr2
-    public static int compareByteRange(byte[] arr1, int idx1, byte[] arr2, int idx2, int bytesToCompare) {
-        assert idx1 >= 0 && idx1 + bytesToCompare <= arr1.length;
-        assert idx2 >= 0 && idx2 + bytesToCompare <= arr2.length;
-        for (int i = 0; i < bytesToCompare; ++i) {
-            int cmp = OptOutUtils.compareByte(arr1[idx1 + i], arr2[idx2 + i]);
-            if (cmp != 0) return cmp;
-        }
-        return 0;
-    }
-
-    public static int compareByte(byte a, byte b) {
-        return Byte.toUnsignedInt(a) - Byte.toUnsignedInt(b);
-    }
-
     public static boolean isDeltaFile(String fn) {
         return fn.contains(OptOutUtils.prefixDeltaFile);
     }
