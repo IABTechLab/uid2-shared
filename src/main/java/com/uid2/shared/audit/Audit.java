@@ -35,9 +35,6 @@ public class Audit {
         private final JsonObject queryParams;
         private final String uidInstanceId;
         private final String requestBody;
-        private static final Pattern UID2_KEY_PATTERN = Pattern.compile("(UID2|EUID)-[A-Za-z]-[A-Za-z]-[A-Za-z0-9_-]+");
-        private static final int PARAMETER_MAX_LENGTH = 1000;
-        private static final int REQUEST_BODY_MAX_LENGTH = 10000;
         private final StringBuilder toJsonValidationErrorMessageBuilder = new StringBuilder();
         @Getter
         private String toJsonValidationErrorMessage = "";
@@ -106,8 +103,9 @@ public class Audit {
                     keysToRemove.add(key);
                 }
 
-                if (val != null && val.length() > PARAMETER_MAX_LENGTH) {
-                    val = val.substring(0, PARAMETER_MAX_LENGTH);
+                int parameter_max_length = 1000;
+                if (val != null && val.length() > parameter_max_length) {
+                    val = val.substring(0, parameter_max_length);
                     toJsonValidationErrorMessageBuilder.append(String.format(
                             "The %s is too long in the audit log: %s. ", propertyName, key));
                 }
@@ -162,8 +160,9 @@ public class Audit {
 
             }
 
-            if (sanitizedRequestBody.length() > REQUEST_BODY_MAX_LENGTH) {
-                sanitizedRequestBody = sanitizedRequestBody.substring(0, REQUEST_BODY_MAX_LENGTH);
+            int request_body_max_length = 10000;
+            if (sanitizedRequestBody.length() > request_body_max_length) {
+                sanitizedRequestBody = sanitizedRequestBody.substring(0, request_body_max_length);
                 toJsonValidationErrorMessageBuilder.append("Request body is too long in the audit log: %s. ");
             }
             return sanitizedRequestBody;
@@ -173,7 +172,8 @@ public class Audit {
             if (fieldValue == null || fieldValue.isEmpty()) {
                 return true;
             }
-            Matcher matcher = UID2_KEY_PATTERN.matcher(fieldValue);
+            Pattern uid2_key_pattern = Pattern.compile("(UID2|EUID)-[A-Za-z]-[A-Za-z]-[A-Za-z0-9_-]+");
+            Matcher matcher = uid2_key_pattern.matcher(fieldValue);
             if(matcher.find()) {
                 toJsonValidationErrorMessageBuilder.append(String.format("Secret found in the audit log: %s. ", propertyName));
                 return false;
