@@ -1,5 +1,7 @@
 package com.uid2.shared.audit;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.vertx.core.MultiMap;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.Json;
@@ -7,12 +9,15 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RequestBody;
 import io.vertx.ext.web.RoutingContext;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import java.time.Instant;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Audit {
 
@@ -30,6 +35,9 @@ public class Audit {
         private final JsonObject queryParams;
         private final String uidInstanceId;
         private final String requestBody;
+        private final StringBuilder toJsonValidationErrorMessageBuilder = new StringBuilder();
+        @Getter
+        private String toJsonValidationErrorMessage = "";
 
         private AuditRecord(Builder builder) {
             this.timestamp = Instant.now();
@@ -53,18 +61,148 @@ public class Audit {
                     .put("source", source)
                     .put("status", status)
                     .put("method", method)
-                    .put("endpoint", endpoint)
-                    .put("trace_id", traceId)
-                    .put("uid_instance_id", uidInstanceId)
-                    .put("actor", actor);
-            if (uidTraceId != null) {
+                    .put("endpoint", endpoint);
+
+            if (traceId != null && validateId(traceId, "trace_id")) {
+                json.put("trace_id", traceId);
+            }
+
+            if (uidTraceId != null && validateId(uidTraceId, "uid_trace_id")) {
                 json.put("uid_trace_id", uidTraceId);
             }
+
+            if (uidInstanceId != null && validateId(uidInstanceId, "uid_instance_id")) {
+                json.put("uid_instance_id", uidInstanceId);
+            }
             actor.put("id", this.getLogIdentifier(json));
-            json.put("actor", actor);
-            if (queryParams != null) json.put("query_params", queryParams);
-            if (requestBody != null) json.put("request_body", requestBody);
+            if (validateJsonObjectParams(actor, "actor")) {
+                json.put("actor", actor);
+            }
+            if (queryParams != null && validateJsonObjectParams(queryParams, "query_params")) json.put("query_params", queryParams);
+            if (requestBody != null) {
+                String sanitizedRequestBody = sanitizeRequestBody(requestBody);
+                if (!sanitizedRequestBody.isEmpty()) {
+                    json.put("request_body", sanitizedRequestBody);
+                }
+            }
+            toJsonValidationErrorMessage = toJsonValidationErrorMessageBuilder.isEmpty()? "" : "Audit log failure: " + toJsonValidationErrorMessageBuilder.toString();
             return json;
+        }
+
+        private boolean validateJsonObjectParams(JsonObject jsonObject, String propertyName) {
+            Set<String> keysToRemove = new HashSet<>();
+
+            for (String key : jsonObject.fieldNames()) {
+                String val = jsonObject.getString(key);
+
+                boolean containsNoSecret = validateNoSecrets(key, propertyName) && validateNoSecrets(val, propertyName);
+                boolean containsNoSQL = validateNoSQL(key, propertyName) && validateNoSQL(val, propertyName);
+
+                if (!(containsNoSecret && containsNoSQL)) {
+                    keysToRemove.add(key);
+                }
+
+                int parameter_max_length = 1000;
+                if (val != null && val.length() > parameter_max_length) {
+                    val = val.substring(0, parameter_max_length);
+                    toJsonValidationErrorMessageBuilder.append(String.format(
+                            "The %s is too long in the audit log: %s. ", propertyName, key));
+                }
+
+                jsonObject.put(key, val);
+            }
+
+            for (String key : keysToRemove) {
+                jsonObject.remove(key);
+            }
+
+            return !jsonObject.isEmpty();
+        }
+
+        private boolean validateJsonArrayParams(JsonArray jsonArray, String propertyName) {
+            JsonArray newJsonArray = new JsonArray();
+
+            for (Object object : jsonArray) {
+                if (object instanceof JsonObject) {
+                    if (validateJsonObjectParams((JsonObject)object, propertyName)) {
+                        newJsonArray.add(object);
+                    }
+                } else {
+                    toJsonValidationErrorMessageBuilder.append("The request body is a JSON array, but one of its elements is not a JSON object.");
+                }
+            }
+
+            jsonArray.clear();
+            jsonArray.addAll(newJsonArray);
+
+            return !jsonArray.isEmpty();
+        }
+
+        private String sanitizeRequestBody(String requestBody) {
+            ObjectMapper mapper = new ObjectMapper();
+            String sanitizedRequestBody = "";
+
+            try {
+                JsonNode root = mapper.readTree(requestBody);
+
+                if (root.isObject()) {
+                    JsonObject jsonObject = new JsonObject(mapper.writeValueAsString(root));
+                    if (validateJsonObjectParams(jsonObject, "request_body")) sanitizedRequestBody = jsonObject.toString();
+                } else if (root.isArray()) {
+                    JsonArray jsonArray = new JsonArray(mapper.writeValueAsString(root));
+                    if (validateJsonArrayParams(jsonArray, "request_body")) sanitizedRequestBody = jsonArray.toString();
+                } else {
+                    toJsonValidationErrorMessageBuilder.append("The request body of audit log is not a JSON object or array. ");
+                }
+            } catch (Exception e) {
+                toJsonValidationErrorMessageBuilder.append("The request body of audit log is Invalid JSON: ").append(e.getMessage());
+
+            }
+
+            int request_body_max_length = 10000;
+            if (sanitizedRequestBody.length() > request_body_max_length) {
+                sanitizedRequestBody = sanitizedRequestBody.substring(0, request_body_max_length);
+                toJsonValidationErrorMessageBuilder.append("Request body is too long in the audit log: %s. ");
+            }
+            return sanitizedRequestBody;
+        }
+
+        private boolean validateNoSecrets(String fieldValue, String propertyName) {
+            if (fieldValue == null || fieldValue.isEmpty()) {
+                return true;
+            }
+            Pattern uid2_key_pattern = Pattern.compile("(UID2|EUID)-[A-Za-z]-[A-Za-z]-[A-Za-z0-9_-]+");
+            Matcher matcher = uid2_key_pattern.matcher(fieldValue);
+            if(matcher.find()) {
+                toJsonValidationErrorMessageBuilder.append(String.format("Secret found in the audit log: %s. ", propertyName));
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        private boolean validateNoSQL(String fieldValue, String propertyName) {
+            if (fieldValue == null || fieldValue.isEmpty()) {
+                return true;
+            }
+            Pattern sql_injection_pattern = Pattern.compile(
+                    "(?i)(\\bselect\\b\\s+.+\\s+\\bfrom\\b|\\bunion\\b\\s+\\bselect\\b|\\binsert\\b\\s+\\binto\\b|\\bdrop\\b\\s+\\btable\\b|--|#|\\bor\\b|\\band\\b|\\blike\\b|\\bin\\b\\s*\\(|;)"
+            );
+            if(sql_injection_pattern.matcher(fieldValue).find()) {
+                toJsonValidationErrorMessageBuilder.append(String.format("SQL injection found in the audit log: %s. ", propertyName));
+                return false;
+            } else {
+                return true;
+            }
+        }
+
+        private boolean validateId(String uidInstanceId, String propertyName) {
+            if(uidInstanceId.length() < 100 && validateNoSecrets(uidInstanceId, propertyName) && validateNoSQL(uidInstanceId, propertyName) ) {
+                return true;
+            } else {
+                toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log. ", propertyName));
+                return false;
+            }
         }
 
         private String getLogIdentifier(JsonObject logObject) {
@@ -130,6 +268,7 @@ public class Audit {
     public static final String UID_TRACE_ID_HEADER = "UID-Trace-Id";
     public static final String UID_INSTANCE_ID_HEADER = "UID-Instance-Id";
     private static final Logger LOGGER = LoggerFactory.getLogger(Audit.class);
+    private static final String UNKNOWN_ID = "unknown";
 
     private static Set<String> flattenToDotNotation(JsonObject json, String parentKey) {
         Set<String> keys = new HashSet<>();
@@ -240,7 +379,7 @@ public class Audit {
     }
 
     private String defaultIfNull(String s) {
-        return s != null ? s : "unknown";
+        return s != null ? s : UNKNOWN_ID;
     }
 
     private String defaultIfNull(String s, String defaultValue) {
@@ -301,7 +440,12 @@ public class Audit {
             }
 
             AuditRecord auditRecord = builder.build();
-            LOGGER.info(auditRecord.toString());
+            String auditRecordString = auditRecord.toString();
+            if (!auditRecord.getToJsonValidationErrorMessage().isEmpty()) {
+                LOGGER.error(auditRecord.getToJsonValidationErrorMessage() + auditRecordString);
+            }
+            LOGGER.info(auditRecordString);
+
         } catch (Exception e) {
             LOGGER.warn("Failed to log audit record", e);
         }
