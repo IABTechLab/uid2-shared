@@ -48,7 +48,7 @@ public class AuditTest {
     private String UID_INSTANCE_ID_FROM_INTEG = "uid2-integ-use2-operator-dfb4bd68d-v9p6t-a2cf5882f000d7b2";
     private String UID_INSTANCE_ID_FROM_PROD = "uid2-prod-use2-operator-6bb87b7fd-n4smk-90527e73fbffa91c";
     private String UID_INSTANCE_ID_FROM_AWS = "aws-aasdadada-ami-12312311321-v9p6t-a2cf5882f000d7b2";
-    private String MALFORMED_UID_INSTANCE_ID = "uid2-prod-use2-operator-6bb87b7fd-n4smk-90527e73fbffa91c-u";
+    private String MALFORMED_UID_INSTANCE_ID = "uid2-prod-SELECT * FROM usersUID2-O-P-AB12cd34EF-zyX9_abCDEFghijklMNOPQRSTuvwxYZ0123";
 
 
     @BeforeEach
@@ -510,25 +510,6 @@ public class AuditTest {
 
     @Test
     public void testMalformedUIDInstanceId() {
-        Mockito.when(mockRequest.getHeader(UID_INSTANCE_ID_HEADER)).thenReturn(TRACE_ID);
-        AuditParams params = new AuditParams();
-
-        new Audit("admin").log(mockCtx, params);
-
-        List<String> messages = listAppender.list.stream()
-                .map(ILoggingEvent::getFormattedMessage)
-                .toList();
-
-        assertThat(messages).noneMatch(msg -> msg.contains(TRACE_ID));
-
-        boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Malformed uid_instance_id found in the audit log. "));
-
-        assertThat(errorLogged).isTrue();
-    }
-
-    @Test
-    public void testAnotherMalformedUIDInstanceId() {
         Mockito.when(mockRequest.getHeader(UID_INSTANCE_ID_HEADER)).thenReturn(MALFORMED_UID_INSTANCE_ID);
         AuditParams params = new AuditParams();
 
@@ -547,7 +528,7 @@ public class AuditTest {
     }
 
     @Test
-    public void testMalformedUIDInstanceIdNull() throws JsonProcessingException {
+    public void testUIDInstanceIdNull() throws JsonProcessingException {
         Mockito.when(mockRequest.getHeader(UID_INSTANCE_ID_HEADER)).thenReturn(null);
         AuditParams params = new AuditParams();
 

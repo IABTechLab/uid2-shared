@@ -38,9 +38,6 @@ public class Audit {
         private static final Pattern UID2_KEY_PATTERN = Pattern.compile("(UID2|EUID)-[A-Za-z]-[A-Za-z]-[A-Za-z0-9_-]+");
         private static final int PARAMETER_MAX_LENGTH = 1000;
         private static final int REQUEST_BODY_MAX_LENGTH = 10000;
-
-        private static final Pattern UID_INSTANCE_ID_SUFFIX_PATTERN = Pattern.compile("^[A-Za-z0-9\\-]+-[0-9a-f]{1,16}$");
-
         private final StringBuilder toJsonValidationErrorMessageBuilder = new StringBuilder();
         @Getter
         private String toJsonValidationErrorMessage = "";
@@ -201,11 +198,11 @@ public class Audit {
         }
 
         private boolean validateUIDInstanceId(String uidInstanceId) {
-            if(!UID_INSTANCE_ID_SUFFIX_PATTERN.matcher(uidInstanceId).matches() && !uidInstanceId.equals(UNKNOWN_ID)) {
+            if(uidInstanceId.length() < 100 && validateNoSecrets(uidInstanceId, "uid_instance_id") && validateNoSQL(uidInstanceId, "uid_instance_id") ) {
+                return true;
+            } else {
                 toJsonValidationErrorMessageBuilder.append("Malformed uid_instance_id found in the audit log. ");
                 return false;
-            } else {
-                return true;
             }
         }
 
