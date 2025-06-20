@@ -64,15 +64,15 @@ public class Audit {
                     .put("endpoint", endpoint)
                     .put("trace_id", traceId);
 
-            if (traceId != null && validateAmazonTraceId(traceId, "trace_id")) {
+            if (traceId != null && validateId(traceId, "trace_id")) {
                 json.put("trace_id", traceId);
             }
 
-            if (uidTraceId != null && validateAmazonTraceId(uidTraceId, "uid_trace_id")) {
+            if (uidTraceId != null && validateId(uidTraceId, "uid_trace_id")) {
                 json.put("uid_trace_id", uidTraceId);
             }
 
-            if (uidInstanceId != null && validateUIDInstanceId(uidInstanceId)) {
+            if (uidInstanceId != null && validateId(uidInstanceId, "uid_instance_id")) {
                 json.put("uid_instance_id", uidInstanceId);
             }
             actor.put("id", this.getLogIdentifier(json));
@@ -197,25 +197,12 @@ public class Audit {
             }
         }
 
-        private boolean validateUIDInstanceId(String uidInstanceId) {
-            if(uidInstanceId.length() < 100 && validateNoSecrets(uidInstanceId, "uid_instance_id") && validateNoSQL(uidInstanceId, "uid_instance_id") ) {
+        private boolean validateId(String uidInstanceId, String propertyName) {
+            if(uidInstanceId.length() < 100 && validateNoSecrets(uidInstanceId, propertyName) && validateNoSQL(uidInstanceId, propertyName) ) {
                 return true;
             } else {
                 toJsonValidationErrorMessageBuilder.append("Malformed uid_instance_id found in the audit log. ");
                 return false;
-            }
-        }
-
-        private boolean validateAmazonTraceId(String traceId, String propertyName) {
-            Pattern x_amzn_trace_id_pattern = Pattern.compile(
-                    "(?:Root|Self)=1-[0-9a-fA-F]{8}-[0-9a-fA-F]{24}"
-            ); // https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-request-tracing.html
-
-            if(!x_amzn_trace_id_pattern.matcher(traceId).matches() && !traceId.equals(UNKNOWN_ID)) {
-                toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log. ", propertyName));
-                return false;
-            } else {
-                return true;
             }
         }
 
