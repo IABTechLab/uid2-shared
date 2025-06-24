@@ -19,7 +19,6 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class AttestationRequest {
     private AttestationDocument attestationDocument;
     private byte[] attestationDocumentRaw;
