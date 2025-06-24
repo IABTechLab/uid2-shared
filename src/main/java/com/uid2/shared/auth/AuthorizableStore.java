@@ -31,11 +31,11 @@ public class AuthorizableStore<T extends IAuthorizable> {
         this.keyToHashCache = createCache();
 
         String cacheName = cls.getName().toLowerCase();
-        keyToHashTotalCounter = Counter.builder("uid2.cache.total_count")
+        keyToHashTotalCounter = Counter.builder("uid2_cache_total_count_total")
                 .description("counter for " + cacheName + " cache total count")
                 .tag("cache", cacheName)
                 .register(Metrics.globalRegistry);
-        keyToHashMissCounter = Counter.builder("uid2.cache.miss_count")
+        keyToHashMissCounter = Counter.builder("uid2_cache_miss_count_total")
                 .description("counter for " + cacheName + " cache miss count")
                 .tag("cache", cacheName)
                 .register(Metrics.globalRegistry);
