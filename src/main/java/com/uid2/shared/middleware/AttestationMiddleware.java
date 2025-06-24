@@ -99,7 +99,7 @@ public class AttestationMiddleware {
                                 if (CollectionUtils.isNotEmpty(response.getRoles())) {
                                     auditLogUserDetails.put("jwt_roles", new ArrayList<>(response.getRoles()));
                                 }
-                                auditLogUserDetails.put("jwt_roles", response.getJti());
+                                auditLogUserDetails.put("token_id", response.getJti());
 
                                 String subject = calculateSubject(operatorKey);
                                 auditLogUserDetails.put("jwt_subject", subject);
