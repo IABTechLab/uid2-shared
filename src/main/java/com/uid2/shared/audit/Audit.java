@@ -95,8 +95,8 @@ public class Audit {
             for (String key : jsonObject.fieldNames()) {
                 String val = jsonObject.getString(key);
 
-                boolean containsNoSecret = validateNoSecrets(key, propertyName) && validateNoSecrets(val, propertyName);
-                boolean containsNoSQL = validateNoSQL(key, propertyName) && validateNoSQL(val, propertyName);
+                boolean containsNoSecret = validateNoSecrets(val, String.format("%s.%s", propertyName, key));
+                boolean containsNoSQL = validateNoSQL(val, String.format("%s.%s", propertyName, key));
 
                 if (!(containsNoSecret && containsNoSQL)) {
                     keysToRemove.add(key);
@@ -128,7 +128,7 @@ public class Audit {
                         newJsonArray.add(object);
                     }
                 } else {
-                    toJsonValidationErrorMessageBuilder.append("The request body is a JSON array, but one of its elements is not a JSON object.");
+                    toJsonValidationErrorMessageBuilder.append(String.format("The request body is a JSON array, but one of its elements is not a JSON object: %s. ", object.toString()));
                 }
             }
 
@@ -152,7 +152,7 @@ public class Audit {
                     JsonArray jsonArray = new JsonArray(mapper.writeValueAsString(root));
                     if (validateJsonArrayParams(jsonArray, "request_body")) sanitizedRequestBody = jsonArray.toString();
                 } else {
-                    toJsonValidationErrorMessageBuilder.append("The request body of audit log is not a JSON object or array. ");
+                    toJsonValidationErrorMessageBuilder.append(String.format("The request body of audit log is not a JSON object or array: %s. ", requestBody));
                 }
             } catch (Exception e) {
                 toJsonValidationErrorMessageBuilder.append("The request body of audit log is Invalid JSON: ").append(e.getMessage());
