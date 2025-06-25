@@ -411,7 +411,7 @@ public class Audit {
             String traceId = defaultIfNull(request.getHeader("X-Amzn-Trace-Id"));
             String headerValue = request.getHeader(UID_TRACE_ID_HEADER);
             if (headerValue != null && "unknown".equalsIgnoreCase(headerValue)) {
-                log.info("UID_TRACE_ID_HEADER is unknown -- ABU DEBUG");
+                LOGGER.error("UID_TRACE_ID_HEADER is unknown -- ABU DEBUG");
             }
             String uidTraceId = (headerValue == null || "unknown".equalsIgnoreCase(headerValue)) ? traceId : headerValue;
             //String uidTraceId = defaultIfNull(request.getHeader(UID_TRACE_ID_HEADER), traceId);
