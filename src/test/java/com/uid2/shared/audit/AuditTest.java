@@ -38,8 +38,8 @@ public class AuditTest {
     private SocketAddress mockAddress;
     private Logger logger;
     private ListAppender<ILoggingEvent> listAppender;
-    private String UID2_SECRET_KEY = "UID2-O-P-AB12cd34EF-zyX9_abCDEFghijklMNOPQRSTuvwxYZ0123";
-    private String SECRET = "jhgjy6tuygiuhi";
+    private String UID_SECRET_KEY = "UID2_SECRET_KEY";
+    private String UID_SECRET = "UID2-O-P-AB12cd34EF-zyX9_abCDEFghijklMNOPQRSTuvwxYZ0123";
     private String SQL_STATEMENT = "SELECT * FROM users WHERE username = '' OR '1'='1'";
     private String TRACE_ID = "Root=1-6825017b-2321f2302b5ea904340c1cff";
     private String UID_TRACE_ID = "Root=1-6825017b-2321f2302b5ea904340c1cfa";
@@ -140,13 +140,13 @@ public class AuditTest {
     @Test
     public void testBodyParamsAsJsobObjectWithSecret() {
         Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
-        AuditParams params = new AuditParams(null, Arrays.asList("name.first", "location", UID2_SECRET_KEY));
+        AuditParams params = new AuditParams(null, Arrays.asList("name.first", "location", UID_SECRET_KEY));
 
         RequestBody mockBody = Mockito.mock(RequestBody.class);
         JsonObject json = new JsonObject()
                 .put("name", new JsonObject().put("first", "uid2_user"))
                 .put("location", "seattle")
-                .put(UID2_SECRET_KEY, SECRET);
+                .put(UID_SECRET_KEY, UID_SECRET);
 
         Mockito.when(mockCtx.body()).thenReturn(mockBody);
         Mockito.when(mockBody.buffer()).thenReturn(Buffer.buffer(json.toString()));
@@ -158,11 +158,10 @@ public class AuditTest {
                 .toList();
 
         assertThat(messages).allMatch(msg -> msg.contains("uid2_user") && msg.contains("seattle"));
-        assertThat(messages).noneMatch(msg -> msg.contains(UID2_SECRET_KEY));
-        assertThat(messages).noneMatch(msg -> msg.contains(SECRET));
+        assertThat(messages).noneMatch(msg -> msg.contains(UID_SECRET));
 
         boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Secret found in the audit log: request_body."));
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains(String.format("Secret found in the audit log: request_body.%s.", UID_SECRET_KEY)));
 
         assertThat(errorLogged).isTrue();
     }
@@ -170,14 +169,14 @@ public class AuditTest {
     @Test
     public void testBodyParamsAsJsobObjectWithSecretNSQL() {
         Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
-        AuditParams params = new AuditParams(null, Arrays.asList("name.first", "location", UID2_SECRET_KEY, SQL_STATEMENT));
+        AuditParams params = new AuditParams(null, Arrays.asList("name.first", "location", UID_SECRET_KEY, "weather"));
 
         RequestBody mockBody = Mockito.mock(RequestBody.class);
         JsonObject json = new JsonObject()
                 .put("name", new JsonObject().put("first", "uid2_user"))
                 .put("location", "seattle")
-                .put(UID2_SECRET_KEY, SECRET)
-                .put(SQL_STATEMENT, "weather");
+                .put(UID_SECRET_KEY, UID_SECRET)
+                .put("weather", SQL_STATEMENT);
 
         Mockito.when(mockCtx.body()).thenReturn(mockBody);
         Mockito.when(mockBody.buffer()).thenReturn(Buffer.buffer(json.toString()));
@@ -189,13 +188,11 @@ public class AuditTest {
                 .toList();
 
         assertThat(messages).allMatch(msg -> msg.contains("uid2_user") && msg.contains("seattle"));
-        assertThat(messages).noneMatch(msg -> msg.contains(UID2_SECRET_KEY));
-        assertThat(messages).noneMatch(msg -> msg.contains(SECRET));
+        assertThat(messages).noneMatch(msg -> msg.contains(UID_SECRET));
         assertThat(messages).noneMatch(msg -> msg.contains(SQL_STATEMENT));
-        assertThat(messages).noneMatch(msg -> msg.contains("weather"));
 
         boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Secret found in the audit log: request_body.") && event.getFormattedMessage().contains("SQL injection found in the audit log: request_body."));
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains(String.format("Secret found in the audit log: request_body.%s. ", UID_SECRET_KEY)) && event.getFormattedMessage().contains("SQL injection found in the audit log: request_body.weather. "));
 
         assertThat(errorLogged).isTrue();
     }
@@ -248,13 +245,13 @@ public class AuditTest {
     @Test
     public void testBodyParamsAsJsonArrayWithSecret() {
         Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
-        AuditParams params = new AuditParams(null, Arrays.asList("partner_id", "config", UID2_SECRET_KEY));
+        AuditParams params = new AuditParams(null, Arrays.asList("partner_id", "config", UID_SECRET_KEY));
 
         RequestBody mockBody = Mockito.mock(RequestBody.class);
         JsonArray json = new JsonArray()
                 .add(new JsonObject().put("partner_id", "1").put("config", "config1"))
                 .add(new JsonObject().put("partner_id", "2").put("config", "config2"))
-                .add(new JsonObject().put(UID2_SECRET_KEY, SECRET).put("config", "config3"));
+                .add(new JsonObject().put(UID_SECRET_KEY, UID_SECRET).put("config", "config3"));
 
         Mockito.when(mockCtx.body()).thenReturn(mockBody);
         Mockito.when(mockBody.buffer()).thenReturn(Buffer.buffer(json.toString()));
@@ -266,11 +263,10 @@ public class AuditTest {
                 .toList();
 
         assertThat(messages).allMatch(msg -> msg.contains("partner_id") && msg.contains("config"));
-        assertThat(messages).noneMatch(msg -> msg.contains(UID2_SECRET_KEY));
-        assertThat(messages).noneMatch(msg -> msg.contains(SECRET));
+        assertThat(messages).noneMatch(msg -> msg.contains(UID_SECRET));
 
         boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Secret found in the audit log: request_body."));
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains(String.format("Secret found in the audit log: request_body.%s", UID_SECRET_KEY)));
 
         assertThat(errorLogged).isTrue();
     }
@@ -278,13 +274,13 @@ public class AuditTest {
     @Test
     public void testBodyParamsAsJsonArrayWithSecretNSQL() {
         Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
-        AuditParams params = new AuditParams(null, Arrays.asList("partner_id", "config", UID2_SECRET_KEY, "weather"));
+        AuditParams params = new AuditParams(null, Arrays.asList("partner_id", "config", UID_SECRET_KEY, "weather"));
 
         RequestBody mockBody = Mockito.mock(RequestBody.class);
         JsonArray json = new JsonArray()
                 .add(new JsonObject().put("partner_id", "1").put("config", "config1"))
                 .add(new JsonObject().put("partner_id", "2").put("config", "config2"))
-                .add(new JsonObject().put(UID2_SECRET_KEY, SECRET).put("config", "config3"))
+                .add(new JsonObject().put(UID_SECRET_KEY, UID_SECRET).put("config", "config3"))
                 .add(new JsonObject().put("weather", SQL_STATEMENT).put("config", "config3"));
 
         Mockito.when(mockCtx.body()).thenReturn(mockBody);
@@ -297,13 +293,11 @@ public class AuditTest {
                 .toList();
 
         assertThat(messages).allMatch(msg -> msg.contains("partner_id") && msg.contains("config"));
-        assertThat(messages).noneMatch(msg -> msg.contains(UID2_SECRET_KEY));
-        assertThat(messages).noneMatch(msg -> msg.contains(SECRET));
+        assertThat(messages).noneMatch(msg -> msg.contains(UID_SECRET));
         assertThat(messages).noneMatch(msg -> msg.contains(SQL_STATEMENT));
-        assertThat(messages).noneMatch(msg -> msg.contains("weather"));
 
         boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Secret found in the audit log: request_body.") && event.getFormattedMessage().contains("SQL injection found in the audit log: request_body."));
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains(String.format("Secret found in the audit log: request_body.%s.", UID_SECRET_KEY)) && event.getFormattedMessage().contains("SQL injection found in the audit log: request_body.weather. "));
 
         assertThat(errorLogged).isTrue();
     }
@@ -352,10 +346,10 @@ public class AuditTest {
     @Test
     public void testQueryParamsContainsSecrets() {
         Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
-        AuditParams params = new AuditParams(Arrays.asList(UID2_SECRET_KEY, "location"), null);
+        AuditParams params = new AuditParams(Arrays.asList(UID_SECRET_KEY, "location"), null);
 
         MultiMap queryParams = MultiMap.caseInsensitiveMultiMap();
-        queryParams.add(UID2_SECRET_KEY, SECRET);
+        queryParams.add(UID_SECRET_KEY, UID_SECRET);
         queryParams.add("location", "seattle");
 
         Mockito.when(mockCtx.request().params()).thenReturn(queryParams);
@@ -366,11 +360,10 @@ public class AuditTest {
                 .toList();
 
         assertThat(messages).anyMatch(msg -> msg.contains("seattle"));
-        assertThat(messages).noneMatch(msg -> msg.contains(UID2_SECRET_KEY));
-        assertThat(messages).noneMatch(msg -> msg.contains(SECRET));
+        assertThat(messages).noneMatch(msg -> msg.contains(UID_SECRET));
 
         boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Secret found in the audit log: query_params."));
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains(String.format("Secret found in the audit log: query_params.%s. ", UID_SECRET_KEY)));
 
         assertThat(errorLogged).isTrue();
     }
@@ -392,11 +385,10 @@ public class AuditTest {
                 .toList();
 
         assertThat(messages).anyMatch(msg -> msg.contains("seattle"));
-        assertThat(messages).noneMatch(msg -> msg.contains("weather"));
         assertThat(messages).noneMatch(msg -> msg.contains(SQL_STATEMENT));
 
         boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("SQL injection found in the audit log: query_params."));
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("SQL injection found in the audit log: query_params.weather. "));
 
         assertThat(errorLogged).isTrue();
     }
@@ -404,12 +396,12 @@ public class AuditTest {
     @Test
     public void testQueryParamsContainsSecretNSQL() {
         Mockito.when(mockRequest.method()).thenReturn(HttpMethod.POST);
-        AuditParams params = new AuditParams(Arrays.asList(UID2_SECRET_KEY, "weather", "location"), null);
+        AuditParams params = new AuditParams(Arrays.asList(UID_SECRET_KEY, "weather", "location"), null);
 
         MultiMap queryParams = MultiMap.caseInsensitiveMultiMap();
         queryParams.add("weather", SQL_STATEMENT);
         queryParams.add("location", "seattle");
-        queryParams.add(UID2_SECRET_KEY, SECRET);
+        queryParams.add(UID_SECRET_KEY, UID_SECRET);
 
         Mockito.when(mockCtx.request().params()).thenReturn(queryParams);
         new Audit("admin").log(mockCtx, params);
@@ -419,13 +411,11 @@ public class AuditTest {
                 .toList();
 
         assertThat(messages).anyMatch(msg -> msg.contains("seattle"));
-        assertThat(messages).noneMatch(msg -> msg.contains("weather"));
         assertThat(messages).noneMatch(msg -> msg.contains(SQL_STATEMENT));
-        assertThat(messages).noneMatch(msg -> msg.contains(UID2_SECRET_KEY));
-        assertThat(messages).noneMatch(msg -> msg.contains(SECRET));
+        assertThat(messages).noneMatch(msg -> msg.contains(UID_SECRET));
 
         boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Secret found in the audit log: query_params.") && event.getFormattedMessage().contains("SQL injection found in the audit log: query_params."));
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains(String.format("Secret found in the audit log: query_params.%s", UID_SECRET_KEY)) && event.getFormattedMessage().contains("SQL injection found in the audit log: query_params.weather. "));
 
         assertThat(errorLogged).isTrue();
     }
