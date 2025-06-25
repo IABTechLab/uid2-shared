@@ -409,7 +409,12 @@ public class Audit {
             String method = request.method() != null ? request.method().name() : "UNKNOWN";
             String path = defaultIfNull(request.path());
             String traceId = defaultIfNull(request.getHeader("X-Amzn-Trace-Id"));
-            String uidTraceId = defaultIfNull(request.getHeader(UID_TRACE_ID_HEADER), traceId);
+            String headerValue = request.getHeader(UID_TRACE_ID_HEADER);
+            if (headerValue != null && "unknown".equalsIgnoreCase(headerValue)) {
+                log.info("UID_TRACE_ID_HEADER is unknown -- ABU DEBUG");
+            }
+            String uidTraceId = (headerValue == null || "unknown".equalsIgnoreCase(headerValue)) ? traceId : headerValue;
+            //String uidTraceId = defaultIfNull(request.getHeader(UID_TRACE_ID_HEADER), traceId);
             String uidInstanceId = defaultIfNull(request.getHeader(UID_INSTANCE_ID_HEADER));
 
 
