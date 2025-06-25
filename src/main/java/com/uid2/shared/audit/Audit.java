@@ -67,9 +67,11 @@ public class Audit {
                 json.put("trace_id", traceId);
             }
 
+            LOGGER.info("ABU DEBUG ----> UID_TRACE_ID_HEADER in toJSON is "+uidTraceId); 
             if (uidTraceId != null && validateId(uidTraceId, "uid_trace_id")) {
                 json.put("uid_trace_id", uidTraceId);
             }
+            LOGGER.info("ABU DEBUG ----> UID_TRACE_ID_HEADER in toJSON after is "+uidTraceId); 
 
             if (uidInstanceId != null && validateId(uidInstanceId, "uid_instance_id")) {
                 json.put("uid_instance_id", uidInstanceId);
@@ -84,7 +86,7 @@ public class Audit {
                 if (!sanitizedRequestBody.isEmpty()) {
                     json.put("request_body", sanitizedRequestBody);
                 }
-            }
+            } 
             toJsonValidationErrorMessage = toJsonValidationErrorMessageBuilder.isEmpty()? "" : "Audit log failure: " + toJsonValidationErrorMessageBuilder.toString();
             return json;
         }
@@ -410,10 +412,12 @@ public class Audit {
             String path = defaultIfNull(request.path());
             String traceId = defaultIfNull(request.getHeader("X-Amzn-Trace-Id"));
             String headerValue = request.getHeader(UID_TRACE_ID_HEADER);
+            LOGGER.info("ABU DEBUG ----> headerValue is "+headerValue);
             if (headerValue != null && "unknown".equalsIgnoreCase(headerValue)) {
                 LOGGER.error("UID_TRACE_ID_HEADER is unknown -- ABU DEBUG");
             }
             String uidTraceId = (headerValue == null || "unknown".equalsIgnoreCase(headerValue)) ? traceId : headerValue;
+            LOGGER.info("ABU DEBUG ----> UID_TRACE_ID_HEADER is "+uidTraceId);
             //String uidTraceId = defaultIfNull(request.getHeader(UID_TRACE_ID_HEADER), traceId);
             String uidInstanceId = defaultIfNull(request.getHeader(UID_INSTANCE_ID_HEADER));
 
