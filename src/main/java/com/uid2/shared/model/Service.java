@@ -16,12 +16,17 @@ public class Service {
     private String linkIdRegex;
     private String name;
     private Set<Role> roles;
+    private boolean disabled;
 
     public Service(int serviceId, int siteId, String name, Set<Role> roles) {
-        this(serviceId, siteId, name, roles, null);
+        this(serviceId, siteId, name, roles, null, false);
     }
 
     public Service(int serviceId, int siteId, String name, Set<Role> roles, String linkIdRegex) {
+        this(serviceId, siteId, name, roles, linkIdRegex, false);
+    }
+
+    public Service(int serviceId, int siteId, String name, Set<Role> roles, String linkIdRegex, boolean disabled) {
         this.serviceId = serviceId;
         this.siteId = siteId;
         this.name = name;
@@ -65,6 +70,14 @@ public class Service {
         this.roles = Objects.requireNonNullElseGet(roles, HashSet::new);
     }
 
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+    }
+
     @Override
     public String toString() {
         return "Service{" +
@@ -73,6 +86,7 @@ public class Service {
                 ", name='" + name + '\'' +
                 ", roles=" + roles +
                 ", linkIdRegex=" + linkIdRegex +
+                ", disabled=" + disabled +
                 '}';
     }
 
@@ -84,6 +98,7 @@ public class Service {
 
         return serviceId == other.serviceId
             && siteId == other.siteId
+            && disabled == other.disabled
             && Objects.equals(name,        other.name)
             && Objects.equals(roles,       other.roles)
             && Objects.equals(linkIdRegex, other.linkIdRegex);
@@ -91,6 +106,6 @@ public class Service {
 
     @Override
     public int hashCode() {
-        return Objects.hash(serviceId, siteId, name, roles.hashCode(), linkIdRegex);
+        return Objects.hash(serviceId, siteId, name, roles.hashCode(), linkIdRegex, disabled);
     }
 }

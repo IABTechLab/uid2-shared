@@ -41,8 +41,8 @@ public class RotatingServiceLinkStoreTest {
         return metadata;
     }
 
-    private ServiceLink addServiceLink(JsonArray content, String linkId, int serviceId, int siteId, String name, Set<Role> roles) {
-        ServiceLink link = new ServiceLink(linkId, serviceId, siteId, name, roles);
+    private ServiceLink addServiceLink(JsonArray content, String linkId, int serviceId, int siteId, String name, Set<Role> roles, boolean disabled) {
+        ServiceLink link = new ServiceLink(linkId, serviceId, siteId, name, roles, disabled);
         JsonObject jo = JsonObject.mapFrom(link);
         content.add(jo);
         return link;
@@ -62,10 +62,10 @@ public class RotatingServiceLinkStoreTest {
     @Test
     public void loadContent_multipleServiceLinksStored_loadsAllServiceLinks() throws Exception {
         JsonArray content = new JsonArray();
-        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of());
-        ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER));
-        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1", Set.of(Role.MAPPER, Role.SHARER));
-        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2", null);
+        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of(), false);
+        ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER), true);
+        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1", Set.of(Role.MAPPER, Role.SHARER), false);
+        ServiceLink l4 = addServiceLink(content, "jkl1011", 3, 124, "test2", null, true);
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = serviceLinkStore.loadContent(makeMetadata("locationPath"));
@@ -77,9 +77,9 @@ public class RotatingServiceLinkStoreTest {
     @Test
     public void getServiceLink_multipleServiceLinksStored_findsCorrectServiceLink() throws Exception {
         JsonArray content = new JsonArray();
-        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of());
-        ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER));
-        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1", Set.of(Role.MAPPER, Role.SHARER));
+        ServiceLink l1 = addServiceLink(content, "abc123", 1, 123, "Test Service 1", Set.of(), false);
+        ServiceLink l2 = addServiceLink(content, "abc123", 2, 123, "test1", Set.of(Role.MAPPER), true);
+        ServiceLink l3 = addServiceLink(content, "ghi789", 1, 123, "Test Service 1", Set.of(Role.MAPPER, Role.SHARER), false);
 
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
@@ -98,7 +98,7 @@ public class RotatingServiceLinkStoreTest {
     @Test
     public void createService_nullRole_createsServiceLinkWithEmptySetOfRoles() throws Exception {
         JsonArray content = new JsonArray();
-        ServiceLink sl = addServiceLink(content, "jkl1011", 3, 124, "Test Service", null);
+        ServiceLink sl = addServiceLink(content, "jkl1011", 3, 124, "Test Service", null, false);
 
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
