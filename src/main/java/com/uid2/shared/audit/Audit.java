@@ -196,13 +196,21 @@ public class Audit {
             }
         }
 
-        private boolean validateId(String uidInstanceId, String propertyName) {
-            if(uidInstanceId.length() < 250 && validateNoSecrets(uidInstanceId, propertyName) && validateNoSQL(uidInstanceId, propertyName) ) {
-                return true;
-            } else {
-                toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log. ", propertyName));
+        private boolean validateId(String uidId, String propertyName) {
+            if (uidId.length() > 250) {
+                toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log: length exceeds 250 characters. ", propertyName));
                 return false;
             }
+            if(!validateNoSecrets(uidId, propertyName)) {
+                toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log: it contains secrets. ", propertyName));
+                return false;
+            }
+
+            if(!validateNoSQL(uidId, propertyName) ) {
+                toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log: it contains SQL statement. ", propertyName));
+                return false;
+            }
+            return true;
         }
 
         private String getLogIdentifier(JsonObject logObject) {
