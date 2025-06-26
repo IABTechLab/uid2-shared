@@ -197,7 +197,7 @@ public class Audit {
         }
 
         private boolean validateId(String uidInstanceId, String propertyName) {
-            if(uidInstanceId.length() < 100 && validateNoSecrets(uidInstanceId, propertyName) && validateNoSQL(uidInstanceId, propertyName) ) {
+            if(uidInstanceId.length() < 250 && validateNoSecrets(uidInstanceId, propertyName) && validateNoSQL(uidInstanceId, propertyName) ) {
                 return true;
             } else {
                 toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log. ", propertyName));
