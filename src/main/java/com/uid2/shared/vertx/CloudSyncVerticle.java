@@ -91,60 +91,60 @@ public class CloudSyncVerticle extends AbstractVerticle {
         this.eventRefresh = eventPrefix + "refresh";
         this.eventRefreshed = eventPrefix + "refreshed";
 
-        Gauge.builder("uid2.cloud_downloading", () -> this.pendingDownload.size())
+        Gauge.builder("uid2_cloud_downloading", () -> this.pendingDownload.size())
             .tag("store", name)
             .description("gauge for how many s3 files are pending download")
             .register(Metrics.globalRegistry);
 
-        Gauge.builder("uid2.cloud_uploading", () -> this.pendingUpload.size())
+        Gauge.builder("uid2_cloud_uploading", () -> this.pendingUpload.size())
             .tag("store", name)
             .description("gauge for how many s3 files are pending upload")
             .register(Metrics.globalRegistry);
 
         this.counterRefreshed = Counter
-            .builder("uid2.cloud_refreshed")
+            .builder("uid2_cloud_refreshed_total")
             .tag("store", name)
             .description("counter for how many times cloud storage files are refreshed")
             .register(Metrics.globalRegistry);
 
         this.counterRefreshSkipped = Counter
-            .builder("uid2.cloud_refresh_skipped")
+            .builder("uid2_cloud_refresh_skipped_total")
             .tag("store", name)
             .description("counter for how many times cloud storage refresh events are skipped due to in-progress refreshing")
             .register(Metrics.globalRegistry);
 
         this.counterRefreshFailures = Counter
-            .builder("uid2.cloud_refresh_failures")
+            .builder("uid2_cloud_refresh_failures_total")
             .tag("store", name)
             .description("counter for number of " + name + " store refresh failures")
             .register(Metrics.globalRegistry);
 
         this.counterDownloaded = Counter
-            .builder("uid2.cloud_downloaded")
+            .builder("uid2_cloud_downloaded_total")
             .tag("store", name)
             .description("counter for how many cloud files are downloaded")
             .register(Metrics.globalRegistry);
 
         this.counterUploaded = Counter
-            .builder("uid2.cloud_uploaded")
+            .builder("uid2_cloud_uploaded_total")
             .tag("store", name)
             .description("counter for how many cloud files are uploaded")
             .register(Metrics.globalRegistry);
 
         this.counterDownloadFailures = Counter
-            .builder("uid2.cloud_download_failures")
+            .builder("uid2_cloud_download_failures_total")
             .tag("store", name)
             .description("counter for how many cloud files downloads have failed")
             .register(Metrics.globalRegistry);
 
         this.counterUploadFailures = Counter
-            .builder("uid2.cloud_upload_failures")
+            .builder("uid2_cloud_upload_failures_total")
             .tag("store", name)
             .description("counter for how many cloud files uploads have failed")
             .register(Metrics.globalRegistry);
 
         this.gaugeConsecutiveRefreshFailures = Gauge
-            .builder("uid2.cloud_downloaded.consecutive_refresh_failures", () -> this.storeRefreshIsFailing.get())
+            .builder("uid2_cloud_downloaded_consecutive_refresh_failures", () -> this.storeRefreshIsFailing.get())
             .tag("store", name)
             .description("gauge for number of consecutive " + name + " store refresh failures")
             .register(Metrics.globalRegistry);

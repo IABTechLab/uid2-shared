@@ -38,32 +38,32 @@ public class RotatingStoreVerticle extends AbstractVerticle {
 
         this.storeName = storeName;
         this.counterStoreRefreshed = Counter
-            .builder("uid2.config_store.refreshed")
+            .builder("uid2_config_store_refreshed_total")
             .tag("store", storeName)
             .description("counter for how many times " + storeName + " store is refreshed")
             .register(Metrics.globalRegistry);
         this.counterStoreRefreshTimeMs = Counter
-            .builder("uid2.config_store.refreshtime_ms")
+            .builder("uid2_config_store_refreshtime_ms_total")
             .tag("store", storeName)
             .description("counter for total time (ms) " + storeName + " store spend in refreshing")
             .register(Metrics.globalRegistry);
         this.counterStoreRefreshFailures = Counter
-            .builder("uid2.config_store.refresh_failures")
+            .builder("uid2_config_store_refresh_failures_total")
             .tag("store", storeName)
             .description("counter for number of " + storeName + " store refresh failures")
             .register(Metrics.globalRegistry);
         this.gaugeStoreVersion = Gauge
-            .builder("uid2.config_store.version", () -> this.latestVersion.get())
+            .builder("uid2_config_store_version", () -> this.latestVersion.get())
             .tag("store", storeName)
             .description("gauge for " + storeName + " store version")
             .register(Metrics.globalRegistry);
         this.gaugeStoreEntryCount = Gauge
-            .builder("uid2.config_store.entry_count", () -> this.latestEntryCount.get())
+            .builder("uid2_config_store_entry_count", () -> this.latestEntryCount.get())
             .tag("store", storeName)
             .description("gauge for " + storeName + " store total entry count")
             .register(Metrics.globalRegistry);
         this.gaugeConsecutiveRefreshFailures = Gauge
-            .builder("uid2.config_store.consecutive_refresh_failures", () -> this.storeRefreshIsFailing.get())
+            .builder("uid2_config_store_consecutive_refresh_failures", () -> this.storeRefreshIsFailing.get())
             .tag("store", storeName)
             .description("gauge for number of consecutive " + storeName + " store refresh failures")
             .register(Metrics.globalRegistry);

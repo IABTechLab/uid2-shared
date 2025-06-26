@@ -232,7 +232,7 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         String key = apiContact + "|" + siteId + "|" + siteName + "|" + host + "|" + status + "|" + method.name() + "|" + path;
         if (!_apiMetricCounters.containsKey(key)) {
             Counter counter = Counter
-                    .builder("uid2.http_requests")
+                    .builder("uid2_http_requests_total")
                     .description("counter for how many http requests are processed per each api contact and status code")
                     .tags("api_contact", apiContact, "site_id", String.valueOf(siteId), "site_name", siteName, "host", host, "status", String.valueOf(status), "method", method.name(), "path", path)
                     .register(Metrics.globalRegistry);
@@ -254,7 +254,7 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         final String key = apiContact + "|" + client.getKey() + "|" + client.getValue();
         if (!_clientAppVersionCounters.containsKey(key)) {
             Counter counter = Counter
-                    .builder("uid2.client_versions")
+                    .builder("uid2_client_versions_total")
                     .description("counter for how many http requests are processed per each api contact and status code")
                     .tags("api_contact", apiContact, "client_name", client.getKey(), "client_version", client.getValue())
                     .register(Metrics.globalRegistry);

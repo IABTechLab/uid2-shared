@@ -67,7 +67,7 @@ public class CloudEncryptionHelpers {
     }
 
     private static void incrementCounter(DecryptionStatus status, int keyId, String storeName) {
-        Counter.builder("uid2.cloud_decryption.runs_total")
+        Counter.builder("uid2_cloud_decryption_runs_total")
                 .description("counter for S3 file decryptions")
                 .tag("key_id", String.valueOf(keyId))
                 .tag("store", storeName)
