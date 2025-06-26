@@ -171,7 +171,7 @@ public class Audit {
             if (fieldValue == null || fieldValue.isEmpty()) {
                 return true;
             }
-            Pattern uid2_key_pattern = Pattern.compile("(UID2|EUID)-[A-Za-z]-[A-Za-z]-[A-Za-z0-9_-]+");
+            Pattern uid2_key_pattern = Pattern.compile("(UID2|EUID)-[A-Za-z]-[A-Za-z]-[A-Za-z0-9_.-]{11,}");
             Matcher matcher = uid2_key_pattern.matcher(fieldValue);
             if(matcher.find()) {
                 toJsonValidationErrorMessageBuilder.append(String.format("Secret found in the audit log: %s. ", propertyName));
