@@ -48,6 +48,7 @@ public class AuditTest {
     private String UID_INSTANCE_ID_FROM_PROD = "uid2-prod-use2-operator-6bb87b7fd-n4smk-90527e73fbffa91c";
     private String UID_INSTANCE_ID_FROM_AWS = "aws-aasdadada-ami-12312311321-v9p6t-a2cf5882f000d7b2";
     private String MALFORMED_ID = "uid2-prod-SELECT * FROM usersUID2-O-P-AB12cd34EF-zyX9_abCDEFghijklMNOPQRSTuvwxYZ0123";
+    private String MALFORMED_SQL_ID = "uid2-prod-SELECT * FROM usersUID2-O-P-AB12cd";
 
 
     @BeforeEach
@@ -439,7 +440,7 @@ public class AuditTest {
     }
 
     @Test
-    public void testMalformedTraceId() {
+    public void testMalformedTraceIdWithSecret() {
         Mockito.when(mockRequest.getHeader(AMZN_TRACE_ID_HEADER)).thenReturn(MALFORMED_ID);
         AuditParams params = new AuditParams();
 
@@ -452,7 +453,26 @@ public class AuditTest {
         assertThat(messages).noneMatch(msg -> msg.contains(MALFORMED_ID));
 
         boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Malformed trace_id found in the audit log.") && event.getFormattedMessage().contains("Malformed uid_trace_id found in the audit log."));
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Malformed trace_id found in the audit log: it contains secrets. ") && event.getFormattedMessage().contains("Malformed uid_trace_id found in the audit log: it contains secrets. "));
+
+        assertThat(errorLogged).isTrue();
+    }
+
+    @Test
+    public void testMalformedTraceIdWithSQL() {
+        Mockito.when(mockRequest.getHeader(AMZN_TRACE_ID_HEADER)).thenReturn(MALFORMED_SQL_ID);
+        AuditParams params = new AuditParams();
+
+        new Audit("admin").log(mockCtx, params);
+
+        List<String> messages = listAppender.list.stream()
+                .map(ILoggingEvent::getFormattedMessage)
+                .toList();
+
+        assertThat(messages).noneMatch(msg -> msg.contains(MALFORMED_SQL_ID));
+
+        boolean errorLogged = listAppender.list.stream()
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Malformed trace_id found in the audit log: it contains SQL statement. ") && event.getFormattedMessage().contains("Malformed uid_trace_id found in the audit log: it contains SQL statement. "));
 
         assertThat(errorLogged).isTrue();
     }
@@ -492,7 +512,7 @@ public class AuditTest {
         assertThat(messages).noneMatch(msg -> msg.contains(UID_TRACE_ID));
 
         boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Malformed uid_trace_id found in the audit log."));
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Malformed uid_trace_id found in the audit log: it contains secrets. "));
 
         assertThat(errorLogged).isTrue();
     }
@@ -511,7 +531,7 @@ public class AuditTest {
         assertThat(messages).noneMatch(msg -> msg.contains(TRACE_ID));
 
         boolean errorLogged = listAppender.list.stream()
-                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Malformed uid_instance_id found in the audit log. "));
+                .anyMatch(event -> event.getLevel() == Level.ERROR && event.getFormattedMessage().contains("Malformed uid_instance_id found in the audit log: it contains secrets. "));
 
         assertThat(errorLogged).isTrue();
     }
