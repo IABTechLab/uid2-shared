@@ -197,10 +197,7 @@ public class Audit {
         }
 
         private boolean validateId(String uidId, String propertyName) {
-            if (uidId.length() > 250) {
-                toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log: length exceeds 250 characters. ", propertyName));
-                return false;
-            }
+    
             if(!validateNoSecrets(uidId, propertyName)) {
                 toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log: it contains secrets. ", propertyName));
                 return false;
