@@ -20,6 +20,11 @@ public class ServiceLink {
     private String linkId;
     private String name;
     private Set<Role> roles;
+    private boolean disabled;
+
+    public ServiceLink(String linkId, int serviceId, int siteId, String name, Set<Role> roles) {
+        this(linkId, serviceId, siteId, name, roles, false);
+    }
 
     @JsonCreator
     public ServiceLink(
@@ -27,12 +32,14 @@ public class ServiceLink {
             @JsonProperty("service_id") int serviceId,
             @JsonProperty("site_id") int siteId,
             @JsonProperty("name") String name,
-            @JsonProperty("roles") Set<Role> roles) {
+            @JsonProperty("roles") Set<Role> roles,
+            @JsonProperty("disabled") boolean disabled) {
         this.linkId = linkId;
         this.serviceId = serviceId;
         this.siteId = siteId;
         this.name = name;
         this.roles = Objects.requireNonNullElseGet(roles, HashSet::new);
+        this.disabled = disabled;
     }
 
     public String getLinkId() {
@@ -67,6 +74,14 @@ public class ServiceLink {
         this.roles = Objects.requireNonNullElseGet(roles, HashSet::new);
     }
 
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    public void setDisabled(boolean disabled) {
+        this.disabled = disabled;
+    }
+
     @Override
     public String toString() {
         return "ServiceLink{" +
@@ -75,6 +90,7 @@ public class ServiceLink {
                 ", linkId='" + linkId + '\'' +
                 ", name='" + name + '\'' +
                 ", roles=" + roles +
+                ", disabled=" + disabled +
                 '}';
     }
 
@@ -83,12 +99,17 @@ public class ServiceLink {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ServiceLink serviceLink = (ServiceLink) o;
-        return siteId == serviceLink.siteId && serviceId == serviceLink.serviceId && linkId.equals(serviceLink.linkId)
-                && name.equals(serviceLink.name) && roles.equals(serviceLink.roles);
+        return siteId == serviceLink.siteId 
+            && serviceId == serviceLink.serviceId 
+            && linkId.equals(serviceLink.linkId)
+            && disabled == serviceLink.disabled
+            && name.equals(serviceLink.name) 
+            && roles.equals(serviceLink.roles)
+            && disabled == serviceLink.disabled;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(siteId, serviceId, linkId, name, roles.hashCode());
+        return Objects.hash(siteId, serviceId, linkId, name, roles.hashCode(), disabled);
     }
 }
