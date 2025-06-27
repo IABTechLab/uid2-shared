@@ -32,6 +32,7 @@ public class Service {
         this.name = name;
         this.roles = Objects.requireNonNullElseGet(roles, HashSet::new);
         this.linkIdRegex = linkIdRegex;
+        this.disabled = disabled;
     }
 
     public int getServiceId() {
