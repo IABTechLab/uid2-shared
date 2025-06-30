@@ -114,7 +114,7 @@ public class AttestationMiddleware {
                 LOGGER.info("JWT validation has failed.");
                 success = false;
             } else if (success && !isJwtValid && !this.enforceJwt) {
-                LOGGER.info("JWT validation has failed, but JWTs are not being enforced.");
+                LOGGER.info("JWT validation has failed, but JWTs are not being enforced. SiteId: {}, Endpoint: {}", profile.getSiteId(), rc.request().path());
             }
 
             if (success) {
