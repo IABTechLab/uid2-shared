@@ -49,6 +49,25 @@ public class RotatingServiceLinkStoreTest {
     }
 
     @Test
+    public void allConstructors(){
+        ServiceLink link = new ServiceLink("abc123", 1, 123, "Test Service 1", Set.of());
+        assertEquals("abc123", link.getLinkId());
+        assertEquals(1, link.getServiceId());
+        assertEquals(123, link.getSiteId());
+        assertEquals("Test Service 1", link.getName());
+        assertEquals(Set.of(), link.getRoles());
+        assertEquals(false, link.isDisabled());
+
+        link = new ServiceLink("abc123", 1, 123, "Test Service 1", Set.of(), true);
+        assertEquals("abc123", link.getLinkId());
+        assertEquals(1, link.getServiceId());
+        assertEquals(123, link.getSiteId());
+        assertEquals("Test Service 1", link.getName());
+        assertEquals(Set.of(), link.getRoles());
+        assertEquals(true, link.isDisabled());
+    }
+
+    @Test
     public void loadContent_emptyArray_loadsZeroServiceLinks() throws Exception {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));

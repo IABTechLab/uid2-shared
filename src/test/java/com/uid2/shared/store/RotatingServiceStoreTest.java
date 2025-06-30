@@ -48,6 +48,33 @@ public class RotatingServiceStoreTest {
     }
 
     @Test
+    public void allConstructors(){
+        Service service = new Service(1, 123, "Test Service 1", Set.of());
+        assertEquals(1, service.getServiceId());
+        assertEquals(123, service.getSiteId());
+        assertEquals("Test Service 1", service.getName());
+        assertEquals(Set.of(), service.getRoles());
+        assertEquals(null, service.getLinkIdRegex());
+        assertEquals(false, service.isDisabled());
+
+        service = new Service(1, 123, "Test Service 1", Set.of(), "nonnull");
+        assertEquals(1, service.getServiceId());
+        assertEquals(123, service.getSiteId());
+        assertEquals("Test Service 1", service.getName());
+        assertEquals(Set.of(), service.getRoles());
+        assertEquals("nonnull", service.getLinkIdRegex());
+        assertEquals(false, service.isDisabled());
+
+        service = new Service(1, 123, "Test Service 1", Set.of(), "nonnull", true);
+        assertEquals(1, service.getServiceId());
+        assertEquals(123, service.getSiteId());
+        assertEquals("Test Service 1", service.getName());
+        assertEquals(Set.of(), service.getRoles());
+        assertEquals("nonnull", service.getLinkIdRegex());
+        assertEquals(true, service.isDisabled());
+    }
+
+    @Test
     public void loadContentEmptyArray() throws Exception {
         JsonArray content = new JsonArray();
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));

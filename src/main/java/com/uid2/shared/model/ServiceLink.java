@@ -102,7 +102,6 @@ public class ServiceLink {
         return siteId == serviceLink.siteId 
             && serviceId == serviceLink.serviceId 
             && linkId.equals(serviceLink.linkId)
-            && disabled == serviceLink.disabled
             && name.equals(serviceLink.name) 
             && roles.equals(serviceLink.roles)
             && disabled == serviceLink.disabled;
