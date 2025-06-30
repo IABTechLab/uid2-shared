@@ -40,8 +40,8 @@ public class RotatingServiceStoreTest {
         return metadata;
     }
 
-    private Service addService(JsonArray content, int serviceId, int siteId, String name, Set<Role> roles) {
-        Service service = new Service(serviceId, siteId, name, roles);
+    private Service addService(JsonArray content, int serviceId, int siteId, String name, Set<Role> roles, String linkIdRegex) {
+        Service service = new Service(serviceId, siteId, name, roles, linkIdRegex);
         JsonObject jo = JsonObject.mapFrom(service);
         content.add(jo);
         return service;
@@ -59,10 +59,10 @@ public class RotatingServiceStoreTest {
     @Test
     public void loadContentMultipleServices() throws Exception {
         JsonArray content = new JsonArray();
-        Service s1 = addService(content, 1, 123, "Test Service 1", Set.of());
-        Service s2 = addService(content, 2, 123, "test1", Set.of(Role.GENERATOR));
-        Service s3 = addService(content, 3, 124, "Test Service 1", Set.of(Role.GENERATOR, Role.SHARING_PORTAL));
-        Service s4 = addService(content, 4, 125, "test2", Set.of(Role.MAINTAINER));
+        Service s1 = addService(content, 1, 123, "Test Service 1", Set.of(), null);
+        Service s2 = addService(content, 2, 123, "test1", Set.of(Role.GENERATOR), "regexA");
+        Service s3 = addService(content, 3, 124, "Test Service 1", Set.of(Role.GENERATOR, Role.SHARING_PORTAL), null);
+        Service s4 = addService(content, 4, 125, "test2", Set.of(Role.MAINTAINER), "regexB");
         when(cloudStorage.download("locationPath")).thenReturn(makeInputStream(content));
 
         final long count = serviceStore.loadContent(makeMetadata("locationPath"));

@@ -5,6 +5,7 @@ import com.uid2.enclave.AttestationException;
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.ApplicationVersion;
 import com.uid2.shared.IClock;
+import com.uid2.shared.audit.UidInstanceIdProvider;
 import com.uid2.shared.cloud.CloudUtils;
 import com.uid2.shared.util.URLConnectionHttpClient;
 import io.vertx.core.Handler;
@@ -420,6 +421,6 @@ public class AttestationResponseHandlerTest {
     }
 
     private AttestationResponseHandler getAttestationResponseHandler(Vertx vertx) {
-        return new AttestationResponseHandler(vertx, ATTESTATION_ENDPOINT, "testApiKey", OPERATOR_TYPE, APP_VERSION, attestationProvider, responseWatcher, proxy, clock, mockHttpClient, mockAttestationTokenDecryptor, 250);
+        return new AttestationResponseHandler(vertx, ATTESTATION_ENDPOINT, "testApiKey", OPERATOR_TYPE, APP_VERSION, attestationProvider, responseWatcher, proxy, clock, mockHttpClient, mockAttestationTokenDecryptor, 250, new UidInstanceIdProvider("test-instance", "id"));
     }
 }

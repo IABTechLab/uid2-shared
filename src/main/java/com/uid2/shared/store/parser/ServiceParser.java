@@ -22,6 +22,7 @@ public class ServiceParser implements Parser<Map<Integer, Service>> {
             int serviceId = serviceSpec.getInteger("service_id");
             int siteId = serviceSpec.getInteger("site_id");
             String name = serviceSpec.getString("name");
+            String linkIdRegex = serviceSpec.getString("link_id_regex");
 
             JsonArray rolesSpec = serviceSpec.getJsonArray("roles");
             HashSet<Role> roles = new HashSet<>();
@@ -29,7 +30,7 @@ public class ServiceParser implements Parser<Map<Integer, Service>> {
                 roles.add(Enum.valueOf(Role.class, rolesSpec.getString(j)));
             }
 
-            Service service = new Service(serviceId, siteId, name, roles);
+            Service service = new Service(serviceId, siteId, name, roles, linkIdRegex);
 
             serviceMap.put(serviceId, service);
         }

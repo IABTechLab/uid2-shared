@@ -2,6 +2,8 @@ package com.uid2.shared.attest;
 
 import com.uid2.shared.Const;
 import com.uid2.shared.Utils;
+import com.uid2.shared.audit.Audit;
+import com.uid2.shared.audit.UidInstanceIdProvider;
 import com.uid2.shared.cloud.*;
 import com.uid2.shared.util.URLConnectionHttpClient;
 import org.slf4j.Logger;
@@ -18,6 +20,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private final ICloudStorage contentStorage;
     private final Proxy proxy;
     private final URLConnectionHttpClient httpClient;
+    private final UidInstanceIdProvider uidInstanceIdProvider;
     private String userToken;
     private final String appVersionHeader;
     private boolean allowContentFromLocalFileSystem = false;
@@ -25,27 +28,24 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
     private final AttestationResponseHandler attestationResponseHandler;
 
 
-    public static UidCoreClient createNoAttest(String userToken, AttestationResponseHandler attestationResponseHandler) {
-        return new UidCoreClient(userToken, CloudUtils.defaultProxy, attestationResponseHandler, null, false);
-    }
-
-    public UidCoreClient(String userToken,
-                         Proxy proxy,
-                         AttestationResponseHandler attestationResponseHandler) {
-        this(userToken, proxy, attestationResponseHandler, null, false);
-    }
-
-    public UidCoreClient(String userToken,
-            Proxy proxy,
-            AttestationResponseHandler attestationResponseHandler, boolean encryptionEnabled) {
-        this(userToken, proxy, attestationResponseHandler, null, encryptionEnabled);
+    public static UidCoreClient createNoAttest(String userToken, AttestationResponseHandler attestationResponseHandler, UidInstanceIdProvider uidInstanceIdProvider) {
+        return new UidCoreClient(userToken, CloudUtils.defaultProxy, attestationResponseHandler, null, false, uidInstanceIdProvider);
     }
 
     public UidCoreClient(String userToken,
                          Proxy proxy,
                          AttestationResponseHandler attestationResponseHandler,
-            URLConnectionHttpClient httpClient,
-            boolean encryptionEnabled) {
+                         boolean encryptionEnabled,
+                         UidInstanceIdProvider uidInstanceIdProvider) {
+        this(userToken, proxy, attestationResponseHandler, null, encryptionEnabled, uidInstanceIdProvider);
+    }
+
+    public UidCoreClient(String userToken,
+                         Proxy proxy,
+                         AttestationResponseHandler attestationResponseHandler,
+                         URLConnectionHttpClient httpClient,
+                         boolean encryptionEnabled,
+                         UidInstanceIdProvider uidInstanceIdProvider) {
         this.encryptionEnabled = encryptionEnabled;
         this.proxy = proxy;
         this.userToken = userToken;
@@ -62,6 +62,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         }
 
         this.appVersionHeader = attestationResponseHandler.getAppVersionHeader();
+        this.uidInstanceIdProvider = uidInstanceIdProvider;
     }
 
     @Override
@@ -125,6 +126,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         if (attestationToken != null && !attestationToken.isBlank()) {
             headers.put(Const.Attestation.AttestationTokenHeader, attestationToken);
         }
+        headers.put(Audit.UID_INSTANCE_ID_HEADER, this.uidInstanceIdProvider.getInstanceId());
 
         String jwtToken = this.getJWT();
         if (jwtToken != null && !jwtToken.isBlank()) {

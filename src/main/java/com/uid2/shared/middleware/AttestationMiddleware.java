@@ -6,13 +6,17 @@ import com.uid2.shared.attest.IAttestationTokenService;
 import com.uid2.shared.attest.JwtService;
 import com.uid2.shared.attest.JwtValidationResponse;
 import com.uid2.shared.attest.RoleBasedJwtClaimValidator;
+import com.uid2.shared.audit.Audit;
 import com.uid2.shared.auth.*;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -68,8 +72,7 @@ public class AttestationMiddleware {
             boolean isJwtValid = false;
 
             final IAuthorizable profile = AuthMiddleware.getAuthClient(rc);
-            if (profile instanceof OperatorKey) {
-                OperatorKey operatorKey = (OperatorKey) profile;
+            if (profile instanceof OperatorKey operatorKey) {
                 final String protocol = operatorKey.getProtocol();
                 final String userToken = AuthMiddleware.getAuthToken(rc);
                 final String jwt = getAttestationJWT(rc);
@@ -92,12 +95,19 @@ public class AttestationMiddleware {
                                     isJwtValid = false;
                                     LOGGER.info("JWT missing required role. Required roles: {}, JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}", this.roleBasedJwtClaimValidator.getRequiredRoles(), response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact());
                                 }
+                                JsonObject auditLogUserDetails = rc.get(Audit.USER_DETAILS, new JsonObject());
+                                if (CollectionUtils.isNotEmpty(response.getRoles())) {
+                                    auditLogUserDetails.put("jwt_roles", new ArrayList<>(response.getRoles()));
+                                }
+                                auditLogUserDetails.put("token_id", response.getJti());
 
                                 String subject = calculateSubject(operatorKey);
+                                auditLogUserDetails.put("jwt_subject", subject);
                                 if (!validateSubject(response, subject)) {
                                     isJwtValid = false;
                                     LOGGER.info("JWT failed validation of Subject. JWT Presented Roles: {}, SiteId: {}, Name: {}, Contact: {}, JWT Subject: {}, Operator Subject: {}", response.getRoles(), operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), response.getSubject(), subject);
                                 }
+                                rc.put(Audit.USER_DETAILS, auditLogUserDetails);
                             }
                         } catch (JwtService.ValidationException e) {
                             LOGGER.info("Error validating JWT. Attestation validation failed. SiteId: {}, Name: {}, Contact: {}. Error: {}", operatorKey.getSiteId(), operatorKey.getName(), operatorKey.getContact(), e.toString());

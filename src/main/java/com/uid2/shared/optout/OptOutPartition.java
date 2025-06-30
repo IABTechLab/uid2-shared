@@ -1,5 +1,7 @@
 package com.uid2.shared.optout;
 
+import java.util.Arrays;
+
 // OptOutPartition is a sorted array of items, each item is a range of bytes within the store
 // that stores identity hash (byte[]), advertising id (byte[]), and the timestamp of the optout entry
 public class OptOutPartition extends OptOutCollection {
@@ -57,7 +59,10 @@ public class OptOutPartition extends OptOutCollection {
         int byteIndex = entryIndex * OptOutConst.EntrySize;
 
         // compare if bytes match
-        return OptOutUtils.compareByteRange(this.store, byteIndex, identityHash, 0, OptOutConst.Sha256Bytes);
+        return Arrays.compareUnsigned(
+                this.store, byteIndex, byteIndex+OptOutConst.Sha256Bytes,
+                identityHash, 0, OptOutConst.Sha256Bytes
+        );
     }
 
     private long getTimestampByIndex(int entryIndex) {

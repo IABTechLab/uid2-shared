@@ -9,12 +9,17 @@ import com.uid2.shared.auth.OperatorType;
 import com.uid2.shared.auth.Role;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
+import org.apache.commons.collections4.CollectionUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -59,12 +64,29 @@ public class AttestationMiddlewareTest {
 
         this.data.put(AuthMiddleware.API_CLIENT_PROP, this.operatorKey);
         when(this.routingContext.data()).thenReturn(data);
+        when(this.routingContext.get(anyString(), any(JsonObject.class))).thenReturn(new JsonObject());
+    }
+
+    private void verifyAuditLogFilledWithJwt(JwtValidationResponse response) {
+        ArgumentCaptor<String> keyArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<JsonObject> jsonObjectArgumentCaptor = ArgumentCaptor.forClass(JsonObject.class);
+        verify(routingContext).put(keyArgumentCaptor.capture(), jsonObjectArgumentCaptor.capture());
+        JsonObject auditLogUserDetailsActual = jsonObjectArgumentCaptor.getValue();
+        JsonArray expectedJwtRoles = null;
+        if (CollectionUtils.isNotEmpty(response.getRoles())) {
+            expectedJwtRoles = JsonArray.of(response.getRoles().toArray());
+        }
+        Assertions.assertEquals(expectedJwtRoles, auditLogUserDetailsActual.getJsonArray("jwt_roles"));
+        Assertions.assertEquals(response.getSubject(), auditLogUserDetailsActual.getString("jwt_subject"));
+        Assertions.assertEquals(response.getJti(), auditLogUserDetailsActual.getString("token_id"));
+
     }
 
     @Test
-    void trustedValidJwtNoRolesReturnsSuccess() throws JwtService.ValidationException {
+    void trustedValidJwtNoJtiReturnsSuccess() throws JwtService.ValidationException {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
+                .withRoles(Role.OPERATOR, Role.SUPER_USER, Role.OPTOUT)
                 .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST);
         when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
@@ -72,6 +94,22 @@ public class AttestationMiddlewareTest {
         handler.handle(this.routingContext);
 
         verify(nextHandler).handle(routingContext);
+        verifyAuditLogFilledWithJwt(response);
+    }
+
+    @Test
+    void trustedValidJwtNoRolesReturnsSuccess() throws JwtService.ValidationException {
+        var attestationMiddleware = getAttestationMiddleware(true);
+        JwtValidationResponse response = new JwtValidationResponse(true)
+                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST)
+                .withJti("dummyJti");
+        when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
+
+        var handler = attestationMiddleware.handle(nextHandler);
+        handler.handle(this.routingContext);
+
+        verify(nextHandler).handle(routingContext);
+        verifyAuditLogFilledWithJwt(response);
     }
 
     @Test
@@ -79,13 +117,15 @@ public class AttestationMiddlewareTest {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
                 .withRoles(Role.OPERATOR, Role.SUPER_USER, Role.OPTOUT)
-                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST);
+                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST)
+                .withJti("dummyJti");
         when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR);
         handler.handle(this.routingContext);
 
         verify(nextHandler).handle(routingContext);
+        verifyAuditLogFilledWithJwt(response);
     }
 
     @Test
@@ -93,13 +133,15 @@ public class AttestationMiddlewareTest {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
                 .withRoles(Role.OPERATOR, Role.SUPER_USER, Role.OPTOUT)
-                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST);
+                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST)
+                .withJti("dummyJti");
         when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR, Role.SUPER_USER);
         handler.handle(this.routingContext);
 
         verify(nextHandler).handle(routingContext);
+        verifyAuditLogFilledWithJwt(response);
     }
 
     @Test
@@ -107,7 +149,8 @@ public class AttestationMiddlewareTest {
         var attestationMiddleware = getAttestationMiddleware(true);
         JwtValidationResponse response = new JwtValidationResponse(true)
                 .withRoles(Role.OPTOUT)
-                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST);
+                .withSubject(EXPECTED_OPERATOR_KEY_HASH_DIGEST)
+                .withJti("dummyJti");
         when(this.jwtService.validateJwt("dummy jwt", JWT_AUDIENCE, JWT_ISSUER)).thenReturn(response);
 
         var handler = attestationMiddleware.handle(nextHandler, Role.OPERATOR);
@@ -115,6 +158,7 @@ public class AttestationMiddlewareTest {
 
         verifyNoInteractions(nextHandler);
         verify(routingContext).fail(401);
+        verifyAuditLogFilledWithJwt(response);
     }
 
     @ParameterizedTest
