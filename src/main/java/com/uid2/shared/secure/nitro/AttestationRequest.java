@@ -16,12 +16,15 @@ import java.security.Signature;
 import java.security.cert.*;
 import java.security.interfaces.ECPublicKey;
 import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AttestationRequest {
     private AttestationDocument attestationDocument;
     private byte[] attestationDocumentRaw;
     private byte[] protectedHeader;
     private byte[] signature;
+    private static final Logger LOGGER = LoggerFactory.getLogger(AttestationRequest.class);
 
     public static AttestationRequest createFrom(byte[] data) throws AttestationClientException {
         try {
@@ -85,8 +88,7 @@ public class AttestationRequest {
             sig.update(this.toCoseSign1());
             return sig.verify(ecRawSignatureToDer(this.signature));
         } catch (Exception e) {
-            System.out.println(e);
-            e.printStackTrace();
+            LOGGER.error("Failed to verify attestation data", e);
             return false;
         }
     }
