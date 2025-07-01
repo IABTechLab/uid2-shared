@@ -121,10 +121,10 @@ public class AttestationMiddleware {
             }
 
             if (success && !isJwtValid && this.enforceJwt) {
-                LOGGER.info("JWT validation has failed.");
+                LOGGER.info("JWT validation has failed. site_id={} endpoint={}", profile.getSiteId(), rc.request().path());
                 success = false;
             } else if (success && !isJwtValid && !this.enforceJwt) {
-                LOGGER.info("JWT validation has failed, but JWTs are not being enforced. SiteId: {}, Endpoint: {}", profile.getSiteId(), rc.request().path());
+                LOGGER.info("JWT validation has failed, but JWTs are not being enforced. site_id={} endpoint={}", profile.getSiteId(), rc.request().path());
             }
 
             if (success) {
