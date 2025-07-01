@@ -67,7 +67,7 @@ public class RequestCapturingHandlerTest {
             client.get(PORT, "localhost", "/v1/token/generate?email=someemail").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
                         Metrics.globalRegistry
-                                .get("uid2.http_requests")
+                                .get("uid2_http_requests_total")
                                 .tag("status", "200")
                                 .tag("method", "GET")
                                 .tag("path", "/v1/token/generate")
@@ -92,7 +92,7 @@ public class RequestCapturingHandlerTest {
             client.post(PORT, "localhost", "/v2/token/generate").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertEquals(1,
                         Metrics.globalRegistry
-                                .get("uid2.http_requests")
+                                .get("uid2_http_requests_total")
                                 .tag("status", "200")
                                 .tag("method", "POST")
                                 .tag("path", "/v2/token/generate")
@@ -115,7 +115,7 @@ public class RequestCapturingHandlerTest {
             client.get(PORT, "localhost", "/static/content").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
                         Metrics.globalRegistry
-                                .get("uid2.http_requests")
+                                .get("uid2_http_requests_total")
                                 .tag("status", "200")
                                 .tag("method", "GET")
                                 .tag("path", "/static/content")
@@ -136,7 +136,7 @@ public class RequestCapturingHandlerTest {
             client.get(PORT, "localhost", "/randomPath").sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
                         Metrics.globalRegistry
-                                .get("uid2.http_requests")
+                                .get("uid2_http_requests_total")
                                 .tag("status", "404")
                                 .tag("method", "GET")
                                 .tag("path", "unknown")
@@ -162,7 +162,7 @@ public class RequestCapturingHandlerTest {
             client.request(HttpMethod.GET, requestOptions).sendJsonObject(new JsonObject(), testContext.succeeding(response -> testContext.verify(() -> {
                 Assertions.assertDoesNotThrow(() ->
                         Metrics.globalRegistry
-                                .get("uid2.http_requests")
+                                .get("uid2_http_requests_total")
                                 .tag("status", "404")
                                 .tag("method", "GET")
                                 .tag("path", "unknown")
@@ -190,7 +190,7 @@ public class RequestCapturingHandlerTest {
             client.get(PORT, "localhost", "/test")
                     .send(testContext.succeeding(response -> testContext.verify(() -> {
                         double actual = Metrics.globalRegistry
-                                .get("uid2.http_requests")
+                                .get("uid2_http_requests_total")
                                 .tag("site_id", siteId)
                                 .tag("site_name", siteName)
                                 .counter()
