@@ -211,8 +211,7 @@ public class Audit {
         }
 
         private String getLogIdentifier(JsonObject logObject) {
-            JsonObject actor = logObject.getJsonObject("actor");
-            String email = (actor != null) ? actor.getString("email") : null;
+            String email = (this.actor != null) ? this.actor.getString("email") : null;
             if (email != null && !email.isEmpty()) {
                 return email;
             }
