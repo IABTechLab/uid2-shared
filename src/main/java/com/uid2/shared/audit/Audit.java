@@ -33,7 +33,7 @@ public class Audit {
         private final JsonObject actor;
         private final String uidTraceId;
         private final JsonObject queryParams;
-        private final String uidInstanceId;
+        private String uidInstanceId;
         private final String requestBody;
         private final StringBuilder toJsonValidationErrorMessageBuilder = new StringBuilder();
         @Getter
