@@ -72,6 +72,9 @@ public class Audit {
             }
 
             if (uidInstanceId != null && validateId(uidInstanceId, "uid_instance_id")) {
+                if (uidInstanceId.length() > 100) {
+                    uidInstanceId = uidInstanceId.substring(0, 100);
+                }
                 json.put("uid_instance_id", uidInstanceId);
             }
             actor.put("id", this.getLogIdentifier(json));
@@ -197,6 +200,8 @@ public class Audit {
         }
 
         private boolean validateId(String uidId, String propertyName) {
+
+            
     
             if(!validateNoSecrets(uidId, propertyName)) {
                 toJsonValidationErrorMessageBuilder.append(String.format("Malformed %s found in the audit log: it contains secrets. ", propertyName));
