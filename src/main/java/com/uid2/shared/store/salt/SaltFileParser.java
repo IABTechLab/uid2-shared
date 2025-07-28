@@ -32,24 +32,17 @@ public class SaltFileParser {
             final String hashedId = this.idHashingScheme.encode(id);
             final long lastUpdated = Long.parseLong(fields[1]);
             final String salt = fields[2];
+            final long refreshFrom = Long.parseLong(fields[3]);
+            final String previousSalt = fields[4];
 
-            Long refreshFrom = null;
-            String previousSalt = null;
+            // TODO: The fields below should stop being optional once refreshable UIDs features get rolled out in production. We can remove them one by one as necessary.
+            // AU, 2025/07/28
             SaltEntry.KeyMaterial currentKey = null;
             SaltEntry.KeyMaterial previousKey = null;
-
-            // TODO: The fields below should stop being optional once the refresh from, previous salt
-            // and refreshable UIDs features get rolled out in production. We can remove them one by one as necessary.
-            // AU, 2025/04/28
-            if (fields.length > 3) {
-                refreshFrom = Long.parseLong(fields[3]);
-            }
-            if (fields.length > 4) {
-                previousSalt = fields[4];
-            }
             if (fields.length > 7) {
                 currentKey = new SaltEntry.KeyMaterial(Integer.parseInt(fields[5]), fields[6], fields[7]);
             }
+
             if (fields.length > 10) {
                 previousKey = new SaltEntry.KeyMaterial(Integer.parseInt(fields[8]), fields[9], fields[10]);
             }

@@ -18,14 +18,14 @@ class SaltFileParserTest {
     @Test
     void parsesSaltFileWithMinimalFields() {
         var file = """
-1,100,salt1
-2,200,salt2
+1,100,salt1,1000,old_salt1
+2,200,salt2,2000,old_salt2
 """;
         SaltEntry[] actual = parser.parseFile(file, 2);
 
         SaltEntry[] expected = new SaltEntry[]{
-                new SaltEntry(1, hashed1, 100, "salt1", null, null, null, null),
-                new SaltEntry(2, hashed2, 200, "salt2", null, null, null, null)
+                new SaltEntry(1, hashed1, 100, "salt1", 1000L, "old_salt1", null, null),
+                new SaltEntry(2, hashed2, 200, "salt2", 2000L, "old_salt2", null, null)
         };
 
         assertThat(actual).isEqualTo(expected);
@@ -48,21 +48,6 @@ class SaltFileParserTest {
                         new KeyMaterial(20, "key_2", "key_salt_2"),
                         new KeyMaterial(200, "old_key_2", "old_key_2_salt")
                 )
-        };
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void parsesSaltFileWithNullValuesForNewFields() {
-        var file = """
-1,100,salt1,,,,,,,,
-2,200,salt2,,,,,,,,
-""";
-        SaltEntry[] actual = parser.parseFile(file, 2);
-
-        SaltEntry[] expected = new SaltEntry[]{
-                new SaltEntry(1, hashed1, 100, "salt1", null, null,null, null),
-                new SaltEntry(2, hashed2, 200, "salt2", null, null,null, null)
         };
         assertThat(actual).isEqualTo(expected);
     }
@@ -115,5 +100,6 @@ class SaltFileParserTest {
                 new SaltEntry(3, hashed3, 300, "salt3", null, null,null, null)
         };
 
+        assertThat(actual).isEqualTo(expected);
     }
 }
