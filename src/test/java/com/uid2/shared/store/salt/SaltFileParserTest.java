@@ -87,7 +87,7 @@ class SaltFileParserTest {
         var file = """
 1,100,salt1,1000,old_salt1,10,key_1,key_salt_1,100,old_key_1,old_key_1_salt
 2,200,salt2,2000,old_salt2,20
-3,300,salt3,3000
+3,300,salt3,3000,
 """;
         SaltEntry[] actual = parser.parseFile(file, 3);
 
@@ -97,7 +97,7 @@ class SaltFileParserTest {
                         new KeyMaterial(100, "old_key_1", "old_key_1_salt")
                 ),
                 new SaltEntry(2, hashed2, 200, "salt2", 2000L, "old_salt2",null, null),
-                new SaltEntry(3, hashed3, 300, "salt3", null, null,null, null)
+                new SaltEntry(3, hashed3, 300, "salt3", 3000L, null,null, null)
         };
 
         assertThat(actual).isEqualTo(expected);
