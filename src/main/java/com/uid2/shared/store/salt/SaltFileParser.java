@@ -39,11 +39,11 @@ public class SaltFileParser {
             // AU, 2025/07/28
             SaltEntry.KeyMaterial currentKey = null;
             SaltEntry.KeyMaterial previousKey = null;
-            if (fields.length > 7 && trimToNull(fields[5]) != null && trimToNull(fields[6]) != null) {
+            if (trimToNull(fields[5]) != null && trimToNull(fields[6]) != null) {
                 currentKey = new SaltEntry.KeyMaterial(Integer.parseInt(fields[5]), fields[6], fields[7]);
             }
 
-            if (fields.length > 10 && trimToNull(fields[8]) != null && trimToNull(fields[9]) != null) {
+            if (trimToNull(fields[8]) != null && trimToNull(fields[9]) != null) {
                 previousKey = new SaltEntry.KeyMaterial(Integer.parseInt(fields[8]), fields[9], fields[10]);
             }
 
