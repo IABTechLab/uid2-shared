@@ -20,12 +20,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class RotatingSaltProviderTest {
+class RotatingSaltProviderTest {
     @Mock
     private ICloudStorage cloudStorage;
 
     @Test
-    public void loadSaltSingleVersion() throws Exception {
+    void loadSaltSingleVersion() throws Exception {
         final String firstLevelSalt = "first_level_salt_value";
         final String idPrefix = "a";
         final String idSecret = "m3yMIcbg9vCaFLJsn4m4PfruZnvAZ72OxmFG5QsGMOw=";
@@ -55,14 +55,14 @@ public class RotatingSaltProviderTest {
         final String effectiveTimeString = String.valueOf(generatedTime.getEpochSecond() * 1000L);
         final String refreshFromTimeString = String.valueOf(generatedTime.plus(30, ChronoUnit.DAYS).getEpochSecond() * 1000L);
         final String salts =
-                "1000000," + effectiveTimeString + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=," + refreshFromTimeString + ",\n" +
-                        "1000001," + effectiveTimeString + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=," + refreshFromTimeString + ",\n" +
-                        "1000002," + effectiveTimeString + ",+a5LPajo7uPfNcc9HH0Tn25b3RnSNZwe8YaAKcyeHaA=," + refreshFromTimeString + ",\n" +
-                        "1000003," + effectiveTimeString + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=," + refreshFromTimeString + ",\n" +
-                        "1000004," + effectiveTimeString + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=," + refreshFromTimeString + ",\n" +
-                        "1000005," + effectiveTimeString + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=," + refreshFromTimeString + ",\n" +
-                        "1000006," + effectiveTimeString + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=," + refreshFromTimeString + ",\n" +
-                        "1000007," + effectiveTimeString + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=," + refreshFromTimeString + ",";
+                "1000000," + effectiveTimeString + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=," + refreshFromTimeString + ",,,,,,\n" +
+                        "1000001," + effectiveTimeString + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=," + refreshFromTimeString + ",,,,,,\n" +
+                        "1000002," + effectiveTimeString + ",+a5LPajo7uPfNcc9HH0Tn25b3RnSNZwe8YaAKcyeHaA=," + refreshFromTimeString + ",,,,,,\n" +
+                        "1000003," + effectiveTimeString + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=," + refreshFromTimeString + ",,,,,,\n" +
+                        "1000004," + effectiveTimeString + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=," + refreshFromTimeString + ",,,,,,\n" +
+                        "1000005," + effectiveTimeString + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=," + refreshFromTimeString + ",,,,,,\n" +
+                        "1000006," + effectiveTimeString + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=," + refreshFromTimeString + ",,,,,,\n" +
+                        "1000007," + effectiveTimeString + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=," + refreshFromTimeString + ",,,,,,";
 
         when(cloudStorage.download("metadata"))
                 .thenReturn(new ByteArrayInputStream(metadataJson.toString().getBytes(StandardCharsets.US_ASCII)));
@@ -82,7 +82,7 @@ public class RotatingSaltProviderTest {
     }
 
     @Test
-    public void loadSaltMultipleVersions() throws Exception {
+    void loadSaltMultipleVersions() throws Exception {
         final String firstLevelSalt = "first_level_salt_value";
         final String idPrefix = "a";
         final String idSecret = "m3yMIcbg9vCaFLJsn4m4PfruZnvAZ72OxmFG5QsGMOw=";
@@ -125,25 +125,25 @@ public class RotatingSaltProviderTest {
         final String refreshFromTimeStringV2 = String.valueOf(generatedTimeV2.plus(60, ChronoUnit.DAYS).getEpochSecond() * 1000L);
 
         final String saltsV1 =
-                "1000000," + effectiveTimeStringV1 + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000002," + effectiveTimeStringV1 + ",+a5LPajo7uPfNcc9HH0Tn25b3RnSNZwe8YaAKcyeHaA=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=," + refreshFromTimeStringV1 + ",";
+                "1000000," + effectiveTimeStringV1 + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000002," + effectiveTimeStringV1 + ",+a5LPajo7uPfNcc9HH0Tn25b3RnSNZwe8YaAKcyeHaA=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=," + refreshFromTimeStringV1 + ",,,,,,";
 
         // update key 1000002
         final String saltsV2 =
-                "1000000," + effectiveTimeStringV1 + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000002," + effectiveTimeStringV2 + ",AP73KwZscb1ltQQH/B7fdbHUnMmbJNlRULxzklXUqaA=," + refreshFromTimeStringV2 + ",AP73KwZscb1ltQQH/B7fdbHUnMmbJNlRULxzklXUqaA=\n" +
-                        "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=," + refreshFromTimeStringV2 + ",";
+                "1000000," + effectiveTimeStringV1 + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000002," + effectiveTimeStringV2 + ",AP73KwZscb1ltQQH/B7fdbHUnMmbJNlRULxzklXUqaA=," + refreshFromTimeStringV2 + ",AP73KwZscb1ltQQH/B7fdbHUnMmbJNlRULxzklXUqaA=,,,,,\n" +
+                        "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=," + refreshFromTimeStringV2 + ",,,,,,";
 
         when(cloudStorage.download("metadata"))
                 .thenReturn(new ByteArrayInputStream(metadataJson.toString().getBytes(StandardCharsets.US_ASCII)));
@@ -167,7 +167,7 @@ public class RotatingSaltProviderTest {
     }
 
     @Test
-    public void loadSaltMultipleVersionsExpired() throws Exception {
+    void loadSaltMultipleVersionsExpired() throws Exception {
         final String firstLevelSalt = "first_level_salt_value";
         final String idPrefix = "a";
         final String idSecret = "m3yMIcbg9vCaFLJsn4m4PfruZnvAZ72OxmFG5QsGMOw=";
@@ -210,25 +210,25 @@ public class RotatingSaltProviderTest {
         final String refreshFromTimeStringV2 = String.valueOf(generatedTimeV2.plus(60, ChronoUnit.DAYS).getEpochSecond() * 1000L);
 
         final String saltsV1 =
-                "1000000," + effectiveTimeStringV1 + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000002," + effectiveTimeStringV1 + ",+a5LPajo7uPfNcc9HH0Tn25b3RnSNZwe8YaAKcyeHaA=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=," + refreshFromTimeStringV1 + ",\n" +
-                        "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=," + refreshFromTimeStringV1 + ",";
+                "1000000," + effectiveTimeStringV1 + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000002," + effectiveTimeStringV1 + ",+a5LPajo7uPfNcc9HH0Tn25b3RnSNZwe8YaAKcyeHaA=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=," + refreshFromTimeStringV1 + ",,,,,,\n" +
+                        "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=," + refreshFromTimeStringV1 + ",,,,,,";
 
         // update key 1000002
         final String saltsV2 =
-                "1000000," + effectiveTimeStringV1 + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000002," + effectiveTimeStringV2 + ",AP73KwZscb1ltQQH/B7fdbHUnMmbJNlRULxzklXUqaA=," + refreshFromTimeStringV2 + ",AP73KwZscb1ltQQH/B7fdbHUnMmbJNlRULxzklXUqaA=\n" +
-                        "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=," + refreshFromTimeStringV2 + ",\n" +
-                        "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=," + refreshFromTimeStringV2 + ",";
+                "1000000," + effectiveTimeStringV1 + ",y5YitNf/KFtceipDz8nqsFVmBZsK3KY7s8bOVM4gMD4=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000001," + effectiveTimeStringV1 + ",z1uBoGyyzgna9i0o/r5eiD/wAhDX/2Q/6zX1p6hsF7I=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000002," + effectiveTimeStringV2 + ",AP73KwZscb1ltQQH/B7fdbHUnMmbJNlRULxzklXUqaA=," + refreshFromTimeStringV2 + ",AP73KwZscb1ltQQH/B7fdbHUnMmbJNlRULxzklXUqaA=,,,,,\n" +
+                        "1000003," + effectiveTimeStringV1 + ",wAL6U+lu9gcMhSEySzWG9RQyoo446zAyGWKTW8VVoVw=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000004," + effectiveTimeStringV1 + ",eP9ZvW4igLQZ4QfzlyiXgKYFDZgmGOefaKDLEL0zuwE=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000005," + effectiveTimeStringV1 + ",UebesrNN0bQkm/QR7Jx7eav+UDXN5Gbq3zs1fLBMRy0=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000006," + effectiveTimeStringV1 + ",MtpALOziEJMtPlCQHk6RHALuWvRvRZpCDBmO0xPAia0=," + refreshFromTimeStringV2 + ",,,,,,\n" +
+                        "1000007," + effectiveTimeStringV1 + ",7tjv+KXaSztTZHEHULacotHQ7IpGBcw6IymoRLObkT4=," + refreshFromTimeStringV2 + ",,,,,,";
 
         when(cloudStorage.download("metadata"))
                 .thenReturn(new ByteArrayInputStream(metadataJson.toString().getBytes(StandardCharsets.US_ASCII)));
@@ -250,6 +250,4 @@ public class RotatingSaltProviderTest {
         assertEquals(1, snapshot.getModifiedSince(Instant.now().minus(49, ChronoUnit.HOURS)).size());
         assertEquals(1000002, snapshot.getModifiedSince(Instant.now().minus(49, ChronoUnit.HOURS)).get(0).id());
     }
-
-
 }
