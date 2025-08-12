@@ -12,32 +12,32 @@ public record SaltEntry(
         KeyMaterial currentKey,
         KeyMaterial previousKey
 ) {
-//    @Override
-//    public String toString() {
-//        return "SaltEntry{" +
-//                "id=" + id +
-//                ", hashedId='" + hashedId + '\'' +
-//                ", lastUpdated=" + lastUpdated +
-//                ", currentSalt=<REDACTED>" +
-//                ", refreshFrom=" + refreshFrom +
-//                ", previousSalt=<REDACTED>" +
-//                ", currentKey=" + currentKey +
-//                ", previousKey=" + previousKey +
-//                '}';
-//    }
+    @Override
+    public String toString() {
+        return "SaltEntry{" +
+                "id=" + id +
+                ", hashedId='" + hashedId + '\'' +
+                ", lastUpdated=" + lastUpdated +
+                ", currentSalt=<REDACTED>" +
+                ", refreshFrom=" + refreshFrom +
+                ", previousSalt=<REDACTED>" +
+                ", currentKey=" + currentKey +
+                ", previousKey=" + previousKey +
+                '}';
+    }
 
     public record KeyMaterial(
             int id,
             String key,
             String salt
     ) {
-//        @Override
-//        public String toString() {
-//            return "KeyMaterial{" +
-//                    "id=" + id +
-//                    ", key=<REDACTED>" +
-//                    ", currentSalt=<REDACTED>" +
-//                    '}';
-//        }
+        @Override
+        public String toString() {
+            return "KeyMaterial{" +
+                    "id=" + id +
+                    ", key=<REDACTED>" +
+                    ", currentSalt=<REDACTED>" +
+                    '}';
+        }
     }
 }
