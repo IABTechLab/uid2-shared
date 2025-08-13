@@ -48,8 +48,8 @@ public abstract class URLStorageWithMetadata implements ICloudStorage {
             if (responseCode >= 200 && responseCode < 300) {
                 return httpConn.getInputStream();
             } else {
-                throw new CloudStorageException("Cannot download required files, HTTP response code " + responseCode 
-                + ", please visit UID2 guides for more details");
+                throw new CloudStorageException("E20: CloudStorageDownloadError, please check error code for the installed environment at"
+                + " https://unifiedid.com/docs/guides/integration-options-private-operator, HTTP response code: " + responseCode);
             }
         }
         catch (CloudStorageException e) {
@@ -58,8 +58,8 @@ public abstract class URLStorageWithMetadata implements ICloudStorage {
         } 
         catch (Throwable t) {
             // Do not log the original exception as it may contain sensitive information such as the pre-signed URL
-            throw new CloudStorageException("Cannot download required files, exception: " + t.getClass().getSimpleName() +
-                ", please visit UID2 guides for more details");
+            throw new CloudStorageException("E20: CloudStorageDownloadError, please check error code for the installed environment at"
+                + " https://unifiedid.com/docs/guides/integration-options-private-operator, exception: " + t.getClass().getSimpleName());
         }
     }
 
