@@ -72,7 +72,7 @@ public class AuthMiddleware {
             throw new IllegalArgumentException("must specify at least one role");
         }
         final RoleBasedAuthorizationProvider<E> authorizationProvider = new RoleBasedAuthorizationProvider<>(Collections.unmodifiableSet(new HashSet<E>(Arrays.asList(roles))));
-        final AuthHandler h = new AuthHandler(handler, this.authKeyStore, authorizationProvider, true);
+        final AuthHandler h = new AuthHandler(handler, this.authKeyStore, authorizationProvider, true, this.audit, null);
         return h::handle;
     }
 
@@ -102,9 +102,9 @@ public class AuthMiddleware {
         AuthHandler h;
         if (enableAuditLog) {
             final Handler<RoutingContext> loggedHandler = logAndHandle(handler, params);
-            h = new AuthHandler(loggedHandler, this.authKeyStore, authorizationProvider, false);
+            h = new AuthHandler(loggedHandler, this.authKeyStore, authorizationProvider, false, this.audit, params);
         } else {
-            h = new AuthHandler(handler, this.authKeyStore, authorizationProvider, false);
+            h = new AuthHandler(handler, this.authKeyStore, authorizationProvider, false, this.audit, null);
         }
 
         return h::handle;
@@ -112,7 +112,7 @@ public class AuthMiddleware {
 
 
     public Handler<RoutingContext> handleWithOptionalAuth(Handler<RoutingContext> handler) {
-        final AuthHandler h = new AuthHandler(handler, this.authKeyStore, blankAuthorizationProvider, true);
+        final AuthHandler h = new AuthHandler(handler, this.authKeyStore, blankAuthorizationProvider, true, this.audit, null);
         return h::handle;
     }
 
@@ -154,12 +154,16 @@ public class AuthMiddleware {
         private final IAuthorizableProvider authKeyStore;
         private final IAuthorizationProvider authorizationProvider;
         private final boolean isV1Response;
+        private final Audit audit;
+        private final AuditParams auditParams;
 
-        private AuthHandler(Handler<RoutingContext> handler, IAuthorizableProvider authKeyStore, IAuthorizationProvider authorizationProvider, boolean isV1Response) {
+        private AuthHandler(Handler<RoutingContext> handler, IAuthorizableProvider authKeyStore, IAuthorizationProvider authorizationProvider, boolean isV1Response, Audit audit, AuditParams auditParams) {
             this.innerHandler = handler;
             this.authKeyStore = authKeyStore;
             this.authorizationProvider = authorizationProvider;
             this.isV1Response = isV1Response;
+            this.audit = audit;
+            this.auditParams = auditParams;
         }
 
 
@@ -182,6 +186,12 @@ public class AuthMiddleware {
         }
 
         private void onFailedAuth(RoutingContext rc) {
+            // Log failed authentication attempt
+            if (this.audit != null) {
+                AuditParams failedAuthParams = this.auditParams != null ? this.auditParams : new AuditParams();
+                this.audit.log(rc, failedAuthParams);
+            }
+            
             if (isV1Response) {
                 rc.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
                         .setStatusCode(401)
