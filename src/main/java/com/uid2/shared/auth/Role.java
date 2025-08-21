@@ -26,6 +26,7 @@ public enum Role {
     SECRET_ROTATION, // corresponds to custom okta scope 'uid2.admin.secret-rotation'
     PRIVATE_OPERATOR_SYNC, // corresponds to custom okta scope 'uid2.admin.site-sync'
     METRICS_EXPORT, // corresponds to custom okta scope 'uid2.admin.metrics-export'
+    ENCLAVE_REGISTRAR, // corresponds to custom okta scope 'uid2.admin.enclave-registrar'
     @JsonEnumDefaultValue
     UNKNOWN
 }
