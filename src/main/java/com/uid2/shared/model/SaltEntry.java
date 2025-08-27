@@ -9,8 +9,8 @@ public record SaltEntry(
         Long refreshFrom, // needs to be nullable until V3 Identity Map is fully rolled out
         String previousSalt,
 
-        KeyMaterial currentKey,
-        KeyMaterial previousKey
+        KeyMaterial currentKeySalt,
+        KeyMaterial previousKeySalt
 ) {
     @Override
     public String toString() {
@@ -18,11 +18,11 @@ public record SaltEntry(
                 "id=" + id +
                 ", hashedId='" + hashedId + '\'' +
                 ", lastUpdated=" + lastUpdated +
-                ", currentSalt=<REDACTED>" +
+                ", currentSalt=" + (currentSalt == null ? "null" : "<REDACTED>") +
                 ", refreshFrom=" + refreshFrom +
-                ", previousSalt=<REDACTED>" +
-                ", currentKey=" + currentKey +
-                ", previousKey=" + previousKey +
+                ", previousSalt=" + (previousSalt == null ? "null" : "<REDACTED>") +
+                ", currentKeySalt=" + currentKeySalt +
+                ", previousKeySalt=" + previousKeySalt +
                 '}';
     }
 
@@ -36,7 +36,7 @@ public record SaltEntry(
             return "KeyMaterial{" +
                     "id=" + id +
                     ", key=<REDACTED>" +
-                    ", currentSalt=<REDACTED>" +
+                    ", salt=<REDACTED>" +
                     '}';
         }
     }
