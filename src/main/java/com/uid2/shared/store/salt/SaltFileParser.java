@@ -27,28 +27,24 @@ public class SaltFileParser {
 
     private SaltEntry parseLine(String line, int lineNumber) {
         try {
-            final String[] fields = line.split(",");
-
+            final String[] fields = line.split(",", -1);
             final long id = Integer.parseInt(fields[0]);
             final String hashedId = this.idHashingScheme.encode(id);
             final long lastUpdated = Long.parseLong(fields[1]);
-            final String salt = fields[2].isEmpty() ? null : fields[2];
-            final Long refreshFrom =  Long.parseLong(fields[3]);
+            final String salt = trimToNull(fields[2]);
+            final long refreshFrom = Long.parseLong(fields[3]);
+            final String previousSalt = trimToNull(fields[4]);
 
-            String previousSalt = null;
+            // TODO: The fields below should stop being optional once refreshable UIDs features get rolled out in production. We can remove them one by one as necessary.
+            // AU, 2025/07/28
             SaltEntry.KeyMaterial currentKeySalt = null;
             SaltEntry.KeyMaterial previousKeySalt = null;
-
-            if (fields.length > 4) {
-                previousSalt = fields[4].isEmpty() ? null : fields[4];
+            if (trimToNull(fields[5]) != null && trimToNull(fields[6]) != null) {
+                currentKeySalt = new SaltEntry.KeyMaterial(Integer.parseInt(fields[5]), fields[6], fields[7]);
             }
 
-            if (fields.length > 7) {
-                currentKeySalt = fields[5].isEmpty() ? null : new SaltEntry.KeyMaterial(Integer.parseInt(fields[5]), fields[6], fields[7]);
-            }
-
-            if (fields.length > 10) {
-                previousKeySalt = fields[8].isEmpty() ? null : new SaltEntry.KeyMaterial(Integer.parseInt(fields[8]), fields[9], fields[10]);
+            if (trimToNull(fields[8]) != null && trimToNull(fields[9]) != null) {
+                previousKeySalt = new SaltEntry.KeyMaterial(Integer.parseInt(fields[8]), fields[9], fields[10]);
             }
 
             return new SaltEntry(id, hashedId, lastUpdated, salt, refreshFrom, previousSalt, currentKeySalt, previousKeySalt);
@@ -57,4 +53,7 @@ public class SaltFileParser {
         }
     }
 
+    private String trimToNull(String s) {
+        return s == null || s.isBlank() ? null : s.trim();
+    }
 }
