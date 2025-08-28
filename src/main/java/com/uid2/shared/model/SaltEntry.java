@@ -6,7 +6,7 @@ public record SaltEntry(
         long lastUpdated,
         String currentSalt,
 
-        Long refreshFrom, // needs to be nullable until V3 Identity Map is fully rolled out
+        long refreshFrom,
         String previousSalt,
 
         KeyMaterial currentKeySalt,
