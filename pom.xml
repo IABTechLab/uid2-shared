@@ -60,7 +60,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <vertx.version>4.5.18</vertx.version>
+        <vertx.version>4.5.21</vertx.version>
         <!-- check micrometer.version vertx-micrometer-metrics consumes before bumping up -->
         <micrometer.version>1.12.2</micrometer.version>
         <image.version>${project.version}</image.version>
