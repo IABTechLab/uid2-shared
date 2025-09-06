@@ -77,7 +77,7 @@
             <dependency>
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>bom</artifactId>
-                <version>2.27.2</version>
+                <version>2.32.24</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -161,14 +161,12 @@
             <version>1.0.3</version>
         </dependency>
         <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-s3</artifactId>
-            <version>1.12.765</version>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
         </dependency>
         <dependency>            <!--Needs to be on classpath for roles to work-->
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-sts</artifactId>
-            <version>1.12.765</version>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sts</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.api-client</groupId>

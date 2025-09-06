@@ -1,6 +1,6 @@
 package com.uid2.shared.secure.azurecc;
 
-import com.amazonaws.util.Base64;
+import java.util.Base64;
 import lombok.Builder;
 import lombok.Value;
 
@@ -15,7 +15,7 @@ public class RuntimeData {
 
     public String getDecodedAttestationUrl() {
         if (attestationUrl != null) {
-            return new String(Base64.decode(attestationUrl), StandardCharsets.UTF_8);
+            return new String(Base64.getDecoder().decode(attestationUrl), StandardCharsets.UTF_8);
         }
         return null;
     }

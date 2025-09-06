@@ -1,6 +1,6 @@
 package com.uid2.shared.attest;
 
-import com.amazonaws.util.Base64;
+import java.util.Base64;
 import com.uid2.enclave.AttestationException;
 import com.uid2.enclave.IAttestationProvider;
 import com.uid2.shared.ApplicationVersion;
@@ -342,7 +342,7 @@ public class AttestationResponseHandlerTest {
         JsonObject jsonBody = new JsonObject(body);
         Assertions.assertNotNull(jsonBody.getString("attestation_request"));
         String base64Content = jsonBody.getString("attestation_request");
-        byte[] data = Base64.decode(base64Content);
+        byte[] data = Base64.getDecoder().decode(base64Content);
         String decodedUrl = new String(data, StandardCharsets.UTF_8);
         assertEquals(ATTESTATION_ENDPOINT, decodedUrl);
 

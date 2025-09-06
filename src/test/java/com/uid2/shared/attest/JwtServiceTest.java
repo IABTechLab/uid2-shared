@@ -1,6 +1,5 @@
 package com.uid2.shared.attest;
 
-import com.amazonaws.util.Base64;
 import com.uid2.shared.Const;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
