@@ -1,19 +1,22 @@
 package com.uid2.shared.cloud;
 
-import com.amazonaws.HttpMethod;
-import com.amazonaws.SdkClientException;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.*;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.core.ResponseInputStream;
+import java.time.Duration;
+import java.net.URI;
+import java.nio.file.Paths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
@@ -24,26 +27,25 @@ import java.util.Map;
 public class CloudStorageS3 implements TaggableCloudStorage {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudStorageS3.class);
 
-    private final AmazonS3 s3;
+    private final S3Client s3;
     private final String bucket;
     private final boolean verbose;
     private long preSignedUrlExpiryInSeconds = 3600;
 
     public CloudStorageS3(String accessKeyId, String secretAccessKey, String region, String bucket, String s3Endpoint, boolean verbose) {
-        // Reading https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html
-        AWSCredentials creds = new BasicAWSCredentials(
-                accessKeyId,
-                secretAccessKey);
+        AwsBasicCredentials creds = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+        
         if (s3Endpoint.isEmpty()) {
-            this.s3 = AmazonS3ClientBuilder.standard()
-                    .withRegion(region)
-                    .withCredentials(new AWSStaticCredentialsProvider(creds))
+            this.s3 = S3Client.builder()
+                    .region(Region.of(region))
+                    .credentialsProvider(StaticCredentialsProvider.create(creds))
                     .build();
         } else {
-            this.s3 = AmazonS3ClientBuilder.standard()
-                    .withCredentials(new AWSStaticCredentialsProvider(creds))
-                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint, region))
-                    .enablePathStyleAccess()
+            this.s3 = S3Client.builder()
+                    .region(Region.of(region))
+                    .credentialsProvider(StaticCredentialsProvider.create(creds))
+                    .endpointOverride(URI.create(s3Endpoint))
+                    .forcePathStyle(true)
                     .build();
         }
         this.bucket = bucket;
@@ -60,21 +62,22 @@ public class CloudStorageS3 implements TaggableCloudStorage {
         // After a lot of experimentation and help of Abu Abraham and Isaac Wilson the only working solution we've
         // found was to explicitly extract env vars populated by the service account from the role and to
         // manually set it on the credentials provider.
-        WebIdentityTokenCredentialsProvider credentialsProvider = WebIdentityTokenCredentialsProvider.builder()
+        WebIdentityTokenFileCredentialsProvider credentialsProvider = WebIdentityTokenFileCredentialsProvider.builder()
                 .roleArn(System.getenv("AWS_ROLE_ARN"))
-                .webIdentityTokenFile(System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE"))
+                .webIdentityTokenFile(Paths.get(System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE")))
                 .build();
 
         if (s3Endpoint.isEmpty()) {
-            this.s3 = AmazonS3ClientBuilder.standard()
-                    .withCredentials(credentialsProvider)
-                    .withRegion(region)
+            this.s3 = S3Client.builder()
+                    .credentialsProvider(credentialsProvider)
+                    .region(Region.of(region))
                     .build();
         } else {
-            this.s3 = AmazonS3ClientBuilder.standard()
-                    .withCredentials(credentialsProvider)
-                    .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(s3Endpoint, region))
-                    .enablePathStyleAccess()
+            this.s3 = S3Client.builder()
+                    .credentialsProvider(credentialsProvider)
+                    .region(Region.of(region))
+                    .endpointOverride(URI.create(s3Endpoint))
+                    .forcePathStyle(true)
                     .build();
         }
         this.bucket = bucket;
@@ -84,8 +87,11 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     @Override
     public void upload(String localPath, String cloudPath) throws CloudStorageException {
         try {
-            File file = new File(localPath);
-            var putResult = this.s3.putObject(bucket, cloudPath, file);
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(cloudPath)
+                    .build();
+            var putResult = this.s3.putObject(putRequest, RequestBody.fromFile(Paths.get(localPath)));
             this.checkVersioningEnabled(putResult);
         } catch (Throwable t) {
             throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
@@ -95,7 +101,11 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     @Override
     public void upload(InputStream input, String cloudPath) throws CloudStorageException {
         try {
-            var putResult = this.s3.putObject(bucket, cloudPath, input, null);
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(cloudPath)
+                    .build();
+            var putResult = this.s3.putObject(putRequest, RequestBody.fromInputStream(input, input.available()));
             this.checkVersioningEnabled(putResult);
         } catch (Throwable t) {
             throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
@@ -105,12 +115,12 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     @Override
     public void upload(String localPath, String cloudPath, Map<String, String> tags) throws CloudStorageException {
         try {
-            File file = new File(localPath);
-            PutObjectRequest putRequest = new PutObjectRequest(bucket, cloudPath, file);
-            List<Tag> newTags = new ArrayList<>();
-            tags.forEach((k, v) -> newTags.add(new Tag(k, v)));
-            putRequest.setTagging(new ObjectTagging(newTags));
-            var putResult = this.s3.putObject(putRequest);
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(cloudPath)
+                    .tagging(createTagging(tags))
+                    .build();
+            var putResult = this.s3.putObject(putRequest, RequestBody.fromFile(Paths.get(localPath)));
             this.checkVersioningEnabled(putResult);
         } catch (Throwable t) {
             throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
@@ -120,11 +130,12 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     @Override
     public void upload(InputStream input, String cloudPath, Map<String, String> tags) throws CloudStorageException {
         try {
-            PutObjectRequest putRequest = new PutObjectRequest(bucket, cloudPath, input, null);
-            List<Tag> newTags = new ArrayList<>();
-            tags.forEach((k, v) -> newTags.add(new Tag(k, v)));
-            putRequest.setTagging(new ObjectTagging(newTags));
-            var putResult = this.s3.putObject(putRequest);
+            PutObjectRequest putRequest = PutObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(cloudPath)
+                    .tagging(createTagging(tags))
+                    .build();
+            var putResult = this.s3.putObject(putRequest, RequestBody.fromInputStream(input, input.available()));
             this.checkVersioningEnabled(putResult);
         } catch (Throwable t) {
             throw new CloudStorageException("s3 put error: " + t.getMessage(), t);
@@ -134,14 +145,16 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     @Override
     public InputStream download(String cloudPath) throws CloudStorageException {
         try {
-            S3Object obj = this.s3.getObject(bucket, cloudPath);
-            return obj.getObjectContent();
-        } catch (AmazonS3Exception e) {
-            if (e.getErrorCode().equals("NoSuchKey")) {
-                throw new CloudStorageException("The specified key does not exist: " + e.getClass().getSimpleName() + ": " + bucket);
-            } else {
-                throw new CloudStorageException("s3 get error: " + e.getClass().getSimpleName() + ": " + bucket + (verbose ? " - " + e.getMessage() : ""));
-            }
+            GetObjectRequest getRequest = GetObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(cloudPath)
+                    .build();
+            ResponseInputStream<GetObjectResponse> obj = this.s3.getObject(getRequest);
+            return obj;
+        } catch (NoSuchKeyException e) {
+            throw new CloudStorageException("The specified key does not exist: " + e.getClass().getSimpleName() + ": " + bucket);
+        } catch (S3Exception e) {
+            throw new CloudStorageException("s3 get error: " + e.getClass().getSimpleName() + ": " + bucket + (verbose ? " - " + e.getMessage() : ""));
         } catch (SdkClientException e) {
             throw new CloudStorageException("s3 get error: " + e.getClass().getSimpleName() + ": " + bucket + (verbose ? " - " + e.getMessage() : ""));
         } catch (Throwable t) {
@@ -153,7 +166,11 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     @Override
     public void delete(String cloudPath) throws CloudStorageException {
         try {
-            this.s3.deleteObject(bucket, cloudPath);
+            DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
+                    .bucket(bucket)
+                    .key(cloudPath)
+                    .build();
+            this.s3.deleteObject(deleteRequest);
         } catch (Throwable t) {
             throw new CloudStorageException("s3 delete error: " + t.getMessage(), t);
         }
@@ -185,30 +202,30 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     @Override
     public List<String> list(String prefix) throws CloudStorageException {
         try {
-            ListObjectsV2Request req = new ListObjectsV2Request()
-                    .withBucketName(bucket)
-                    .withPrefix(prefix);
-            ListObjectsV2Result result = null;
-            List<S3ObjectSummary> objects = null;
+            ListObjectsV2Request.Builder reqBuilder = ListObjectsV2Request.builder()
+                    .bucket(bucket)
+                    .prefix(prefix);
+            ListObjectsV2Request req = reqBuilder.build();
+            ListObjectsV2Response result = null;
 
             int reqCount = 0;
             List<String> s3Paths = new ArrayList<>();
             do {
                 result = this.s3.listObjectsV2(req);
-                objects = result.getObjectSummaries();
+                List<S3Object> objects = result.contents();
 
-                LOGGER.trace("s3 listobjectv2 request for " + prefix + " " + reqCount++ + ", returned keycount " + result.getKeyCount());
-                if (objects.size() > 0) {
-                    LOGGER.trace("--> 1st key = " + objects.get(0).getKey());
+                LOGGER.trace("s3 listobjectv2 request for " + prefix + " " + reqCount++ + ", returned keycount " + result.keyCount());
+                if (!objects.isEmpty()) {
+                    LOGGER.trace("--> 1st key = " + objects.get(0).key());
                 }
 
-                for (S3ObjectSummary os : objects) {
-                    s3Paths.add(os.getKey());
+                for (S3Object obj : objects) {
+                    s3Paths.add(obj.key());
                 }
 
                 if (result.isTruncated()) {
-                    req.setContinuationToken(result.getNextContinuationToken());
-                    LOGGER.trace("--> truncated, continuationtoken: " + req.getContinuationToken());
+                    req = reqBuilder.continuationToken(result.nextContinuationToken()).build();
+                    LOGGER.trace("--> truncated, continuationtoken: " + result.nextContinuationToken());
                 }
             } while (result.isTruncated());
             return s3Paths;
@@ -220,19 +237,19 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     @Override
     public URL preSignUrl(String cloudPath) throws CloudStorageException {
         try {
-            // Set the presigned URL to expire after one hour.
-            java.util.Date expiration = new java.util.Date();
-            long expTimeMillis = expiration.getTime();
-            expTimeMillis += preSignedUrlExpiryInSeconds * 1000;
-            expiration.setTime(expTimeMillis);
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(this.bucket)
+                    .key(cloudPath)
+                    .build();
 
-            // Generate the presigned URL.
-            GeneratePresignedUrlRequest generatePresignedUrlRequest =
-                    new GeneratePresignedUrlRequest(this.bucket, cloudPath)
-                            .withMethod(HttpMethod.GET)
-                            .withExpiration(expiration);
-            URL url = this.s3.generatePresignedUrl(generatePresignedUrlRequest);
-            return url;
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(Duration.ofSeconds(preSignedUrlExpiryInSeconds))
+                    .getObjectRequest(getObjectRequest)
+                    .build();
+
+            try (S3Presigner presigner = S3Presigner.create()) {
+                return presigner.presignGetObject(presignRequest).url();
+            }
         } catch (Throwable t) {
             throw new CloudStorageException("s3 preSignUrl error: " + t.getMessage(), t);
         }
@@ -251,15 +268,23 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     @Override
     public void setTags(String cloudPath, Map<String, String> tags) throws CloudStorageException {
         try {
-            if (this.s3.doesObjectExist(this.bucket, cloudPath)) {
-                List<Tag> newTags = new ArrayList<>();
-                tags.forEach((k, v) -> newTags.add(new Tag(k, v)));
-
-                this.s3.setObjectTagging(new SetObjectTaggingRequest(
-                        this.bucket,
-                        cloudPath,
-                        new ObjectTagging(newTags)));
-            } else {
+            // Check if object exists by trying to get its metadata
+            try {
+                HeadObjectRequest headRequest = HeadObjectRequest.builder()
+                        .bucket(this.bucket)
+                        .key(cloudPath)
+                        .build();
+                this.s3.headObject(headRequest);
+                
+                // Object exists, set tags
+                PutObjectTaggingRequest tagRequest = PutObjectTaggingRequest.builder()
+                        .bucket(this.bucket)
+                        .key(cloudPath)
+                        .tagging(createTagging(tags))
+                        .build();
+                        
+                this.s3.putObjectTagging(tagRequest);
+            } catch (NoSuchKeyException e) {
                 LOGGER.warn("CloudPath: {} does not exist in bucket: {}. Tags not set", cloudPath, this.bucket);
             }
         } catch (Throwable t) {
@@ -268,33 +293,50 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     }
 
     private void deleteInternal(Collection<String> cloudPaths) throws CloudStorageException {
-        List<DeleteObjectsRequest.KeyVersion> keys = new ArrayList<>();
+        List<ObjectIdentifier> keys = new ArrayList<>();
         for (String p : cloudPaths) {
-            keys.add(new DeleteObjectsRequest.KeyVersion(p));
+            keys.add(ObjectIdentifier.builder().key(p).build());
         }
-        DeleteObjectsRequest dor = new DeleteObjectsRequest(bucket)
-                .withKeys(keys)
-                .withQuiet(false);
+        
+        Delete delete = Delete.builder()
+                .objects(keys)
+                .quiet(false)
+                .build();
+                
+        DeleteObjectsRequest deleteRequest = DeleteObjectsRequest.builder()
+                .bucket(bucket)
+                .delete(delete)
+                .build();
+                
         try {
-            this.s3.deleteObjects(dor);
+            this.s3.deleteObjects(deleteRequest);
         } catch (Throwable t) {
-            throw new CloudStorageException("s3 get error: " + t.getMessage(), t);
+            throw new CloudStorageException("s3 delete error: " + t.getMessage(), t);
         }
     }
 
-    private void checkVersioningEnabled(PutObjectResult putObjectResult) {
+    private Tagging createTagging(Map<String, String> tags) {
+        List<Tag> tagList = new ArrayList<>();
+        for (Map.Entry<String, String> entry : tags.entrySet()) {
+            tagList.add(Tag.builder().key(entry.getKey()).value(entry.getValue()).build());
+        }
+        return Tagging.builder().tagSet(tagList).build();
+    }
+
+    private void checkVersioningEnabled(PutObjectResponse putObjectResponse) {
         try {
-            String versionId = putObjectResult.getVersionId();
+            String versionId = putObjectResponse.versionId();
+            String region = "unknown"; // S3Client doesn't expose region directly
             if (versionId == null || versionId.isEmpty()) {
                 LOGGER.warn(
                         "Bucket: {} in Region: {} does not have versioning configured. There is a potential for data loss",
                         this.bucket,
-                        this.s3.getRegionName());
+                        region);
             } else {
                 LOGGER.info(
                         "Bucket: {} in Region: {} has versioning configured.",
                         this.bucket,
-                        this.s3.getRegionName());
+                        region);
             }
         } catch (Throwable t) {
             // don't want this to fail when writing, but should be logged
