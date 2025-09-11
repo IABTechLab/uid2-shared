@@ -35,7 +35,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     public RotatingStoreVerticle(String storeName, long refreshIntervalMs, IMetadataVersionedStore versionedStore) {
         this.healthComponent = HealthManager.instance.registerComponent(storeName + "-rotator");
         this.healthComponent.setHealthStatus(false, "not started");
-       
+
         this.storeName = storeName;
         this.counterStoreRefreshed = Counter
             .builder("uid2_config_store_refreshed_total")
@@ -61,7 +61,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
             .builder("uid2_config_store_entry_count", () -> this.latestEntryCount.get())
             .tag("store", storeName)
             .description("gauge for " + storeName + " store total entry count")
-            .register(Metrics.globalRegistry);  
+            .register(Metrics.globalRegistry);
         this.gaugeConsecutiveRefreshFailures = Gauge
             .builder("uid2_config_store_consecutive_refresh_failures", () -> this.storeRefreshIsFailing.get())
             .tag("store", storeName)
