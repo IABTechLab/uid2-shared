@@ -35,38 +35,33 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     public RotatingStoreVerticle(String storeName, long refreshIntervalMs, IMetadataVersionedStore versionedStore) {
         this.healthComponent = HealthManager.instance.registerComponent(storeName + "-rotator");
         this.healthComponent.setHealthStatus(false, "not started");
+       
         this.storeName = storeName;
-
         this.counterStoreRefreshed = Counter
             .builder("uid2_config_store_refreshed_total")
             .tag("store", storeName)
             .description("counter for how many times " + storeName + " store is refreshed")
             .register(Metrics.globalRegistry);
-
         this.counterStoreRefreshTimeMs = Counter
             .builder("uid2_config_store_refreshtime_ms_total")
             .tag("store", storeName)
             .description("counter for total time (ms) " + storeName + " store spend in refreshing")
             .register(Metrics.globalRegistry);
-
         this.counterStoreRefreshFailures = Counter
             .builder("uid2_config_store_refresh_failures_total")
             .tag("store", storeName)
             .description("counter for number of " + storeName + " store refresh failures")
             .register(Metrics.globalRegistry);
-
         this.gaugeStoreVersion = Gauge
             .builder("uid2_config_store_version", () -> this.latestVersion.get())
             .tag("store", storeName)
             .description("gauge for " + storeName + " store version")
             .register(Metrics.globalRegistry);
-
         this.gaugeStoreEntryCount = Gauge
             .builder("uid2_config_store_entry_count", () -> this.latestEntryCount.get())
             .tag("store", storeName)
             .description("gauge for " + storeName + " store total entry count")
-            .register(Metrics.globalRegistry);
-            
+            .register(Metrics.globalRegistry);  
         this.gaugeConsecutiveRefreshFailures = Gauge
             .builder("uid2_config_store_consecutive_refresh_failures", () -> this.storeRefreshIsFailing.get())
             .tag("store", storeName)
@@ -150,7 +145,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
             );
         });
     }
-    
+
     public synchronized void refresh() throws Exception {
         final JsonObject metadata = this.versionedStore.getMetadata();
         final long version = this.versionedStore.getVersion(metadata);
