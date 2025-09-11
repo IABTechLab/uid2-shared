@@ -403,6 +403,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
             promise.fail(new Throwable(ex));
         }
     }
+
     private void handleAsyncResult(AsyncResult ar) {
         if (ar.failed()) {
             Throwable ex = ar.cause();
