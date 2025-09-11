@@ -154,22 +154,22 @@ public class CloudSyncVerticle extends AbstractVerticle {
     public void start(Promise<Void> promise) {
         LOGGER.info("starting CloudSyncVerticle." + name);
         this.healthComponent.setHealthStatus(false, "still starting");
-        
+
         this.downloadExecutor = vertx.createSharedWorkerExecutor("cloudsync-" + name + "-download-pool",
             this.downloadThreads);
         this.uploadExecutor = vertx.createSharedWorkerExecutor("cloudsync-" + name + "-upload-pool",
             this.uploadThreads);
-        
+
         // handle refresh event
         vertx.eventBus().consumer(
             eventRefresh,
             o -> this.handleRefresh(o));
-        
+
         // upload to cloud
         vertx.eventBus().<String>consumer(
             this.eventUpload,
             msg -> this.handleUpload(msg));
-        
+
         cloudRefresh()
             .onFailure(t -> LOGGER.error("cloudRefresh failed: " + t.getMessage(), new Exception(t)))
             .onComplete(ar -> promise.handle(ar));
@@ -229,6 +229,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
             this.cloudRefreshEnsureInSync(refreshPromise, 0);
             blockBromise.complete();
         }, ar -> {});
+
         return refreshPromise.future()
             .onComplete(v -> {
                 this.isRefreshing = false;
@@ -254,6 +255,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
                         fs.add(this.localDelete(d));
                     }
                 });
+
             CompositeFuture.all(fs)
                 .onFailure(e -> refreshPromise.fail(new Exception(e)))
                 .onSuccess(v -> {
@@ -322,7 +324,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 } else {
                     this.counterUploadFailures.increment();
                 }
-                
+
                 LOGGER.info("Upload result: " + ar.succeeded() + ", " + fileToUpload);
             });
     }
