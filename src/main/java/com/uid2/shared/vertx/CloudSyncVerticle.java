@@ -312,6 +312,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
             LOGGER.info("Uploading: " + fileToUpload);
             this.pendingUpload.add(fileToUpload);
         }
+
         this.uploadExecutor.<Void>executeBlocking(
             promise -> this.cloudUploadBlocking(promise, msg.body()),
             ar -> {
