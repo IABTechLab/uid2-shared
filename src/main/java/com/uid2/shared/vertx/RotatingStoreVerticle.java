@@ -78,7 +78,9 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     }
 
     private void startRefresh(Promise<Void> promise) {
-        LOGGER.info("Starting " + this.storeName + " loading");
+        LOGGER.info("Starting {} store initial S3 loading", this.storeName);
+        final long startupRefreshStart = System.nanoTime();
+        
         vertx.executeBlocking(p -> {
             try {
                 this.refresh();
@@ -87,14 +89,26 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                 p.fail(e);
             }
         }, ar -> {
+            final long startupRefreshEnd = System.nanoTime();
+            final long startupRefreshTimeMs = (startupRefreshEnd - startupRefreshStart) / 1000000;
+            
             if (ar.succeeded()) {
                 this.healthComponent.setHealthStatus(true);
                 promise.complete();
-                LOGGER.info("Successful " + this.storeName + " loading. Starting Background Refresh");
+                LOGGER.info("Successful {} store initial S3 loading in {} ms. Starting Background Refresh", 
+                    this.storeName, startupRefreshTimeMs);
+                
+                // Record startup-specific S3 store loading metric
+                Gauge.builder("uid2_operator_startup_store_refresh_duration_ms", () -> (double) startupRefreshTimeMs)
+                    .description("Time taken for initial store S3 refresh during startup")
+                    .tags("store_name", this.storeName)
+                    .register(Metrics.globalRegistry);
+                    
                 this.startBackgroundRefresh();
             } else {
                 this.healthComponent.setHealthStatus(false, ar.cause().getMessage());
-                LOGGER.error("Failed " + this.storeName + " loading. Trying again in " + refreshIntervalMs + "ms", ar.cause());
+                LOGGER.error("Failed {} store initial S3 loading after {} ms. Trying again in {} ms", 
+                    this.storeName, startupRefreshTimeMs, refreshIntervalMs, ar.cause());
                 vertx.setTimer(refreshIntervalMs, id -> this.startRefresh(promise));
             }
         });

@@ -357,9 +357,14 @@ public class CloudSyncVerticle extends AbstractVerticle {
         }
 
         Promise<Void> promise = Promise.promise();
+        final long downloadStart = System.nanoTime();
+        
         this.downloadExecutor.<Void>executeBlocking(
             blockingPromise -> this.cloudDownloadBlocking(blockingPromise, s3Path),
             ar -> {
+                final long downloadEnd = System.nanoTime();
+                final long downloadTimeMs = (downloadEnd - downloadStart) / 1000000;
+                
                 this.pendingDownload.remove(s3Path);
                 this.handleAsyncResult(ar);
                 promise.complete();
@@ -368,11 +373,17 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 if (ar.succeeded()) {
                     vertx.eventBus().publish(this.eventDownloaded, this.cloudSync.toLocalPath(s3Path));
                     this.counterDownloaded.increment();
+                    LOGGER.info("S3 download completed: {} in {} ms", cloudStorage.mask(s3Path), downloadTimeMs);
                 } else {
                     this.counterDownloadFailures.increment();
+                    LOGGER.warn("S3 download failed: {} after {} ms", cloudStorage.mask(s3Path), downloadTimeMs);
                 }
 
-                LOGGER.trace("Download result: " + ar.succeeded() + ", " + cloudStorage.mask(s3Path));
+                // Record S3 download timing metric
+                Gauge.builder("uid2_operator_s3_download_duration_ms", () -> (double) downloadTimeMs)
+                    .description("Time taken for individual S3 file downloads")
+                    .tags("store_name", name, "status", ar.succeeded() ? "success" : "failure")
+                    .register(Metrics.globalRegistry);
             });
 
         return promise.future();
