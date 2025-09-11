@@ -28,24 +28,35 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudStorageS3.class);
 
     private final S3Client s3;
+    private final S3Presigner s3Presigner;
     private final String bucket;
     private final boolean verbose;
     private long preSignedUrlExpiryInSeconds = 3600;
 
     public CloudStorageS3(String accessKeyId, String secretAccessKey, String region, String bucket, String s3Endpoint, boolean verbose) {
         AwsBasicCredentials creds = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
+        StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(creds);
         
         if (s3Endpoint.isEmpty()) {
             this.s3 = S3Client.builder()
                     .region(Region.of(region))
-                    .credentialsProvider(StaticCredentialsProvider.create(creds))
+                    .credentialsProvider(credentialsProvider)
+                    .build();
+            this.s3Presigner = S3Presigner.builder()
+                    .region(Region.of(region))
+                    .credentialsProvider(credentialsProvider)
                     .build();
         } else {
             this.s3 = S3Client.builder()
                     .region(Region.of(region))
-                    .credentialsProvider(StaticCredentialsProvider.create(creds))
+                    .credentialsProvider(credentialsProvider)
                     .endpointOverride(URI.create(s3Endpoint))
                     .forcePathStyle(true)
+                    .build();
+            this.s3Presigner = S3Presigner.builder()
+                    .region(Region.of(region))
+                    .credentialsProvider(credentialsProvider)
+                    .endpointOverride(URI.create(s3Endpoint))
                     .build();
         }
         this.bucket = bucket;
@@ -72,12 +83,21 @@ public class CloudStorageS3 implements TaggableCloudStorage {
                     .credentialsProvider(credentialsProvider)
                     .region(Region.of(region))
                     .build();
+            this.s3Presigner = S3Presigner.builder()
+                    .credentialsProvider(credentialsProvider)
+                    .region(Region.of(region))
+                    .build();
         } else {
             this.s3 = S3Client.builder()
                     .credentialsProvider(credentialsProvider)
                     .region(Region.of(region))
                     .endpointOverride(URI.create(s3Endpoint))
                     .forcePathStyle(true)
+                    .build();
+            this.s3Presigner = S3Presigner.builder()
+                    .credentialsProvider(credentialsProvider)
+                    .region(Region.of(region))
+                    .endpointOverride(URI.create(s3Endpoint))
                     .build();
         }
         this.bucket = bucket;
@@ -247,9 +267,7 @@ public class CloudStorageS3 implements TaggableCloudStorage {
                     .getObjectRequest(getObjectRequest)
                     .build();
 
-            try (S3Presigner presigner = S3Presigner.create()) {
-                return presigner.presignGetObject(presignRequest).url();
-            }
+            return this.s3Presigner.presignGetObject(presignRequest).url();
         } catch (Throwable t) {
             throw new CloudStorageException("s3 preSignUrl error: " + t.getMessage(), t);
         }
