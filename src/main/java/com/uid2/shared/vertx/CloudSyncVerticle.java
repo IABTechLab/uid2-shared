@@ -319,7 +319,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 this.pendingUpload.remove(fileToUpload);
                 this.handleAsyncResult(ar);
                 msg.reply(ar.succeeded());
-
+                
                 // increase counter
                 if (ar.succeeded()) {
                     this.counterUploaded.increment();
@@ -367,6 +367,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
 
                 this.pendingDownload.remove(s3Path);
                 this.handleAsyncResult(ar);
+
                 promise.complete();
                 // increase counter, send event
                 if (ar.succeeded()) {
