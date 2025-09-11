@@ -154,22 +154,22 @@ public class CloudSyncVerticle extends AbstractVerticle {
     public void start(Promise<Void> promise) {
         LOGGER.info("starting CloudSyncVerticle." + name);
         this.healthComponent.setHealthStatus(false, "still starting");
-
+        
         this.downloadExecutor = vertx.createSharedWorkerExecutor("cloudsync-" + name + "-download-pool",
             this.downloadThreads);
         this.uploadExecutor = vertx.createSharedWorkerExecutor("cloudsync-" + name + "-upload-pool",
             this.uploadThreads);
-
+        
         // handle refresh event
         vertx.eventBus().consumer(
             eventRefresh,
             o -> this.handleRefresh(o));
-
+        
         // upload to cloud
         vertx.eventBus().<String>consumer(
             this.eventUpload,
             msg -> this.handleUpload(msg));
-
+        
         cloudRefresh()
             .onFailure(t -> LOGGER.error("cloudRefresh failed: " + t.getMessage(), new Exception(t)))
             .onComplete(ar -> promise.handle(ar));
@@ -229,7 +229,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
             this.cloudRefreshEnsureInSync(refreshPromise, 0);
             blockBromise.complete();
         }, ar -> {});
-
         return refreshPromise.future()
             .onComplete(v -> {
                 this.isRefreshing = false;
@@ -255,7 +254,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
                         fs.add(this.localDelete(d));
                     }
                 });
-
             CompositeFuture.all(fs)
                 .onFailure(e -> refreshPromise.fail(new Exception(e)))
                 .onSuccess(v -> {
@@ -312,21 +310,19 @@ public class CloudSyncVerticle extends AbstractVerticle {
             LOGGER.info("Uploading: " + fileToUpload);
             this.pendingUpload.add(fileToUpload);
         }
-
         this.uploadExecutor.<Void>executeBlocking(
             promise -> this.cloudUploadBlocking(promise, msg.body()),
             ar -> {
                 this.pendingUpload.remove(fileToUpload);
                 this.handleAsyncResult(ar);
                 msg.reply(ar.succeeded());
-
                 // increase counter
                 if (ar.succeeded()) {
                     this.counterUploaded.increment();
                 } else {
                     this.counterUploadFailures.increment();
                 }
-
+                
                 LOGGER.info("Upload result: " + ar.succeeded() + ", " + fileToUpload);
             });
     }
@@ -357,22 +353,33 @@ public class CloudSyncVerticle extends AbstractVerticle {
         }
 
         Promise<Void> promise = Promise.promise();
+        final long downloadStart = System.nanoTime();
+
         this.downloadExecutor.<Void>executeBlocking(
             blockingPromise -> this.cloudDownloadBlocking(blockingPromise, s3Path),
             ar -> {
+                final long downloadEnd = System.nanoTime();
+                final long downloadTimeMs = (downloadEnd - downloadStart) / 1000000;
+
                 this.pendingDownload.remove(s3Path);
                 this.handleAsyncResult(ar);
                 promise.complete();
-
                 // increase counter, send event
                 if (ar.succeeded()) {
                     vertx.eventBus().publish(this.eventDownloaded, this.cloudSync.toLocalPath(s3Path));
                     this.counterDownloaded.increment();
+                    LOGGER.info("S3 download completed: {} in {} ms", cloudStorage.mask(s3Path), downloadTimeMs);
                 } else {
                     this.counterDownloadFailures.increment();
+                    LOGGER.warn("S3 download failed: {} after {} ms", cloudStorage.mask(s3Path), downloadTimeMs);
                 }
 
                 LOGGER.trace("Download result: " + ar.succeeded() + ", " + cloudStorage.mask(s3Path));
+                // Record S3 download timing metric
+                Gauge.builder("uid2_operator_s3_download_duration_ms", () -> (double) downloadTimeMs)
+                    .description("Time taken for individual S3 file downloads")
+                    .tags("store_name", name, "status", ar.succeeded() ? "success" : "failure")
+                    .register(Metrics.globalRegistry);
             });
 
         return promise.future();
@@ -391,7 +398,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
             promise.fail(new Throwable(ex));
         }
     }
-
     private void handleAsyncResult(AsyncResult ar) {
         if (ar.failed()) {
             Throwable ex = ar.cause();
