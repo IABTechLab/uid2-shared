@@ -120,6 +120,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     private void startBackgroundRefresh() {
         vertx.setPeriodic(this.refreshIntervalMs, (id) -> {
             final long start = System.nanoTime();
+            
             vertx.executeBlocking(promise -> {
                     try {
                         this.refresh();
