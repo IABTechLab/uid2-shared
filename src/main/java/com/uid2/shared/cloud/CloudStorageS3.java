@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.core.ResponseInputStream;
 import java.time.Duration;
@@ -47,16 +48,21 @@ public class CloudStorageS3 implements TaggableCloudStorage {
                     .credentialsProvider(credentialsProvider)
                     .build();
         } else {
+            S3Configuration s3Cfg = S3Configuration.builder()
+                .pathStyleAccessEnabled(true)
+                .checksumValidationEnabled(false)
+                .build();
             this.s3 = S3Client.builder()
                     .region(Region.of(region))
                     .credentialsProvider(credentialsProvider)
                     .endpointOverride(URI.create(s3Endpoint))
-                    .forcePathStyle(true)
+                    .serviceConfiguration(s3Cfg)
                     .build();
             this.s3Presigner = S3Presigner.builder()
                     .region(Region.of(region))
                     .credentialsProvider(credentialsProvider)
                     .endpointOverride(URI.create(s3Endpoint))
+                    .serviceConfiguration(s3Cfg)
                     .build();
         }
         this.bucket = bucket;
@@ -87,17 +93,23 @@ public class CloudStorageS3 implements TaggableCloudStorage {
                     .credentialsProvider(credentialsProvider)
                     .region(Region.of(region))
                     .build();
-        } else {
+        } 
+        else {
+            S3Configuration s3Cfg = S3Configuration.builder()
+                .pathStyleAccessEnabled(true)
+                .checksumValidationEnabled(false)
+                .build();
             this.s3 = S3Client.builder()
                     .credentialsProvider(credentialsProvider)
                     .region(Region.of(region))
                     .endpointOverride(URI.create(s3Endpoint))
-                    .forcePathStyle(true)
+                    .serviceConfiguration(s3Cfg)
                     .build();
             this.s3Presigner = S3Presigner.builder()
                     .credentialsProvider(credentialsProvider)
                     .region(Region.of(region))
                     .endpointOverride(URI.create(s3Endpoint))
+                    .serviceConfiguration(s3Cfg)
                     .build();
         }
         this.bucket = bucket;
