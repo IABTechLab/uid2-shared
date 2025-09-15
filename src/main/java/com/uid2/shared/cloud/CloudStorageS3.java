@@ -93,8 +93,7 @@ public class CloudStorageS3 implements TaggableCloudStorage {
                     .credentialsProvider(credentialsProvider)
                     .region(Region.of(region))
                     .build();
-        } 
-        else {
+        } else {
             S3Configuration s3Cfg = S3Configuration.builder()
                 .pathStyleAccessEnabled(true)
                 .checksumValidationEnabled(false)
