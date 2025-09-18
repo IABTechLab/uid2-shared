@@ -1,5 +1,4 @@
 package com.uid2.shared.vertx;
-
 import com.uid2.shared.Const;
 import com.uid2.shared.cloud.CloudStorageException;
 import com.uid2.shared.cloud.ICloudStorage;
@@ -13,14 +12,12 @@ import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
 //
 // consumes events:
 //   - cloudsync.<name>.refresh
@@ -35,7 +32,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class CloudSyncVerticle extends AbstractVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(CloudSyncVerticle.class);
     private final HealthComponent healthComponent;
-
     private final Counter counterRefreshed;
     private final Counter counterRefreshSkipped;
     private final Counter counterRefreshFailures;
@@ -44,7 +40,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private final Counter counterDownloadFailures;
     private final Counter counterUploadFailures;
     private final Gauge gaugeConsecutiveRefreshFailures;
-
     private final String name;
     private final ICloudStorage cloudStorage;
     private final ICloudStorage localStorage;
@@ -52,128 +47,104 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private final int downloadThreads;
     private final int uploadThreads;
     private final AtomicInteger storeRefreshIsFailing = new AtomicInteger(0);
-
     private final String eventRefresh;
     private final String eventRefreshed;
     private final String eventUpload;
     private final String eventDownloaded;
-
     private final HashSet<String> pendingUpload = new HashSet<>();
     private final HashSet<String> pendingDownload = new HashSet<>();
-
     private WorkerExecutor downloadExecutor = null;
     private WorkerExecutor uploadExecutor = null;
-
     private boolean isRefreshing = false;
-
     public CloudSyncVerticle(String name, ICloudStorage cloudStorage, ICloudStorage localStorage,
                              ICloudSync cloudSync, JsonObject jsonConfig) {
         this(name, cloudStorage, localStorage, cloudSync,
             jsonConfig.getInteger(Const.Config.CloudDownloadThreadsProp),
             jsonConfig.getInteger(Const.Config.CloudUploadThreadsProp));
     }
-
     public CloudSyncVerticle(String name, ICloudStorage cloudStorage, ICloudStorage localStorage,
                              ICloudSync cloudSync, int downloadThreads, int uploadThreads) {
         this.healthComponent = HealthManager.instance.registerComponent("cloudsync-" + name);
         this.healthComponent.setHealthStatus(false, "not started");
-
         this.name = name;
         this.cloudStorage = cloudStorage;
         this.localStorage = localStorage;
         this.cloudSync = cloudSync;
         this.downloadThreads = downloadThreads;
         this.uploadThreads = uploadThreads;
-
         String eventPrefix = "cloudsync." + this.name + ".";
         this.eventUpload = eventPrefix + "upload";
         this.eventDownloaded = eventPrefix + "downloaded";
         this.eventRefresh = eventPrefix + "refresh";
         this.eventRefreshed = eventPrefix + "refreshed";
-
         Gauge.builder("uid2_cloud_downloading", () -> this.pendingDownload.size())
             .tag("store", name)
             .description("gauge for how many s3 files are pending download")
             .register(Metrics.globalRegistry);
-
         Gauge.builder("uid2_cloud_uploading", () -> this.pendingUpload.size())
             .tag("store", name)
             .description("gauge for how many s3 files are pending upload")
             .register(Metrics.globalRegistry);
-
         this.counterRefreshed = Counter
             .builder("uid2_cloud_refreshed_total")
             .tag("store", name)
             .description("counter for how many times cloud storage files are refreshed")
             .register(Metrics.globalRegistry);
-
         this.counterRefreshSkipped = Counter
             .builder("uid2_cloud_refresh_skipped_total")
             .tag("store", name)
             .description("counter for how many times cloud storage refresh events are skipped due to in-progress refreshing")
             .register(Metrics.globalRegistry);
-
         this.counterRefreshFailures = Counter
             .builder("uid2_cloud_refresh_failures_total")
             .tag("store", name)
             .description("counter for number of " + name + " store refresh failures")
             .register(Metrics.globalRegistry);
-
         this.counterDownloaded = Counter
             .builder("uid2_cloud_downloaded_total")
             .tag("store", name)
             .description("counter for how many cloud files are downloaded")
             .register(Metrics.globalRegistry);
-
         this.counterUploaded = Counter
             .builder("uid2_cloud_uploaded_total")
             .tag("store", name)
             .description("counter for how many cloud files are uploaded")
             .register(Metrics.globalRegistry);
-
         this.counterDownloadFailures = Counter
             .builder("uid2_cloud_download_failures_total")
             .tag("store", name)
             .description("counter for how many cloud files downloads have failed")
             .register(Metrics.globalRegistry);
-
         this.counterUploadFailures = Counter
             .builder("uid2_cloud_upload_failures_total")
             .tag("store", name)
             .description("counter for how many cloud files uploads have failed")
             .register(Metrics.globalRegistry);
-
         this.gaugeConsecutiveRefreshFailures = Gauge
             .builder("uid2_cloud_downloaded_consecutive_refresh_failures", () -> this.storeRefreshIsFailing.get())
             .tag("store", name)
             .description("gauge for number of consecutive " + name + " store refresh failures")
             .register(Metrics.globalRegistry);
     }
-
     @Override
     public void start(Promise<Void> promise) {
         LOGGER.info("starting CloudSyncVerticle." + name);
         this.healthComponent.setHealthStatus(false, "still starting");
-
         this.downloadExecutor = vertx.createSharedWorkerExecutor("cloudsync-" + name + "-download-pool",
             this.downloadThreads);
         this.uploadExecutor = vertx.createSharedWorkerExecutor("cloudsync-" + name + "-upload-pool",
             this.uploadThreads);
-
         // handle refresh event
         vertx.eventBus().consumer(
             eventRefresh,
             o -> this.handleRefresh(o));
-
         // upload to cloud
         vertx.eventBus().<String>consumer(
             this.eventUpload,
             msg -> this.handleUpload(msg));
-
         cloudRefresh()
             .onFailure(t -> LOGGER.error("cloudRefresh failed: " + t.getMessage(), new Exception(t)))
             .onComplete(ar -> promise.handle(ar));
-
         promise.future()
             .onSuccess(v -> {
                 LOGGER.info("started CloudSyncVerticle." + name);
@@ -184,28 +155,22 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 this.healthComponent.setHealthStatus(false, e.getMessage());
             });
     }
-
     @Override
     public void stop() {
         LOGGER.info("shutting down CloudSyncVerticle" + name);
     }
-
     public String eventRefresh() {
         return eventRefresh;
     }
-
     public String eventRefreshed() {
         return eventRefreshed;
     }
-
     public String eventUpload() {
         return eventUpload;
     }
-
     public String eventDownloaded() {
         return eventDownloaded;
     }
-
     private void handleRefresh(Message m) {
         cloudRefresh()
             .onSuccess(t -> this.storeRefreshIsFailing.set(0))
@@ -215,28 +180,24 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 LOGGER.error("handleRefresh error: " + t.getMessage(), new Exception(t));
             });
     }
-
     private Future<Void> cloudRefresh() {
         if (this.isRefreshing) {
             LOGGER.debug("existing s3 refresh in-progress, skipping this one");
             counterRefreshSkipped.increment();
             return Future.succeededFuture();
         }
-
         Promise<Void> refreshPromise = Promise.promise();
         this.isRefreshing = true;
         vertx.<Void>executeBlocking(blockBromise -> {
             this.cloudRefreshEnsureInSync(refreshPromise, 0);
             blockBromise.complete();
         }, ar -> {});
-
         return refreshPromise.future()
             .onComplete(v -> {
                 this.isRefreshing = false;
                 emitRefreshedEvent();
             });
     }
-
     // this is a blocking function
     private void cloudRefreshEnsureInSync(Promise<Void> refreshPromise, int iteration) {
         try {
@@ -255,7 +216,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
                         fs.add(this.localDelete(d));
                     }
                 });
-
             CompositeFuture.all(fs)
                 .onFailure(e -> refreshPromise.fail(new Exception(e)))
                 .onSuccess(v -> {
@@ -278,7 +238,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
             refreshPromise.fail(new Exception("unexpected error in cloudRefresh(): " + e.getMessage(), e));
         }
     }
-
     private Future<Void> localDelete(String fileToDelete) {
         boolean success;
         try {
@@ -290,14 +249,12 @@ public class CloudSyncVerticle extends AbstractVerticle {
         LOGGER.info("delete " + fileToDelete + ": " + success);
         return Future.succeededFuture();
     }
-
     private void emitRefreshedEvent() {
         int iterations = (int) this.counterRefreshed.count();
         this.counterRefreshed.increment();
         LOGGER.trace("cloudsync " + this.name + " refreshed " + iterations);
         vertx.eventBus().publish(this.eventRefreshed, iterations);
     }
-
     private void handleUpload(Message<String> msg) {
         String fileToUpload = msg.body();
         if (fileToUpload == null) {
@@ -312,25 +269,21 @@ public class CloudSyncVerticle extends AbstractVerticle {
             LOGGER.info("Uploading: " + fileToUpload);
             this.pendingUpload.add(fileToUpload);
         }
-
         this.uploadExecutor.<Void>executeBlocking(
             promise -> this.cloudUploadBlocking(promise, msg.body()),
             ar -> {
                 this.pendingUpload.remove(fileToUpload);
                 this.handleAsyncResult(ar);
                 msg.reply(ar.succeeded());
-
                 // increase counter
                 if (ar.succeeded()) {
                     this.counterUploaded.increment();
                 } else {
                     this.counterUploadFailures.increment();
                 }
-
                 LOGGER.info("Upload result: " + ar.succeeded() + ", " + fileToUpload);
             });
     }
-
     private void cloudUploadBlocking(Promise<Void> promise, String fileToUpload) {
         try {
             String cloudPath = this.cloudSync.toCloudPath(fileToUpload);
@@ -343,7 +296,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
             promise.fail(new Throwable(ex));
         }
     }
-
     private Future<Void> cloudDownloadFile(String s3Path) {
         if (s3Path == null) {
             LOGGER.warn("Received null path for s3 download");
@@ -358,17 +310,16 @@ public class CloudSyncVerticle extends AbstractVerticle {
 
         Promise<Void> promise = Promise.promise();
         final long downloadStart = System.nanoTime();
-        
+
         this.downloadExecutor.<Void>executeBlocking(
             blockingPromise -> this.cloudDownloadBlocking(blockingPromise, s3Path),
             ar -> {
                 final long downloadEnd = System.nanoTime();
                 final long downloadTimeMs = (downloadEnd - downloadStart) / 1000000;
-                
+
                 this.pendingDownload.remove(s3Path);
                 this.handleAsyncResult(ar);
                 promise.complete();
-
                 // increase counter, send event
                 if (ar.succeeded()) {
                     vertx.eventBus().publish(this.eventDownloaded, this.cloudSync.toLocalPath(s3Path));
@@ -379,6 +330,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
                     LOGGER.warn("S3 download failed: {} after {} ms", cloudStorage.mask(s3Path), downloadTimeMs);
                 }
 
+                LOGGER.trace("Download result: " + ar.succeeded() + ", " + cloudStorage.mask(s3Path));
                 // Record S3 download timing metric
                 Gauge.builder("uid2_operator_s3_download_duration_ms", () -> (double) downloadTimeMs)
                     .description("Time taken for individual S3 file downloads")
@@ -388,7 +340,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
 
         return promise.future();
     }
-
     private void cloudDownloadBlocking(Promise<Void> promise, String s3Path) {
         try {
             String localPath = this.cloudSync.toLocalPath(s3Path);
@@ -402,7 +353,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
             promise.fail(new Throwable(ex));
         }
     }
-
     private void handleAsyncResult(AsyncResult ar) {
         if (ar.failed()) {
             Throwable ex = ar.cause();
