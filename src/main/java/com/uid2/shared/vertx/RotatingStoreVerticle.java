@@ -78,8 +78,13 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     }
 
     private void startRefresh(Promise<Void> promise) {
-        LOGGER.info("Starting " + this.storeName + " loading");
-        LOGGER.info("Starting {} store initial S3 loading", this.storeName);
+        // Only log detailed startup messages for salt stores (which are slow)
+        if ("salt".equals(this.storeName)) {
+            LOGGER.info("Starting {} store initial S3 loading", this.storeName);
+        } else {
+            // Fast stores: just log minimal startup message
+            LOGGER.info("Starting {} loading", this.storeName);
+        }
         final long startupRefreshStart = System.nanoTime();
 
         vertx.executeBlocking(p -> {
@@ -96,9 +101,15 @@ public class RotatingStoreVerticle extends AbstractVerticle {
             if (ar.succeeded()) {
                 this.healthComponent.setHealthStatus(true);
                 promise.complete();
-                LOGGER.info("Successful " + this.storeName + " loading. Starting Background Refresh");
-                LOGGER.info("Successful {} store initial S3 loading in {} ms. Starting Background Refresh", 
-                    this.storeName, startupRefreshTimeMs);
+                
+                // Only log detailed timing for salt stores (which are slow), keep other stores minimal
+                if ("salt".equals(this.storeName)) {
+                    LOGGER.info("Successful {} store initial S3 loading in {} ms. Starting Background Refresh", 
+                        this.storeName, startupRefreshTimeMs);
+                } else {
+                    // Fast stores: just log completion without timing details to reduce noise
+                    LOGGER.info("Successful {} loading. Starting Background Refresh", this.storeName);
+                }
 
                 // Record startup-specific S3 store loading metric
                 Gauge.builder("uid2_operator_startup_store_refresh_duration_ms", () -> (double) startupRefreshTimeMs)

@@ -77,6 +77,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
 
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
+        final long saltLoadingStart = System.currentTimeMillis();
         final JsonArray salts = metadata.getJsonArray("salts");
         final String firstLevelSalt = metadata.getString("first_level");
         final SaltFileParser saltFileParser = new SaltFileParser(
@@ -98,6 +99,10 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         this.snapshotsByEffectiveTime.set(snapshots.stream()
                 .sorted(Comparator.comparing(SaltSnapshot::getEffective))
                 .collect(Collectors.toList()));
+
+        final long saltLoadingEnd = System.currentTimeMillis();
+        LOGGER.info("Salt loading completed in {} ms, {} snapshots loaded, {} total salts", 
+                saltLoadingEnd - saltLoadingStart, snapshots.size(), saltCount);
 
         return saltCount;
     }
@@ -129,9 +134,14 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
 
         final String path = spec.getString("location");
         Integer size = spec.getInteger("size");
+        
+        final long downloadStart = System.currentTimeMillis();
         SaltEntry[] entries = readInputStream(this.contentStreamProvider.download(path), saltFileParser, size);
-
-        LOGGER.info("Loaded {} salts", size);
+        final long downloadEnd = System.currentTimeMillis();
+        
+        // Only log filename portion to avoid potential presigned URL exposure
+        String fileName = path.substring(path.lastIndexOf('/') + 1);
+        LOGGER.info("Salt file {} downloaded in {} ms, loaded {} salts", fileName, downloadEnd - downloadStart, size);
         return new SaltSnapshot(effective, expires, entries, firstLevelSalt);
     }
 
