@@ -65,6 +65,9 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private WorkerExecutor uploadExecutor = null;
 
     private boolean isRefreshing = false;
+    
+    private long optoutTotalStart = 0;
+    private final Counter optoutFileCounter;
 
     public CloudSyncVerticle(String name, ICloudStorage cloudStorage, ICloudStorage localStorage,
                              ICloudSync cloudSync, JsonObject jsonConfig) {
@@ -148,6 +151,11 @@ public class CloudSyncVerticle extends AbstractVerticle {
             .tag("store", name)
             .description("gauge for number of consecutive " + name + " store refresh failures")
             .register(Metrics.globalRegistry);
+
+        this.optoutFileCounter = "optout".equals(name) ? Counter
+            .builder("uid2_optout_files_downloaded_total")
+            .description("counter for total optout files downloaded from S3")
+            .register(Metrics.globalRegistry) : null;
     }
 
     @Override
@@ -223,6 +231,10 @@ public class CloudSyncVerticle extends AbstractVerticle {
             return Future.succeededFuture();
         }
 
+        if ("optout".equals(this.name)) {
+            this.optoutTotalStart = System.currentTimeMillis();
+        }
+
         Promise<Void> refreshPromise = Promise.promise();
         this.isRefreshing = true;
         vertx.<Void>executeBlocking(blockBromise -> {
@@ -233,6 +245,13 @@ public class CloudSyncVerticle extends AbstractVerticle {
         return refreshPromise.future()
             .onComplete(v -> {
                 this.isRefreshing = false;
+                if ("optout".equals(this.name) && this.optoutTotalStart > 0) {
+                    long totalDuration = System.currentTimeMillis() - this.optoutTotalStart;
+                    LOGGER.info("Optout sync completed in {} ms", totalDuration);
+                    Gauge.builder("uid2_optout_total_sync_duration_ms", () -> (double) totalDuration)
+                        .description("Total time taken for complete optout sync operation")
+                        .register(Metrics.globalRegistry);
+                }
                 emitRefreshedEvent();
             });
     }
@@ -357,9 +376,14 @@ public class CloudSyncVerticle extends AbstractVerticle {
         }
 
         Promise<Void> promise = Promise.promise();
+        final long downloadStart = System.nanoTime();
+
         this.downloadExecutor.<Void>executeBlocking(
             blockingPromise -> this.cloudDownloadBlocking(blockingPromise, s3Path),
             ar -> {
+                final long downloadEnd = System.nanoTime();
+                final long downloadTimeMs = (downloadEnd - downloadStart) / 1000000;
+
                 this.pendingDownload.remove(s3Path);
                 this.handleAsyncResult(ar);
                 promise.complete();
@@ -368,22 +392,43 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 if (ar.succeeded()) {
                     vertx.eventBus().publish(this.eventDownloaded, this.cloudSync.toLocalPath(s3Path));
                     this.counterDownloaded.increment();
+                    if (optoutFileCounter != null) {
+                        optoutFileCounter.increment();
+                    }
+                    LOGGER.info("S3 download completed: {} in {} ms", cloudStorage.mask(s3Path), downloadTimeMs);
                 } else {
                     this.counterDownloadFailures.increment();
+                    LOGGER.warn("S3 download failed: {} after {} ms", cloudStorage.mask(s3Path), downloadTimeMs);
                 }
 
                 LOGGER.trace("Download result: " + ar.succeeded() + ", " + cloudStorage.mask(s3Path));
+                // Record S3 download timing metric
+                Gauge.builder("uid2_operator_s3_download_duration_ms", () -> (double) downloadTimeMs)
+                    .description("Time taken for individual S3 file downloads")
+                    .tags("store_name", name, "status", ar.succeeded() ? "success" : "failure")
+                    .register(Metrics.globalRegistry);
             });
 
         return promise.future();
     }
 
     private void cloudDownloadBlocking(Promise<Void> promise, String s3Path) {
+        final long fileDownloadStart = System.currentTimeMillis();
         try {
             String localPath = this.cloudSync.toLocalPath(s3Path);
             try (InputStream cloudInput = this.cloudStorage.download(s3Path)) {
                 this.localStorage.upload(cloudInput, localPath);
             }
+            
+            // Log individual file download timing for optout files (avoid logging full path for security)
+            if ("optout".equals(this.name)) {
+                final long fileDownloadEnd = System.currentTimeMillis();
+                final long fileDownloadTime = fileDownloadEnd - fileDownloadStart;
+                // Only log filename portion to avoid potential presigned URL exposure
+                String fileName = s3Path.substring(s3Path.lastIndexOf('/') + 1);
+                LOGGER.info("Optout file {} downloaded in {} ms", fileName, fileDownloadTime);
+            }
+            
             promise.complete();
         } catch (Exception ex) {
             // Be careful as the s3Path may contain the pre-signed S3 token, so do not log the whole path
