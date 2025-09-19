@@ -386,8 +386,8 @@ public class CloudSyncVerticle extends AbstractVerticle {
 
                 this.pendingDownload.remove(s3Path);
                 this.handleAsyncResult(ar);
-
                 promise.complete();
+
                 // increase counter, send event
                 if (ar.succeeded()) {
                     vertx.eventBus().publish(this.eventDownloaded, this.cloudSync.toLocalPath(s3Path));
