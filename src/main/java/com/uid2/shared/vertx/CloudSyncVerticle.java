@@ -253,10 +253,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
         return refreshPromise.future()
             .onComplete(v -> {
                 this.isRefreshing = false;
-                if ("optout".equals(this.name) && this.optoutTotalStart > 0) {
-                    long totalDuration = System.currentTimeMillis() - this.optoutTotalStart;
-                    LOGGER.info("Optout sync completed in {} ms", totalDuration);
-                }
                 emitRefreshedEvent();
             });
     }
