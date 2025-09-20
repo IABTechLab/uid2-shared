@@ -400,32 +400,33 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 }
 
                 LOGGER.trace("Download result: " + ar.succeeded() + ", " + cloudStorage.mask(s3Path));
-                (ar.succeeded() ? downloadSuccessTimer : downloadFailureTimer)
-                    .record(java.time.Duration.ofMillis(downloadTimeMs));
+                // Timer recording moved to cloudDownloadBlocking for precise cloud download measurement
             });
 
         return promise.future();
     }
 
     private void cloudDownloadBlocking(Promise<Void> promise, String s3Path) {
-        final long fileDownloadStart = System.currentTimeMillis();
+        final long cloudDownloadStart = System.nanoTime();
         try {
             String localPath = this.cloudSync.toLocalPath(s3Path);
             try (InputStream cloudInput = this.cloudStorage.download(s3Path)) {
+                final long cloudDownloadEnd = System.nanoTime();
+                final long cloudDownloadTimeMs = (cloudDownloadEnd - cloudDownloadStart) / 1_000_000;
+                
                 this.localStorage.upload(cloudInput, localPath);
+                
+                // Record only the cloud storage download time
+                downloadSuccessTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));
             }
-            
-            // Log individual file download timing for optout files (avoid logging full path for security)
-            if ("optout".equals(this.name)) {
-                final long fileDownloadEnd = System.currentTimeMillis();
-                final long fileDownloadTime = fileDownloadEnd - fileDownloadStart;
-                // Only log filename portion to avoid potential presigned URL exposure
-                String fileName = s3Path.substring(s3Path.lastIndexOf('/') + 1);
-                LOGGER.info("Optout file {} downloaded in {} ms", fileName, fileDownloadTime);
-            }
-            
             promise.complete();
         } catch (Exception ex) {
+            final long cloudDownloadEnd = System.nanoTime();
+            final long cloudDownloadTimeMs = (cloudDownloadEnd - cloudDownloadStart) / 1_000_000;
+            
+            // Record failure timing
+            downloadFailureTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));
+            
             // Be careful as the s3Path may contain the pre-signed S3 token, so do not log the whole path
             LOGGER.error("download error: " + ex.getClass().getSimpleName());
             promise.fail(new Throwable(ex));
