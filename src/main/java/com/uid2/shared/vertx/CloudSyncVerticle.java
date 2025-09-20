@@ -68,7 +68,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private boolean isRefreshing = false;
     
     private long optoutTotalStart = 0;
-    private final Counter optoutFileCounter;
     private final Timer downloadSuccessTimer;
     private final Timer downloadFailureTimer;
 
@@ -154,11 +153,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
             .tag("store", name)
             .description("gauge for number of consecutive " + name + " store refresh failures")
             .register(Metrics.globalRegistry);
-
-        this.optoutFileCounter = "optout".equals(name) ? Counter
-            .builder("uid2_optout_files_downloaded_total")
-            .description("counter for total optout files downloaded from S3")
-            .register(Metrics.globalRegistry) : null;
 
         this.downloadSuccessTimer = Timer
             .builder("uid2_s3_download_duration")
@@ -262,9 +256,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 if ("optout".equals(this.name) && this.optoutTotalStart > 0) {
                     long totalDuration = System.currentTimeMillis() - this.optoutTotalStart;
                     LOGGER.info("Optout sync completed in {} ms", totalDuration);
-                    Gauge.builder("uid2_optout_total_sync_duration_ms", () -> (double) totalDuration)
-                        .description("Total time taken for complete optout sync operation")
-                        .register(Metrics.globalRegistry);
                 }
                 emitRefreshedEvent();
             });
@@ -406,9 +397,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 if (ar.succeeded()) {
                     vertx.eventBus().publish(this.eventDownloaded, this.cloudSync.toLocalPath(s3Path));
                     this.counterDownloaded.increment();
-                    if (optoutFileCounter != null) {
-                        optoutFileCounter.increment();
-                    }
                     LOGGER.info("S3 download completed: {} in {} ms", cloudStorage.mask(s3Path), downloadTimeMs);
                 } else {
                     this.counterDownloadFailures.increment();
@@ -416,7 +404,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 }
 
                 LOGGER.trace("Download result: " + ar.succeeded() + ", " + cloudStorage.mask(s3Path));
-                // Record S3 download timing metric using pre-created timers
                 (ar.succeeded() ? downloadSuccessTimer : downloadFailureTimer)
                     .record(java.time.Duration.ofMillis(downloadTimeMs));
             });
