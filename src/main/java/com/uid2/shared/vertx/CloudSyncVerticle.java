@@ -7,6 +7,7 @@ import com.uid2.shared.health.HealthComponent;
 import com.uid2.shared.health.HealthManager;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.Metrics;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
@@ -68,6 +69,8 @@ public class CloudSyncVerticle extends AbstractVerticle {
     
     private long optoutTotalStart = 0;
     private final Counter optoutFileCounter;
+    private final Timer downloadSuccessTimer;
+    private final Timer downloadFailureTimer;
 
     public CloudSyncVerticle(String name, ICloudStorage cloudStorage, ICloudStorage localStorage,
                              ICloudSync cloudSync, JsonObject jsonConfig) {
@@ -156,6 +159,17 @@ public class CloudSyncVerticle extends AbstractVerticle {
             .builder("uid2_optout_files_downloaded_total")
             .description("counter for total optout files downloaded from S3")
             .register(Metrics.globalRegistry) : null;
+
+        this.downloadSuccessTimer = Timer
+            .builder("uid2_s3_download_duration")
+            .description("duration of S3 file downloads")
+            .tags("store_name", name, "status", "success")
+            .register(Metrics.globalRegistry);
+        this.downloadFailureTimer = Timer
+            .builder("uid2_s3_download_duration")
+            .description("duration of S3 file downloads")
+            .tags("store_name", name, "status", "failure")
+            .register(Metrics.globalRegistry);
     }
 
     @Override
@@ -402,11 +416,9 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 }
 
                 LOGGER.trace("Download result: " + ar.succeeded() + ", " + cloudStorage.mask(s3Path));
-                // Record S3 download timing metric
-                Gauge.builder("uid2_operator_s3_download_duration_ms", () -> (double) downloadTimeMs)
-                    .description("Time taken for individual S3 file downloads")
-                    .tags("store_name", name, "status", ar.succeeded() ? "success" : "failure")
-                    .register(Metrics.globalRegistry);
+                // Record S3 download timing metric using pre-created timers
+                (ar.succeeded() ? downloadSuccessTimer : downloadFailureTimer)
+                    .record(java.time.Duration.ofMillis(downloadTimeMs));
             });
 
         return promise.future();
