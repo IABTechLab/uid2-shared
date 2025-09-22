@@ -152,9 +152,9 @@ public class CloudSyncVerticle extends AbstractVerticle {
             .description("gauge for number of consecutive " + name + " store refresh failures")
             .register(Metrics.globalRegistry);
 
-        this.downloadSuccessTimer = Metrics.timer("uid2_s3_download_duration", "store_name", name, "status", "success");
+        this.downloadSuccessTimer = Metrics.timer("uid2_cloud_download_duration", "store_name", name, "status", "success");
         
-        this.downloadFailureTimer = Metrics.timer("uid2_s3_download_duration", "store_name", name, "status", "failure");
+        this.downloadFailureTimer = Metrics.timer("uid2_cloud_download_duration", "store_name", name, "status", "failure");
     }
 
     @Override
