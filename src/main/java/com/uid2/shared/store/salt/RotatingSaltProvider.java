@@ -99,7 +99,6 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
                 .sorted(Comparator.comparing(SaltSnapshot::getEffective))
                 .collect(Collectors.toList()));
 
-
         return saltCount;
     }
 
