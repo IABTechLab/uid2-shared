@@ -77,7 +77,6 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
 
     @Override
     public long loadContent(JsonObject metadata) throws Exception {
-        final long saltLoadingStart = System.currentTimeMillis();
         final JsonArray salts = metadata.getJsonArray("salts");
         final String firstLevelSalt = metadata.getString("first_level");
         final SaltFileParser saltFileParser = new SaltFileParser(
@@ -100,9 +99,6 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
                 .sorted(Comparator.comparing(SaltSnapshot::getEffective))
                 .collect(Collectors.toList()));
 
-        final long saltLoadingEnd = System.currentTimeMillis();
-        LOGGER.info("Salt loading completed in {} ms, {} snapshots loaded, {} total salts", 
-                saltLoadingEnd - saltLoadingStart, snapshots.size(), saltCount);
 
         return saltCount;
     }
