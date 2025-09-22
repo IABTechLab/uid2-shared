@@ -81,7 +81,6 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     }
 
     private void startRefresh(Promise<Void> promise) {
-       
         LOGGER.info("Starting " + this.storeName + " loading");
         final long startupRefreshStart = System.nanoTime();
         vertx.executeBlocking(p -> {
