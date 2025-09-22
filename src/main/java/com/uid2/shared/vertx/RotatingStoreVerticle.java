@@ -98,9 +98,8 @@ public class RotatingStoreVerticle extends AbstractVerticle {
             if (ar.succeeded()) {
                 this.healthComponent.setHealthStatus(true);
                 promise.complete();
-                
                 storeRefreshTimer.record(java.time.Duration.ofMillis(startupRefreshTimeMs));
-                LOGGER.info("Successful {} loading. Starting Background Refresh", this.storeName);
+                LOGGER.info("Successful " + this.storeName + " loading. Starting Background Refresh");
                 this.startBackgroundRefresh();
             } else {
                 this.healthComponent.setHealthStatus(false, ar.cause().getMessage());
