@@ -82,9 +82,8 @@ public class RotatingStoreVerticle extends AbstractVerticle {
 
     private void startRefresh(Promise<Void> promise) {
        
-        LOGGER.info("Starting {} loading", this.storeName);
+        LOGGER.info("Starting " + this.storeName + " loading");
         final long startupRefreshStart = System.nanoTime();
-
         vertx.executeBlocking(p -> {
             try {
                 this.refresh();
@@ -102,7 +101,6 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                 
                 storeRefreshTimer.record(java.time.Duration.ofMillis(startupRefreshTimeMs));
                 LOGGER.info("Successful {} loading. Starting Background Refresh", this.storeName);
-                
                 this.startBackgroundRefresh();
             } else {
                 this.healthComponent.setHealthStatus(false, ar.cause().getMessage());
