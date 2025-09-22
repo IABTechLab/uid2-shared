@@ -367,7 +367,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
         this.downloadExecutor.<Void>executeBlocking(
             blockingPromise -> this.cloudDownloadBlocking(blockingPromise, s3Path),
             ar -> {
-
                 this.pendingDownload.remove(s3Path);
                 this.handleAsyncResult(ar);
                 promise.complete();
@@ -409,7 +408,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
             LOGGER.error("download error: " + ex.getClass().getSimpleName());
             promise.fail(new Throwable(ex));
         }
-
     }
 
     private void handleAsyncResult(AsyncResult ar) {
