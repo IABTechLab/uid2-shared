@@ -6,6 +6,7 @@ import com.uid2.shared.store.reader.IMetadataVersionedStore;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Timer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
@@ -19,6 +20,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingStoreVerticle.class);
     private final String storeName;
     private final HealthComponent healthComponent;
+    private final Timer storeRefreshTimer;
     private final Counter counterStoreRefreshTimeMs;
     private final Counter counterStoreRefreshed;
     private final Gauge gaugeStoreVersion;
@@ -69,6 +71,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
             .register(Metrics.globalRegistry);
         this.versionedStore = versionedStore;
         this.refreshIntervalMs = refreshIntervalMs;
+        this.storeRefreshTimer = Metrics.timer("uid2_store_refresh_duration", "store_name", storeName);
     }
 
     @Override
@@ -79,6 +82,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
 
     private void startRefresh(Promise<Void> promise) {
         LOGGER.info("Starting " + this.storeName + " loading");
+        final long startupRefreshStart = System.nanoTime();
         vertx.executeBlocking(p -> {
             try {
                 this.refresh();
@@ -87,9 +91,13 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                 p.fail(e);
             }
         }, ar -> {
+            final long startupRefreshEnd = System.nanoTime();
+            final long startupRefreshTimeMs = (startupRefreshEnd - startupRefreshStart) / 1000000;
+
             if (ar.succeeded()) {
                 this.healthComponent.setHealthStatus(true);
                 promise.complete();
+                storeRefreshTimer.record(java.time.Duration.ofMillis(startupRefreshTimeMs));
                 LOGGER.info("Successful " + this.storeName + " loading. Starting Background Refresh");
                 this.startBackgroundRefresh();
             } else {

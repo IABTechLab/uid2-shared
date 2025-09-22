@@ -7,6 +7,7 @@ import com.uid2.shared.health.HealthComponent;
 import com.uid2.shared.health.HealthManager;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.Metrics;
 import io.vertx.core.*;
 import io.vertx.core.eventbus.Message;
@@ -44,6 +45,8 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private final Counter counterDownloadFailures;
     private final Counter counterUploadFailures;
     private final Gauge gaugeConsecutiveRefreshFailures;
+    private final Timer downloadSuccessTimer;
+    private final Timer downloadFailureTimer;
 
     private final String name;
     private final ICloudStorage cloudStorage;
@@ -148,6 +151,10 @@ public class CloudSyncVerticle extends AbstractVerticle {
             .tag("store", name)
             .description("gauge for number of consecutive " + name + " store refresh failures")
             .register(Metrics.globalRegistry);
+
+        this.downloadSuccessTimer = Metrics.timer("uid2_cloud_download_duration", "store_name", name, "status", "success");
+        
+        this.downloadFailureTimer = Metrics.timer("uid2_cloud_download_duration", "store_name", name, "status", "failure");
     }
 
     @Override
@@ -379,13 +386,24 @@ public class CloudSyncVerticle extends AbstractVerticle {
     }
 
     private void cloudDownloadBlocking(Promise<Void> promise, String s3Path) {
+        final long cloudDownloadStart = System.nanoTime();
         try {
             String localPath = this.cloudSync.toLocalPath(s3Path);
             try (InputStream cloudInput = this.cloudStorage.download(s3Path)) {
+                final long cloudDownloadEnd = System.nanoTime();
+                final long cloudDownloadTimeMs = (cloudDownloadEnd - cloudDownloadStart) / 1_000_000;
+                
                 this.localStorage.upload(cloudInput, localPath);
+                
+                downloadSuccessTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));
+                LOGGER.info("S3 download completed: {} in {} ms", cloudStorage.mask(s3Path), cloudDownloadTimeMs);
             }
             promise.complete();
         } catch (Exception ex) {
+            final long cloudDownloadEnd = System.nanoTime();
+            final long cloudDownloadTimeMs = (cloudDownloadEnd - cloudDownloadStart) / 1_000_000;
+            
+            downloadFailureTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));            
             // Be careful as the s3Path may contain the pre-signed S3 token, so do not log the whole path
             LOGGER.error("download error: " + ex.getClass().getSimpleName());
             promise.fail(new Throwable(ex));
