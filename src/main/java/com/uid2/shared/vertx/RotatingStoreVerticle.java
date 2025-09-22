@@ -6,6 +6,7 @@ import com.uid2.shared.store.reader.IMetadataVersionedStore;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.Timer;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.json.JsonObject;
@@ -19,6 +20,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingStoreVerticle.class);
     private final String storeName;
     private final HealthComponent healthComponent;
+    private final Timer storeRefreshTimer;
     private final Counter counterStoreRefreshTimeMs;
     private final Counter counterStoreRefreshed;
     private final Gauge gaugeStoreVersion;
@@ -69,6 +71,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
             .register(Metrics.globalRegistry);
         this.versionedStore = versionedStore;
         this.refreshIntervalMs = refreshIntervalMs;
+        this.storeRefreshTimer = Metrics.timer("uid2_store_refresh_duration", "store_name", storeName);
     }
 
     @Override
@@ -97,12 +100,9 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                 this.healthComponent.setHealthStatus(true);
                 promise.complete();
                 
-                if ("salt".equals(this.storeName)) {
-                    LOGGER.info("Successful {} store initial S3 loading in {} ms. Starting Background Refresh", 
-                        this.storeName, startupRefreshTimeMs);
-                } else {
-                    LOGGER.info("Successful {} loading. Starting Background Refresh", this.storeName);
-                }
+                storeRefreshTimer.record(java.time.Duration.ofMillis(startupRefreshTimeMs));
+                LOGGER.info("Successful {} loading. Starting Background Refresh", this.storeName);
+                
                 this.startBackgroundRefresh();
             } else {
                 this.healthComponent.setHealthStatus(false, ar.cause().getMessage());
