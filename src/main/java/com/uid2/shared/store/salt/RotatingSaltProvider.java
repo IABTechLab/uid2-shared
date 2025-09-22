@@ -133,11 +133,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
         final long downloadStart = System.currentTimeMillis();
         SaltEntry[] entries = readInputStream(this.contentStreamProvider.download(path), saltFileParser, size);
         final long downloadEnd = System.currentTimeMillis();
-        String fileName = path.substring(path.lastIndexOf('/') + 1);
-        if (fileName.contains("?")) {
-            fileName = fileName.substring(0, fileName.indexOf("?"));
-        }
-        LOGGER.info("Salt file {} downloaded in {} ms", fileName, downloadEnd - downloadStart);
+        LOGGER.info("Salt file downloaded in {} ms", downloadEnd - downloadStart);
 
         LOGGER.info("Loaded {} salts", size);
         return new SaltSnapshot(effective, expires, entries, firstLevelSalt);
