@@ -67,7 +67,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
 
     private boolean isRefreshing = false;
     
-    private long optoutTotalStart = 0;
     private final Timer downloadSuccessTimer;
     private final Timer downloadFailureTimer;
 
@@ -154,16 +153,9 @@ public class CloudSyncVerticle extends AbstractVerticle {
             .description("gauge for number of consecutive " + name + " store refresh failures")
             .register(Metrics.globalRegistry);
 
-        this.downloadSuccessTimer = Timer
-            .builder("uid2_s3_download_duration")
-            .description("duration of S3 file downloads")
-            .tags("store_name", name, "status", "success")
-            .register(Metrics.globalRegistry);
-        this.downloadFailureTimer = Timer
-            .builder("uid2_s3_download_duration")
-            .description("duration of S3 file downloads")
-            .tags("store_name", name, "status", "failure")
-            .register(Metrics.globalRegistry);
+        this.downloadSuccessTimer = Metrics.timer("uid2_s3_download_duration", "store_name", name, "status", "success");
+        
+        this.downloadFailureTimer = Metrics.timer("uid2_s3_download_duration", "store_name", name, "status", "failure");
     }
 
     @Override
@@ -239,9 +231,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
             return Future.succeededFuture();
         }
 
-        if ("optout".equals(this.name)) {
-            this.optoutTotalStart = System.currentTimeMillis();
-        }
 
         Promise<Void> refreshPromise = Promise.promise();
         this.isRefreshing = true;
@@ -400,7 +389,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 }
 
                 LOGGER.trace("Download result: " + ar.succeeded() + ", " + cloudStorage.mask(s3Path));
-                // Timer recording moved to cloudDownloadBlocking for precise cloud download measurement
             });
 
         return promise.future();
@@ -416,7 +404,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 
                 this.localStorage.upload(cloudInput, localPath);
                 
-                // Record only the cloud storage download time
                 downloadSuccessTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));
             }
             promise.complete();
@@ -424,7 +411,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
             final long cloudDownloadEnd = System.nanoTime();
             final long cloudDownloadTimeMs = (cloudDownloadEnd - cloudDownloadStart) / 1_000_000;
             
-            // Record failure timing
             downloadFailureTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));
             
             // Be careful as the s3Path may contain the pre-signed S3 token, so do not log the whole path
