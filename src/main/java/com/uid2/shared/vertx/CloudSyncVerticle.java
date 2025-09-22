@@ -45,6 +45,8 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private final Counter counterDownloadFailures;
     private final Counter counterUploadFailures;
     private final Gauge gaugeConsecutiveRefreshFailures;
+    private final Timer downloadSuccessTimer;
+    private final Timer downloadFailureTimer;
 
     private final String name;
     private final ICloudStorage cloudStorage;
@@ -66,9 +68,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
     private WorkerExecutor uploadExecutor = null;
 
     private boolean isRefreshing = false;
-    
-    private final Timer downloadSuccessTimer;
-    private final Timer downloadFailureTimer;
 
     public CloudSyncVerticle(String name, ICloudStorage cloudStorage, ICloudStorage localStorage,
                              ICloudSync cloudSync, JsonObject jsonConfig) {
@@ -231,7 +230,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
             return Future.succeededFuture();
         }
 
-
         Promise<Void> refreshPromise = Promise.promise();
         this.isRefreshing = true;
         vertx.<Void>executeBlocking(blockBromise -> {
@@ -366,13 +364,9 @@ public class CloudSyncVerticle extends AbstractVerticle {
         }
 
         Promise<Void> promise = Promise.promise();
-        final long downloadStart = System.nanoTime();
-
         this.downloadExecutor.<Void>executeBlocking(
             blockingPromise -> this.cloudDownloadBlocking(blockingPromise, s3Path),
             ar -> {
-                final long downloadEnd = System.nanoTime();
-                final long downloadTimeMs = (downloadEnd - downloadStart) / 1000000;
 
                 this.pendingDownload.remove(s3Path);
                 this.handleAsyncResult(ar);
@@ -382,10 +376,8 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 if (ar.succeeded()) {
                     vertx.eventBus().publish(this.eventDownloaded, this.cloudSync.toLocalPath(s3Path));
                     this.counterDownloaded.increment();
-                    LOGGER.info("S3 download completed: {} in {} ms", cloudStorage.mask(s3Path), downloadTimeMs);
                 } else {
                     this.counterDownloadFailures.increment();
-                    LOGGER.warn("S3 download failed: {} after {} ms", cloudStorage.mask(s3Path), downloadTimeMs);
                 }
 
                 LOGGER.trace("Download result: " + ar.succeeded() + ", " + cloudStorage.mask(s3Path));
@@ -405,18 +397,19 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 this.localStorage.upload(cloudInput, localPath);
                 
                 downloadSuccessTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));
+                LOGGER.info("S3 download completed: {} in {} ms", cloudStorage.mask(s3Path), cloudDownloadTimeMs);
             }
             promise.complete();
         } catch (Exception ex) {
             final long cloudDownloadEnd = System.nanoTime();
             final long cloudDownloadTimeMs = (cloudDownloadEnd - cloudDownloadStart) / 1_000_000;
             
-            downloadFailureTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));
-            
+            downloadFailureTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));            
             // Be careful as the s3Path may contain the pre-signed S3 token, so do not log the whole path
             LOGGER.error("download error: " + ex.getClass().getSimpleName());
             promise.fail(new Throwable(ex));
         }
+
     }
 
     private void handleAsyncResult(AsyncResult ar) {
