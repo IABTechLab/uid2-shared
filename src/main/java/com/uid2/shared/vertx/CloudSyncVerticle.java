@@ -242,7 +242,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 this.isRefreshing = false;
                 emitRefreshedEvent();
             });
-            
     }
 
     // this is a blocking function
