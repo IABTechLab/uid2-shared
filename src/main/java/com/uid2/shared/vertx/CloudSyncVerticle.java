@@ -362,7 +362,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
         this.downloadExecutor.executeBlocking(() -> {
             this.cloudDownloadBlocking(s3Path);
             return null;
-        }).onComplete(ar -> {
+        }, false).onComplete(ar -> {
                 this.pendingDownload.remove(s3Path);
                 this.handleAsyncResult(ar);
                 promise.complete();
