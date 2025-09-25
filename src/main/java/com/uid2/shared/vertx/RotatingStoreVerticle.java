@@ -83,14 +83,10 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     private void startRefresh(Promise<Void> promise) {
         LOGGER.info("Starting " + this.storeName + " loading");
         final long startupRefreshStart = System.nanoTime();
-        vertx.executeBlocking(p -> {
-            try {
-                this.refresh();
-                p.complete();
-            } catch (Exception e) {
-                p.fail(e);
-            }
-        }, ar -> {
+        vertx.executeBlocking(() -> {
+            this.refresh();
+            return null;
+        }).onComplete(ar -> {
             final long startupRefreshEnd = System.nanoTime();
             final long startupRefreshTimeMs = (startupRefreshEnd - startupRefreshStart) / 1000000;
 
@@ -112,15 +108,10 @@ public class RotatingStoreVerticle extends AbstractVerticle {
         vertx.setPeriodic(this.refreshIntervalMs, (id) -> {
             final long start = System.nanoTime();
 
-            vertx.executeBlocking(promise -> {
-                    try {
-                        this.refresh();
-                        promise.complete();
-                    } catch (Exception e) {
-                        promise.fail(e);
-                    }
-                },
-                asyncResult -> {
+            vertx.executeBlocking(() -> {
+                    this.refresh();
+                    return null;
+                }).onComplete(asyncResult -> {
                     final long end = System.nanoTime();
                     final long elapsed = ((end - start) / 1000000);
                     this.counterStoreRefreshTimeMs.increment(elapsed);

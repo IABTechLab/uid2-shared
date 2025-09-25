@@ -232,10 +232,10 @@ public class CloudSyncVerticle extends AbstractVerticle {
 
         Promise<Void> refreshPromise = Promise.promise();
         this.isRefreshing = true;
-        vertx.<Void>executeBlocking(blockBromise -> {
+        vertx.executeBlocking(() -> {
             this.cloudRefreshEnsureInSync(refreshPromise, 0);
-            blockBromise.complete();
-        }, ar -> {});
+            return null;
+        });
 
         return refreshPromise.future()
             .onComplete(v -> {
@@ -320,12 +320,13 @@ public class CloudSyncVerticle extends AbstractVerticle {
             this.pendingUpload.add(fileToUpload);
         }
 
-        this.uploadExecutor.<Void>executeBlocking(
-            promise -> this.cloudUploadBlocking(promise, msg.body()),
-            ar -> {
-                this.pendingUpload.remove(fileToUpload);
-                this.handleAsyncResult(ar);
-                msg.reply(ar.succeeded());
+        this.uploadExecutor.executeBlocking(() -> {
+            this.cloudUploadBlocking(msg.body());
+            return null;
+        }).onComplete(ar -> {
+            this.pendingUpload.remove(fileToUpload);
+            this.handleAsyncResult(ar);
+            msg.reply(ar.succeeded());
 
                 // increase counter
                 if (ar.succeeded()) {
@@ -338,16 +339,10 @@ public class CloudSyncVerticle extends AbstractVerticle {
             });
     }
 
-    private void cloudUploadBlocking(Promise<Void> promise, String fileToUpload) {
-        try {
-            String cloudPath = this.cloudSync.toCloudPath(fileToUpload);
-            try (InputStream localInput = this.localStorage.download(fileToUpload)) {
-                this.cloudStorage.upload(localInput, cloudPath);
-            }
-            promise.complete();
-        } catch (Exception ex) {
-            LOGGER.error(ex.getMessage(), ex);
-            promise.fail(new Throwable(ex));
+    private void cloudUploadBlocking(String fileToUpload) throws Exception {
+        String cloudPath = this.cloudSync.toCloudPath(fileToUpload);
+        try (InputStream localInput = this.localStorage.download(fileToUpload)) {
+            this.cloudStorage.upload(localInput, cloudPath);
         }
     }
 
@@ -364,9 +359,10 @@ public class CloudSyncVerticle extends AbstractVerticle {
         }
 
         Promise<Void> promise = Promise.promise();
-        this.downloadExecutor.<Void>executeBlocking(
-            blockingPromise -> this.cloudDownloadBlocking(blockingPromise, s3Path),
-            ar -> {
+        this.downloadExecutor.executeBlocking(() -> {
+            this.cloudDownloadBlocking(s3Path);
+            return null;
+        }, false).onComplete(ar -> {
                 this.pendingDownload.remove(s3Path);
                 this.handleAsyncResult(ar);
                 promise.complete();
@@ -385,7 +381,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
         return promise.future();
     }
 
-    private void cloudDownloadBlocking(Promise<Void> promise, String s3Path) {
+    private void cloudDownloadBlocking(String s3Path) throws Exception {
         final long cloudDownloadStart = System.nanoTime();
         try {
             String localPath = this.cloudSync.toLocalPath(s3Path);
@@ -398,7 +394,6 @@ public class CloudSyncVerticle extends AbstractVerticle {
                 downloadSuccessTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));
                 LOGGER.info("S3 download completed: {} in {} ms", cloudStorage.mask(s3Path), cloudDownloadTimeMs);
             }
-            promise.complete();
         } catch (Exception ex) {
             final long cloudDownloadEnd = System.nanoTime();
             final long cloudDownloadTimeMs = (cloudDownloadEnd - cloudDownloadStart) / 1_000_000;
@@ -406,7 +401,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
             downloadFailureTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));            
             // Be careful as the s3Path may contain the pre-signed S3 token, so do not log the whole path
             LOGGER.error("download error: " + ex.getClass().getSimpleName());
-            promise.fail(new Throwable(ex));
+            throw new CloudStorageException("Download failed"); 
         }
     }
 
