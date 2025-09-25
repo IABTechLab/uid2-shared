@@ -401,7 +401,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
             downloadFailureTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));            
             // Be careful as the s3Path may contain the pre-signed S3 token, so do not log the whole path
             LOGGER.error("download error: " + ex.getClass().getSimpleName());
-            throw ex;
+            throw new CloudStorageException("Download failed"); 
         }
     }
 
