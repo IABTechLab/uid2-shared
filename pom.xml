@@ -174,11 +174,6 @@
             <version>2.6.0</version>
         </dependency>
         <dependency>
-            <groupId>com.google.apis</groupId>
-            <artifactId>google-api-services-compute</artifactId>
-            <version>v1-rev20221205-2.0.0</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.auth</groupId>
             <artifactId>google-auth-library-oauth2-http</artifactId>
             <version>1.30.0</version>
@@ -187,11 +182,6 @@
             <groupId>com.google.auth</groupId>
             <artifactId>google-auth-library-credentials</artifactId>
             <version>1.30.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-logging</artifactId>
-            <version>3.15.12</version>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
