@@ -32,10 +32,6 @@ public class Const {
 
         public static final String UidInstanceIdPrefixProp = "uid_instance_id_prefix";
 
-        // GCP
-        public static final String GoogleCredentialsProp = "google_credentials";
-        public static final String GcpEnclaveParamsProp = "gcp_enclave_params";
-
         // Azure
         public static final String MaaServerBaseUrlProp = "maa_server_base_url";
 
