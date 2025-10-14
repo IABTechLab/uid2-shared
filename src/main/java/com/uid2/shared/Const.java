@@ -91,6 +91,7 @@ public class Const {
 
         // Others
         public static final String SaltsExpiredShutdownHours = "salts_expired_shutdown_hours";
+        public static final String KeysetKeysFailedShutdownHours = "keysetkeys_failed_shutdown_hours";
         public static final String encryptionSupportVersion = "encryption_support_version";
     }
 
