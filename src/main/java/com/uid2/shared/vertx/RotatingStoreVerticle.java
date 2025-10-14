@@ -123,21 +123,21 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                     final long end = System.nanoTime();
                     final long elapsed = ((end - start) / 1000000);
                     this.counterStoreRefreshTimeMs.increment(elapsed);
-                if (asyncResult.failed()) {
-                    this.counterStoreRefreshFailures.increment();
-                    this.storeRefreshIsFailing.set(1);
-                    LOGGER.error("Failed to load " + this.storeName + ", " + elapsed + " ms", asyncResult.cause());
-                    if (this.refreshCallback != null) {
-                        this.refreshCallback.accept(false);
+                    if (asyncResult.failed()) {
+                        this.counterStoreRefreshFailures.increment();
+                        this.storeRefreshIsFailing.set(1);
+                        LOGGER.error("Failed to load " + this.storeName + ", " + elapsed + " ms", asyncResult.cause());
+                        if (this.refreshCallback != null) {
+                            this.refreshCallback.accept(false);
+                        }
+                    } else {
+                        this.counterStoreRefreshed.increment();
+                        this.storeRefreshIsFailing.set(0);
+                        LOGGER.trace("Successfully refreshed " + this.storeName + ", " + elapsed + " ms");
+                        if (this.refreshCallback != null) {
+                            this.refreshCallback.accept(true);
+                        }
                     }
-                } else {
-                    this.counterStoreRefreshed.increment();
-                    this.storeRefreshIsFailing.set(0);
-                    LOGGER.trace("Successfully refreshed " + this.storeName + ", " + elapsed + " ms");
-                    if (this.refreshCallback != null) {
-                        this.refreshCallback.accept(true);
-                    }
-                }
                 }
             );
         });
