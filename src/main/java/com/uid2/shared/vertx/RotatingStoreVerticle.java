@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 
 public class RotatingStoreVerticle extends AbstractVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(RotatingStoreVerticle.class);
@@ -32,7 +31,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     private final AtomicLong latestVersion = new AtomicLong(-1L);
     private final AtomicLong latestEntryCount = new AtomicLong(-1L);
     private final AtomicInteger storeRefreshIsFailing = new AtomicInteger(0);
-    private final Consumer<Boolean> refreshCallback;
+    private final Runnable refreshCallback;
 
     private final long refreshIntervalMs;
 
@@ -41,7 +40,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     }
 
     public RotatingStoreVerticle(String storeName, long refreshIntervalMs, IMetadataVersionedStore versionedStore,
-            Consumer<Boolean> refreshCallback) {
+            Runnable refreshCallback) {
         this.healthComponent = HealthManager.instance.registerComponent(storeName + "-rotator");
         this.healthComponent.setHealthStatus(false, "not started");
 
@@ -127,15 +126,12 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                         this.counterStoreRefreshFailures.increment();
                         this.storeRefreshIsFailing.set(1);
                         LOGGER.error("Failed to load " + this.storeName + ", " + elapsed + " ms", asyncResult.cause());
-                        if (this.refreshCallback != null) {
-                            this.refreshCallback.accept(false);
-                        }
                     } else {
                         this.counterStoreRefreshed.increment();
                         this.storeRefreshIsFailing.set(0);
                         LOGGER.trace("Successfully refreshed " + this.storeName + ", " + elapsed + " ms");
                         if (this.refreshCallback != null) {
-                            this.refreshCallback.accept(true);
+                            this.refreshCallback.run();
                         }
                     }
                 }
