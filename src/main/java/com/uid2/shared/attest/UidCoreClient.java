@@ -89,8 +89,12 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
                 inputStream = getWithAttest(path);
             }
             return inputStream;
+        } catch (CloudStorageException e) {
+            throw e;
         } catch (Exception e) {
-            throw new CloudStorageException("download error: " + e.getMessage(), e);
+            throw new CloudStorageException(
+                "Cannot download required files from UID2 core service, exception: " + e.getClass().getSimpleName() + 
+                ", please visit UID2 guides for troubleshooting", e);
         }
     }
 
@@ -108,7 +112,12 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         HttpResponse<String> httpResponse;
         httpResponse = sendHttpRequest(path, attestationToken);
         if (httpResponse.statusCode() != 200) {
-            throw new CloudStorageException(String.format("Non-success response from core on request to %s. Status code: %d", path, httpResponse.statusCode()));
+            // Don't log full path as it may contain sensitive information
+            URI uri = URI.create(path);
+            String safeEndpoint = uri.getHost() + uri.getPath();
+            throw new CloudStorageException(String.format(
+                "Cannot download required files from UID2 core service, HTTP response code %d, endpoint: %s, please visit UID2 guides for troubleshooting", 
+                httpResponse.statusCode(), safeEndpoint));
         }
         return Utils.convertHttpResponseToInputStream(httpResponse);
     }
