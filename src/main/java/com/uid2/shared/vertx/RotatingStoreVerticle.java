@@ -31,10 +31,16 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     private final AtomicLong latestVersion = new AtomicLong(-1L);
     private final AtomicLong latestEntryCount = new AtomicLong(-1L);
     private final AtomicInteger storeRefreshIsFailing = new AtomicInteger(0);
+    private final Runnable refreshCallback;
 
     private final long refreshIntervalMs;
 
     public RotatingStoreVerticle(String storeName, long refreshIntervalMs, IMetadataVersionedStore versionedStore) {
+        this(storeName, refreshIntervalMs, versionedStore, null);
+    }
+
+    public RotatingStoreVerticle(String storeName, long refreshIntervalMs, IMetadataVersionedStore versionedStore,
+            Runnable refreshCallback) {
         this.healthComponent = HealthManager.instance.registerComponent(storeName + "-rotator");
         this.healthComponent.setHealthStatus(false, "not started");
 
@@ -72,6 +78,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
         this.versionedStore = versionedStore;
         this.refreshIntervalMs = refreshIntervalMs;
         this.storeRefreshTimer = Metrics.timer("uid2_store_refresh_duration", "store_name", storeName);
+        this.refreshCallback = refreshCallback;
     }
 
     @Override
@@ -95,6 +102,9 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                 promise.complete();
                 storeRefreshTimer.record(java.time.Duration.ofMillis(startupRefreshTimeMs));
                 LOGGER.info("Successful " + this.storeName + " loading. Starting Background Refresh");
+                if (this.refreshCallback != null) {
+                    this.refreshCallback.run();
+                }
                 this.startBackgroundRefresh();
             } else {
                 this.healthComponent.setHealthStatus(false, ar.cause().getMessage());
@@ -123,6 +133,9 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                         this.counterStoreRefreshed.increment();
                         this.storeRefreshIsFailing.set(0);
                         LOGGER.trace("Successfully refreshed " + this.storeName + ", " + elapsed + " ms");
+                        if (this.refreshCallback != null) {
+                            this.refreshCallback.run();
+                        }
                     }
                 }
             );
