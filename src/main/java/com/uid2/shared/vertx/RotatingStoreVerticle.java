@@ -32,7 +32,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     private final AtomicLong latestVersion = new AtomicLong(-1L);
     private final AtomicLong latestEntryCount = new AtomicLong(-1L);
     private final AtomicInteger storeRefreshIsFailing = new AtomicInteger(0);
-    private final Consumer<Boolean> refreshCallback;
+    private final Runnable refreshCallback;
 
     private final long refreshIntervalMs;
 
@@ -41,7 +41,7 @@ public class RotatingStoreVerticle extends AbstractVerticle {
     }
 
     public RotatingStoreVerticle(String storeName, long refreshIntervalMs, IMetadataVersionedStore versionedStore,
-            Consumer<Boolean> refreshCallback) {
+            Runnable refreshCallback) {
         this.healthComponent = HealthManager.instance.registerComponent(storeName + "-rotator");
         this.healthComponent.setHealthStatus(false, "not started");
 
@@ -103,6 +103,9 @@ public class RotatingStoreVerticle extends AbstractVerticle {
                 promise.complete();
                 storeRefreshTimer.record(java.time.Duration.ofMillis(startupRefreshTimeMs));
                 LOGGER.info("Successful " + this.storeName + " loading. Starting Background Refresh");
+                if (this.refreshCallback != null) {
+                    this.refreshCallback.run();
+                }
                 this.startBackgroundRefresh();
             } else {
                 this.healthComponent.setHealthStatus(false, ar.cause().getMessage());
@@ -118,25 +121,23 @@ public class RotatingStoreVerticle extends AbstractVerticle {
             final long start = System.nanoTime();
 
             vertx.executeBlocking(() -> {
-                this.refresh();
-                return null;
-            }).onComplete(asyncResult -> {
-                final long end = System.nanoTime();
-                final long elapsed = ((end - start) / 1000000);
-                this.counterStoreRefreshTimeMs.increment(elapsed);
-                if (asyncResult.failed()) {
-                    this.counterStoreRefreshFailures.increment();
-                    this.storeRefreshIsFailing.set(1);
-                    LOGGER.error("Failed to load " + this.storeName + ", " + elapsed + " ms", asyncResult.cause());
-                    if (this.refreshCallback != null) {
-                        this.refreshCallback.accept(false);
-                    }
-                } else {
-                    this.counterStoreRefreshed.increment();
-                    this.storeRefreshIsFailing.set(0);
-                    LOGGER.trace("Successfully refreshed " + this.storeName + ", " + elapsed + " ms");
-                    if (this.refreshCallback != null) {
-                        this.refreshCallback.accept(true);
+                    this.refresh();
+                    return null;
+                }).onComplete(asyncResult -> {
+                    final long end = System.nanoTime();
+                    final long elapsed = ((end - start) / 1000000);
+                    this.counterStoreRefreshTimeMs.increment(elapsed);
+                    if (asyncResult.failed()) {
+                        this.counterStoreRefreshFailures.increment();
+                        this.storeRefreshIsFailing.set(1);
+                        LOGGER.error("Failed to load " + this.storeName + ", " + elapsed + " ms", asyncResult.cause());
+                    } else {
+                        this.counterStoreRefreshed.increment();
+                        this.storeRefreshIsFailing.set(0);
+                        LOGGER.trace("Successfully refreshed " + this.storeName + ", " + elapsed + " ms");
+                        if (this.refreshCallback != null) {
+                            this.refreshCallback.run();
+                        }
                     }
                 }
             });

@@ -32,10 +32,6 @@ public class Const {
 
         public static final String UidInstanceIdPrefixProp = "uid_instance_id_prefix";
 
-        // GCP
-        public static final String GoogleCredentialsProp = "google_credentials";
-        public static final String GcpEnclaveParamsProp = "gcp_enclave_params";
-
         // Azure
         public static final String MaaServerBaseUrlProp = "maa_server_base_url";
 
@@ -91,7 +87,7 @@ public class Const {
 
         // Others
         public static final String SaltsExpiredShutdownHours = "salts_expired_shutdown_hours";
-        public static final String KeysetKeyShutdownHours = "keyset_key_shutdown_hours";
+        public static final String StoreRefreshStaleShutdownHours = "store_refresh_stale_shutdown_hours";
         public static final String encryptionSupportVersion = "encryption_support_version";
     }
 
