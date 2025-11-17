@@ -72,7 +72,7 @@ public class UidCoreClientTest {
         CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
             uidCoreClient.download("https://download");
         });
-        String expectedExceptionMessage = "Cannot download required files from UID2 core service, exception: AttestationResponseHandlerException, please visit UID2 guides for troubleshooting";
+        String expectedExceptionMessage = "E12: Data Download Failure - exception: AttestationResponseHandlerException. Please visit UID2 guides for troubleshooting";
         assertEquals(expectedExceptionMessage, result.getMessage());
     }
 
@@ -112,13 +112,11 @@ public class UidCoreClientTest {
         });
 
         assertAll(
+            () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
+                "Should contain E12 error code"),
             () -> assertTrue(result.getMessage().contains("HTTP response code 403"), 
                 "Should contain HTTP status code 403"),
-            () -> assertTrue(result.getMessage().contains("Cannot download required files from UID2 core service"), 
-                "Should have customer-friendly message"),
-            () -> assertTrue(result.getMessage().contains("core-prod.uidapi.com/sites/refresh"), 
-                "Should contain safe endpoint"),
-            () -> assertTrue(result.getMessage().contains("please visit UID2 guides for troubleshooting"), 
+            () -> assertTrue(result.getMessage().contains("Please visit UID2 guides for troubleshooting"), 
                 "Should reference documentation")
         );
     }
@@ -152,10 +150,10 @@ public class UidCoreClientTest {
         });
 
         assertAll(
+            () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
+                "Should contain E12 error code"),
             () -> assertTrue(result.getMessage().contains("HTTP response code 500"), 
-                "Should contain HTTP status code 500"),
-            () -> assertTrue(result.getMessage().contains("UID2 core service"), 
-                "Should identify source as UID2 core")
+                "Should contain HTTP status code 500")
         );
     }
 
@@ -183,11 +181,11 @@ public class UidCoreClientTest {
         });
 
         assertAll(
-            () -> assertTrue(result.getMessage().contains("Cannot download required files from UID2 core service"), 
-                "Should have customer-friendly message"),
+            () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
+                "Should contain E12 error code"),
             () -> assertTrue(result.getMessage().contains("exception: IOException"), 
                 "Should log exception type"),
-            () -> assertTrue(result.getMessage().contains("please visit UID2 guides"), 
+            () -> assertTrue(result.getMessage().contains("Please visit UID2 guides for troubleshooting"), 
                 "Should reference documentation")
         );
     }
@@ -203,10 +201,10 @@ public class UidCoreClientTest {
         });
 
         assertAll(
+            () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
+                "Should contain E12 error code"),
             () -> assertTrue(result.getMessage().contains("HTTP response code 403"), 
-                "Should contain HTTP status code"),
-            () -> assertTrue(result.getMessage().contains("Cannot download required files from UID2 core service"), 
-                "Should have customer-friendly message")
+                "Should contain HTTP status code")
         );
     }
 }
