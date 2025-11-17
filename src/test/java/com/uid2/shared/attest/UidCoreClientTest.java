@@ -134,8 +134,8 @@ public class UidCoreClientTest {
         assertAll(
             () -> assertTrue(result.getMessage().contains("HTTP response code 404"), 
                 "Should contain HTTP status code 404"),
-            () -> assertTrue(result.getMessage().contains("core-prod.uidapi.com/keys/refresh"), 
-                "Should contain endpoint")
+            () -> assertTrue(result.getMessage().contains("Cannot download required files from UID2 core service"), 
+                "Should have customer-friendly message")
         );
     }
 
