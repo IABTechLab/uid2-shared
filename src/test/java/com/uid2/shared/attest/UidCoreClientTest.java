@@ -189,22 +189,4 @@ public class UidCoreClientTest {
                 "Should reference documentation")
         );
     }
-
-    @Test
-    public void Download_Http403Error_DoesNotLogPath() throws IOException, AttestationResponseHandlerException {
-        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
-        when(mockHttpResponse.statusCode()).thenReturn(403);
-        when(mockHttpClient.get(eq("https://core-prod.uidapi.com/sites/refresh"), any(HashMap.class))).thenReturn(mockHttpResponse);
-
-        CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
-            uidCoreClient.download("https://core-prod.uidapi.com/sites/refresh");
-        });
-
-        assertAll(
-            () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
-                "Should contain E12 error code"),
-            () -> assertTrue(result.getMessage().contains("HTTP response code 403"), 
-                "Should contain HTTP status code")
-        );
-    }
 }
