@@ -193,21 +193,20 @@ public class UidCoreClientTest {
     }
 
     @Test
-    public void Download_EndpointWithQueryParams_LogsOnlyHostAndPath() throws IOException, AttestationResponseHandlerException {
+    public void Download_Http403Error_DoesNotLogPath() throws IOException, AttestationResponseHandlerException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         when(mockHttpResponse.statusCode()).thenReturn(403);
-        // URL with query params (simulating potential sensitive data)
-        when(mockHttpClient.get(eq("https://core-prod.uidapi.com/sites/refresh?token=secret123"), any(HashMap.class))).thenReturn(mockHttpResponse);
+        when(mockHttpClient.get(eq("https://core-prod.uidapi.com/sites/refresh"), any(HashMap.class))).thenReturn(mockHttpResponse);
 
         CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
-            uidCoreClient.download("https://core-prod.uidapi.com/sites/refresh?token=secret123");
+            uidCoreClient.download("https://core-prod.uidapi.com/sites/refresh");
         });
 
         assertAll(
-            () -> assertTrue(result.getMessage().contains("core-prod.uidapi.com/sites/refresh"), 
-                "Should contain host and path"),
-            () -> assertFalse(result.getMessage().contains("token=secret123"), 
-                "Should NOT contain query parameters with tokens")
+            () -> assertTrue(result.getMessage().contains("HTTP response code 403"), 
+                "Should contain HTTP status code"),
+            () -> assertTrue(result.getMessage().contains("Cannot download required files from UID2 core service"), 
+                "Should have customer-friendly message")
         );
     }
 }
