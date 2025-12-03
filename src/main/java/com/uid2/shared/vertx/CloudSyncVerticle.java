@@ -405,8 +405,8 @@ public class CloudSyncVerticle extends AbstractVerticle {
             if (ex instanceof CloudStorageException) {
                 throw (CloudStorageException) ex;
             }
-            throw new CloudStorageException("Failed to download file from cloud storage, exception: " 
-                + ex.getClass().getSimpleName() + ", please check network connectivity and service availability"); 
+            throw new CloudStorageException("E12: Data Download Failure - Failed to download file from cloud storage, exception: " 
+                + ex.getClass().getSimpleName() + ". Check network connectivity and service availability."); 
         }
     }
 

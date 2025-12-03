@@ -94,7 +94,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         } catch (Exception e) {
             throw new CloudStorageException(
                 "E12: Data Download Failure - exception: " + e.getClass().getSimpleName() + 
-                ". Please visit UID2 guides for troubleshooting", e);
+                ". For troubleshooting information, refer to the applicable Private Operator guide: see https://unifiedid.com/docs/guides/integration-options-private-operator.", e);
         }
     }
 
@@ -113,7 +113,7 @@ public class UidCoreClient implements IUidCoreClient, DownloadCloudStorage {
         httpResponse = sendHttpRequest(path, attestationToken);
         if (httpResponse.statusCode() != 200) {
             throw new CloudStorageException(String.format(
-                "E12: Data Download Failure - HTTP response code %d. Please visit UID2 guides for troubleshooting", 
+                "E12: Data Download Failure - HTTP response code %d. For troubleshooting information, refer to the applicable Private Operator guide: see https://unifiedid.com/docs/guides/integration-options-private-operator.", 
                 httpResponse.statusCode()));
         }
         return Utils.convertHttpResponseToInputStream(httpResponse);

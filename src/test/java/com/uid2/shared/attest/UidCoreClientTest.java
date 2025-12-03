@@ -72,7 +72,7 @@ public class UidCoreClientTest {
         CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
             uidCoreClient.download("https://download");
         });
-        String expectedExceptionMessage = "E12: Data Download Failure - exception: AttestationResponseHandlerException. Please visit UID2 guides for troubleshooting";
+        String expectedExceptionMessage = "E12: Data Download Failure - exception: AttestationResponseHandlerException. For troubleshooting information, refer to the applicable Private Operator guide: see https://unifiedid.com/docs/guides/integration-options-private-operator.";
         assertEquals(expectedExceptionMessage, result.getMessage());
     }
 
@@ -116,7 +116,7 @@ public class UidCoreClientTest {
                 "Should contain E12 error code"),
             () -> assertTrue(result.getMessage().contains("HTTP response code 403"), 
                 "Should contain HTTP status code 403"),
-            () -> assertTrue(result.getMessage().contains("Please visit UID2 guides for troubleshooting"), 
+            () -> assertTrue(result.getMessage().contains("For troubleshooting information, refer to the applicable Private Operator guide"), 
                 "Should reference documentation")
         );
     }
@@ -185,7 +185,7 @@ public class UidCoreClientTest {
                 "Should contain E12 error code"),
             () -> assertTrue(result.getMessage().contains("exception: IOException"), 
                 "Should log exception type"),
-            () -> assertTrue(result.getMessage().contains("Please visit UID2 guides for troubleshooting"), 
+            () -> assertTrue(result.getMessage().contains("For troubleshooting information, refer to the applicable Private Operator guide"), 
                 "Should reference documentation")
         );
     }

@@ -49,7 +49,7 @@ public abstract class URLStorageWithMetadata implements ICloudStorage {
                 return httpConn.getInputStream();
             } else {
                 throw new CloudStorageException("E12: Data Download Failure - HTTP response code " + responseCode 
-                + ". Please visit UID2 guides for troubleshooting");
+                + ". For troubleshooting information, refer to the applicable Private Operator guide: see https://unifiedid.com/docs/guides/integration-options-private-operator.");
             }
         }
         catch (CloudStorageException e) {
@@ -59,7 +59,7 @@ public abstract class URLStorageWithMetadata implements ICloudStorage {
         catch (Throwable t) {
             // Do not log the original exception as it may contain sensitive information such as the pre-signed URL
             throw new CloudStorageException("E12: Data Download Failure - exception: " + t.getClass().getSimpleName() +
-                ". Please visit UID2 guides for troubleshooting");
+                ". For troubleshooting information, refer to the applicable Private Operator guide: see https://unifiedid.com/docs/guides/integration-options-private-operator.");
         }
     }
 
