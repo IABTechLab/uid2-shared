@@ -113,11 +113,11 @@ public class UidCoreClientTest {
 
         assertAll(
             () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
-                "Should contain E12 error code"),
+                "Expected E12 error code in message"),
             () -> assertTrue(result.getMessage().contains("HTTP response code 403"), 
-                "Should contain HTTP status code 403"),
+                "Expected HTTP status code 403 in message"),
             () -> assertTrue(result.getMessage().contains("For troubleshooting information, refer to the applicable Private Operator guide"), 
-                "Should reference documentation")
+                "Expected documentation reference in message")
         );
     }
 
@@ -133,9 +133,9 @@ public class UidCoreClientTest {
 
         assertAll(
             () -> assertTrue(result.getMessage().contains("HTTP response code 404"), 
-                "Should contain HTTP status code 404"),
+                "Expected HTTP status code 404 in message"),
             () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
-                "Should contain E12 error code")
+                "Expected E12 error code in message")
         );
     }
 
@@ -151,9 +151,9 @@ public class UidCoreClientTest {
 
         assertAll(
             () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
-                "Should contain E12 error code"),
+                "Expected E12 error code in message"),
             () -> assertTrue(result.getMessage().contains("HTTP response code 500"), 
-                "Should contain HTTP status code 500")
+                "Expected HTTP status code 500 in message")
         );
     }
 
@@ -168,7 +168,7 @@ public class UidCoreClientTest {
         });
 
         assertTrue(result.getMessage().contains("HTTP response code 503"), 
-            "Should contain HTTP status code 503");
+            "Expected HTTP status code 503 in message");
     }
 
     @Test
@@ -182,11 +182,11 @@ public class UidCoreClientTest {
 
         assertAll(
             () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
-                "Should contain E12 error code"),
+                "Expected E12 error code in message"),
             () -> assertTrue(result.getMessage().contains("exception: IOException"), 
-                "Should log exception type"),
+                "Expected exception type in message"),
             () -> assertTrue(result.getMessage().contains("For troubleshooting information, refer to the applicable Private Operator guide"), 
-                "Should reference documentation")
+                "Expected documentation reference in message")
         );
     }
 }
