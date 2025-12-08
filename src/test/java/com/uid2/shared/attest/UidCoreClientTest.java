@@ -72,7 +72,7 @@ public class UidCoreClientTest {
         CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
             uidCoreClient.download("https://download");
         });
-        String expectedExceptionMessage = "download error: AttestationResponseCode: AttestationFailure, test failure";
+        String expectedExceptionMessage = "E12: Data Download Failure - exception: AttestationResponseHandlerException. For troubleshooting information, refer to the applicable Private Operator guide: see https://unifiedid.com/docs/guides/integration-options-private-operator.";
         assertEquals(expectedExceptionMessage, result.getMessage());
     }
 
@@ -99,5 +99,94 @@ public class UidCoreClientTest {
         when(mockAttestationResponseHandler.getOptOutJWT()).thenReturn("optOutJWT");
         when(mockAttestationResponseHandler.getCoreJWT()).thenReturn("coreJWT");
         Assertions.assertEquals("coreJWT", this.uidCoreClient.getJWT());
+    }
+
+    @Test
+    public void Download_Http403Error_LogsStatusCodeAndEndpoint() throws IOException, AttestationResponseHandlerException {
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        when(mockHttpResponse.statusCode()).thenReturn(403);
+        when(mockHttpClient.get(eq("https://core-prod.uidapi.com/sites/refresh"), any(HashMap.class))).thenReturn(mockHttpResponse);
+
+        CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
+            uidCoreClient.download("https://core-prod.uidapi.com/sites/refresh");
+        });
+
+        assertAll(
+            () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
+                "Expected E12 error code in message"),
+            () -> assertTrue(result.getMessage().contains("HTTP response code 403"), 
+                "Expected HTTP status code 403 in message"),
+            () -> assertTrue(result.getMessage().contains("For troubleshooting information, refer to the applicable Private Operator guide"), 
+                "Expected documentation reference in message")
+        );
+    }
+
+    @Test
+    public void Download_Http404Error_LogsStatusCode() throws IOException, AttestationResponseHandlerException {
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        when(mockHttpResponse.statusCode()).thenReturn(404);
+        when(mockHttpClient.get(eq("https://core-prod.uidapi.com/keys/refresh"), any(HashMap.class))).thenReturn(mockHttpResponse);
+
+        CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
+            uidCoreClient.download("https://core-prod.uidapi.com/keys/refresh");
+        });
+
+        assertAll(
+            () -> assertTrue(result.getMessage().contains("HTTP response code 404"), 
+                "Expected HTTP status code 404 in message"),
+            () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
+                "Expected E12 error code in message")
+        );
+    }
+
+    @Test
+    public void Download_Http500Error_LogsStatusCode() throws IOException, AttestationResponseHandlerException {
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        when(mockHttpResponse.statusCode()).thenReturn(500);
+        when(mockHttpClient.get(eq("https://core-prod.uidapi.com/salts/refresh"), any(HashMap.class))).thenReturn(mockHttpResponse);
+
+        CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
+            uidCoreClient.download("https://core-prod.uidapi.com/salts/refresh");
+        });
+
+        assertAll(
+            () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
+                "Expected E12 error code in message"),
+            () -> assertTrue(result.getMessage().contains("HTTP response code 500"), 
+                "Expected HTTP status code 500 in message")
+        );
+    }
+
+    @Test
+    public void Download_Http503Error_LogsStatusCode() throws IOException, AttestationResponseHandlerException {
+        HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
+        when(mockHttpResponse.statusCode()).thenReturn(503);
+        when(mockHttpClient.get(eq("https://core-integ.uidapi.com/clients/refresh"), any(HashMap.class))).thenReturn(mockHttpResponse);
+
+        CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
+            uidCoreClient.download("https://core-integ.uidapi.com/clients/refresh");
+        });
+
+        assertTrue(result.getMessage().contains("HTTP response code 503"), 
+            "Expected HTTP status code 503 in message");
+    }
+
+    @Test
+    public void Download_NetworkError_LogsExceptionType() throws IOException, AttestationResponseHandlerException {
+        IOException networkException = new IOException("Connection timeout");
+        when(mockHttpClient.get(anyString(), any(HashMap.class))).thenThrow(networkException);
+
+        CloudStorageException result = assertThrows(CloudStorageException.class, () -> {
+            uidCoreClient.download("https://core-prod.uidapi.com/sites/refresh");
+        });
+
+        assertAll(
+            () -> assertTrue(result.getMessage().contains("E12: Data Download Failure"), 
+                "Expected E12 error code in message"),
+            () -> assertTrue(result.getMessage().contains("exception: IOException"), 
+                "Expected exception type in message"),
+            () -> assertTrue(result.getMessage().contains("For troubleshooting information, refer to the applicable Private Operator guide"), 
+                "Expected documentation reference in message")
+        );
     }
 }
