@@ -414,8 +414,13 @@ public class CloudSyncVerticle extends AbstractVerticle {
             
             downloadFailureTimer.record(java.time.Duration.ofMillis(cloudDownloadTimeMs));            
             // Be careful as the s3Path may contain the pre-signed S3 token, so do not log the whole path
-            LOGGER.error("download error: " + ex.getClass().getSimpleName());
-            throw new CloudStorageException("Download failed"); 
+            LOGGER.error("Cloud storage download error, exception type: " + ex.getClass().getSimpleName());
+            
+            if (ex instanceof CloudStorageException) {
+                throw (CloudStorageException) ex;
+            }
+            throw new CloudStorageException("E12: Data Download Failure - Failed to download file from cloud storage, exception: " 
+                + ex.getClass().getSimpleName() + ". Check network connectivity and service availability."); 
         }
     }
 
