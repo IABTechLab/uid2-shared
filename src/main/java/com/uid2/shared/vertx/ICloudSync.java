@@ -15,4 +15,13 @@ public interface ICloudSync {
     boolean refresh(Instant now, ICloudStorage fsCloud, ICloudStorage fsLocal,
                     Consumer<Set<String>> handleDownloads, Consumer<Set<String>> handleDeletes)
         throws CloudStorageException;
+
+    /**
+     * Returns true if this CloudSync instance only supports upload operations.
+     * When true, download/refresh operations will be skipped.
+     * Default is false for backward compatibility.
+     */
+    default boolean isUploadOnly() {
+        return false;
+    }
 }
