@@ -27,6 +27,7 @@ public class OptOutCloudSync implements ICloudSync {
     private static final Logger LOGGER = LoggerFactory.getLogger(OptOutCloudSync.class);
 
     private final boolean fullSync;
+    private final boolean uploadOnly;
     private final String cloudFolder;
     private final String deltaConsumerDir;
     private final String partitionConsumerDir;
@@ -48,7 +49,12 @@ public class OptOutCloudSync implements ICloudSync {
     private AtomicReference<List<Consumer<Collection<String>>>> handlersNewCloudPaths = new AtomicReference<>(new ArrayList<>());
 
     public OptOutCloudSync(JsonObject jsonConfig, boolean fullSync) {
+        this(jsonConfig, fullSync, false);
+    }
+
+    public OptOutCloudSync(JsonObject jsonConfig, boolean fullSync, boolean uploadOnly) {
         this.fullSync = fullSync;
+        this.uploadOnly = uploadOnly;
         this.cloudFolder = CloudUtils.normalizDirPath(jsonConfig.getString(Const.Config.OptOutS3FolderProp));
         this.deltaConsumerDir = OptOutUtils.getDeltaConsumerDir(jsonConfig);
         this.partitionConsumerDir = OptOutUtils.getPartitionConsumerDir(jsonConfig);
@@ -82,6 +88,19 @@ public class OptOutCloudSync implements ICloudSync {
             this.cloudSyntheticFolder = null;
         }
         this.mkdirsBlocking();
+    }
+
+    /**
+     * Creates an upload-only OptOutCloudSync instance.
+     * This skips all download/refresh operations.
+     */
+    public static OptOutCloudSync createUploadOnly(JsonObject jsonConfig, boolean fullSync) {
+        return new OptOutCloudSync(jsonConfig, fullSync, true);
+    }
+
+    @Override
+    public boolean isUploadOnly() {
+        return this.uploadOnly;
     }
 
     @Override
@@ -121,6 +140,11 @@ public class OptOutCloudSync implements ICloudSync {
 
     @Override
     public boolean refresh(Instant now, ICloudStorage fsCloud, ICloudStorage fsLocal, Consumer<Set<String>> handleDownloads, Consumer<Set<String>> handleDeletes) throws CloudStorageException {
+        // In upload-only mode, skip all download/sync operations
+        if (uploadOnly) {
+            return true;
+        }
+
         // list local cached paths
         List<String> cachedPathList = new ArrayList<>();
         localListFiles(fsLocal, this.deltaConsumerDir, OptOutUtils.prefixDeltaFile, cachedPathList);

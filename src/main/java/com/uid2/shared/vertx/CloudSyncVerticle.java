@@ -167,19 +167,29 @@ public class CloudSyncVerticle extends AbstractVerticle {
         this.uploadExecutor = vertx.createSharedWorkerExecutor("cloudsync-" + name + "-upload-pool",
             this.uploadThreads);
 
-        // handle refresh event
-        vertx.eventBus().consumer(
-            eventRefresh,
-            o -> this.handleRefresh(o));
+        // handle refresh event (skip if upload-only)
+        if (!cloudSync.isUploadOnly()) {
+            vertx.eventBus().consumer(
+                eventRefresh,
+                o -> this.handleRefresh(o));
+        } else {
+            LOGGER.info("CloudSyncVerticle." + name + " is upload-only, skipping refresh event handler registration");
+        }
 
         // upload to cloud
         vertx.eventBus().<String>consumer(
             this.eventUpload,
             msg -> this.handleUpload(msg));
 
-        cloudRefresh()
-            .onFailure(t -> LOGGER.error("cloudRefresh failed: " + t.getMessage(), new Exception(t)))
-            .onComplete(ar -> promise.handle(ar));
+        // Initial refresh (skip if upload-only)
+        if (!cloudSync.isUploadOnly()) {
+            cloudRefresh()
+                .onFailure(t -> LOGGER.error("cloudRefresh failed: " + t.getMessage(), new Exception(t)))
+                .onComplete(ar -> promise.handle(ar));
+        } else {
+            LOGGER.info("CloudSyncVerticle." + name + " is upload-only, skipping initial refresh");
+            promise.complete();
+        }
 
         promise.future()
             .onSuccess(v -> {
@@ -214,6 +224,10 @@ public class CloudSyncVerticle extends AbstractVerticle {
     }
 
     private void handleRefresh(Message m) {
+        if (cloudSync.isUploadOnly()) {
+            LOGGER.warn("handleRefresh called but this is upload-only mode");
+            return;
+        }
         cloudRefresh()
             .onSuccess(t -> this.storeRefreshIsFailing.set(0))
             .onFailure(t -> {
