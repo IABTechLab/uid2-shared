@@ -181,7 +181,7 @@ public class CloudSyncVerticle extends AbstractVerticle {
             this.eventUpload,
             msg -> this.handleUpload(msg));
 
-        // Initial refresh (skip if upload-only)
+        // initial refresh (skip if upload-only)
         if (!cloudSync.isUploadOnly()) {
             cloudRefresh()
                 .onFailure(t -> LOGGER.error("cloudRefresh failed: " + t.getMessage(), new Exception(t)))
