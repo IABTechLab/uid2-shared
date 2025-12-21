@@ -30,8 +30,6 @@ public class PolicyValidator implements IPolicyValidator {
     public static final String ENV_DEBUG_MODE = "DEBUG_MODE";
     public static final String ENV_SKIP_VALIDATIONS = "SKIP_VALIDATIONS";
 
-    public static final String EU_REGION_PREFIX = "europe";
-
     private static final List<String> REQUIRED_ENV_OVERRIDES = ImmutableList.of(
             ENV_ENVIRONMENT,
             ENV_OPERATOR_API_KEY_SECRET_NAME
@@ -88,13 +86,13 @@ public class PolicyValidator implements IPolicyValidator {
         return payload.getWorkloadImageDigest();
     }
 
-    // We don't support to launch UID2 instance in EU.
-    // Currently, there's no GCP serving options in China mainland, so we will skip the check for CN.
+    // Verify that region is specified.
+    // Currently, there's no GCP serving options in China mainland, so we skip the check for CN.
     // More details about zone in https://cloud.google.com/compute/docs/regions-zones.
     private static String checkRegion(TokenPayload payload) throws AttestationException{
         var region = payload.getGceZone();
-        if(Strings.isNullOrEmpty(region) || region.startsWith(EU_REGION_PREFIX)){
-            throw new AttestationClientException("Region is not supported. Value: " + region, AttestationFailure.BAD_FORMAT);
+        if(Strings.isNullOrEmpty(region)){
+            throw new AttestationClientException("Region is not specified.", AttestationFailure.BAD_FORMAT);
         }
         return region;
     }

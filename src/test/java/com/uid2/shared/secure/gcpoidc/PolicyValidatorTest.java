@@ -87,13 +87,12 @@ public class PolicyValidatorTest {
     }
 
     @Test
-    public void testValidationFailure_EURegion() {
+    public void testValidationSuccess_EURegion() {
         var validator = new PolicyValidator(ATTESTATION_URL);
         var payload = generateBasicPayload().toBuilder()
                 .gceZone("europe-north1-a")
                 .build();
-        var e = assertThrows(AttestationException.class, () -> validator.validate(payload));
-        assertEquals(AttestationFailure.BAD_FORMAT, ((AttestationClientException) e).getAttestationFailure());
+        assertDoesNotThrow(() -> validator.validate(payload));
     }
 
     @Test
