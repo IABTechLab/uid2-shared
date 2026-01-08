@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public class MaskingPatternLayout extends PatternLayout {
-    private static final Map<Pattern, String> MASKING_PATTERNS = Map.of(
-            Pattern.compile("\\S+s3\\.amazonaws\\.com/\\S*X-Amz-Security-Token=\\S+"), "REDACTED - S3"
-    );
+    private static final Pattern maskPattern = Pattern.compile("\\S+s3\\.amazonaws\\.com/\\S*X-Amz-Security-Token=\\S+");
+    private static final String maskBroadCheckSubstring = "X-Amz-Security-Token=";
+    private static final String maskedRedaction = "REDACTED - S3";
 
     @Override
     public String doLayout(ILoggingEvent event) {
@@ -22,11 +22,10 @@ public class MaskingPatternLayout extends PatternLayout {
         }
 
         String maskedMessage = message;
-        for (Map.Entry<Pattern, String> entry : MASKING_PATTERNS.entrySet()) {
-            Pattern pattern = entry.getKey();
-            String mask = entry.getValue();
-            maskedMessage = pattern.matcher(maskedMessage).replaceAll(mask);
+        if (maskedMessage.contains(maskBroadCheckSubstring)) {
+            maskedMessage = maskPattern.matcher(maskedMessage).replaceAll(maskedRedaction);
         }
+
         return maskedMessage;
     }
 }
