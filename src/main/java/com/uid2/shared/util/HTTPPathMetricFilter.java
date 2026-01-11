@@ -7,7 +7,7 @@ public class HTTPPathMetricFilter {
     public static String filterPath(String actualPath, Set<String> pathSet) {
         try {
             String normalized = HttpUtils.normalizePath(actualPath);
-            /* Optimization 1: Split that avoids array and regex initialization */
+
             int splitIndex = normalized.indexOf('?');
             if (splitIndex != -1) {
                 normalized = normalized.substring(0, splitIndex);
@@ -35,7 +35,7 @@ public class HTTPPathMetricFilter {
     public static String filterPathWithoutPathParameters(String actualPath, Set<String> pathSet) {
         try {
             String normalized = HttpUtils.normalizePath(actualPath);
-            /* Optimization 1: Split that avoids array and regex initialization */
+     
             int splitIndex = normalized.indexOf('?');
             if (splitIndex != -1) {
                 normalized = normalized.substring(0, splitIndex);
@@ -48,7 +48,6 @@ public class HTTPPathMetricFilter {
 
             if (pathSet == null || pathSet.isEmpty()) { return normalized; }
 
-            /* Optimization 2: Remove for loop and regex matching */
             if (pathSet.contains(normalized)) { return normalized; }
 
             return "/unknown";
