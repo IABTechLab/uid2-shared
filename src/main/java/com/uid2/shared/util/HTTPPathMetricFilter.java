@@ -1,22 +1,12 @@
 package com.uid2.shared.util;
 
-import io.vertx.core.http.impl.HttpUtils;
+import com.uid2.shared.Utils;
 import java.util.Set;
 
 public class HTTPPathMetricFilter {
     public static String filterPath(String actualPath, Set<String> pathSet) {
         try {
-            String normalized = HttpUtils.normalizePath(actualPath);
-
-            int splitIndex = normalized.indexOf('?');
-            if (splitIndex != -1) {
-                normalized = normalized.substring(0, splitIndex);
-            }
-            
-            if (normalized.charAt(normalized.length() - 1) == '/') {
-                normalized = normalized.substring(0, normalized.length() - 1);
-            }
-            normalized = normalized.toLowerCase();
+            String normalized = Utils.getNormalizedHttpPath(actualPath);
 
             if (pathSet == null || pathSet.isEmpty()) { return normalized; }
 
@@ -34,17 +24,7 @@ public class HTTPPathMetricFilter {
 
     public static String filterPathWithoutPathParameters(String actualPath, Set<String> pathSet) {
         try {
-            String normalized = HttpUtils.normalizePath(actualPath);
-     
-            int splitIndex = normalized.indexOf('?');
-            if (splitIndex != -1) {
-                normalized = normalized.substring(0, splitIndex);
-            }
-
-            if (normalized.charAt(normalized.length() - 1) == '/') {
-                normalized = normalized.substring(0, normalized.length() - 1);
-            }
-            normalized = normalized.toLowerCase();
+            String normalized = Utils.getNormalizedHttpPath(actualPath);
 
             if (pathSet == null || pathSet.isEmpty()) { return normalized; }
 
