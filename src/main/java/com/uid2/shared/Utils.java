@@ -2,6 +2,7 @@ package com.uid2.shared;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.uid2.shared.util.Mapper;
+import io.vertx.core.http.impl.HttpUtils;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -189,5 +190,21 @@ public class Utils {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String getNormalizedHttpPath(String path) {
+        String normalized = HttpUtils.normalizePath(path);
+
+        int splitIndex = normalized.indexOf('?');
+        if (splitIndex != -1) {
+            normalized = normalized.substring(0, splitIndex);
+        }
+
+        if (normalized.charAt(normalized.length() - 1) == '/') {
+            normalized = normalized.substring(0, normalized.length() - 1);
+        }
+        normalized = normalized.toLowerCase();
+
+        return normalized;
     }
 }
