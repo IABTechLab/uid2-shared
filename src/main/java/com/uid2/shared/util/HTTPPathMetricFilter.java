@@ -1,16 +1,12 @@
 package com.uid2.shared.util;
 
-import io.vertx.core.http.impl.HttpUtils;
+import com.uid2.shared.Utils;
 import java.util.Set;
 
 public class HTTPPathMetricFilter {
     public static String filterPath(String actualPath, Set<String> pathSet) {
         try {
-            String normalized = HttpUtils.normalizePath(actualPath).split("\\?")[0];
-            if (normalized.charAt(normalized.length() - 1) == '/') {
-                normalized = normalized.substring(0, normalized.length() - 1);
-            }
-            normalized = normalized.toLowerCase();
+            String normalized = Utils.getNormalizedHttpPath(actualPath);
 
             if (pathSet == null || pathSet.isEmpty()) { return normalized; }
 
@@ -20,6 +16,20 @@ public class HTTPPathMetricFilter {
                     return path;
                 }
             }
+            return "/unknown";
+        } catch (IllegalArgumentException e) {
+            return "/parsing_error";
+        }
+    }
+
+    public static String filterPathWithoutPathParameters(String actualPath, Set<String> pathSet) {
+        try {
+            String normalized = Utils.getNormalizedHttpPath(actualPath);
+
+            if (pathSet == null || pathSet.isEmpty()) { return normalized; }
+
+            if (pathSet.contains(normalized)) { return normalized; }
+
             return "/unknown";
         } catch (IllegalArgumentException e) {
             return "/parsing_error";
