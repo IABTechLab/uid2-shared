@@ -9,5 +9,4 @@ public interface IClientKeyProvider extends IAuthorizableProvider {
     ClientKey getClientKey(String key);
     ClientKey getClientKeyFromHash(String hash);
     Collection<ClientKey> getAll();
-    ClientKey getOldestClientKey(int siteId);
 }
