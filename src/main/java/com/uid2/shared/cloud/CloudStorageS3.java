@@ -79,9 +79,23 @@ public class CloudStorageS3 implements TaggableCloudStorage {
         // After a lot of experimentation and help of Abu Abraham and Isaac Wilson the only working solution we've
         // found was to explicitly extract env vars populated by the service account from the role and to
         // manually set it on the credentials provider.
+        String roleArn = System.getenv("AWS_ROLE_ARN");
+        String webIdentityTokenFile = System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE");
+        LOGGER.info("AWS web identity env vars: AWS_ROLE_ARN set={}, AWS_WEB_IDENTITY_TOKEN_FILE set={}",
+                roleArn != null && !roleArn.isBlank(),
+                webIdentityTokenFile != null && !webIdentityTokenFile.isBlank());
+        if (webIdentityTokenFile != null && !webIdentityTokenFile.isBlank()) {
+            var tokenPath = Paths.get(webIdentityTokenFile);
+            LOGGER.info("AWS web identity token path exists={}, readable={}",
+                    tokenPath.toFile().exists(),
+                    tokenPath.toFile().canRead());
+        }
+        if (roleArn == null || roleArn.isBlank() || webIdentityTokenFile == null || webIdentityTokenFile.isBlank()) {
+            LOGGER.error("Missing AWS web identity env vars");
+        }
         WebIdentityTokenFileCredentialsProvider credentialsProvider = WebIdentityTokenFileCredentialsProvider.builder()
-                .roleArn(System.getenv("AWS_ROLE_ARN"))
-                .webIdentityTokenFile(Paths.get(System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE")))
+                .roleArn(roleArn)
+                .webIdentityTokenFile(Paths.get(webIdentityTokenFile))
                 .build();
 
         if (s3Endpoint.isEmpty()) {
