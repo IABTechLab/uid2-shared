@@ -38,32 +38,39 @@ public class CloudStorageS3 implements TaggableCloudStorage {
         AwsBasicCredentials creds = AwsBasicCredentials.create(accessKeyId, secretAccessKey);
         StaticCredentialsProvider credentialsProvider = StaticCredentialsProvider.create(creds);
         
-        if (s3Endpoint.isEmpty()) {
-            this.s3 = S3Client.builder()
-                    .region(Region.of(region))
-                    .credentialsProvider(credentialsProvider)
+        try {
+            LOGGER.info("Initializing S3 client for bucket {}", bucket);
+            if (s3Endpoint.isEmpty()) {
+                this.s3 = S3Client.builder()
+                        .region(Region.of(region))
+                        .credentialsProvider(credentialsProvider)
+                        .build();
+                this.s3Presigner = S3Presigner.builder()
+                        .region(Region.of(region))
+                        .credentialsProvider(credentialsProvider)
+                        .build();
+            } else {
+                S3Configuration s3Cfg = S3Configuration.builder()
+                    .pathStyleAccessEnabled(true)
+                    .checksumValidationEnabled(false)
                     .build();
-            this.s3Presigner = S3Presigner.builder()
-                    .region(Region.of(region))
-                    .credentialsProvider(credentialsProvider)
-                    .build();
-        } else {
-            S3Configuration s3Cfg = S3Configuration.builder()
-                .pathStyleAccessEnabled(true)
-                .checksumValidationEnabled(false)
-                .build();
-            this.s3 = S3Client.builder()
-                    .region(Region.of(region))
-                    .credentialsProvider(credentialsProvider)
-                    .endpointOverride(URI.create(s3Endpoint))
-                    .serviceConfiguration(s3Cfg)
-                    .build();
-            this.s3Presigner = S3Presigner.builder()
-                    .region(Region.of(region))
-                    .credentialsProvider(credentialsProvider)
-                    .endpointOverride(URI.create(s3Endpoint))
-                    .serviceConfiguration(s3Cfg)
-                    .build();
+                this.s3 = S3Client.builder()
+                        .region(Region.of(region))
+                        .credentialsProvider(credentialsProvider)
+                        .endpointOverride(URI.create(s3Endpoint))
+                        .serviceConfiguration(s3Cfg)
+                        .build();
+                this.s3Presigner = S3Presigner.builder()
+                        .region(Region.of(region))
+                        .credentialsProvider(credentialsProvider)
+                        .endpointOverride(URI.create(s3Endpoint))
+                        .serviceConfiguration(s3Cfg)
+                        .build();
+            }
+            LOGGER.info("Initialized S3 client for bucket {}", bucket);
+        } catch (RuntimeException e) {
+            LOGGER.error("Failed to initialize S3 client for bucket {}", bucket, e);
+            throw e;
         }
         this.bucket = bucket;
         this.verbose = verbose;
@@ -98,32 +105,39 @@ public class CloudStorageS3 implements TaggableCloudStorage {
                 .webIdentityTokenFile(Paths.get(webIdentityTokenFile))
                 .build();
 
-        if (s3Endpoint.isEmpty()) {
-            this.s3 = S3Client.builder()
-                    .credentialsProvider(credentialsProvider)
-                    .region(Region.of(region))
+        try {
+            LOGGER.info("Initializing S3 client for bucket {}", bucket);
+            if (s3Endpoint.isEmpty()) {
+                this.s3 = S3Client.builder()
+                        .credentialsProvider(credentialsProvider)
+                        .region(Region.of(region))
+                        .build();
+                this.s3Presigner = S3Presigner.builder()
+                        .credentialsProvider(credentialsProvider)
+                        .region(Region.of(region))
+                        .build();
+            } else {
+                S3Configuration s3Cfg = S3Configuration.builder()
+                    .pathStyleAccessEnabled(true)
+                    .checksumValidationEnabled(false)
                     .build();
-            this.s3Presigner = S3Presigner.builder()
-                    .credentialsProvider(credentialsProvider)
-                    .region(Region.of(region))
-                    .build();
-        } else {
-            S3Configuration s3Cfg = S3Configuration.builder()
-                .pathStyleAccessEnabled(true)
-                .checksumValidationEnabled(false)
-                .build();
-            this.s3 = S3Client.builder()
-                    .credentialsProvider(credentialsProvider)
-                    .region(Region.of(region))
-                    .endpointOverride(URI.create(s3Endpoint))
-                    .serviceConfiguration(s3Cfg)
-                    .build();
-            this.s3Presigner = S3Presigner.builder()
-                    .credentialsProvider(credentialsProvider)
-                    .region(Region.of(region))
-                    .endpointOverride(URI.create(s3Endpoint))
-                    .serviceConfiguration(s3Cfg)
-                    .build();
+                this.s3 = S3Client.builder()
+                        .credentialsProvider(credentialsProvider)
+                        .region(Region.of(region))
+                        .endpointOverride(URI.create(s3Endpoint))
+                        .serviceConfiguration(s3Cfg)
+                        .build();
+                this.s3Presigner = S3Presigner.builder()
+                        .credentialsProvider(credentialsProvider)
+                        .region(Region.of(region))
+                        .endpointOverride(URI.create(s3Endpoint))
+                        .serviceConfiguration(s3Cfg)
+                        .build();
+            }
+            LOGGER.info("Initialized S3 client for bucket {}", bucket);
+        } catch (RuntimeException e) {
+            LOGGER.error("Failed to initialize S3 client for bucket {}", bucket, e);
+            throw e;
         }
         this.bucket = bucket;
         this.verbose = false;
