@@ -62,12 +62,14 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         }
 
         long timestamp = System.currentTimeMillis();
-        String remoteClient = null;
-        try {
-            SocketAddress remoteAddress = context.request().remoteAddress();
-            remoteClient = getClientAddress(remoteAddress);
-        } catch (NullPointerException ex) {
-            LOGGER.warn("remoteAddress() throws NullPointerException");
+        String remoteClient = getClientAddressFromHeaders(context.request());
+        if (remoteClient == null) {
+            try {
+                SocketAddress remoteAddress = context.request().remoteAddress();
+                remoteClient = remoteAddress != null ? remoteAddress.host() : null;
+            } catch (NullPointerException ex) {
+                LOGGER.warn("remoteAddress() throws NullPointerException");
+            }
         }
 
         HttpMethod method = context.request().method();
@@ -78,11 +80,33 @@ public class RequestCapturingHandler implements Handler<RoutingContext> {
         context.next();
     }
 
-    private String getClientAddress(SocketAddress inetSocketAddress) {
-        if (inetSocketAddress == null) {
+    private static String getClientAddressFromHeaders(HttpServerRequest request) {
+        if (request == null || request.headers() == null) {
             return null;
         }
-        return inetSocketAddress.host();
+        MultiMap headers = request.headers();
+        String value = headers.get("X-Forwarded-For");
+        if (value != null && !value.isEmpty()) {
+            // Leftmost is the original client (RFC 7239)
+            int comma = value.indexOf(',');
+            String client = comma >= 0 ? value.substring(0, comma).trim() : value.trim();
+            if (!client.isEmpty()) {
+                return client;
+            }
+        }
+        value = headers.get("X-Real-IP");
+        if (value != null && !value.trim().isEmpty()) {
+            return value.trim();
+        }
+        value = headers.get("True-Client-IP");
+        if (value != null && !value.trim().isEmpty()) {
+            return value.trim();
+        }
+        value = headers.get("CF-Connecting-IP");
+        if (value != null && !value.trim().isEmpty()) {
+            return value.trim();
+        }
+        return null;
     }
 
     private void captureNoThrow(RoutingContext context, long timestamp, String remoteClient, HttpVersion version, HttpMethod method, String uri) {
