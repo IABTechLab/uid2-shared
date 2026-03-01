@@ -16,6 +16,7 @@ public interface ISaltProvider {
 
         String getFirstLevelSalt();
         Instant getExpires();
+        Instant getEffective();
 
         List<SaltEntry> getModifiedSince(Instant timestamp);
 
