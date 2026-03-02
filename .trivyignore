@@ -1,5 +1,7 @@
 # List any vulnerability that are to be accepted
-# See https://aquasecurity.github.io/trivy/v0.35/docs/vulnerability/examples/filter/ 
+# See https://aquasecurity.github.io/trivy/v0.35/docs/vulnerability/examples/filter/
 # for more details
 
-
+# jackson-core async parser DoS - not exploitable, services only use synchronous ObjectMapper API
+# See: UID2-6670
+GHSA-72hv-8253-57qq exp:2026-09-01
