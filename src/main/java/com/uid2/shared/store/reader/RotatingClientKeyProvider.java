@@ -44,10 +44,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReader<Collection<ClientKey>> {
     private final ScopedStoreReader<Collection<ClientKey>> reader;
     private final AuthorizableStore<ClientKey> authorizableStore;
-    private final ConcurrentHashMap<Integer, VersionedValue> oldestClientKeyBySiteIdCache = new ConcurrentHashMap<>();
-    private volatile long snapshotVersion = 0;
-
-    private record VersionedValue(long version, Optional<ClientKey> value) {}
 
     public RotatingClientKeyProvider(DownloadCloudStorage fileStreamProvider, StoreScope scope) {
         this.reader = new ScopedStoreReader<>(fileStreamProvider, scope, new ClientParser(), "auth keys");
@@ -73,10 +69,6 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
     public long loadContent(JsonObject metadata) throws Exception {        
         long version = reader.loadContent(metadata, "client_keys");
         authorizableStore.refresh(getAll());
-        
-        // Versioning to prevent race conditions when reading the oldest client key
-        oldestClientKeyBySiteIdCache.clear();
-        snapshotVersion = getVersion(metadata);
         return version;
     }
 
@@ -108,22 +100,5 @@ public class RotatingClientKeyProvider implements IClientKeyProvider, StoreReade
     @Override
     public IAuthorizable get(String key) {
         return getClientKey(key);
-    }
-
-    @Override
-    public ClientKey getOldestClientKey(int siteId) {
-        long currentVersion = snapshotVersion;
-        VersionedValue cached = oldestClientKeyBySiteIdCache.get(siteId);
-
-        if (cached != null && cached.version() == currentVersion) {
-            return cached.value().orElse(null);
-        }
-
-        Optional<ClientKey> computed = this.reader.getSnapshot().stream()
-                .filter(k -> k.getSiteId() == siteId)
-                .min(Comparator.comparingLong(ClientKey::getCreated));
-
-        oldestClientKeyBySiteIdCache.put(siteId, new VersionedValue(currentVersion, computed));
-        return computed.orElse(null);
     }
 }
