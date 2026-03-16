@@ -29,6 +29,8 @@ public class PolicyValidator implements IPolicyValidator {
     public static final String ENV_OPT_OUT_ENDPOINT = "OPTOUT_BASE_URL";
     public static final String ENV_DEBUG_MODE = "DEBUG_MODE";
     public static final String ENV_SKIP_VALIDATIONS = "SKIP_VALIDATIONS";
+    public static final String ENV_SERVICE_INSTANCES = "service_instances";
+    public static final String ENV_DEFAULT_WORKER_POOL_THREAD_COUNT = "default_worker_pool_thread_count";
 
     private static final List<String> REQUIRED_ENV_OVERRIDES = ImmutableList.of(
             ENV_ENVIRONMENT,
@@ -38,13 +40,17 @@ public class PolicyValidator implements IPolicyValidator {
     private static final Map<Environment, List<String>> OPTIONAL_ENV_OVERRIDES_MAP = ImmutableMap.of(
             Environment.Production, ImmutableList.of(
                     ENV_CORE_ENDPOINT,
-                    ENV_OPT_OUT_ENDPOINT
+                    ENV_OPT_OUT_ENDPOINT,
+                    ENV_SERVICE_INSTANCES,
+                    ENV_DEFAULT_WORKER_POOL_THREAD_COUNT
             ),
             Environment.Integration, ImmutableList.of(
                     ENV_CORE_ENDPOINT,
                     ENV_OPT_OUT_ENDPOINT,
                     ENV_DEBUG_MODE,
-                    ENV_SKIP_VALIDATIONS
+                    ENV_SKIP_VALIDATIONS,
+                    ENV_SERVICE_INSTANCES,
+                    ENV_DEFAULT_WORKER_POOL_THREAD_COUNT
             )
     );
     private final String attestationUrl;
