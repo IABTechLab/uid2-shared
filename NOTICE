@@ -1,0 +1,14 @@
+uid2-shared
+Copyright 2023 The Trade Desk, Inc. / IABTechLab
+
+This product includes software developed at or by the following third parties:
+
+--------------------------------------------------------------------------------
+Project Lombok
+Copyright (C) 2009-2021 The Project Lombok Authors
+Licensed under the MIT License
+https://github.com/projectlombok/lombok/blob/master/LICENSE
+
+Note: Lombok is used as a compile-time annotation processor only. No Lombok
+code is included in the compiled binary artifacts of this project.
+--------------------------------------------------------------------------------
