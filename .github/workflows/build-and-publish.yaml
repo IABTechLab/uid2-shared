@@ -40,4 +40,5 @@ jobs:
       java_version: ${{ inputs.java_version }}
       publish_vulnerabilities: ${{ inputs.publish_vulnerabilities }}
       vulnerability_failure_severity: ${{ inputs.vulnerability_failure_severity }}
+      merge_environment: ${{ github.ref_protected && 'ci-auto-merge' || '' }}
     secrets: inherit
