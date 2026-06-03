@@ -2,8 +2,8 @@ package com.uid2.shared.cloud;
 
 import software.amazon.awssdk.core.exception.SdkClientException;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
@@ -74,15 +74,9 @@ public class CloudStorageS3 implements TaggableCloudStorage {
     }
 
     public CloudStorageS3(String region, String bucket, String s3Endpoint) {
-        // In theory `new InstanceProfileCredentialsProvider()` or even omitting credentials provider should work,
-        // but for some unknown reason it doesn't. The credential it provides look realistic, but are not valid.
-        // After a lot of experimentation and help of Abu Abraham and Isaac Wilson the only working solution we've
-        // found was to explicitly extract env vars populated by the service account from the role and to
-        // manually set it on the credentials provider.
-        WebIdentityTokenFileCredentialsProvider credentialsProvider = WebIdentityTokenFileCredentialsProvider.builder()
-                .roleArn(System.getenv("AWS_ROLE_ARN"))
-                .webIdentityTokenFile(Paths.get(System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE")))
-                .build();
+        // DefaultCredentialsProvider supports IRSA (WebIdentityTokenFile), EKS Pod Identity,
+        // instance profile, and all other standard AWS credential mechanisms automatically.
+        DefaultCredentialsProvider credentialsProvider = DefaultCredentialsProvider.create();
 
         if (s3Endpoint.isEmpty()) {
             this.s3 = S3Client.builder()
