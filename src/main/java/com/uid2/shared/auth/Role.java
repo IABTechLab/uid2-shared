@@ -27,6 +27,7 @@ public enum Role {
     PRIVATE_OPERATOR_SYNC, // corresponds to custom okta scope 'uid2.admin.site-sync'
     METRICS_EXPORT, // corresponds to custom okta scope 'uid2.admin.metrics-export'
     ENCLAVE_REGISTRAR, // corresponds to custom okta scope 'uid2.admin.enclave-registrar'
+    READ_ONLY, // corresponds to custom okta scope 'uid2.admin.read-only'
     @JsonEnumDefaultValue
     UNKNOWN
 }
