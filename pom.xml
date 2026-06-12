@@ -63,7 +63,7 @@
         <vertx.version>4.5.21</vertx.version>
         <!-- check micrometer.version vertx-micrometer-metrics consumes before bumping up -->
         <micrometer.version>1.12.2</micrometer.version>
-        <netty.version>4.1.132.Final</netty.version>
+        <netty.version>4.1.135.Final</netty.version>
         <image.version>${project.version}</image.version>
     </properties>
     <dependencyManagement>
