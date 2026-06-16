@@ -5,7 +5,7 @@
 
     <groupId>com.uid2</groupId>
     <artifactId>uid2-shared</artifactId>
-    <version>11.4.20</version>
+    <version>11.5.0</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <description>Library for all the shared uid2 operations</description>
     <url>https://github.com/IABTechLab/uid2docs</url>
@@ -63,7 +63,7 @@
         <vertx.version>4.5.21</vertx.version>
         <!-- check micrometer.version vertx-micrometer-metrics consumes before bumping up -->
         <micrometer.version>1.12.2</micrometer.version>
-        <netty.version>4.1.132.Final</netty.version>
+        <netty.version>4.1.135.Final</netty.version>
         <image.version>${project.version}</image.version>
     </properties>
     <dependencyManagement>
