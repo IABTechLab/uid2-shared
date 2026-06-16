@@ -28,6 +28,7 @@ public enum Role {
     METRICS_EXPORT, // corresponds to custom okta scope 'uid2.admin.metrics-export'
     ENCLAVE_REGISTRAR, // corresponds to custom okta scope 'uid2.admin.enclave-registrar'
     READ_ONLY, // corresponds to custom okta scope 'uid2.admin.read-only'
+    CREATE, // corresponds to custom okta scope 'uid2.admin.create'
     @JsonEnumDefaultValue
     UNKNOWN
 }
