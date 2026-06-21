@@ -141,8 +141,7 @@ public class RotatingSaltProvider implements ISaltProvider, IMetadataVersionedSt
 
     protected SaltEntry[] readInputStream(InputStream inputStream, SaltFileParser saltFileParser, Integer size) throws IOException {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-            String[] saltFileLines = reader.lines().toArray(String[]::new);
-            return saltFileParser.parseFileLines(saltFileLines, size);
+            return saltFileParser.parseLines(reader, size);
         }
     }
 
