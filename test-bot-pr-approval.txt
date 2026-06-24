@@ -1,0 +1,2 @@
+Throwaway test for verifying bot-PR workflow approval behavior (post-2026-06-11 GitHub change).
+Safe to delete.
