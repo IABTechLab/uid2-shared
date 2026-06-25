@@ -6,7 +6,9 @@
 # See: UID2-6670
 GHSA-72hv-8253-57qq exp:2026-09-01
 
-# jackson-databind data-binding vulnerability - no upstream fix released yet (fix targets: 2.18.8, 2.21.4, 3.1.4)
+# jackson-databind polymorphic deserialization bypass - not exploitable, uid2-shared does not enable polymorphic
+# typing (no @JsonTypeInfo, enableDefaultTyping, or PolymorphicTypeValidator usage). No upstream fix released yet
+# (fix targets: 2.18.8, 2.21.4, 3.1.4; latest available: 2.18.4).
 # See: UID2-7364
 CVE-2026-54512 exp:2026-07-25
 CVE-2026-54513 exp:2026-07-25
