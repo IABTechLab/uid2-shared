@@ -5,3 +5,8 @@
 # jackson-core async parser DoS - not exploitable, services only use synchronous ObjectMapper API
 # See: UID2-6670
 GHSA-72hv-8253-57qq exp:2026-09-01
+
+# jackson-databind data-binding vulnerability - no upstream fix released yet (fix targets: 2.18.8, 2.21.4, 3.1.4)
+# See: UID2-7364
+CVE-2026-54512 exp:2026-07-25
+CVE-2026-54513 exp:2026-07-25
