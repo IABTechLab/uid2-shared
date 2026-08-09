@@ -5,8 +5,10 @@ import com.uid2.shared.model.SaltEntry;
 import com.uid2.shared.store.reader.RotatingCloudEncryptionKeyProvider;
 import com.uid2.shared.store.scope.StoreScope;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 
 import static com.uid2.shared.util.CloudEncryptionHelpers.decryptInputStream;
 
@@ -21,6 +23,8 @@ public class EncryptedRotatingSaltProvider extends RotatingSaltProvider {
     @Override
     protected SaltEntry[] readInputStream(InputStream inputStream, SaltFileParser saltFileParser, Integer size) throws IOException {
         String decrypted = decryptInputStream(inputStream, cloudEncryptionKeyProvider, "salts");
-        return saltFileParser.parseFile(decrypted, size);
+        try (BufferedReader reader = new BufferedReader(new StringReader(decrypted))) {
+            return saltFileParser.parseLines(reader, size);
+        }
     }
 }

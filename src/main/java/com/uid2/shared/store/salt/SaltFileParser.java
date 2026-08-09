@@ -2,11 +2,25 @@ package com.uid2.shared.store.salt;
 
 import com.uid2.shared.model.SaltEntry;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+
 public class SaltFileParser {
     private final IdHashingScheme idHashingScheme;
 
     public SaltFileParser(IdHashingScheme idHashingScheme) {
         this.idHashingScheme = idHashingScheme;
+    }
+
+    public SaltEntry[] parseLines(BufferedReader reader, Integer size) throws IOException {
+        SaltEntry[] entries = new SaltEntry[size];
+        int lineNumber = 0;
+        String line;
+        while ((line = reader.readLine()) != null) {
+            entries[lineNumber] = parseLine(line, lineNumber);
+            lineNumber++;
+        }
+        return entries;
     }
 
     public SaltEntry[] parseFile(String saltFileContent, Integer size) {
