@@ -64,7 +64,7 @@
         <!-- check micrometer.version vertx-micrometer-metrics consumes before bumping up -->
         <micrometer.version>1.12.2</micrometer.version>
         <netty.version>4.1.136.Final</netty.version>
-        <jackson.version>2.21.4</jackson.version>
+        <jackson.version>2.21.6</jackson.version>
         <image.version>${project.version}</image.version>
     </properties>
     <dependencyManagement>
