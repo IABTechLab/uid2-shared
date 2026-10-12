@@ -4,6 +4,9 @@ import com.uid2.shared.model.SaltEntry;
 import com.uid2.shared.model.SaltEntry.KeyMaterial;
 import org.junit.jupiter.api.Test;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 class SaltFileParserTest {
@@ -16,6 +19,18 @@ class SaltFileParserTest {
     private final String hashed3 = hashingScheme.encode(3);
     private final String hashed4 = hashingScheme.encode(4);
     private final String hashed5 = hashingScheme.encode(5);
+
+    @Test
+    void parseLinesMatchesParseFile() throws Exception {
+        var file = """
+1,100,salt1,1000,old_salt1,10,key_1,key_salt_1,100,old_key_1,old_key_1_salt
+2,200,salt2,2000,old_salt2,20,key_2,key_salt_2,200,old_key_2,old_key_2_salt
+""";
+        SaltEntry[] viaParseFile = parser.parseFile(file, 2);
+        SaltEntry[] viaParseLines = parser.parseLines(new BufferedReader(new StringReader(file)), 2);
+
+        assertThat(viaParseLines).isEqualTo(viaParseFile);
+    }
 
     @Test
     void parsesSaltFileWithAllFields() {
