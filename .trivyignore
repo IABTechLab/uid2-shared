@@ -5,3 +5,15 @@
 # jackson-core async parser DoS - not exploitable, services only use synchronous ObjectMapper API
 # See: UID2-6670
 GHSA-72hv-8253-57qq exp:2026-09-01
+
+# CVE-2026-75595 — netty-handler (CRITICAL). Not vulnerable.
+# See: UID2-8185
+CVE-2026-75595 exp:2027-04-28
+
+# CVE-2026-102554 — guava (HIGH). Not vulnerable.
+# See: UID2-8215
+CVE-2026-102554 exp:2027-04-28
+
+# CVE-2026-40984 — micrometer-core (HIGH). Not vulnerable.
+# See: UID2-8215
+CVE-2026-40984 exp:2027-04-28
