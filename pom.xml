@@ -112,6 +112,12 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- Overrides the guava version managed by libraries-bom. -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>33.7.2-jre</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
