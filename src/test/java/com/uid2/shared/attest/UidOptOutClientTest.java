@@ -36,6 +36,7 @@ public class UidOptOutClientTest {
 
     @BeforeEach
     void setUp() {
+        reset(mockedLogger);
         mockedLoggerFactory = mockStatic(LoggerFactory.class);
         mockedLoggerFactory.when(() -> LoggerFactory.getLogger(any(Class.class))).thenReturn(mockedLogger);
 
@@ -61,6 +62,9 @@ public class UidOptOutClientTest {
             "http://other.example:8081/optout/replicate;https://core.example.com/optout/replicate",
             "//other.example/x;https://core.example.com/x",
             "https://a//other.example/x;https://core.example.com//other.example/x",
+            "optout/refresh;https://core.example.com/optout/refresh",
+            "other.example/x;https://core.example.com/other.example/x",
+            "?x=1;https://core.example.com?x=1",
     }, delimiter = ';')
     void usesOptOutUrlForDownloadWithPath(String path, String expectedFullPath) throws CloudStorageException, IOException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
@@ -88,12 +92,17 @@ public class UidOptOutClientTest {
         verify(mockedLogger).warn("UidOptOutClient attempting to download but OptOutUrl not available");
     }
 
-    @Test
-    void returnsEmptyStreamWhenMalformedUrl() throws CloudStorageException, IOException {
+    @ParameterizedTest
+    @CsvSource(value = {
+            "nowhere;/path",
+            "https://core.example.com;other.example:8081/path",
+            "https://core.example.com;/path with space",
+    }, delimiter = ';')
+    void returnsEmptyStreamWhenMalformedUrl(String optOutUrl, String path) throws CloudStorageException, IOException {
         when(mockAttestationResponseHandler.attested()).thenReturn(true);
-        when(mockAttestationResponseHandler.getOptOutUrl()).thenReturn("nowhere");
+        when(mockAttestationResponseHandler.getOptOutUrl()).thenReturn(optOutUrl);
 
-        InputStream is = this.optOutClient.download("/path");
+        InputStream is = this.optOutClient.download(path);
         assertEquals(0, is.available());
         verify(mockedLogger).error(eq("Unable to parse OptOut URL"), any(MalformedURLException.class));
     }

@@ -74,10 +74,14 @@ public class UidOptOutClient extends UidCoreClient {
             try {
                 location = new URI(configuredLocation);
             } catch (URISyntaxException e) {
+                throw (MalformedURLException) new MalformedURLException("Invalid opt-out path").initCause(e);
+            }
+            if (location.isOpaque()) {
                 throw new MalformedURLException("Invalid opt-out path");
             }
-            if (location.getRawPath() != null) {
-                pathAndQuery = location.getRawPath();
+            String rawPath = location.getRawPath();
+            if (rawPath != null && !rawPath.isEmpty()) {
+                pathAndQuery = rawPath.startsWith("/") ? rawPath : "/" + rawPath;
             }
             if (location.getRawQuery() != null) {
                 pathAndQuery += "?" + location.getRawQuery();
