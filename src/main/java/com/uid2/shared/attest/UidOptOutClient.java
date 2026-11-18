@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.Proxy;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 public class UidOptOutClient extends UidCoreClient {
@@ -45,8 +47,7 @@ public class UidOptOutClient extends UidCoreClient {
 
         if (this.attestationResponseHandler.getOptOutUrl() != null) {
             try {
-                URL baseUrl = new URL(this.attestationResponseHandler.getOptOutUrl());
-                URL fullUrl = new URL(baseUrl, path);
+                URL fullUrl = buildOptOutUrl(this.attestationResponseHandler.getOptOutUrl(), path);
                 return super.download(fullUrl.toExternalForm());
             } catch (MalformedURLException e) {
                 LOGGER.error("Unable to parse OptOut URL", e);
@@ -59,5 +60,34 @@ public class UidOptOutClient extends UidCoreClient {
         }
 
         return InputStream.nullInputStream();
+    }
+
+    /**
+     * Builds an opt-out URL from the scheme, host and port of {@code optOutBaseUrl} and only the path and query of
+     * {@code configuredLocation}, so the host always comes from the base URL.
+     */
+    public static URL buildOptOutUrl(String optOutBaseUrl, String configuredLocation) throws MalformedURLException {
+        URL base = new URL(optOutBaseUrl);
+        String pathAndQuery = "";
+        if (configuredLocation != null && !configuredLocation.isEmpty()) {
+            URI location;
+            try {
+                location = new URI(configuredLocation.trim());
+            } catch (URISyntaxException e) {
+                throw new MalformedURLException("Invalid opt-out path: " + e.getReason() + " at index " + e.getIndex());
+            }
+            String scheme = location.getScheme();
+            if (location.isOpaque() || (scheme != null && !"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme))) {
+                throw new MalformedURLException("Invalid opt-out path");
+            }
+            String rawPath = location.getRawPath();
+            if (rawPath != null && !rawPath.isEmpty()) {
+                pathAndQuery = rawPath.startsWith("/") ? rawPath : "/" + rawPath;
+            }
+            if (location.getRawQuery() != null) {
+                pathAndQuery = (pathAndQuery.isEmpty() ? "/" : pathAndQuery) + "?" + location.getRawQuery();
+            }
+        }
+        return new URL(base.getProtocol(), base.getHost(), base.getPort(), pathAndQuery);
     }
 }
