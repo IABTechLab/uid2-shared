@@ -76,7 +76,7 @@ public class UidOptOutClient extends UidCoreClient {
             } catch (URISyntaxException e) {
                 throw new MalformedURLException("Invalid opt-out path: " + e.getReason() + " at index " + e.getIndex());
             }
-            if (location.isOpaque()) {
+            if (location.isOpaque() || (location.getScheme() != null && !location.getScheme().matches("(?i)https?"))) {
                 throw new MalformedURLException("Invalid opt-out path");
             }
             String rawPath = location.getRawPath();
@@ -84,7 +84,7 @@ public class UidOptOutClient extends UidCoreClient {
                 pathAndQuery = rawPath.startsWith("/") ? rawPath : "/" + rawPath;
             }
             if (location.getRawQuery() != null) {
-                pathAndQuery += "?" + location.getRawQuery();
+                pathAndQuery = (pathAndQuery.isEmpty() ? "/" : pathAndQuery) + "?" + location.getRawQuery();
             }
         }
         return new URL(base.getProtocol(), base.getHost(), base.getPort(), pathAndQuery);

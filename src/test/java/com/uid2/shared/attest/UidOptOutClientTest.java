@@ -64,7 +64,7 @@ public class UidOptOutClientTest {
             "https://core.example.com;https://a//other.example/x;https://core.example.com//other.example/x",
             "https://core.example.com;optout/refresh;https://core.example.com/optout/refresh",
             "https://core.example.com;other.example/x;https://core.example.com/other.example/x",
-            "https://core.example.com;?x=1;https://core.example.com?x=1",
+            "https://core.example.com;?x=1;https://core.example.com/?x=1",
             "http://localhost:8081;https://other.example/optout/refresh;http://localhost:8081/optout/refresh",
             "https://core.example.com;' /optout/refresh ';https://core.example.com/optout/refresh",
     }, delimiter = ';')
@@ -99,6 +99,7 @@ public class UidOptOutClientTest {
             "nowhere;/path",
             "https://core.example.com;other.example:8081/path",
             "https://core.example.com;/path with space",
+            "https://core.example.com;file:/tmp/optout/refresh",
     }, delimiter = ';')
     void returnsEmptyStreamWhenMalformedUrl(String optOutUrl, String path) throws CloudStorageException, IOException {
         when(mockAttestationResponseHandler.attested()).thenReturn(true);
