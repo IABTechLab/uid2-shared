@@ -76,7 +76,8 @@ public class UidOptOutClient extends UidCoreClient {
             } catch (URISyntaxException e) {
                 throw new MalformedURLException("Invalid opt-out path: " + e.getReason() + " at index " + e.getIndex());
             }
-            if (location.isOpaque() || (location.getScheme() != null && !location.getScheme().matches("(?i)https?"))) {
+            String scheme = location.getScheme();
+            if (location.isOpaque() || (scheme != null && !"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme))) {
                 throw new MalformedURLException("Invalid opt-out path");
             }
             String rawPath = location.getRawPath();
