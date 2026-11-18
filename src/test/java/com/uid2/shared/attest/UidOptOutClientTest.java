@@ -57,6 +57,10 @@ public class UidOptOutClientTest {
             "/path1/path2?var=3;https://core.example.com/path1/path2?var=3",
             ";https://core.example.com",
             "/;https://core.example.com/",
+            "https://other.example/optout/refresh?x=1;https://core.example.com/optout/refresh?x=1",
+            "http://other.example:8081/optout/replicate;https://core.example.com/optout/replicate",
+            "//other.example/x;https://core.example.com/x",
+            "https://a//other.example/x;https://core.example.com//other.example/x",
     }, delimiter = ';')
     void usesOptOutUrlForDownloadWithPath(String path, String expectedFullPath) throws CloudStorageException, IOException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
