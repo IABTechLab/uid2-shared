@@ -72,9 +72,9 @@ public class UidOptOutClient extends UidCoreClient {
         if (configuredLocation != null && !configuredLocation.isEmpty()) {
             URI location;
             try {
-                location = new URI(configuredLocation);
+                location = new URI(configuredLocation.trim());
             } catch (URISyntaxException e) {
-                throw (MalformedURLException) new MalformedURLException("Invalid opt-out path").initCause(e);
+                throw new MalformedURLException("Invalid opt-out path: " + e.getReason() + " at index " + e.getIndex());
             }
             if (location.isOpaque()) {
                 throw new MalformedURLException("Invalid opt-out path");

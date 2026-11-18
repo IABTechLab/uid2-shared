@@ -55,18 +55,20 @@ public class UidOptOutClientTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "/path1/path2?var=3;https://core.example.com/path1/path2?var=3",
-            ";https://core.example.com",
-            "/;https://core.example.com/",
-            "https://other.example/optout/refresh?x=1;https://core.example.com/optout/refresh?x=1",
-            "http://other.example:8081/optout/replicate;https://core.example.com/optout/replicate",
-            "//other.example/x;https://core.example.com/x",
-            "https://a//other.example/x;https://core.example.com//other.example/x",
-            "optout/refresh;https://core.example.com/optout/refresh",
-            "other.example/x;https://core.example.com/other.example/x",
-            "?x=1;https://core.example.com?x=1",
+            "https://core.example.com;/path1/path2?var=3;https://core.example.com/path1/path2?var=3",
+            "https://core.example.com;;https://core.example.com",
+            "https://core.example.com;/;https://core.example.com/",
+            "https://core.example.com;https://other.example/optout/refresh?x=1;https://core.example.com/optout/refresh?x=1",
+            "https://core.example.com;http://other.example:8081/optout/replicate;https://core.example.com/optout/replicate",
+            "https://core.example.com;//other.example/x;https://core.example.com/x",
+            "https://core.example.com;https://a//other.example/x;https://core.example.com//other.example/x",
+            "https://core.example.com;optout/refresh;https://core.example.com/optout/refresh",
+            "https://core.example.com;other.example/x;https://core.example.com/other.example/x",
+            "https://core.example.com;?x=1;https://core.example.com?x=1",
+            "http://localhost:8081;https://other.example/optout/refresh;http://localhost:8081/optout/refresh",
+            "https://core.example.com;' /optout/refresh ';https://core.example.com/optout/refresh",
     }, delimiter = ';')
-    void usesOptOutUrlForDownloadWithPath(String path, String expectedFullPath) throws CloudStorageException, IOException {
+    void usesOptOutUrlForDownloadWithPath(String optOutUrl, String path, String expectedFullPath) throws CloudStorageException, IOException {
         HttpResponse<String> mockHttpResponse = mock(HttpResponse.class);
         String expectedResponseBody = "Hello, world!";
         when(mockHttpResponse.body()).thenReturn(expectedResponseBody);
@@ -75,7 +77,7 @@ public class UidOptOutClientTest {
 
         when(mockAttestationResponseHandler.attested()).thenReturn(true);
         when(mockAttestationResponseHandler.getAttestationToken()).thenReturn("testAttToken");
-        when(mockAttestationResponseHandler.getOptOutUrl()).thenReturn("https://core.example.com");
+        when(mockAttestationResponseHandler.getOptOutUrl()).thenReturn(optOutUrl);
 
         InputStream is = this.optOutClient.download(path);
         verify(mockAttestationResponseHandler, times(2)).getOptOutUrl();
