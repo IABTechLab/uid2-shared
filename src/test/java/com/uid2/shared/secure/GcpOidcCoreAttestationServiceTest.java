@@ -2,6 +2,7 @@ package com.uid2.shared.secure;
 
 import com.uid2.shared.secure.gcpoidc.IPolicyValidator;
 import com.uid2.shared.secure.gcpoidc.ITokenSignatureValidator;
+import com.uid2.shared.secure.gcpoidc.PolicyValidator;
 import com.uid2.shared.secure.gcpoidc.TokenPayload;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -15,6 +16,7 @@ import org.mockito.quality.Strictness;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,6 +33,25 @@ public class GcpOidcCoreAttestationServiceTest {
     private static final String ENCLAVE_ID_2 = "test-enclave_2";
 
     private static final TokenPayload VALID_TOKEN_PAYLOAD = TokenPayload.builder().build();
+
+    private static final Map<String, String> EXPECTED_DETAILS = Map.of(
+            PolicyValidator.ENV_ENVIRONMENT, "prod",
+            PolicyValidator.ENV_CORE_ENDPOINT, "https://core.example.com",
+            PolicyValidator.ENV_OPT_OUT_ENDPOINT, "https://optout.example.com"
+    );
+
+    private static final TokenPayload TOKEN_PAYLOAD_WITH_ENV_OVERRIDES = TokenPayload.builder()
+            .envOverrides(Map.of(
+                    PolicyValidator.ENV_ENVIRONMENT, "prod",
+                    PolicyValidator.ENV_CORE_ENDPOINT, "https://core.example.com",
+                    PolicyValidator.ENV_OPT_OUT_ENDPOINT, "https://optout.example.com",
+                    PolicyValidator.ENV_OPERATOR_API_KEY_SECRET_NAME, "projects/123/secrets/key/versions/1",
+                    "OTHER_KEY", "other-value"
+            ))
+            .build();
+
+    @Mock
+    private ITokenSignatureValidator envOverridesTokenValidator;
 
     @Mock
     private ITokenSignatureValidator alwaysPassTokenValidator;
@@ -52,6 +73,7 @@ public class GcpOidcCoreAttestationServiceTest {
         when(alwaysPassTokenValidator.validate(any())).thenReturn(VALID_TOKEN_PAYLOAD);
         when(alwaysPassPolicyValidator1.validate(any())).thenReturn(ENCLAVE_ID_1);
         when(alwaysPassPolicyValidator2.validate(any())).thenReturn(ENCLAVE_ID_2);
+        when(envOverridesTokenValidator.validate(any())).thenReturn(TOKEN_PAYLOAD_WITH_ENV_OVERRIDES);
     }
 
     @Test
@@ -131,6 +153,45 @@ public class GcpOidcCoreAttestationServiceTest {
             assertTrue(ar.succeeded());
             assertTrue(ar.result().isSuccess());
         });
+    }
+
+    @Test
+    public void testAttestationResultCarriesEnvOverrides() throws AttestationException {
+        var provider = new GcpOidcCoreAttestationService(envOverridesTokenValidator, List.of(alwaysPassPolicyValidator1));
+        provider.registerEnclave(ENCLAVE_ID_1);
+        attest(provider, ar -> {
+            assertTrue(ar.result().isSuccess());
+            assertEquals(EXPECTED_DETAILS, ar.result().getAttestationDetails());
+        });
+    }
+
+    @Test
+    public void testAttestationResultCarriesEnvOverrides_ForbiddenEnclave() throws AttestationException {
+        var provider = new GcpOidcCoreAttestationService(envOverridesTokenValidator, List.of(alwaysPassPolicyValidator1));
+        provider.registerEnclave(ENCLAVE_ID_2);
+        attest(provider, ar -> {
+            assertEquals(AttestationFailure.FORBIDDEN_ENCLAVE, ar.result().getFailure());
+            assertEquals(EXPECTED_DETAILS, ar.result().getAttestationDetails());
+        });
+    }
+
+    @Test
+    public void testAttestationResultCarriesEnvOverrides_PolicyCheckFailed() throws AttestationException {
+        when(alwaysFailPolicyValidator.validate(any())).thenThrow(new AttestationClientException("policy validation failed", AttestationFailure.BAD_FORMAT));
+        var provider = new GcpOidcCoreAttestationService(envOverridesTokenValidator, List.of(alwaysFailPolicyValidator));
+        provider.registerEnclave(ENCLAVE_ID_1);
+        attest(provider, ar -> {
+            assertEquals(AttestationFailure.BAD_FORMAT, ar.result().getFailure());
+            assertEquals(EXPECTED_DETAILS, ar.result().getAttestationDetails());
+        });
+    }
+
+    @Test
+    public void testSignatureCheckFailed_EmptyAttestationDetails() throws AttestationException {
+        when(alwaysFailTokenValidator.validate(any())).thenThrow(new AttestationClientException("signature validation failed", AttestationFailure.BAD_PAYLOAD));
+        var provider = new GcpOidcCoreAttestationService(alwaysFailTokenValidator, List.of(alwaysPassPolicyValidator1));
+        provider.registerEnclave(ENCLAVE_ID_1);
+        attest(provider, ar -> assertTrue(ar.result().getAttestationDetails().isEmpty()));
     }
 
     private static void attest(ICoreAttestationService provider, Handler<AsyncResult<AttestationResult>> handler) {

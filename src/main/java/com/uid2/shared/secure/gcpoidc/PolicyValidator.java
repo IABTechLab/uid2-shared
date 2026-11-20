@@ -30,6 +30,13 @@ public class PolicyValidator implements IPolicyValidator {
     public static final String ENV_DEBUG_MODE = "DEBUG_MODE";
     public static final String ENV_SKIP_VALIDATIONS = "SKIP_VALIDATIONS";
 
+    // Env overrides that may be reported on the attestation result, e.g. for logging.
+    public static final List<String> REPORTED_ENV_OVERRIDES = ImmutableList.of(
+            ENV_ENVIRONMENT,
+            ENV_CORE_ENDPOINT,
+            ENV_OPT_OUT_ENDPOINT
+    );
+
     private static final List<String> REQUIRED_ENV_OVERRIDES = ImmutableList.of(
             ENV_ENVIRONMENT,
             ENV_OPERATOR_API_KEY_SECRET_NAME

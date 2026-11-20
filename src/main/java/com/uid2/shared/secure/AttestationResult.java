@@ -1,5 +1,8 @@
 package com.uid2.shared.secure;
 
+import java.util.Collections;
+import java.util.Map;
+
 public class AttestationResult {
     private final AttestationFailure failure;
     private final byte[] publicKey;
@@ -8,11 +11,14 @@ public class AttestationResult {
 
     private final AttestationClientException attestationClientException;
 
+    private final Map<String, String> attestationDetails;
+
     public AttestationResult(AttestationFailure reasonToFail) {
         this.failure = reasonToFail;
         this.publicKey = null;
         this.enclaveId = "Failed attestation, enclave Id unknown";
         this.attestationClientException = null;
+        this.attestationDetails = Collections.emptyMap();
     }
 
     public AttestationResult(AttestationClientException exception) {
@@ -20,6 +26,7 @@ public class AttestationResult {
         this.publicKey = null;
         this.enclaveId = "Failed attestation, enclave Id unknown";
         this.attestationClientException = exception;
+        this.attestationDetails = Collections.emptyMap();
     }
 
     public AttestationResult(byte[] publicKey, String enclaveId) {
@@ -27,6 +34,19 @@ public class AttestationResult {
         this.publicKey = publicKey;
         this.enclaveId = enclaveId;
         this.attestationClientException = null;
+        this.attestationDetails = Collections.emptyMap();
+    }
+
+    private AttestationResult(AttestationResult result, Map<String, String> attestationDetails) {
+        this.failure = result.failure;
+        this.publicKey = result.publicKey;
+        this.enclaveId = result.enclaveId;
+        this.attestationClientException = result.attestationClientException;
+        this.attestationDetails = Collections.unmodifiableMap(attestationDetails);
+    }
+
+    public AttestationResult withDetails(Map<String, String> attestationDetails) {
+        return new AttestationResult(this, attestationDetails);
     }
 
     public boolean isSuccess() {
@@ -48,5 +68,9 @@ public class AttestationResult {
 
     public String getEnclaveId() {
         return enclaveId;
+    }
+
+    public Map<String, String> getAttestationDetails() {
+        return attestationDetails;
     }
 }

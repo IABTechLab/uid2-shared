@@ -31,23 +31,24 @@ public class GcpOidcCoreAttestationService implements ICoreAttestationService {
 
     @Override
     public void attest(byte[] attestationRequest, byte[] publicKey, Handler<AsyncResult<AttestationResult>> handler) {
+        TokenPayload tokenPayload = null;
         try {
             var tokenString = new String(attestationRequest, StandardCharsets.US_ASCII);
 
             LOGGER.debug("Validating signature...");
-            var tokenPayload = tokenSignatureValidator.validate(tokenString);
+            tokenPayload = tokenSignatureValidator.validate(tokenString);
 
             var enclaveId = this.validate(tokenPayload);
             if (enclaveId != null) {
                 LOGGER.info("Successfully attested gcp-oidc against registered enclaves, enclave id: " + enclaveId);
-                handler.handle(Future.succeededFuture(new AttestationResult(publicKey, enclaveId)));
+                handler.handle(Future.succeededFuture(new AttestationResult(publicKey, enclaveId).withDetails(getAttestationDetails(tokenPayload))));
             } else {
                 LOGGER.warn("Can not find registered gcp-oidc enclave id.");
-                handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.FORBIDDEN_ENCLAVE)));
+                handler.handle(Future.succeededFuture(new AttestationResult(AttestationFailure.FORBIDDEN_ENCLAVE).withDetails(getAttestationDetails(tokenPayload))));
             }
         }
         catch (AttestationClientException ace){
-            handler.handle(Future.succeededFuture(new AttestationResult(ace)));
+            handler.handle(Future.succeededFuture(new AttestationResult(ace).withDetails(getAttestationDetails(tokenPayload))));
         }
         catch (AttestationException ae){
             handler.handle(Future.failedFuture(ae));
@@ -78,6 +79,19 @@ public class GcpOidcCoreAttestationService implements ICoreAttestationService {
     @Override
     public Collection<String> getEnclaveAllowlist() {
         return allowedEnclaveIds;
+    }
+
+    private static Map<String, String> getAttestationDetails(TokenPayload tokenPayload) {
+        var details = new LinkedHashMap<String, String>();
+        if (tokenPayload != null && tokenPayload.getEnvOverrides() != null) {
+            for (var key : PolicyValidator.REPORTED_ENV_OVERRIDES) {
+                var value = tokenPayload.getEnvOverrides().get(key);
+                if (value != null) {
+                    details.put(key, value);
+                }
+            }
+        }
+        return details;
     }
 
     // Pass as long as one of supported policy validator check pass.
