@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
@@ -234,7 +235,8 @@ public class PolicyValidatorTest {
                 Arguments.of("testValidationSuccess_CoreEnvironmentUnset", null, OPT_OUT_URL, true, "integ", OTHER_OPT_OUT_URL, null, null),
                 Arguments.of("testValidationSuccess_NotEnforced_UnknownOptOutUrl", Environment.Production, OPT_OUT_URL, false, "prod", OTHER_OPT_OUT_URL, null, null),
                 Arguments.of("testValidationSuccess_NotEnforced_EnvironmentMismatch", Environment.Production, OPT_OUT_URL, false, "integ", OTHER_OPT_OUT_URL, null, null),
-                Arguments.of("testValidationSuccess_CoreOptOutUrlUnset_NoOptOutUrl", Environment.Production, null, true, "prod", null, null, null),
+                Arguments.of("testValidationSuccess_NotEnforced_CoreOptOutUrlUnset", Environment.Production, null, false, "prod", OPT_OUT_URL, null, null),
+                Arguments.of("testValidationSuccess_IntegCoreOptOutUrlUnset", Environment.Integration, null, true, "integ", OTHER_OPT_OUT_URL, null, null),
                 Arguments.of("testValidationFailure_UnknownOptOutUrl", Environment.Production, OPT_OUT_URL, true, "prod", OTHER_OPT_OUT_URL,
                         unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: " + OTHER_OPT_OUT_URL),
                 Arguments.of("testValidationFailure_UnknownOptOutUrl_DifferentScheme", Environment.Production, OPT_OUT_URL, true, "prod", "http://optout.uidapi.com",
@@ -243,15 +245,17 @@ public class PolicyValidatorTest {
                         unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: https://optout.uidapi.com:8443"),
                 Arguments.of("testValidationFailure_UnknownOptOutUrl_NotAUrl", Environment.Production, OPT_OUT_URL, true, "prod", "optout_endpoint",
                         unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: optout_endpoint"),
-                Arguments.of("testValidationFailure_UnknownOptOutUrl_CoreOptOutUrlUnset", Environment.Production, null, true, "prod", OPT_OUT_URL,
-                        unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: " + OPT_OUT_URL),
-                Arguments.of("testValidationFailure_UnknownOptOutUrl_CoreOptOutUrlBlank", Environment.Production, "", true, "prod", OPT_OUT_URL,
-                        unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: " + OPT_OUT_URL),
                 Arguments.of("testValidationFailure_EnvironmentMismatch", Environment.Production, OPT_OUT_URL, true, "integ", OPT_OUT_URL,
                         badFormat, "Environment mismatch. Expected prod, given: integ"),
                 Arguments.of("testValidationFailure_EnvironmentMismatch_UnknownOptOutUrl", Environment.Production, OPT_OUT_URL, true, "integ", OTHER_OPT_OUT_URL,
                         badFormat, "Environment mismatch. Expected prod, given: integ")
         );
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    public void testConstructorFailure_EnforcedProdWithoutCoreOptOutUrl(String coreOptOutUrl) {
+        assertThrows(IllegalArgumentException.class, () -> new PolicyValidator(ATTESTATION_URL, coreOptOutUrl, Environment.Production, true));
     }
 
     @Test

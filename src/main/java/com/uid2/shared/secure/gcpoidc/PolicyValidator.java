@@ -65,7 +65,10 @@ public class PolicyValidator implements IPolicyValidator {
         this.coreEnvironment = coreEnvironment;
         this.enforce = enforce;
         if (coreEnvironment == Environment.Production && Strings.isNullOrEmpty(optOutUrl)) {
-            LOGGER.warn("Core opt-out URL is not configured; every GCP opt-out URL override will fail validation");
+            if (enforce) {
+                throw new IllegalArgumentException("Core opt-out URL must be configured when GCP override checks are enforced in prod");
+            }
+            LOGGER.warn("Core opt-out URL is not configured; GCP opt-out URL overrides will fail validation");
         }
     }
 
@@ -193,7 +196,7 @@ public class PolicyValidator implements IPolicyValidator {
         if (this.enforce) {
             throw e;
         }
-        LOGGER.warn("GCP override check failed (not enforced): " + e.getMessage());
+        LOGGER.warn("GCP override check failed (not enforced): {}", e.getMessage());
     }
 
     private String generateEnclaveId(boolean isDebugMode, String imageDigest, Environment env) throws AttestationException {
