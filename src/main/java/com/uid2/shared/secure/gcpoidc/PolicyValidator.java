@@ -60,13 +60,15 @@ public class PolicyValidator implements IPolicyValidator {
     private final String optOutUrl;
     private final Environment coreEnvironment;
     private final boolean enforce;
+    private final boolean isOptOutUrlValid;
 
     public PolicyValidator(String attestationUrl, String optOutUrl, Environment coreEnvironment, boolean enforce) {
         this.attestationUrl = attestationUrl;
         this.optOutUrl = optOutUrl;
         this.coreEnvironment = coreEnvironment;
         this.enforce = enforce;
-        if (coreEnvironment == Environment.Production && !isValidUrl(optOutUrl)) {
+        this.isOptOutUrlValid = isValidUrl(optOutUrl);
+        if (coreEnvironment == Environment.Production && !this.isOptOutUrlValid) {
             if (enforce) {
                 throw new IllegalArgumentException("Core opt-out URL must be a valid URL when GCP override checks are enforced in prod. Given URL: " + optOutUrl);
             }
@@ -202,7 +204,7 @@ public class PolicyValidator implements IPolicyValidator {
         if (Strings.isNullOrEmpty(givenOptOutUrl)) {
             return;
         }
-        if (Strings.isNullOrEmpty(this.optOutUrl) || !UrlEquivalenceValidator.areUrlsEquivalent(givenOptOutUrl, this.optOutUrl)) {
+        if (!this.isOptOutUrlValid || !isValidUrl(givenOptOutUrl) || !UrlEquivalenceValidator.areUrlsEquivalent(givenOptOutUrl, this.optOutUrl)) {
             handleOverrideCheckFailure(new AttestationClientException("The given opt-out URL is unknown. Given URL: " + givenOptOutUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL));
         }
     }
