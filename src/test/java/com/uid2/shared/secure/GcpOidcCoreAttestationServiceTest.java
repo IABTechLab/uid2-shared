@@ -1,6 +1,5 @@
 package com.uid2.shared.secure;
 
-import com.uid2.shared.secure.gcpoidc.Environment;
 import com.uid2.shared.secure.gcpoidc.IPolicyValidator;
 import com.uid2.shared.secure.gcpoidc.ITokenSignatureValidator;
 import com.uid2.shared.secure.gcpoidc.PolicyValidator;
@@ -183,34 +182,6 @@ public class GcpOidcCoreAttestationServiceTest {
         provider.registerEnclave(ENCLAVE_ID_1);
         attest(provider, ar -> {
             assertEquals(AttestationFailure.BAD_FORMAT, ar.result().getFailure());
-            assertEquals(EXPECTED_DETAILS, ar.result().getAttestationDetails());
-        });
-    }
-
-    @Test
-    public void testAttestationResultCarriesEnvOverrides_UnknownOptOutUrl() throws AttestationException {
-        var envOverrides = Map.of(
-                PolicyValidator.ENV_ENVIRONMENT, "prod",
-                PolicyValidator.ENV_CORE_ENDPOINT, "https://core.example.com",
-                PolicyValidator.ENV_OPT_OUT_ENDPOINT, "https://optout.example.com",
-                PolicyValidator.ENV_OPERATOR_API_KEY_SECRET_NAME, "projects/123/secrets/key/versions/1"
-        );
-        when(envOverridesTokenValidator.validate(any())).thenReturn(TokenPayload.builder()
-                .gceZone("us-west1-b")
-                .swName("CONFIDENTIAL_SPACE")
-                .dbgStat("disabled-since-boot")
-                .csSupportedAttributes(List.of("STABLE"))
-                .workloadImageDigest("sha256:b5a2c96250612366ea272ffac6d9744aaf4b45aacd96aa7cfcb931ee3b558259")
-                .restartPolicy("NEVER")
-                .envOverrides(envOverrides)
-                .build());
-        var policyValidator = new PolicyValidator("https://core.example.com", "https://optout-prod.example.com", Environment.Production, true);
-        var provider = new GcpOidcCoreAttestationService(envOverridesTokenValidator, List.of(policyValidator));
-        provider.registerEnclave(ENCLAVE_ID_1);
-        attest(provider, ar -> {
-            assertTrue(ar.succeeded());
-            assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, ar.result().getFailure());
-            assertEquals("The given opt-out URL is unknown. Given URL: https://optout.example.com", ar.result().getReason());
             assertEquals(EXPECTED_DETAILS, ar.result().getAttestationDetails());
         });
     }
