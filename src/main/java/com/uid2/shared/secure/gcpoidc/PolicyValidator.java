@@ -55,9 +55,18 @@ public class PolicyValidator implements IPolicyValidator {
             )
     );
     private final String attestationUrl;
+    private final String optOutUrl;
+    private final Environment coreEnvironment;
+    private final boolean enforce;
 
-    public PolicyValidator(String attestationUrl) {
+    public PolicyValidator(String attestationUrl, String optOutUrl, Environment coreEnvironment, boolean enforce) {
         this.attestationUrl = attestationUrl;
+        this.optOutUrl = optOutUrl;
+        this.coreEnvironment = coreEnvironment;
+        this.enforce = enforce;
+        if (coreEnvironment == Environment.Production && Strings.isNullOrEmpty(optOutUrl)) {
+            LOGGER.warn("Core opt-out URL is not configured; every GCP opt-out URL override will fail validation");
+        }
     }
 
     @Override
@@ -142,6 +151,10 @@ public class PolicyValidator implements IPolicyValidator {
         }
 
         checkAttestationUrl(new HashMap<>(envOverrides));
+        if (this.coreEnvironment == Environment.Production) {
+            checkDeclaredEnvironment(env);
+            checkOptOutUrl(new HashMap<>(envOverrides));
+        }
 
         if(!envOverridesCopy.isEmpty()){
             throw new AttestationClientException("More env overrides than allowed. " + envOverridesCopy, AttestationFailure.BAD_FORMAT);
@@ -157,6 +170,30 @@ public class PolicyValidator implements IPolicyValidator {
                 throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + givenAttestationUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
             }
         }
+    }
+
+    private void checkDeclaredEnvironment(Environment declaredEnvironment) throws AttestationException {
+        if (declaredEnvironment != this.coreEnvironment) {
+            handleOverrideCheckFailure(new AttestationClientException("Environment mismatch. Expected " + this.coreEnvironment.getName() + ", given: " + declaredEnvironment.getName(), AttestationFailure.BAD_FORMAT));
+        }
+    }
+
+    // Opt-out endpoint must match Core's configured opt-out URL.
+    private void checkOptOutUrl(HashMap<String, String> optionalEnvOverrides) throws AttestationException {
+        String givenOptOutUrl = optionalEnvOverrides.get(ENV_OPT_OUT_ENDPOINT);
+        if (Strings.isNullOrEmpty(givenOptOutUrl)) {
+            return;
+        }
+        if (Strings.isNullOrEmpty(this.optOutUrl) || !UrlEquivalenceValidator.areUrlsEquivalent(givenOptOutUrl, this.optOutUrl)) {
+            handleOverrideCheckFailure(new AttestationClientException("The given opt-out URL is unknown. Given URL: " + givenOptOutUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL));
+        }
+    }
+
+    private void handleOverrideCheckFailure(AttestationClientException e) throws AttestationException {
+        if (this.enforce) {
+            throw e;
+        }
+        LOGGER.warn("GCP override check failed (not enforced): " + e.getMessage());
     }
 
     private String generateEnclaveId(boolean isDebugMode, String imageDigest, Environment env) throws AttestationException {
