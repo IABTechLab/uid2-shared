@@ -13,6 +13,8 @@ import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -64,11 +66,23 @@ public class PolicyValidator implements IPolicyValidator {
         this.optOutUrl = optOutUrl;
         this.coreEnvironment = coreEnvironment;
         this.enforce = enforce;
-        if (coreEnvironment == Environment.Production && Strings.isNullOrEmpty(optOutUrl)) {
+        if (coreEnvironment == Environment.Production && !isValidUrl(optOutUrl)) {
             if (enforce) {
-                throw new IllegalArgumentException("Core opt-out URL must be configured when GCP override checks are enforced in prod");
+                throw new IllegalArgumentException("Core opt-out URL must be a valid URL when GCP override checks are enforced in prod. Given URL: " + optOutUrl);
             }
-            LOGGER.warn("Core opt-out URL is not configured; GCP opt-out URL overrides will fail validation");
+            LOGGER.warn("Core opt-out URL is not a valid URL; GCP opt-out URL override checks will only log warnings. Given URL: {}", optOutUrl);
+        }
+    }
+
+    private static boolean isValidUrl(String url) {
+        if (Strings.isNullOrEmpty(url)) {
+            return false;
+        }
+        try {
+            new URL(url);
+            return true;
+        } catch (MalformedURLException e) {
+            return false;
         }
     }
 
