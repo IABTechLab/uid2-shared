@@ -166,7 +166,7 @@ public class PolicyValidator implements IPolicyValidator {
         checkAttestationUrl(new HashMap<>(envOverrides));
         if (this.coreEnvironment == Environment.Production) {
             checkDeclaredEnvironment(env);
-            checkOptOutUrl(new HashMap<>(envOverrides));
+            checkOptOutUrl(envOverrides);
         }
 
         if(!envOverridesCopy.isEmpty()){
@@ -191,9 +191,8 @@ public class PolicyValidator implements IPolicyValidator {
         }
     }
 
-    // Opt-out endpoint must match Core's configured opt-out URL.
-    private void checkOptOutUrl(HashMap<String, String> optionalEnvOverrides) throws AttestationException {
-        String givenOptOutUrl = optionalEnvOverrides.get(ENV_OPT_OUT_ENDPOINT);
+    private void checkOptOutUrl(Map<String, String> envOverrides) throws AttestationException {
+        String givenOptOutUrl = envOverrides.get(ENV_OPT_OUT_ENDPOINT);
         if (!Strings.isNullOrEmpty(givenOptOutUrl) && !UrlEquivalenceValidator.areUrlsEquivalent(givenOptOutUrl, this.optOutUrl)) {
             throw new AttestationClientException("The given opt-out URL is unknown. Given URL: " + givenOptOutUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
         }
