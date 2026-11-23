@@ -79,8 +79,9 @@ public class PolicyValidator implements IPolicyValidator {
             return false;
         }
         try {
-            new URL(url);
-            return true;
+            var parsed = new URL(url);
+            var protocol = parsed.getProtocol();
+            return ("https".equals(protocol) || "http".equals(protocol)) && !Strings.isNullOrEmpty(parsed.getHost());
         } catch (MalformedURLException e) {
             return false;
         }

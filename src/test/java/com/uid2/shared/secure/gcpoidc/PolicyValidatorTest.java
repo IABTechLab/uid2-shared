@@ -256,7 +256,7 @@ public class PolicyValidatorTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {" ", "optout.uidapi.com"})
+    @ValueSource(strings = {" ", "optout.uidapi.com", "https:optout.uidapi.com", "https://", "file:/etc"})
     public void testConstructorFailure_EnforcedProdWithoutValidCoreOptOutUrl(String coreOptOutUrl) {
         assertThrows(IllegalArgumentException.class, () -> new PolicyValidator(ATTESTATION_URL, coreOptOutUrl, Environment.Production, true));
     }
