@@ -7,12 +7,13 @@ import com.uid2.shared.Utils;
 import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
 import com.uid2.shared.secure.AttestationFailure;
-import com.uid2.shared.util.UrlEquivalenceValidator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -54,10 +55,39 @@ public class PolicyValidator implements IPolicyValidator {
                     ENV_SKIP_VALIDATIONS
             )
     );
-    private final String attestationUrl;
 
-    public PolicyValidator(String attestationUrl) {
+    private final String attestationUrl;
+    private final String optOutUrl;
+    private final Environment coreEnvironment;
+
+    /**
+     * @param attestationUrl  Core's URL. A given CORE_BASE_URL override must equal it exactly, ignoring one trailing
+     *                        slash, in every environment.
+     * @param optOutUrl       Core's opt-out URL. A given OPTOUT_BASE_URL override must equal it exactly, ignoring one
+     *                        trailing slash, in every environment.
+     * @param coreEnvironment Core's own environment. The declared environment check and the https requirement on
+     *                        optOutUrl apply only when this is {@link Environment#Production}; null (not configured)
+     *                        skips them.
+     */
+    public PolicyValidator(String attestationUrl, String optOutUrl, Environment coreEnvironment) {
+        if (coreEnvironment == Environment.Production && !isValidHttpsUrl(optOutUrl)) {
+            throw new IllegalArgumentException("Core opt-out URL must be a valid https URL in prod. Given URL: " + optOutUrl);
+        }
         this.attestationUrl = attestationUrl;
+        this.optOutUrl = optOutUrl;
+        this.coreEnvironment = coreEnvironment;
+    }
+
+    private static boolean isValidHttpsUrl(String url) {
+        if (Strings.isNullOrEmpty(url)) {
+            return false;
+        }
+        try {
+            var parsed = new URL(url);
+            return "https".equals(parsed.getProtocol()) && !Strings.isNullOrEmpty(parsed.getHost());
+        } catch (MalformedURLException e) {
+            return false;
+        }
     }
 
     @Override
@@ -142,6 +172,10 @@ public class PolicyValidator implements IPolicyValidator {
         }
 
         checkAttestationUrl(new HashMap<>(envOverrides));
+        if (this.coreEnvironment == Environment.Production) {
+            checkDeclaredEnvironment(env);
+        }
+        checkOptOutUrl(envOverrides);
 
         if(!envOverridesCopy.isEmpty()){
             throw new AttestationClientException("More env overrides than allowed. " + envOverridesCopy, AttestationFailure.BAD_FORMAT);
@@ -153,10 +187,38 @@ public class PolicyValidator implements IPolicyValidator {
     private void checkAttestationUrl(HashMap<String, String> optionalEnvOverrides) throws AttestationException {
         if (!Strings.isNullOrEmpty(optionalEnvOverrides.get(ENV_CORE_ENDPOINT))) {
             String givenAttestationUrl = optionalEnvOverrides.get(ENV_CORE_ENDPOINT);
-            if (!UrlEquivalenceValidator.areUrlsEquivalent(givenAttestationUrl, this.attestationUrl)) {
+            if (!matchesExactly(givenAttestationUrl, this.attestationUrl)) {
                 throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + givenAttestationUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
             }
         }
+    }
+
+    private void checkDeclaredEnvironment(Environment declaredEnvironment) throws AttestationException {
+        if (declaredEnvironment != this.coreEnvironment) {
+            throw new AttestationClientException("Environment mismatch. Expected " + this.coreEnvironment.getName() + ", given: " + declaredEnvironment.getName(), AttestationFailure.BAD_FORMAT);
+        }
+    }
+
+    private void checkOptOutUrl(Map<String, String> envOverrides) throws AttestationException {
+        String givenOptOutUrl = envOverrides.get(ENV_OPT_OUT_ENDPOINT);
+        if (Strings.isNullOrEmpty(givenOptOutUrl)) {
+            return;
+        }
+        if (!matchesExactly(givenOptOutUrl, this.optOutUrl)) {
+            throw new AttestationClientException("The given opt-out URL is unknown. Given URL: " + givenOptOutUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
+        }
+    }
+
+    // Overrides must equal Core's URL exactly (case-sensitive), ignoring one trailing slash.
+    private static boolean matchesExactly(String given, String expected) {
+        if (expected == null) {
+            return false;
+        }
+        return stripTrailingSlash(given).equals(stripTrailingSlash(expected));
+    }
+
+    private static String stripTrailingSlash(String url) {
+        return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
     }
 
     private String generateEnclaveId(boolean isDebugMode, String imageDigest, Environment env) throws AttestationException {

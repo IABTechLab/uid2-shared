@@ -30,7 +30,7 @@
         "DEPLOYMENT_ENVIRONMENT": "prod",
         "API_TOKEN_SECRET_NAME": "dummy",
         "CORE_BASE_URL": "https://core-url.uidapi.com",
-        "OPTOUT_BASE_URL": "optout-url"
+        "OPTOUT_BASE_URL": "https://optout-url.uidapi.com"
       },
       "cmd_override": null,
       "env": {
