@@ -59,7 +59,7 @@ public class PolicyValidator implements IPolicyValidator {
     );
     // Scheme, host and optional port, with at most a trailing slash. The GCP operator substitutes OPTOUT_BASE_URL
     // into its JSON config as raw text, so anything after the host (path, query, quotes) must be rejected.
-    private static final Pattern PLAIN_BASE_URL = Pattern.compile("^https?://[A-Za-z0-9.-]+(:[0-9]+)?/?$", Pattern.CASE_INSENSITIVE);
+    private static final Pattern PLAIN_BASE_URL = Pattern.compile("^https?://[A-Za-z0-9._-]+(:[0-9]+)?/?$", Pattern.CASE_INSENSITIVE);
 
     private final String attestationUrl;
     private final String optOutUrl;

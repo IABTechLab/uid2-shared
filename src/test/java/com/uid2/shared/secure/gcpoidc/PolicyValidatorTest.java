@@ -231,6 +231,7 @@ public class PolicyValidatorTest {
                 Arguments.of("testValidationSuccess_IntegCoreDeclaredProd", Environment.Integration, OPT_OUT_URL, "prod", OPT_OUT_URL, null, null),
                 Arguments.of("testValidationSuccess_CoreEnvironmentUnsetMatchingOptOutUrl", null, OPT_OUT_URL, "integ", OPT_OUT_URL, null, null),
                 Arguments.of("testValidationSuccess_IntegCoreHttpOptOutUrl", Environment.Integration, "http://optout:8081", "integ", "http://optout:8081", null, null),
+                Arguments.of("testValidationSuccess_IntegCoreUnderscoreHostOptOutUrl", Environment.Integration, "http://uid2_optout:8081", "integ", "http://uid2_optout:8081", null, null),
                 Arguments.of("testValidationFailure_IntegCoreUnknownOptOutUrl", Environment.Integration, OPT_OUT_URL, "integ", OTHER_OPT_OUT_URL,
                         unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: " + OTHER_OPT_OUT_URL),
                 Arguments.of("testValidationFailure_CoreEnvironmentUnsetUnknownOptOutUrl", null, OPT_OUT_URL, "integ", OTHER_OPT_OUT_URL,
