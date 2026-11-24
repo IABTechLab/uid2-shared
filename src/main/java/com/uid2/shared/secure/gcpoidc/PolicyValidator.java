@@ -60,23 +60,26 @@ public class PolicyValidator implements IPolicyValidator {
     private final String optOutUrl;
     private final Environment coreEnvironment;
 
+    /**
+     * @param coreEnvironment Core's own environment. The opt-out URL and environment checks apply only when this is
+     *                        {@link Environment#Production}; null (not configured) skips them.
+     */
     public PolicyValidator(String attestationUrl, String optOutUrl, Environment coreEnvironment) {
-        if (coreEnvironment == Environment.Production && !isValidUrl(optOutUrl)) {
-            throw new IllegalArgumentException("Core opt-out URL must be a valid URL in prod. Given URL: " + optOutUrl);
+        if (coreEnvironment == Environment.Production && !isValidHttpsUrl(optOutUrl)) {
+            throw new IllegalArgumentException("Core opt-out URL must be a valid https URL in prod. Given URL: " + optOutUrl);
         }
         this.attestationUrl = attestationUrl;
         this.optOutUrl = optOutUrl;
         this.coreEnvironment = coreEnvironment;
     }
 
-    private static boolean isValidUrl(String url) {
+    private static boolean isValidHttpsUrl(String url) {
         if (Strings.isNullOrEmpty(url)) {
             return false;
         }
         try {
             var parsed = new URL(url);
-            var protocol = parsed.getProtocol();
-            return ("https".equals(protocol) || "http".equals(protocol)) && !Strings.isNullOrEmpty(parsed.getHost());
+            return "https".equals(parsed.getProtocol()) && !Strings.isNullOrEmpty(parsed.getHost());
         } catch (MalformedURLException e) {
             return false;
         }

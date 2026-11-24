@@ -235,6 +235,8 @@ public class PolicyValidatorTest {
                         unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: " + OTHER_OPT_OUT_URL),
                 Arguments.of("testValidationFailure_UnknownOptOutUrl_NotAUrl", Environment.Production, OPT_OUT_URL, "prod", "optout_endpoint",
                         unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: optout_endpoint"),
+                Arguments.of("testValidationFailure_UnknownOptOutUrl_Http", Environment.Production, OPT_OUT_URL, "prod", "http://optout.uidapi.com",
+                        unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: http://optout.uidapi.com"),
                 Arguments.of("testValidationFailure_EnvironmentMismatch", Environment.Production, OPT_OUT_URL, "integ", OPT_OUT_URL,
                         badFormat, "Environment mismatch. Expected prod, given: integ"),
                 Arguments.of("testValidationFailure_EnvironmentMismatch_UnknownOptOutUrl", Environment.Production, OPT_OUT_URL, "integ", OTHER_OPT_OUT_URL,
@@ -244,7 +246,7 @@ public class PolicyValidatorTest {
 
     @ParameterizedTest
     @NullAndEmptySource
-    @ValueSource(strings = {" ", "optout.uidapi.com", "https:optout.uidapi.com", "https://", "file:/etc"})
+    @ValueSource(strings = {" ", "optout.uidapi.com", "https:optout.uidapi.com", "https://", "file:/etc", "http://optout.uidapi.com"})
     public void testConstructorFailure_ProdWithoutValidCoreOptOutUrl(String coreOptOutUrl) {
         assertThrows(IllegalArgumentException.class, () -> new PolicyValidator(ATTESTATION_URL, coreOptOutUrl, Environment.Production));
     }
