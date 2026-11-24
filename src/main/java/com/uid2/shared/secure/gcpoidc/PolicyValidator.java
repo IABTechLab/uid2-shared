@@ -21,6 +21,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 public class PolicyValidator implements IPolicyValidator {
     private static final Logger LOGGER = LoggerFactory.getLogger(PolicyValidator.class);
@@ -56,6 +57,10 @@ public class PolicyValidator implements IPolicyValidator {
                     ENV_SKIP_VALIDATIONS
             )
     );
+    // Scheme, host and optional port, with at most a trailing slash. The GCP operator substitutes OPTOUT_BASE_URL
+    // into its JSON config as raw text, so anything after the host (path, query, quotes) must be rejected.
+    private static final Pattern PLAIN_BASE_URL = Pattern.compile("^https?://[A-Za-z0-9.-]+(:[0-9]+)?/?$", Pattern.CASE_INSENSITIVE);
+
     private final String attestationUrl;
     private final String optOutUrl;
     private final Environment coreEnvironment;
@@ -198,7 +203,10 @@ public class PolicyValidator implements IPolicyValidator {
 
     private void checkOptOutUrl(Map<String, String> envOverrides) throws AttestationException {
         String givenOptOutUrl = envOverrides.get(ENV_OPT_OUT_ENDPOINT);
-        if (!Strings.isNullOrEmpty(givenOptOutUrl) && !UrlEquivalenceValidator.areUrlsEquivalent(givenOptOutUrl, this.optOutUrl)) {
+        if (Strings.isNullOrEmpty(givenOptOutUrl)) {
+            return;
+        }
+        if (!PLAIN_BASE_URL.matcher(givenOptOutUrl).matches() || !UrlEquivalenceValidator.areUrlsEquivalent(givenOptOutUrl, this.optOutUrl)) {
             throw new AttestationClientException("The given opt-out URL is unknown. Given URL: " + givenOptOutUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
         }
     }
