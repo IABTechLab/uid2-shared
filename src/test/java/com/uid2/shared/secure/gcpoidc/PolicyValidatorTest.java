@@ -225,7 +225,6 @@ public class PolicyValidatorTest {
         var badFormat = AttestationFailure.BAD_FORMAT;
         return Stream.of(
                 Arguments.of("testValidationSuccess_MatchingOptOutUrl", Environment.Production, OPT_OUT_URL, "prod", OPT_OUT_URL, null, null),
-                Arguments.of("testValidationSuccess_EquivalentOptOutUrl", Environment.Production, OPT_OUT_URL, "prod", "https://OPTOUT.uidapi.com:443/", null, null),
                 Arguments.of("testValidationSuccess_NoOptOutUrl", Environment.Production, OPT_OUT_URL, "prod", null, null, null),
                 Arguments.of("testValidationSuccess_IntegCoreMatchingOptOutUrl", Environment.Integration, OPT_OUT_URL, "integ", OPT_OUT_URL, null, null),
                 Arguments.of("testValidationSuccess_IntegCoreDeclaredProd", Environment.Integration, OPT_OUT_URL, "prod", OPT_OUT_URL, null, null),
@@ -244,20 +243,56 @@ public class PolicyValidatorTest {
                         unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: optout_endpoint"),
                 Arguments.of("testValidationFailure_UnknownOptOutUrl_Http", Environment.Production, OPT_OUT_URL, "prod", "http://optout.uidapi.com",
                         unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: http://optout.uidapi.com"),
-                Arguments.of("testValidationFailure_OptOutUrlNotPlain_Path", Environment.Production, OPT_OUT_URL, "prod", "https://optout.uidapi.com/some/path",
-                        unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: https://optout.uidapi.com/some/path"),
-                Arguments.of("testValidationFailure_OptOutUrlNotPlain_Query", Environment.Production, OPT_OUT_URL, "prod", "https://optout.uidapi.com?x=1",
-                        unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: https://optout.uidapi.com?x=1"),
-                Arguments.of("testValidationFailure_OptOutUrlNotPlain_UserInfo", Environment.Production, OPT_OUT_URL, "prod", "https://user@optout.uidapi.com",
-                        unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: https://user@optout.uidapi.com"),
-                Arguments.of("testValidationFailure_OptOutUrlNotPlain_TrailingWhitespace", Environment.Production, OPT_OUT_URL, "prod", "https://optout.uidapi.com ",
-                        unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: https://optout.uidapi.com "),
-                Arguments.of("testValidationFailure_OptOutUrlNotPlain_JsonInjection", Environment.Production, OPT_OUT_URL, "prod", "https://optout.uidapi.com/x\", \"enforce_https\": false, \"y\": \"",
-                        unknownOptOutUrl, "The given opt-out URL is unknown. Given URL: https://optout.uidapi.com/x\", \"enforce_https\": false, \"y\": \""),
                 Arguments.of("testValidationFailure_EnvironmentMismatch", Environment.Production, OPT_OUT_URL, "integ", OPT_OUT_URL,
                         badFormat, "Environment mismatch. Expected prod, given: integ"),
                 Arguments.of("testValidationFailure_EnvironmentMismatch_UnknownOptOutUrl", Environment.Production, OPT_OUT_URL, "integ", OTHER_OPT_OUT_URL,
                         badFormat, "Environment mismatch. Expected prod, given: integ")
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("urlOverrideExactMatchCases")
+    public void testUrlOverrideExactMatch(String caseName, String envKey, String coreUrl, String givenUrl, boolean accepted) throws AttestationException {
+        var isCoreUrl = PolicyValidator.ENV_CORE_ENDPOINT.equals(envKey);
+        var validator = new PolicyValidator(isCoreUrl ? coreUrl : ATTESTATION_URL, isCoreUrl ? OPT_OUT_URL : coreUrl, Environment.Integration);
+        var payload = generateBasicPayload();
+        var envOverrides = new HashMap<>(payload.getEnvOverrides());
+        envOverrides.put(PolicyValidator.ENV_ENVIRONMENT, "integ");
+        envOverrides.put(envKey, givenUrl);
+        var newPayload = payload.toBuilder()
+                .envOverrides(envOverrides)
+                .build();
+
+        if (accepted) {
+            assertNotNull(validator.validate(newPayload));
+        } else {
+            var e = assertThrows(AttestationClientException.class, () -> validator.validate(newPayload));
+            assertEquals(AttestationFailure.UNKNOWN_ATTESTATION_URL, e.getAttestationFailure());
+            var urlKind = isCoreUrl ? "attestation" : "opt-out";
+            assertEquals("The given " + urlKind + " URL is unknown. Given URL: " + givenUrl, e.getMessage());
+        }
+    }
+
+    private static Stream<Arguments> urlOverrideExactMatchCases() {
+        return Stream.concat(
+                urlOverrideExactMatchCases(PolicyValidator.ENV_CORE_ENDPOINT, ATTESTATION_URL, "https://CORE.uidapi.com"),
+                urlOverrideExactMatchCases(PolicyValidator.ENV_OPT_OUT_ENDPOINT, OPT_OUT_URL, "https://OPTOUT.uidapi.com"));
+    }
+
+    private static Stream<Arguments> urlOverrideExactMatchCases(String envKey, String coreUrl, String differentCaseUrl) {
+        return Stream.of(
+                Arguments.of(envKey + ": exact match", envKey, coreUrl, coreUrl, true),
+                Arguments.of(envKey + ": trailing slash on override", envKey, coreUrl, coreUrl + "/", true),
+                Arguments.of(envKey + ": trailing slash on Core URL", envKey, coreUrl + "/", coreUrl, true),
+                Arguments.of(envKey + ": different case", envKey, coreUrl, differentCaseUrl, false),
+                Arguments.of(envKey + ": explicit default port", envKey, coreUrl, coreUrl + ":443", false),
+                Arguments.of(envKey + ": path", envKey, coreUrl, coreUrl + "/some/path", false),
+                Arguments.of(envKey + ": query", envKey, coreUrl, coreUrl + "?x=1", false),
+                Arguments.of(envKey + ": two trailing slashes", envKey, coreUrl, coreUrl + "//", false),
+                Arguments.of(envKey + ": trailing whitespace", envKey, coreUrl, coreUrl + " ", false),
+                Arguments.of(envKey + ": different host", envKey, coreUrl, "https://other.example.com", false),
+                Arguments.of(envKey + ": JSON injection", envKey, coreUrl, "https://optout-prod.uidapi.com/x\", \"enforce_https\": false, \"a\": \"", false),
+                Arguments.of(envKey + ": Core URL unset", envKey, null, coreUrl, false)
         );
     }
 

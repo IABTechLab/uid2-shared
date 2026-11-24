@@ -29,11 +29,6 @@ public class UrlEquivalenceValidator {
             return false;
         }
 
-        return first.getProtocol().equals(second.getProtocol()) && first.getHost().equalsIgnoreCase(second.getHost()) && effectivePort(first) == effectivePort(second);
-    }
-
-    // Treat an explicit default port (e.g. https://host:443) the same as no port.
-    private static int effectivePort(URL url) {
-        return url.getPort() == -1 ? url.getDefaultPort() : url.getPort();
+        return first.getProtocol().equals(second.getProtocol()) && first.getHost().equalsIgnoreCase(second.getHost()) && first.getPort() == second.getPort();
     }
 }

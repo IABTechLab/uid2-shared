@@ -7,7 +7,6 @@ import com.uid2.shared.Utils;
 import com.uid2.shared.secure.AttestationClientException;
 import com.uid2.shared.secure.AttestationException;
 import com.uid2.shared.secure.AttestationFailure;
-import com.uid2.shared.util.UrlEquivalenceValidator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.slf4j.Logger;
@@ -21,7 +20,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 public class PolicyValidator implements IPolicyValidator {
     private static final Logger LOGGER = LoggerFactory.getLogger(PolicyValidator.class);
@@ -57,16 +55,16 @@ public class PolicyValidator implements IPolicyValidator {
                     ENV_SKIP_VALIDATIONS
             )
     );
-    // Scheme, host and optional port, with at most a trailing slash. The GCP operator substitutes OPTOUT_BASE_URL
-    // into its JSON config as raw text, so anything after the host (path, query, quotes) must be rejected.
-    private static final Pattern PLAIN_BASE_URL = Pattern.compile("^https?://[A-Za-z0-9._-]+(:[0-9]+)?/?$", Pattern.CASE_INSENSITIVE);
 
     private final String attestationUrl;
     private final String optOutUrl;
     private final Environment coreEnvironment;
 
     /**
-     * @param optOutUrl       Core's opt-out URL. A given opt-out URL override must match it in every environment.
+     * @param attestationUrl  Core's URL. A given CORE_BASE_URL override must equal it exactly, ignoring one trailing
+     *                        slash, in every environment.
+     * @param optOutUrl       Core's opt-out URL. A given OPTOUT_BASE_URL override must equal it exactly, ignoring one
+     *                        trailing slash, in every environment.
      * @param coreEnvironment Core's own environment. The declared environment check and the https requirement on
      *                        optOutUrl apply only when this is {@link Environment#Production}; null (not configured)
      *                        skips them.
@@ -189,7 +187,7 @@ public class PolicyValidator implements IPolicyValidator {
     private void checkAttestationUrl(HashMap<String, String> optionalEnvOverrides) throws AttestationException {
         if (!Strings.isNullOrEmpty(optionalEnvOverrides.get(ENV_CORE_ENDPOINT))) {
             String givenAttestationUrl = optionalEnvOverrides.get(ENV_CORE_ENDPOINT);
-            if (!UrlEquivalenceValidator.areUrlsEquivalent(givenAttestationUrl, this.attestationUrl)) {
+            if (!matchesExactly(givenAttestationUrl, this.attestationUrl)) {
                 throw new AttestationClientException("The given attestation URL is unknown. Given URL: " + givenAttestationUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
             }
         }
@@ -206,9 +204,22 @@ public class PolicyValidator implements IPolicyValidator {
         if (Strings.isNullOrEmpty(givenOptOutUrl)) {
             return;
         }
-        if (!PLAIN_BASE_URL.matcher(givenOptOutUrl).matches() || !UrlEquivalenceValidator.areUrlsEquivalent(givenOptOutUrl, this.optOutUrl)) {
+        if (!matchesExactly(givenOptOutUrl, this.optOutUrl)) {
             throw new AttestationClientException("The given opt-out URL is unknown. Given URL: " + givenOptOutUrl, AttestationFailure.UNKNOWN_ATTESTATION_URL);
         }
+    }
+
+    // Overrides must equal Core's URL exactly (case-sensitive), ignoring one trailing slash. The GCP operator
+    // substitutes OPTOUT_BASE_URL into its JSON config as raw text, so no looser matching is allowed.
+    private static boolean matchesExactly(String given, String expected) {
+        if (expected == null) {
+            return false;
+        }
+        return stripTrailingSlash(given).equals(stripTrailingSlash(expected));
+    }
+
+    private static String stripTrailingSlash(String url) {
+        return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
     }
 
     private String generateEnclaveId(boolean isDebugMode, String imageDigest, Environment env) throws AttestationException {
