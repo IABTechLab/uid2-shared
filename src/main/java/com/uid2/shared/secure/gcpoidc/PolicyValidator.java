@@ -61,8 +61,10 @@ public class PolicyValidator implements IPolicyValidator {
     private final Environment coreEnvironment;
 
     /**
-     * @param coreEnvironment Core's own environment. The opt-out URL and environment checks apply only when this is
-     *                        {@link Environment#Production}; null (not configured) skips them.
+     * @param optOutUrl       Core's opt-out URL. A given opt-out URL override must match it in every environment.
+     * @param coreEnvironment Core's own environment. The declared environment check and the https requirement on
+     *                        optOutUrl apply only when this is {@link Environment#Production}; null (not configured)
+     *                        skips them.
      */
     public PolicyValidator(String attestationUrl, String optOutUrl, Environment coreEnvironment) {
         if (coreEnvironment == Environment.Production && !isValidHttpsUrl(optOutUrl)) {
@@ -169,8 +171,8 @@ public class PolicyValidator implements IPolicyValidator {
         checkAttestationUrl(new HashMap<>(envOverrides));
         if (this.coreEnvironment == Environment.Production) {
             checkDeclaredEnvironment(env);
-            checkOptOutUrl(envOverrides);
         }
+        checkOptOutUrl(envOverrides);
 
         if(!envOverridesCopy.isEmpty()){
             throw new AttestationClientException("More env overrides than allowed. " + envOverridesCopy, AttestationFailure.BAD_FORMAT);
