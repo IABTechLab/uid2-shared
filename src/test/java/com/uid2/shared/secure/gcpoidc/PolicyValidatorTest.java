@@ -291,7 +291,7 @@ public class PolicyValidatorTest {
                 Arguments.of(envKey + ": two trailing slashes", envKey, coreUrl, coreUrl + "//", false),
                 Arguments.of(envKey + ": trailing whitespace", envKey, coreUrl, coreUrl + " ", false),
                 Arguments.of(envKey + ": different host", envKey, coreUrl, "https://other.example.com", false),
-                Arguments.of(envKey + ": JSON injection", envKey, coreUrl, "https://optout-prod.uidapi.com/x\", \"enforce_https\": false, \"a\": \"", false),
+                Arguments.of(envKey + ": embedded quote", envKey, coreUrl, coreUrl + "\"", false),
                 Arguments.of(envKey + ": Core URL unset", envKey, null, coreUrl, false)
         );
     }

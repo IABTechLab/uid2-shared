@@ -209,8 +209,7 @@ public class PolicyValidator implements IPolicyValidator {
         }
     }
 
-    // Overrides must equal Core's URL exactly (case-sensitive), ignoring one trailing slash. The GCP operator
-    // substitutes OPTOUT_BASE_URL into its JSON config as raw text, so no looser matching is allowed.
+    // Overrides must equal Core's URL exactly (case-sensitive), ignoring one trailing slash.
     private static boolean matchesExactly(String given, String expected) {
         if (expected == null) {
             return false;
