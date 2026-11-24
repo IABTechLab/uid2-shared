@@ -45,6 +45,8 @@ public class UrlEquivalenceValidatorTest {
             "https://example.com;HTTPS://example.com/",
             "http://example.com:8080;http://example.com:8080/",
             "http://example.com:8080   ;http://example.com:8080/",
+            "https://example.com:443;https://example.com/",
+            "http://example.com;http://example.com:80/",
             "https://ade7-113-29-30-226.ngrok-free.app;https://ade7-113-29-30-226.ngrok-free.app/attest"
     }, delimiter = ';')
     public void urls_equal(String first, String second) {
@@ -60,6 +62,8 @@ public class UrlEquivalenceValidatorTest {
             "http://example.com;http://example1.com/",
             "http://example.com:8081;http://example.com:8080/",
             "http://example.com:8081;http://example.com:8080/",
+            "https://example.com:8443;https://example.com/",
+            "https://example.com:80;https://example.com/",
     }, delimiter = ';')
     public void urls_not_equal(String first, String second) {
         assertFalse(UrlEquivalenceValidator.areUrlsEquivalent(first, second));
